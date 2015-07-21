@@ -1,7 +1,7 @@
 #ifndef QHYImager_H
 #define QHYImager_H
 
-#include <QtGui/QMainWindow>
+#include <QMainWindow>
 
 class QHYImager : public QMainWindow
 {

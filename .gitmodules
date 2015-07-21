@@ -1,0 +1,3 @@
+[submodule "QHYCCD_Linux"]
+	path = QHYCCD_Linux
+	url = https://github.com/qhyccd-lzr/QHYCCD_Linux.git
