@@ -1,7 +1,7 @@
 #ifndef UTILS_H
 #define UTILS_H
 #include <QString>
-
+#include <QDebug>
 #ifdef IN_IDE_PARSER
 #define _q + QString()
 #else

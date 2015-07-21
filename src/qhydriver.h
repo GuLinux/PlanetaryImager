@@ -2,17 +2,19 @@
 #define QHYDRIVER_H
 #include "dptr.h"
 
-#include <vector>
+#include <QList>
+#include <QString>
 class QHYDriver
 {
 public:
     QHYDriver();
     ~QHYDriver();
     struct Camera {
-      int id;
-      std::string name;
+      char id;
+      int index;
+      QString name;
     };
-    std::vector<Camera> cameras() const;
+    QList<Camera> cameras() const;
 private:
   D_PTR
 };
