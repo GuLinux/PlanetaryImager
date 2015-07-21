@@ -1,0 +1,4 @@
+[Project]
+Name=QHYImager
+Manager=KDevCMakeManager
+VersionControl=kdevgit
