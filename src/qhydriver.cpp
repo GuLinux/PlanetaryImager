@@ -31,12 +31,14 @@ QHYDriver::QHYDriver() : dpointer(this)
 {
   if(int result = InitQHYCCDResource() != QHYCCD_SUCCESS)
     throw Private::error("initializing QHY Driver", result);
+  qDebug() << "Initialized QHY Driver";
 }
 
 QHYDriver::~QHYDriver()
 {
   if(int result = ReleaseQHYCCDResource() != QHYCCD_SUCCESS)
     throw Private::error("releasing QHY Driver", result);
+  qDebug() << "Released QHY Driver";
 }
 
 

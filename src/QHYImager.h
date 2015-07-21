@@ -2,6 +2,7 @@
 #define QHYImager_H
 
 #include <QMainWindow>
+#include "qhydriver.h"
 
 class QHYImager : public QMainWindow
 {
@@ -10,6 +11,8 @@ class QHYImager : public QMainWindow
 public:
     QHYImager();
     virtual ~QHYImager();
+private:
+  QHYDriver driver;
 };
 
 #endif // QHYImager_H
