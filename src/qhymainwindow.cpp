@@ -21,8 +21,11 @@
 #include "qhydriver.h"
 #include "qhyccdimager.h"
 #include "ui_qhymainwindow.h"
+#include <functional>
+#include "utils.h"
 
 using namespace std;
+using namespace std::placeholders;
 class QHYMainWindow::Private {
 public:
   Private(QHYMainWindow *q);
@@ -47,6 +50,17 @@ QHYMainWindow::QHYMainWindow(QWidget* parent, Qt::WindowFlags flags) : dpointer(
 {
     d->ui->setupUi(this);
     connect(d->ui->action_devices_rescan, &QAction::triggered, bind(&Private::rescan_devices, d.get()));
+    
+    auto dockWidgetToggleVisibility = [=](QDockWidget *widget, bool visible){ widget->setVisible(visible); };
+    auto dockWidgetVisibleCheck = [=](QAction *action, QDockWidget *widget) { action->setChecked(widget->isVisible()); };
+    auto setupDockWidget = [=](QAction *action, QDockWidget *widget){
+      dockWidgetVisibleCheck(action, widget);
+      connect(action, &QAction::triggered, bind(dockWidgetToggleVisibility, widget, _1));
+      connect(widget, &QDockWidget::visibilityChanged, bind(dockWidgetVisibleCheck, action, widget));
+    };
+    
+    setupDockWidget(d->ui->actionChip_Info, d->ui->chipInfoWidget);
+    setupDockWidget(d->ui->actionCamera_Settings, d->ui->camera_settings);
     d->rescan_devices();
 }
 
@@ -58,6 +72,11 @@ void QHYMainWindow::Private::rescan_devices()
     auto action = ui->menu_device_load->addAction(device.name());
     QObject::connect(action, &QAction::triggered, [=]{
       imager = make_shared<QHYCCDImager>(device);
+      ui->camera_name->setText(imager->name());
+      ui->camera_chip_size->setText(QString("%1x%2").arg(imager->chip().width, 2).arg(imager->chip().height, 2));
+      ui->camera_bpp->setText("%1"_q % imager->chip().bpp);
+      ui->camera_pixels_size->setText(QString("%1x%2").arg(imager->chip().pixelwidth, 2).arg(imager->chip().pixelheight, 2));
+      ui->camera_resolution->setText(QString("%1x%2").arg(imager->chip().xres, 2).arg(imager->chip().yres, 2));
     });
   }
 }

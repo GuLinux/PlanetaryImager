@@ -27,8 +27,25 @@ class QHYCCDImager
 public:
     QHYCCDImager(QHYDriver::Camera camera);
     ~QHYCCDImager();
+    struct Chip {
+      double width, height, pixelwidth, pixelheight;
+      int xres, yres, bpp;
+    };
+    QString name() const;
+    QString id() const;
+    Chip chip() const;
+
+    struct Setting {
+      int id;
+      QString name;
+      double min, max, step, value;
+    };
+    QList<Setting> settings() const;  
 private:
   D_PTR
 };
+
+QDebug operator<<(QDebug dbg, const QHYCCDImager::Chip &chip);
+QDebug operator<<(QDebug dbg, const QHYCCDImager::Setting &setting);
 
 #endif // QHYCCD_H

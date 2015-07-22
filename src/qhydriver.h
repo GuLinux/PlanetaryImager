@@ -15,6 +15,7 @@ public:
       QString name() const;
     };
     QList<Camera> cameras() const;
+    static QString error_name(int code);
     
   class error : public std::runtime_error {
   public:

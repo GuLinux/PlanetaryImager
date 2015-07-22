@@ -32,6 +32,10 @@ QHYDriver::error::error(const QString& label, int code):  runtime_error(("Error 
 }
 
 
+QString QHYDriver::error_name(int code)
+{
+  return Private::error_codes[code];
+}
 
 QHYDriver::QHYDriver() : dpointer(this)
 {
