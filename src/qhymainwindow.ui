@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>QHYMainWindow</class>
+ <widget class="QMainWindow" name="QHYMainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>QHY Imager</string>
+  </property>
+  <widget class="QWidget" name="centralwidget"/>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>27</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuDevice">
+    <property name="title">
+     <string>&amp;Device</string>
+    </property>
+    <widget class="QMenu" name="menu_device_load">
+     <property name="title">
+      <string>Load...</string>
+     </property>
+    </widget>
+    <addaction name="action_devices_rescan"/>
+    <addaction name="menu_device_load"/>
+   </widget>
+   <addaction name="menuDevice"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <action name="action_devices_rescan">
+   <property name="text">
+    <string>&amp;Rescan</string>
+   </property>
+  </action>
+  <action name="action_device_use">
+   <property name="text">
+    <string>&amp;Load...</string>
+   </property>
+  </action>
+  <action name="actionDevices">
+   <property name="text">
+    <string>Devices</string>
+   </property>
+  </action>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
