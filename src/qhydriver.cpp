@@ -4,6 +4,7 @@
 #include "utils.h"
 #include <QDebug>
 #include <QString>
+#include <QRegularExpression>
 using namespace std;
 
 class QHYDriver::Private {
@@ -26,18 +27,23 @@ QHYDriver::Private::Private(QHYDriver* q) : q(q)
 
 }
 
+QHYDriver::error::error(const QString& label, int code):  runtime_error(("Error on %1: %2 (%3)"_q % label % code % Private::error_codes[code]).toLatin1())
+{
+}
+
+
 
 QHYDriver::QHYDriver() : dpointer(this)
 {
   if(int result = InitQHYCCDResource() != QHYCCD_SUCCESS)
-    throw Private::error("initializing QHY Driver", result);
+    throw error("initializing QHY Driver", result);
   qDebug() << "Initialized QHY Driver";
 }
 
 QHYDriver::~QHYDriver()
 {
   if(int result = ReleaseQHYCCDResource() != QHYCCD_SUCCESS)
-    throw Private::error("releasing QHY Driver", result);
+    throw error("releasing QHY Driver", result);
   qDebug() << "Released QHY Driver";
 }
 
@@ -50,13 +56,19 @@ QList< QHYDriver::Camera > QHYDriver::cameras() const
     return cameras;
   }
   if(scan_result < QHYCCD_SUCCESS) {
-    throw Private::error{"getting QHY cameras list", scan_result};
+    throw error{"getting QHY cameras list", scan_result};
   }
   for(int i=0; i<scan_result; i++) {
-    char id = 0;
-    if(int result = GetQHYCCDId(i, &id) != QHYCCD_SUCCESS)
-      throw Private::error{"getting QHY Camera ID", result};
-    cameras.push_back({id, i, Private::device_codes[id]});
+    Camera camera{i};
+    if(int result = GetQHYCCDId(i, &camera.id[0]) != QHYCCD_SUCCESS)
+      throw error{"getting QHY Camera ID", result};
+    qDebug() << "Found device at index " << i << " with id=" << camera.id << ")";
+    cameras.push_back(camera);
   }
   return cameras;
+}
+
+QString QHYDriver::Camera::name() const
+{
+  return QString(id).remove(QRegularExpression{"-[\\da-f]+$"});
 }

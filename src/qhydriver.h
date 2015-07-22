@@ -10,11 +10,16 @@ public:
     QHYDriver();
     ~QHYDriver();
     struct Camera {
-      char id;
       int index;
-      QString name;
+      char id[255];
+      QString name() const;
     };
     QList<Camera> cameras() const;
+    
+  class error : public std::runtime_error {
+  public:
+    error(const QString &label, int code);
+  };
 private:
   D_PTR
 };

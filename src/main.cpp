@@ -1,11 +1,10 @@
 #include <QApplication>
-#include "QHYImager.h"
-
+#include "qhymainwindow.h"
 
 int main(int argc, char** argv)
 {
     QApplication app(argc, argv);
-    QHYImager qhyimager;
-    qhyimager.show();
+    QHYMainWindow mainWindow;
+    mainWindow.show();
     return app.exec();
 }
