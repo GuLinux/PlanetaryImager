@@ -21,9 +21,11 @@
 #define QHYCCD_H
 #include "qhydriver.h"
 #include "dptr.h"
+#include <QObject>
 
-class QHYCCDImager
+class QHYCCDImager : public QObject
 {
+  Q_OBJECT
 public:
     QHYCCDImager(QHYDriver::Camera camera);
     ~QHYCCDImager();
@@ -40,10 +42,19 @@ public:
       QString name;
       double min, max, step, value;
     };
-    QList<Setting> settings() const;  
+    typedef QList<Setting> Settings;
+    Settings settings() const;  
+signals:
+  void settingsLoaded(const Settings settings);
+public slots:
+  void setSetting(const Setting &setting);
+  void startLive();
+  void stopLive();
 private:
   D_PTR
 };
+
+typedef std::shared_ptr<QHYCCDImager> QHYCCDImagerPtr;
 
 QDebug operator<<(QDebug dbg, const QHYCCDImager::Chip &chip);
 QDebug operator<<(QDebug dbg, const QHYCCDImager::Setting &setting);

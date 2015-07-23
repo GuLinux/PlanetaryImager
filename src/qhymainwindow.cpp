@@ -23,21 +23,56 @@
 #include "ui_qhymainwindow.h"
 #include <functional>
 #include "utils.h"
+#include <QLabel>
+#include <QDoubleSpinBox>
+#include <QSettings>
+#include <QThread>
 
 using namespace std;
 using namespace std::placeholders;
+
 class QHYMainWindow::Private {
 public:
   Private(QHYMainWindow *q);
   shared_ptr<Ui::QHYMainWindow> ui;
   QHYDriver driver;
   void rescan_devices();
-  shared_ptr<QHYCCDImager> imager;
+  QHYCCDImagerPtr imager;
+  QSettings settings;
+  void saveState();
+  QBoxLayout *settings_layout;
 private:
   QHYMainWindow *q;
 };
 
-QHYMainWindow::Private::Private(QHYMainWindow* q) : ui{make_shared<Ui::QHYMainWindow>()}, q{q}
+
+class CameraSettingWidget : public QWidget {
+  Q_OBJECT
+public:
+  CameraSettingWidget(const QHYCCDImager::Setting &setting, const QHYCCDImagerPtr &imager, QWidget* parent = 0);  
+};
+
+CameraSettingWidget::CameraSettingWidget(const QHYCCDImager::Setting& setting, const QHYCCDImagerPtr& imager, QWidget* parent): QWidget(parent)
+{
+  setObjectName("setting_%1"_q % setting.name);
+  auto layout = new QHBoxLayout;
+  setLayout(layout);
+  layout->addWidget(new QLabel(tr(qPrintable(setting.name))));
+  QDoubleSpinBox *spinbox = new QDoubleSpinBox;
+  spinbox->setMinimum(setting.min);
+  spinbox->setMaximum(setting.max <= 2 ? 2000 : setting.max);
+  spinbox->setSingleStep(setting.step != 0 ? setting.step : 0.0001);
+  spinbox->setValue(setting.value);
+  layout->addWidget(spinbox);
+  connect(spinbox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [=] (double v) mutable {
+    auto s = setting;
+    s.value = v;
+    imager->setSetting(s);
+  });
+}
+
+
+QHYMainWindow::Private::Private(QHYMainWindow* q) : ui{make_shared<Ui::QHYMainWindow>()}, settings{"GuLinux", "QHYImager"}, q{q}
 {
 }
 
@@ -46,9 +81,16 @@ QHYMainWindow::~QHYMainWindow()
 {
 }
 
+void QHYMainWindow::Private::saveState()
+{
+  settings.setValue("dock_settings", q->saveState());
+}
+
+
 QHYMainWindow::QHYMainWindow(QWidget* parent, Qt::WindowFlags flags) : dpointer(this)
 {
     d->ui->setupUi(this);
+    restoreState(d->settings.value("dock_settings").toByteArray());
     connect(d->ui->action_devices_rescan, &QAction::triggered, bind(&Private::rescan_devices, d.get()));
     
     auto dockWidgetToggleVisibility = [=](QDockWidget *widget, bool visible){ widget->setVisible(visible); };
@@ -57,10 +99,24 @@ QHYMainWindow::QHYMainWindow(QWidget* parent, Qt::WindowFlags flags) : dpointer(
       dockWidgetVisibleCheck(action, widget);
       connect(action, &QAction::triggered, bind(dockWidgetToggleVisibility, widget, _1));
       connect(widget, &QDockWidget::visibilityChanged, bind(dockWidgetVisibleCheck, action, widget));
+      connect(widget, &QDockWidget::dockLocationChanged, bind(&Private::saveState, d.get()));
+      connect(widget, &QDockWidget::topLevelChanged, bind(&Private::saveState, d.get()));
+      connect(widget, &QDockWidget::visibilityChanged, bind(&Private::saveState, d.get()));
     };
     
+    connect(d->ui->start_recording, &QPushButton::clicked, [=]{
+      if(d->imager)
+	d->imager->startLive();
+    });
+    connect(d->ui->stop_recording, &QPushButton::clicked, [=]{
+      if(d->imager)
+	d->imager->stopLive();
+    });
     setupDockWidget(d->ui->actionChip_Info, d->ui->chipInfoWidget);
     setupDockWidget(d->ui->actionCamera_Settings, d->ui->camera_settings);
+    setupDockWidget(d->ui->actionRecording, d->ui->recording);
+    
+    d->ui->settings_frame->setLayout(d->settings_layout = new QVBoxLayout);
     d->rescan_devices();
 }
 
@@ -72,11 +128,21 @@ void QHYMainWindow::Private::rescan_devices()
     auto action = ui->menu_device_load->addAction(device.name());
     QObject::connect(action, &QAction::triggered, [=]{
       imager = make_shared<QHYCCDImager>(device);
+      if(!imager)
+	return;
       ui->camera_name->setText(imager->name());
       ui->camera_chip_size->setText(QString("%1x%2").arg(imager->chip().width, 2).arg(imager->chip().height, 2));
       ui->camera_bpp->setText("%1"_q % imager->chip().bpp);
       ui->camera_pixels_size->setText(QString("%1x%2").arg(imager->chip().pixelwidth, 2).arg(imager->chip().pixelheight, 2));
       ui->camera_resolution->setText(QString("%1x%2").arg(imager->chip().xres, 2).arg(imager->chip().yres, 2));
+
+      auto settings_widgets = ui->settings_frame->findChildren<QWidget*>(QRegularExpression{"setting_.*"});
+      for_each(begin(settings_widgets), end(settings_widgets), bind(&QWidget::deleteLater, _1));
+      for(auto setting: imager->settings()) {
+	qDebug() << "adding setting: " << setting;
+	settings_layout->addWidget(new CameraSettingWidget{setting, imager});
+      }
     });
   }
 }
+#include "qhymainwindow.moc"
