@@ -23,8 +23,25 @@
 #include <QDebug>
 
 #include <libusb.h>
+#include <QThread>
 #include "utils.h"
+#include <QElapsedTimer>
+
 using namespace std;
+
+
+class ImagingWorker : public QObject {
+  Q_OBJECT
+public:
+  ImagingWorker(qhyccd_handle *handle, QObject* parent = 0);
+public slots:
+  void start();
+  void start_live();
+  void stop();
+private:
+  qhyccd_handle *handle;
+  bool enabled = true;
+};
 
 class QHYCCDImager::Private {
 public:
@@ -33,11 +50,14 @@ public:
   QString name;
   QString id;
   Chip chip;
-  QList<Setting> settings;
+  Settings settings;
   void load_settings();
+  QThread imaging_thread;
+  ImagingWorker *worker;
 private:
   QHYCCDImager *q;
 };
+
 
 QHYCCDImager::Private::Private(const QString &name, const QString &id, QHYCCDImager* q) : name(name), id(id), q{q}
 {
@@ -130,15 +150,130 @@ void QHYCCDImager::Private::load_settings()
       qDebug() << "control " << control.first << "not supported, skipping";
       continue;
     }
-    if(result != QHYCCD_SUCCESS) {
-      qCritical() << "error retrieving control " << control.first << ":" << QHYDriver::error_name(control.second);
-      continue;
-    }
     Setting setting{control.second, control.first};
     result = GetQHYCCDParamMinMaxStep(handle, control.second, &setting.min, &setting.max, &setting.step);
+    if(result != QHYCCD_SUCCESS) {
+      qCritical() << "error retrieving control " << control.first << ":" << QHYDriver::error_name(result) << "(" << result << ")";
+      continue;
+    }
     setting.value = GetQHYCCDParam(handle, control.second);
     qDebug() << setting;
+    settings << setting;
   }
+  emit q->settingsLoaded(settings);
+}
+
+void QHYCCDImager::setSetting(const QHYCCDImager::Setting& setting)
+{
+  auto result = SetQHYCCDParam(d->handle, static_cast<CONTROL_ID>(setting.id), setting.value);
+  if(result != QHYCCD_SUCCESS) {
+    qCritical() << "error setting" << setting.name << ":" << QHYDriver::error_name(result) << "(" << result << ")";
+    return;
+  }
+  d->load_settings();
+}
+
+void QHYCCDImager::startLive()
+{
+//   auto result = BeginQHYCCDLive(d->handle);
+//   if(result != QHYCCD_SUCCESS) {
+//     throw QHYDriver::error("start live", result);
+//     return;
+//   }
+  d->worker = new ImagingWorker{d->handle};
+  d->worker->moveToThread(&d->imaging_thread);
+  connect(&d->imaging_thread, SIGNAL(started()), d->worker, SLOT(start_live()));
+  d->imaging_thread.start();
+  qDebug() << "Live started correctly";
+}
+
+ImagingWorker::ImagingWorker(qhyccd_handle* handle, QObject* parent): QObject(parent), handle(handle)
+{
+}
+
+void ImagingWorker::start()
+{
+  auto size = GetQHYCCDMemLength(handle);
+  uint8_t buffer[size];
+  qDebug() << "capturing thread started, image size: " << size;
+  double frames;
+  QElapsedTimer timer;
+  timer.start();
+  while(enabled){
+    int result = ExpQHYCCDSingleFrame(handle);
+    if(result != QHYCCD_SUCCESS) {
+      qDebug() << "error stating exposure: " << QHYDriver::error_name(result);
+      continue;
+    }
+    qDebug() << "exposure started";
+    while(int rem = GetQHYCCDExposureRemaining(handle) > 100);
+    int w, h, bpp, channels;
+    result = GetQHYCCDSingleFrame(handle, &w, &h, &bpp, &channels, buffer);
+    if(result == QHYCCD_SUCCESS) {
+      qDebug() << "Correctly acquired frame: " << w << "x" << h << "@" << bpp << ":" << channels;
+      frames++;
+      if(frames == 100) {
+	qDebug() << "fps: " << frames/timer.elapsed();
+	frames = 0;
+	timer.restart();
+      }
+    } else {
+      qDebug() << "error capturing frame: " << QHYDriver::error_name(result);
+    }
+    
+  };
+}
+
+void ImagingWorker::start_live()
+{
+  auto size = GetQHYCCDMemLength(handle);
+  uint8_t buffer[size];
+  qDebug() << "capturing thread started, image size: " << size;
+  double frames;
+  QElapsedTimer timer;
+  timer.start();
+  while(enabled){
+    int result = ExpQHYCCDSingleFrame(handle);
+    if(result != QHYCCD_SUCCESS) {
+      qDebug() << "error stating exposure: " << QHYDriver::error_name(result);
+      continue;
+    }
+    
+    while(GetQHYCCDExposureRemaining(handle) > 100);
+    
+    int w, h, bpp, channels;
+    result = GetQHYCCDLiveFrame(handle, &w, &h, &bpp, &channels, buffer);
+    if(result == QHYCCD_SUCCESS) {
+      qDebug() << "Correctly acquired frame: " << w << "x" << h << "@" << bpp << ":" << channels;
+      frames++;
+      if(frames == 100) {
+	qDebug() << "fps: " << frames/timer.elapsed();
+	frames = 0;
+	timer.restart();
+      }
+    } else {
+      qDebug() << "error capturing frame: " << QHYDriver::error_name(result);
+    }
+    
+  };
+}
+
+void ImagingWorker::stop()
+{
+  enabled = false;
+}
+
+
+void QHYCCDImager::stopLive()
+{
+  d->worker->stop();
+  d->imaging_thread.quit();
+//   auto result = StopQHYCCDLive(d->handle);
+//   if(result != QHYCCD_SUCCESS) {
+//     throw QHYDriver::error("stop live", result);
+//     return;
+//   }
+  qDebug() << "Live stopped correctly";
 }
 
 
@@ -154,3 +289,6 @@ QDebug operator<<(QDebug dbg, const QHYCCDImager::Setting& setting)
   dbg.nospace() << "{ name: " << setting.name << ", min: " << setting.min << ", max: " << setting.max << ", step: " << setting.step << ", value: " << setting.value << " }";
   return dbg.space();
 }
+
+#include "qhyccdimager.moc"
+
