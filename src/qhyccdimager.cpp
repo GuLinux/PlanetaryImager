@@ -175,11 +175,6 @@ void QHYCCDImager::setSetting(const QHYCCDImager::Setting& setting)
 
 void QHYCCDImager::startLive()
 {
-//   auto result = BeginQHYCCDLive(d->handle);
-//   if(result != QHYCCD_SUCCESS) {
-//     throw QHYDriver::error("start live", result);
-//     return;
-//   }
   d->worker = new ImagingWorker{d->handle};
   d->worker->moveToThread(&d->imaging_thread);
   connect(&d->imaging_thread, SIGNAL(started()), d->worker, SLOT(start_live()));
@@ -227,34 +222,43 @@ void ImagingWorker::start()
 void ImagingWorker::start_live()
 {
   auto size = GetQHYCCDMemLength(handle);
+  auto result =  SetQHYCCDStreamMode(handle,1);
+  if(result != QHYCCD_SUCCESS) {
+    qCritical() << "Unable to set live mode stream";
+    return;
+  }
+  result =  SetQHYCCDResolution(handle, 0, 0, 1280, 960);
+  if(result != QHYCCD_SUCCESS) {
+    qCritical() << "Unable to set resolution";
+    return;
+  }
+  result = BeginQHYCCDLive(handle);
+  if(result != QHYCCD_SUCCESS) {
+    qCritical() << "Unable to start live mode";
+    return;
+  }
+
   uint8_t buffer[size];
   qDebug() << "capturing thread started, image size: " << size;
   double frames;
   QElapsedTimer timer;
   timer.start();
+  int w,h,bpp,channels;
+  timer.start();
+  int captured = 0;
   while(enabled){
-    int result = ExpQHYCCDSingleFrame(handle);
+    result = GetQHYCCDLiveFrame(handle,&w,&h,&bpp,&channels,buffer);
     if(result != QHYCCD_SUCCESS) {
-      qDebug() << "error stating exposure: " << QHYDriver::error_name(result);
-      continue;
+      qCritical() << "Error capturing live frame: " << result;
+    } else
+      captured++;
+    if(timer.elapsed() > 5000) {
+      double elapsed = timer.elapsed();
+      double fps = static_cast<double>(captured) / (elapsed / 1000);
+      qDebug() << "fps: " << fps << ": " << w << "x" << h << "@" << bpp << ":" << channels;
+      timer.restart();
+      captured = 0;
     }
-    
-    while(GetQHYCCDExposureRemaining(handle) > 100);
-    
-    int w, h, bpp, channels;
-    result = GetQHYCCDLiveFrame(handle, &w, &h, &bpp, &channels, buffer);
-    if(result == QHYCCD_SUCCESS) {
-      qDebug() << "Correctly acquired frame: " << w << "x" << h << "@" << bpp << ":" << channels;
-      frames++;
-      if(frames == 100) {
-	qDebug() << "fps: " << frames/timer.elapsed();
-	frames = 0;
-	timer.restart();
-      }
-    } else {
-      qDebug() << "error capturing frame: " << QHYDriver::error_name(result);
-    }
-    
   };
 }
 

@@ -46,6 +46,7 @@ public:
     Settings settings() const;  
 signals:
   void settingsLoaded(const Settings settings);
+  void gotImage(const QImage &);
 public slots:
   void setSetting(const Setting &setting);
   void startLive();
