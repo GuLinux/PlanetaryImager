@@ -130,6 +130,9 @@ void QHYMainWindow::Private::rescan_devices()
       imager = make_shared<QHYCCDImager>(device);
       if(!imager)
 	return;
+      connect(imager.get(), &QHYCCDImager::gotImage, q, [=](const QImage &image) {
+        ui->image->setPixmap(QPixmap::fromImage(image));
+      }, Qt::QueuedConnection);
       ui->camera_name->setText(imager->name());
       ui->camera_chip_size->setText(QString("%1x%2").arg(imager->chip().width, 2).arg(imager->chip().height, 2));
       ui->camera_bpp->setText("%1"_q % imager->chip().bpp);

@@ -16,7 +16,17 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QGraphicsView" name="graphicsView"/>
+     <widget class="QLabel" name="image">
+      <property name="frameShape">
+       <enum>QFrame::Box</enum>
+      </property>
+      <property name="text">
+       <string/>
+      </property>
+      <property name="scaledContents">
+       <bool>true</bool>
+      </property>
+     </widget>
     </item>
    </layout>
   </widget>
@@ -26,7 +36,7 @@
      <x>0</x>
      <y>0</y>
      <width>1025</width>
-     <height>27</height>
+     <height>28</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuDevice">
@@ -257,7 +267,7 @@
   </widget>
   <widget class="QDockWidget" name="recording">
    <property name="windowTitle">
-    <string>Recording</string>
+    <string>&amp;Recording</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>4</number>

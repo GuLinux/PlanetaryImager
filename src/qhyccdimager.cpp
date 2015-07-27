@@ -25,6 +25,7 @@
 #include <libusb.h>
 #include <QThread>
 #include "utils.h"
+#include <QImage>
 #include <QElapsedTimer>
 
 using namespace std;
@@ -33,14 +34,14 @@ using namespace std;
 class ImagingWorker : public QObject {
   Q_OBJECT
 public:
-  ImagingWorker(qhyccd_handle *handle, QObject* parent = 0);
+  ImagingWorker(qhyccd_handle *handle, QHYCCDImager *imager, QObject* parent = 0);
 public slots:
-  void start();
   void start_live();
   void stop();
 private:
   qhyccd_handle *handle;
   bool enabled = true;
+  QHYCCDImager *imager;
 };
 
 class QHYCCDImager::Private {
@@ -175,48 +176,15 @@ void QHYCCDImager::setSetting(const QHYCCDImager::Setting& setting)
 
 void QHYCCDImager::startLive()
 {
-  d->worker = new ImagingWorker{d->handle};
+  d->worker = new ImagingWorker{d->handle, this};
   d->worker->moveToThread(&d->imaging_thread);
   connect(&d->imaging_thread, SIGNAL(started()), d->worker, SLOT(start_live()));
   d->imaging_thread.start();
   qDebug() << "Live started correctly";
 }
 
-ImagingWorker::ImagingWorker(qhyccd_handle* handle, QObject* parent): QObject(parent), handle(handle)
+ImagingWorker::ImagingWorker(qhyccd_handle* handle, QHYCCDImager* imager, QObject* parent): QObject(parent), handle(handle), imager{imager}
 {
-}
-
-void ImagingWorker::start()
-{
-  auto size = GetQHYCCDMemLength(handle);
-  uint8_t buffer[size];
-  qDebug() << "capturing thread started, image size: " << size;
-  double frames;
-  QElapsedTimer timer;
-  timer.start();
-  while(enabled){
-    int result = ExpQHYCCDSingleFrame(handle);
-    if(result != QHYCCD_SUCCESS) {
-      qDebug() << "error stating exposure: " << QHYDriver::error_name(result);
-      continue;
-    }
-    qDebug() << "exposure started";
-    while(int rem = GetQHYCCDExposureRemaining(handle) > 100);
-    int w, h, bpp, channels;
-    result = GetQHYCCDSingleFrame(handle, &w, &h, &bpp, &channels, buffer);
-    if(result == QHYCCD_SUCCESS) {
-      qDebug() << "Correctly acquired frame: " << w << "x" << h << "@" << bpp << ":" << channels;
-      frames++;
-      if(frames == 100) {
-	qDebug() << "fps: " << frames/timer.elapsed();
-	frames = 0;
-	timer.restart();
-      }
-    } else {
-      qDebug() << "error capturing frame: " << QHYDriver::error_name(result);
-    }
-    
-  };
 }
 
 void ImagingWorker::start_live()
@@ -240,24 +208,30 @@ void ImagingWorker::start_live()
 
   uint8_t buffer[size];
   qDebug() << "capturing thread started, image size: " << size;
-  double frames;
+  long frames = 0;
   QElapsedTimer timer;
   timer.start();
-  int w,h,bpp,channels;
+  int w = 1280;
+  int h = 960;
+  int bpp = 8;
+  int channels = 1;
   timer.start();
-  int captured = 0;
   while(enabled){
+    //qDebug() << "progress: " << GetQHYCCDReadingProgress(handle) << ", remainingExposure: " << GetQHYCCDExposureRemaining(handle);
     result = GetQHYCCDLiveFrame(handle,&w,&h,&bpp,&channels,buffer);
     if(result != QHYCCD_SUCCESS) {
       qCritical() << "Error capturing live frame: " << result;
-    } else
-      captured++;
+    } else {
+      QImage image(buffer, w, h, QImage::Format_Grayscale8);
+      emit imager->gotImage(image);
+      frames++;
+    }
     if(timer.elapsed() > 5000) {
       double elapsed = timer.elapsed();
-      double fps = static_cast<double>(captured) / (elapsed / 1000);
-      qDebug() << "fps: " << fps << ": " << w << "x" << h << "@" << bpp << ":" << channels;
+      double fps = static_cast<double>(frames) / (elapsed / 1000);
+      qDebug() << "frames:" << frames << ", elapsed: " << elapsed << "ms, fps: " << fps << ": " << w << "x" << h << "@" << bpp << ":" << channels;
       timer.restart();
-      captured = 0;
+      frames = 0;
     }
   };
 }
