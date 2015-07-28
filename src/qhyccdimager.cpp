@@ -27,6 +27,7 @@
 #include "utils.h"
 #include <QImage>
 #include <QElapsedTimer>
+#include <QtConcurrent/QtConcurrent>
 
 using namespace std;
 
@@ -35,6 +36,7 @@ class ImagingWorker : public QObject {
   Q_OBJECT
 public:
   ImagingWorker(qhyccd_handle *handle, QHYCCDImager *imager, QObject* parent = 0);
+  void convert_image_data(const QByteArray &data, int w, int h, int bpp, int channels);
 public slots:
   void start_live();
   void stop();
@@ -229,12 +231,7 @@ void ImagingWorker::start_live()
     if(result != QHYCCD_SUCCESS) {
       qCritical() << "Error capturing live frame: " << result;
     } else {
-      QImage image(w, h, QImage::QImage::Format_RGB32);
-      int bytesPerLine = channels * w;
-      for(int i=0; i<h /* multiply per channels and bpp */; i++) {
-        memcpy(image.scanLine(i), &buffer[bytesPerLine*i], bytesPerLine);
-      }
-      emit imager->gotImage(image);
+      QtConcurrent::run(bind(&ImagingWorker::convert_image_data, this, QByteArray{reinterpret_cast<const char*>(buffer), w*h}, w, h, bpp, channels));
       frames++;
     }
     if(timer.elapsed() > 5000) {
@@ -246,6 +243,28 @@ void ImagingWorker::start_live()
     }
   };
 }
+
+
+void ImagingWorker::convert_image_data ( const QByteArray& data, int w, int h, int bpp, int channels )
+{
+//   QImage image(w, h, QImage::QImage::Format_RGB32);
+//   int bytesPerLine = channels * w;
+//   for(int i=0; i<h /* multiply per channels and bpp */; i++) {
+//     memcpy(image.scanLine(i), &data.constData()[bytesPerLine*i], bytesPerLine);
+//   }
+//   emit imager->gotImage(image);
+  struct Pixel {
+    char alpha;
+    char red;
+    char green;
+    char blue;
+  };
+  static char alpha_ff = 0xff;
+  std::vector<Pixel> pixels(w*h);
+  transform(begin(data), end(data), begin(pixels), [](char c){return Pixel{alpha_ff, c, c, c}; });
+  emit imager->gotImage(QImage{reinterpret_cast<uchar*>(pixels.data()), w, h, QImage::Format_RGB32});
+}
+
 
 void ImagingWorker::stop()
 {
