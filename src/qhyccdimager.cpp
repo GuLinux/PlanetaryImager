@@ -145,6 +145,16 @@ void QHYCCDImager::Private::load_settings()
     { "cam_bin2x2mode", CAM_BIN2X2MODE },
     { "cam_bin3x3mode", CAM_BIN3X3MODE },
     { "cam_bin4x4mode", CAM_BIN4X4MODE },
+    { "CAM_MECHANICALSHUTTER", CAM_MECHANICALSHUTTER },
+    { "CAM_TRIGER_INTERFACE", CAM_TRIGER_INTERFACE },
+    { "CAM_TECOVERPROTECT_INTERFACE", CAM_TECOVERPROTECT_INTERFACE },
+    { "CAM_SINGNALCLAMP_INTERFACE", CAM_SINGNALCLAMP_INTERFACE },
+    { "CAM_FINETONE_INTERFACE", CAM_FINETONE_INTERFACE },
+    { "CAM_SHUTTERMOTORHEATING_INTERFACE", CAM_SHUTTERMOTORHEATING_INTERFACE },
+    { "CAM_CALIBRATEFPN_INTERFACE", CAM_CALIBRATEFPN_INTERFACE },
+    { "CAM_CHIPTEMPERATURESENSOR_INTERFACE", CAM_CHIPTEMPERATURESENSOR_INTERFACE },
+    { "CAM_USBREADOUTSLOWEST_INTERFACE", CAM_USBREADOUTSLOWEST_INTERFACE },
+
   }) {
     int result = IsQHYCCDControlAvailable(handle, control.second);
     if(result == QHYCCD_ERROR_NOTSUPPORT) {
@@ -211,10 +221,7 @@ void ImagingWorker::start_live()
   long frames = 0;
   QElapsedTimer timer;
   timer.start();
-  int w = 1280;
-  int h = 960;
-  int bpp = 8;
-  int channels = 1;
+  int w, h, bpp, channels;
   timer.start();
   while(enabled){
     //qDebug() << "progress: " << GetQHYCCDReadingProgress(handle) << ", remainingExposure: " << GetQHYCCDExposureRemaining(handle);
@@ -222,7 +229,11 @@ void ImagingWorker::start_live()
     if(result != QHYCCD_SUCCESS) {
       qCritical() << "Error capturing live frame: " << result;
     } else {
-      QImage image(buffer, w, h, QImage::Format_Grayscale8);
+      QImage image(w, h, QImage::QImage::Format_RGB32);
+      int bytesPerLine = channels * w;
+      for(int i=0; i<h /* multiply per channels and bpp */; i++) {
+        memcpy(image.scanLine(i), &buffer[bytesPerLine*i], bytesPerLine);
+      }
       emit imager->gotImage(image);
       frames++;
     }

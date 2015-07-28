@@ -60,8 +60,8 @@ CameraSettingWidget::CameraSettingWidget(const QHYCCDImager::Setting& setting, c
   layout->addWidget(new QLabel(tr(qPrintable(setting.name))));
   QDoubleSpinBox *spinbox = new QDoubleSpinBox;
   spinbox->setMinimum(setting.min);
-  spinbox->setMaximum(setting.max <= 2 ? 2000 : setting.max);
-  spinbox->setSingleStep(setting.step != 0 ? setting.step : 0.0001);
+  spinbox->setMaximum(setting.max);
+  spinbox->setSingleStep(setting.step != 0 ? setting.step : 0.1);
   spinbox->setValue(setting.value);
   layout->addWidget(spinbox);
   connect(spinbox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [=] (double v) mutable {
