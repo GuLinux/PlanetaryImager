@@ -260,9 +260,10 @@ void ImagingWorker::convert_image_data ( const QByteArray& data, int w, int h, i
     char blue;
   };
   static char alpha_ff = 0xff;
-  std::vector<Pixel> pixels(w*h);
-  transform(begin(data), end(data), begin(pixels), [](char c){return Pixel{alpha_ff, c, c, c}; });
-  emit imager->gotImage(QImage{reinterpret_cast<uchar*>(pixels.data()), w, h, QImage::Format_RGB32});
+  Pixel *pixels = new Pixel[w*h];
+  for(int i=0; i<data.size(); i++)
+    pixels[i] = {alpha_ff, data[i], data[i], data[i]};
+  emit imager->gotImage(QImage{reinterpret_cast<uchar*>(pixels), w, h, QImage::Format_RGB32, [](void *pixels){ delete reinterpret_cast<Pixel*>(pixels); }, pixels });
 }
 
 
