@@ -247,23 +247,27 @@ void ImagingWorker::start_live()
 
 void ImagingWorker::convert_image_data ( const QByteArray& data, int w, int h, int bpp, int channels )
 {
-//   QImage image(w, h, QImage::QImage::Format_RGB32);
-//   int bytesPerLine = channels * w;
-//   for(int i=0; i<h /* multiply per channels and bpp */; i++) {
-//     memcpy(image.scanLine(i), &data.constData()[bytesPerLine*i], bytesPerLine);
-//   }
-//   emit imager->gotImage(image);
-  struct Pixel {
-    char alpha;
-    char red;
-    char green;
-    char blue;
-  };
-  static char alpha_ff = 0xff;
-  Pixel *pixels = new Pixel[w*h];
-  for(int i=0; i<data.size(); i++)
-    pixels[i] = {alpha_ff, data[i], data[i], data[i]};
-  emit imager->gotImage(QImage{reinterpret_cast<uchar*>(pixels), w, h, QImage::Format_RGB32, [](void *pixels){ delete reinterpret_cast<Pixel*>(pixels); }, pixels });
+  static list<double> elapsed;
+  QElapsedTimer timer;
+  timer.start();
+  auto raw_pixels = data.constData();
+
+  uchar *rgb32_data = new uchar[w*h*4];
+  static uchar ff = static_cast<uchar>(0xff);
+  for(int i=0; i<data.size(); i++) {
+    rgb32_data[i*4] = ff;
+    auto pixel = raw_pixels[i];
+    rgb32_data[i*4+1] = pixel;
+    rgb32_data[i*4+2] = pixel;
+    rgb32_data[i*4+3] = pixel;
+  }
+  emit imager->gotImage(QImage{rgb32_data, w, h, QImage::Format_RGB32, [](void *pixels){ delete reinterpret_cast<uchar*>(pixels); }, rgb32_data });
+  elapsed.push_back(timer.elapsed());
+  if(elapsed.size() % 25 == 0) {
+    double avg = accumulate(begin(elapsed), end(elapsed), 0);
+    avg /= elapsed.size();
+    qDebug() << "average image elab time: " << avg;
+  }
 }
 
 
