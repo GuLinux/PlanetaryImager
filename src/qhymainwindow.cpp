@@ -109,8 +109,9 @@ QHYMainWindow::QHYMainWindow(QWidget* parent, Qt::WindowFlags flags) : dpointer(
       connect(widget, &QDockWidget::visibilityChanged, bind(&Private::saveState, d.get()));
     };
     d->zoom = 1;
-    connect(d->ui->zoom_in, &QPushButton::clicked, [=]{ d->zoom += 0.01; d->ui->image->scale(d->zoom, d->zoom); });
-    connect(d->ui->zoom_out, &QPushButton::clicked, [=]{ d->zoom -= 0.01; d->ui->image->scale(d->zoom, d->zoom); });
+    auto zoom = [=](qreal scale) {qDebug() << "scale: " << scale; d->ui->image->scale(scale, scale); };
+    connect(d->ui->zoom_in, &QPushButton::clicked, [=]{ zoom(1.05); });
+    connect(d->ui->zoom_out, &QPushButton::clicked, [=]{ zoom(0.95); });
     
     connect(d->ui->start_recording, &QPushButton::clicked, [=]{
       if(d->imager)
