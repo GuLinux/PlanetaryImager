@@ -16,15 +16,12 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QLabel" name="image">
-      <property name="frameShape">
-       <enum>QFrame::Box</enum>
+     <widget class="QGraphicsView" name="image">
+      <property name="viewportUpdateMode">
+       <enum>QGraphicsView::SmartViewportUpdate</enum>
       </property>
-      <property name="text">
-       <string/>
-      </property>
-      <property name="scaledContents">
-       <bool>true</bool>
+      <property name="optimizationFlags">
+       <set>QGraphicsView::DontAdjustForAntialiasing</set>
       </property>
      </widget>
     </item>

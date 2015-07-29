@@ -41,6 +41,7 @@ public:
   QSettings settings;
   void saveState();
   QBoxLayout *settings_layout;
+  QGraphicsScene *scene;
 private:
   QHYMainWindow *q;
 };
@@ -90,9 +91,12 @@ void QHYMainWindow::Private::saveState()
 QHYMainWindow::QHYMainWindow(QWidget* parent, Qt::WindowFlags flags) : dpointer(this)
 {
     d->ui->setupUi(this);
+    d->scene = new QGraphicsScene(this);
+    
     restoreState(d->settings.value("dock_settings").toByteArray());
     connect(d->ui->action_devices_rescan, &QAction::triggered, bind(&Private::rescan_devices, d.get()));
     
+    d->ui->image->setScene(d->scene);
     auto dockWidgetToggleVisibility = [=](QDockWidget *widget, bool visible){ widget->setVisible(visible); };
     auto dockWidgetVisibleCheck = [=](QAction *action, QDockWidget *widget) { action->setChecked(widget->isVisible()); };
     auto setupDockWidget = [=](QAction *action, QDockWidget *widget){
@@ -131,7 +135,8 @@ void QHYMainWindow::Private::rescan_devices()
       if(!imager)
 	return;
       connect(imager.get(), &QHYCCDImager::gotImage, q, [=](const QImage &image) {
-        ui->image->setPixmap(QPixmap::fromImage(image));
+        scene->clear();
+        scene->addPixmap(QPixmap::fromImage(image));
       }, Qt::QueuedConnection);
       ui->camera_name->setText(imager->name());
       ui->camera_chip_size->setText(QString("%1x%2").arg(imager->chip().width, 2).arg(imager->chip().height, 2));

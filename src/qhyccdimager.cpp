@@ -226,7 +226,6 @@ void ImagingWorker::start_live()
   int w, h, bpp, channels;
   timer.start();
   while(enabled){
-    //qDebug() << "progress: " << GetQHYCCDReadingProgress(handle) << ", remainingExposure: " << GetQHYCCDExposureRemaining(handle);
     result = GetQHYCCDLiveFrame(handle,&w,&h,&bpp,&channels,buffer);
     if(result != QHYCCD_SUCCESS) {
       qCritical() << "Error capturing live frame: " << result;
@@ -250,18 +249,8 @@ void ImagingWorker::start_live()
 
 void ImagingWorker::convert_image_data( uint8_t *data, int w, int h, int bpp, int channels )
 {
-  static list<double> elapsed;
-  QElapsedTimer timer;
-  timer.start();
   QImage image(data, w, h, QImage::Format_Grayscale8, [](void *data){ delete [] reinterpret_cast<uchar*>(data); }, data);
   emit imager->gotImage(image);
-  
-  elapsed.push_back(timer.elapsed());
-  if(elapsed.size() % 25 == 0) {
-    double avg = accumulate(begin(elapsed), end(elapsed), 0);
-    avg /= elapsed.size();
-    qDebug() << "average image elab time: " << avg;
-  }
 }
 
 
