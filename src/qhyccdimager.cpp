@@ -36,7 +36,7 @@ class ImagingWorker : public QObject {
   Q_OBJECT
 public:
   ImagingWorker(qhyccd_handle *handle, QHYCCDImager *imager, QObject* parent = 0);
-  void convert_image_data(const QByteArray &data, int w, int h, int bpp, int channels);
+  void convert_image_data( uint8_t* data, int w, int h, int bpp, int channels );
 public slots:
   void start_live();
   void stop();
@@ -231,7 +231,9 @@ void ImagingWorker::start_live()
     if(result != QHYCCD_SUCCESS) {
       qCritical() << "Error capturing live frame: " << result;
     } else {
-      QtConcurrent::run(bind(&ImagingWorker::convert_image_data, this, QByteArray{reinterpret_cast<const char*>(buffer), w*h}, w, h, bpp, channels));
+      uint8_t *data = new uint8_t[w*h*channels];
+      memcpy(data, buffer, w*h*channels);
+      QtConcurrent::run(bind(&ImagingWorker::convert_image_data, this, data, w, h, bpp, channels));
       frames++;
     }
     if(timer.elapsed() > 5000) {
@@ -241,19 +243,17 @@ void ImagingWorker::start_live()
       timer.restart();
       frames = 0;
     }
-  };
+  }
+  StopQHYCCDLive(handle);
 }
 
 
-void ImagingWorker::convert_image_data ( const QByteArray& data, int w, int h, int bpp, int channels )
+void ImagingWorker::convert_image_data( uint8_t *data, int w, int h, int bpp, int channels )
 {
   static list<double> elapsed;
   QElapsedTimer timer;
   timer.start();
-  
-  uchar *imgdata = new uchar[w*h*channels];
-  memcpy(imgdata, data.constData(), data.size());
-  QImage image(imgdata, w, h, QImage::Format_Grayscale8, [](void *data){ delete [] reinterpret_cast<uchar*>(data); }, imgdata);
+  QImage image(data, w, h, QImage::Format_Grayscale8, [](void *data){ delete [] reinterpret_cast<uchar*>(data); }, data);
   emit imager->gotImage(image);
   
   elapsed.push_back(timer.elapsed());
