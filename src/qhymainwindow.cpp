@@ -42,6 +42,7 @@ public:
   void saveState();
   QBoxLayout *settings_layout;
   QGraphicsScene *scene;
+  double zoom;
 private:
   QHYMainWindow *q;
 };
@@ -107,6 +108,9 @@ QHYMainWindow::QHYMainWindow(QWidget* parent, Qt::WindowFlags flags) : dpointer(
       connect(widget, &QDockWidget::topLevelChanged, bind(&Private::saveState, d.get()));
       connect(widget, &QDockWidget::visibilityChanged, bind(&Private::saveState, d.get()));
     };
+    
+    connect(d->ui->zoom_in, &QPushButton::clicked, [=]{ d->zoom += 0.2; d->ui->image->scale(d->zoom, d->zoom); });
+    connect(d->ui->zoom_in, &QPushButton::clicked, [=]{ d->zoom -= 0.2; d->ui->image->scale(d->zoom, d->zoom); });
     
     connect(d->ui->start_recording, &QPushButton::clicked, [=]{
       if(d->imager)
