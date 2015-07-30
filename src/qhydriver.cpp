@@ -14,7 +14,7 @@ public:
   static map<char,QString> device_codes;
   class error : public std::runtime_error {
   public:
-    error(const QString &label, int code) : runtime_error(("Error on %1: %2 (%3)"_q % label % code % error_codes[code]).toLatin1()) {}
+    error(const QString &label, int code) : runtime_error(("Error on %1: %2 (%3)"_q % label % code % error_codes[code]).toStdString()) {}
   };
 private:
   QHYDriver *q;
@@ -27,7 +27,7 @@ QHYDriver::Private::Private(QHYDriver* q) : q(q)
 
 }
 
-QHYDriver::error::error(const QString& label, int code):  runtime_error(("Error on %1: %2 (%3)"_q % label % code % Private::error_codes[code]).toLatin1())
+QHYDriver::error::error(const QString& label, int code):  runtime_error(("Error on %1: %2 (%3)"_q % label % code % Private::error_codes[code]).toStdString())
 {
 }
 
