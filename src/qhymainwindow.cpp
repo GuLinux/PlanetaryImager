@@ -23,6 +23,7 @@
 #include "ui_qhymainwindow.h"
 #include <functional>
 #include "utils.h"
+#include "statusbarinfowidget.h"
 #include <QLabel>
 #include <QDoubleSpinBox>
 #include <QSettings>
@@ -43,6 +44,7 @@ public:
   QBoxLayout *settings_layout;
   QGraphicsScene *scene;
   double zoom;
+  StatusBarInfoWidget *statusbar_info_widget;
 private:
   QHYMainWindow *q;
 };
@@ -126,6 +128,7 @@ QHYMainWindow::QHYMainWindow(QWidget* parent, Qt::WindowFlags flags) : dpointer(
     setupDockWidget(d->ui->actionRecording, d->ui->recording);
     
     d->ui->settings_frame->setLayout(d->settings_layout = new QVBoxLayout);
+    d->ui->statusbar->addPermanentWidget(d->statusbar_info_widget = new StatusBarInfoWidget());
     d->rescan_devices();
 }
 
@@ -139,10 +142,14 @@ void QHYMainWindow::Private::rescan_devices()
       imager = make_shared<QHYCCDImager>(device);
       if(!imager)
 	return;
+      statusbar_info_widget->deviceConnected(imager->name());
       connect(imager.get(), &QHYCCDImager::gotImage, q, [=](const QImage &image) {
         scene->clear();
         scene->addPixmap(QPixmap::fromImage(image));
       }, Qt::QueuedConnection);
+      
+      connect(imager.get(), &QHYCCDImager::captureFps, statusbar_info_widget, &StatusBarInfoWidget::captureFPS, Qt::QueuedConnection);
+      connect(imager.get(), &QHYCCDImager::saveFps, statusbar_info_widget, &StatusBarInfoWidget::saveFPS, Qt::QueuedConnection);
       ui->camera_name->setText(imager->name());
       ui->camera_chip_size->setText(QString("%1x%2").arg(imager->chip().width, 2).arg(imager->chip().height, 2));
       ui->camera_bpp->setText("%1"_q % imager->chip().bpp);

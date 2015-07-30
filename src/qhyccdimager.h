@@ -47,6 +47,8 @@ public:
 signals:
   void settingsLoaded(const Settings settings);
   void gotImage(const QImage &);
+  void captureFps(double fps);
+  void saveFps(double fps);
 public slots:
   void setSetting(const Setting &setting);
   void startLive();
