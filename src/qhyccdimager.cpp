@@ -235,10 +235,10 @@ void ImagingWorker::start_live()
       QtConcurrent::run(bind(&ImagingWorker::convert_image_data, this, data, w, h, bpp, channels));
       frames++;
     }
-    if(timer.elapsed() > 5000) {
+    if(timer.elapsed() > 500) {
       double elapsed = timer.elapsed();
       double fps = static_cast<double>(frames) / (elapsed / 1000);
-      qDebug() << "frames:" << frames << ", elapsed: " << elapsed << "ms, fps: " << fps << ": " << w << "x" << h << "@" << bpp << ":" << channels;
+      emit imager->captureFps(fps);
       timer.restart();
       frames = 0;
     }
