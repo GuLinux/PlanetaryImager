@@ -128,7 +128,7 @@ QHYMainWindow::QHYMainWindow(QWidget* parent, Qt::WindowFlags flags) : dpointer(
     setupDockWidget(d->ui->actionRecording, d->ui->recording);
     
     d->ui->settings_frame->setLayout(d->settings_layout = new QVBoxLayout);
-    d->ui->statusbar->addPermanentWidget(d->statusbar_info_widget = new StatusBarInfoWidget());
+    d->ui->statusbar->addPermanentWidget(d->statusbar_info_widget = new StatusBarInfoWidget(), 1);
     d->rescan_devices();
 }
 
