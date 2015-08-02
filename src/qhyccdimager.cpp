@@ -28,6 +28,7 @@
 #include <QImage>
 #include <QElapsedTimer>
 #include <QtConcurrent/QtConcurrent>
+#include "image_data.h"
 
 using namespace std;
 
@@ -36,7 +37,7 @@ class ImagingWorker : public QObject {
   Q_OBJECT
 public:
   ImagingWorker(qhyccd_handle *handle, QHYCCDImager *imager, QObject* parent = 0);
-  void convert_image_data( uint8_t* data, int w, int h, int bpp, int channels );
+  void convert_image_data(const ImageDataPtr &imageData );
 public slots:
   void start_live();
   void stop();
@@ -207,11 +208,6 @@ void ImagingWorker::start_live()
     qCritical() << "Unable to set live mode stream";
     return;
   }
-  result =  SetQHYCCDResolution(handle, 0, 0, 1280, 960);
-  if(result != QHYCCD_SUCCESS) {
-    qCritical() << "Unable to set resolution";
-    return;
-  }
   result = BeginQHYCCDLive(handle);
   if(result != QHYCCD_SUCCESS) {
     qCritical() << "Unable to start live mode";
@@ -225,31 +221,28 @@ void ImagingWorker::start_live()
   timer.start();
   int w, h, bpp, channels;
   timer.start();
+  fps count_fps([=](double fps) { emit imager->captureFps(fps); } );
   while(enabled){
     result = GetQHYCCDLiveFrame(handle,&w,&h,&bpp,&channels,buffer);
     if(result != QHYCCD_SUCCESS) {
       qCritical() << "Error capturing live frame: " << result;
     } else {
-      uint8_t *data = new uint8_t[w*h*channels];
-      memcpy(data, buffer, w*h*channels);
-      QtConcurrent::run(bind(&ImagingWorker::convert_image_data, this, data, w, h, bpp, channels));
+//       benchmarck("create_image_data");
+      ImageDataPtr imageData = ImageData::create(w, h, bpp, channels, buffer);
+      count_fps.add_frame();
+      QtConcurrent::run(bind(&ImagingWorker::convert_image_data, this, imageData));
       frames++;
-    }
-    if(timer.elapsed() > 500) {
-      double elapsed = timer.elapsed();
-      double fps = static_cast<double>(frames) / (elapsed / 1000);
-      emit imager->captureFps(fps);
-      timer.restart();
-      frames = 0;
     }
   }
   StopQHYCCDLive(handle);
 }
 
 
-void ImagingWorker::convert_image_data( uint8_t *data, int w, int h, int bpp, int channels )
+void ImagingWorker::convert_image_data( const ImageDataPtr& imageData )
 {
-  QImage image(data, w, h, QImage::Format_Grayscale8, [](void *data){ delete [] reinterpret_cast<uchar*>(data); }, data);
+//   benchmarck("convert_image_data");
+  auto ptrCopy = new ImageDataPtr(imageData);
+  QImage image(imageData->data(), imageData->width(), imageData->height(), QImage::Format_Grayscale8, [](void *data){ delete reinterpret_cast<ImageDataPtr*>(data); }, ptrCopy);
   emit imager->gotImage(image);
 }
 

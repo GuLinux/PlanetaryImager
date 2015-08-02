@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 2.6)
+cmake_minimum_required(VERSION 2.8.6)
+enable_testing()
 project(qhyimager)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
@@ -11,4 +12,4 @@ pkg_check_modules(LIBUSB libusb REQUIRED)
 add_subdirectory(QHYCCD_Linux)
 include_directories(QHYCCD_Linux ${LIBUSB_INCLUDE_DIRS})
 add_subdirectory(src)
-
+add_subdirectory(tests)
