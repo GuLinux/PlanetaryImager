@@ -31,6 +31,7 @@
 #include <QThread>
 #include <QFileDialog>
 #include <QDateTime>
+#include <QtConcurrent/QtConcurrent>
 using namespace std;
 using namespace std::placeholders;
 
@@ -52,10 +53,12 @@ DisplayImage::DisplayImage(QObject* parent): QObject(parent), capture_fps([=](do
 
 void DisplayImage::handle(const ImageDataPtr& imageData)
 {
-  capture_fps.add_frame();
-  auto ptrCopy = new ImageDataPtr(imageData);
-  QImage image(imageData->data(), imageData->width(), imageData->height(), QImage::Format_Grayscale8, [](void *data){ delete reinterpret_cast<ImageDataPtr*>(data); }, ptrCopy);
-  emit gotImage(image);
+  QtConcurrent::run([=]{
+    capture_fps.add_frame();
+    auto ptrCopy = new ImageDataPtr(imageData);
+    QImage image(imageData->data(), imageData->width(), imageData->height(), QImage::Format_Grayscale8, [](void *data){ delete reinterpret_cast<ImageDataPtr*>(data); }, ptrCopy);
+    emit gotImage(image);
+  });
 }
 
 

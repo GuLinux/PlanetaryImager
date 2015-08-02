@@ -30,6 +30,7 @@
 #include "image_data.h"
 
 using namespace std;
+using namespace std::placeholders;
 
 
 class ImagingWorker : public QObject {
@@ -229,8 +230,7 @@ void ImagingWorker::start_live()
       qCritical() << "Error capturing live frame: " << result;
     } else {
       ImageDataPtr imageData = ImageData::create(w, h, bpp, channels, buffer);
-      foreach(ImageHandlerPtr handler, imageHandlers)
-	QtConcurrent::run(bind(&ImageHandler::handle, handler, imageData));
+      for_each(begin(imageHandlers), end(imageHandlers), bind(&ImageHandler::handle, _1, imageData));
     }
   }
   result = StopQHYCCDLive(handle);
