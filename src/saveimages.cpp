@@ -22,6 +22,7 @@
 #include <QThread>
 #include <QDebug>
 #include <functional>
+#include <QQueue>
 #include "utils.h"
 
 using namespace std;
@@ -36,13 +37,18 @@ typedef function<FileWriterPtr(const QString &filename)> FileWriterFactory;
 class WriterThreadWorker : public QObject {
   Q_OBJECT
 public:
-  explicit WriterThreadWorker ( const FileWriterPtr &fileWriter, QObject* parent = 0 );
+  explicit WriterThreadWorker ( const FileWriterPtr &fileWriter, QObject* parent = 0 ) : QObject(parent), fileWriter(fileWriter) {}
 public slots:
-  virtual void handle(const ImageDataPtr& imageData) {
-    fileWriter->handle(imageData);
-  }
+  virtual void handle(const ImageDataPtr& imageData) { frames.enqueue(imageData); }
+  void finish() {stop = true; }
+  void run();
+signals:
+  void saveFPS(double fps);
+  void savedFrames(uint64_t frames);
 private:
   FileWriterPtr fileWriter;
+  QQueue<ImageDataPtr> frames;
+  bool stop = false;
 };
 
 struct __attribute__ ((__packed__)) SER_Header {
@@ -95,13 +101,12 @@ public:
     QString filename;
     Format format = SER;
     void createWriter();
-    fps savefps;
-    uint64_t frames;
+    WriterThreadWorker *worker;
 private:
     SaveImages *q;
 };
 
-SaveImages::Private::Private(SaveImages* q) : savefps([=](double fps){ emit q->saveFPS(fps);}), q {q}
+SaveImages::Private::Private(SaveImages* q) : q {q}
 {
 }
 
@@ -171,28 +176,46 @@ void SER_Writer::handle(const ImageDataPtr& imageData)
 }
 
 
+void WriterThreadWorker::run()
+{
+  fps savefps{[=](double fps){ emit saveFPS(fps);}};
+  uint64_t frames = 0;
+  while(!stop) {
+    if(this->frames.size()>0) {
+      fileWriter->handle(this->frames.dequeue());
+        emit savedFrames(++frames);
+    }
+  }
+}
+
+
 void SaveImages::handle(const ImageDataPtr& imageData)
 {
   if(!d->fileWriter)
     return;
   d->fileWriter->handle(imageData);
-  d->savefps.add_frame();
-  emit savedFrames(++d->frames);
 }
 
 void SaveImages::startRecording()
 {
-  d->frames = 0;
   d->createWriter();
-  d->recordingThread.start();
-  
+  if(d->fileWriter) {
+    d->worker = new WriterThreadWorker(d->fileWriter);
+    connect(d->worker, SIGNAL(savedFrames(uint64_t)), this, SIGNAL(savedFrames(uint64_t)));
+    connect(d->worker, SIGNAL(saveFPS(double)), this, SIGNAL(saveFPS(double)));
+    d->worker->moveToThread(&d->recordingThread);
+    d->recordingThread.start();
+  }
 }
 
 
 void SaveImages::endRecording()
 {
-  d->fileWriter.reset();
+  d->worker->finish();
   d->recordingThread.quit();
+  d->recordingThread.wait();
+  delete d->worker;
+  d->fileWriter.reset();
 }
 
 
