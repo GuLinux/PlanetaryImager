@@ -123,7 +123,7 @@ void SaveImages::Private::createWriter()
   fileWriter = factories[format](filename);
 }
 
-SER_Writer::SER_Writer(const QString& filename) : file(filename)
+SER_Writer::SER_Writer(const QString& filename) : file("%1.ser"_q % filename)
 {
   file.open(QIODevice::ReadWrite);
 

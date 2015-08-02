@@ -29,7 +29,8 @@
 #include <QDoubleSpinBox>
 #include <QSettings>
 #include <QThread>
-
+#include <QFileDialog>
+#include <QDateTime>
 using namespace std;
 using namespace std::placeholders;
 
@@ -155,6 +156,10 @@ QHYMainWindow::QHYMainWindow(QWidget* parent, Qt::WindowFlags flags) : dpointer(
     
     
     connect(d->ui->start_recording, &QPushButton::clicked, [=]{
+      auto save_directory = d->settings.value("save_directory_output").toString();
+      if(!QDir(save_directory).exists())
+	return;
+      d->saveImages->setOutput("%1/%2%3"_q % save_directory % d->settings.value("save_file_prefix").toString() % QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss_zzz_t"));
       d->saveImages->startRecording();
     });
     connect(d->ui->stop_recording, &QPushButton::clicked, [=]{
@@ -172,12 +177,23 @@ QHYMainWindow::QHYMainWindow(QWidget* parent, Qt::WindowFlags flags) : dpointer(
       d->scene->addPixmap(QPixmap::fromImage(image));
       d->imageRect = image.rect();
     }, Qt::QueuedConnection);
-    // TODO: GUI for this
-    d->saveImages->setOutput("/tmp/out.ser");
+    
     connect(d->displayImage.get(), &DisplayImage::captureFps, d->statusbar_info_widget, &StatusBarInfoWidget::captureFPS, Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::saveFPS, d->statusbar_info_widget, &StatusBarInfoWidget::saveFPS, Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::savedFrames, d->statusbar_info_widget, &StatusBarInfoWidget::savedFrames, Qt::QueuedConnection);
     connect(d->ui->actionDisconnect, &QAction::triggered, [=]{ d->imager->stopLive(); d->imager.reset(); d->cameraDisconnected(); });
+    d->ui->saveDirectory->setText(d->settings.value("save_directory_output").toString());
+    d->ui->filePrefix->setText(d->settings.value("save_file_prefix").toString());
+    connect(d->ui->saveDirectory, &QLineEdit::textChanged, [=](const QString &t){ d->settings.setValue("save_directory_output", t);});
+    connect(d->ui->filePrefix, &QLineEdit::textChanged, [=](const QString &t){ d->settings.setValue("save_file_prefix", t);});
+    auto pickDirectory = d->ui->saveDirectory->addAction(QIcon(":/resources/folder.png"), QLineEdit::TrailingPosition);
+    connect(pickDirectory, &QAction::triggered, [=]{
+      auto directory = QFileDialog::getExistingDirectory(this, tr("Directory to save recordings"), d->settings.value("save_directory_output").toString());
+      if(directory.isEmpty())
+	return;
+      d->ui->saveDirectory->setText(directory);
+    });
+    d->enableUIWidgets(false);
 }
 
 
@@ -233,6 +249,9 @@ void QHYMainWindow::Private::enableUIWidgets(bool cameraConnected)
   ui->actionActual_Size->setEnabled(cameraConnected);
   ui->actionFit_to_window->setEnabled(cameraConnected);
   ui->actionDisconnect->setEnabled(cameraConnected);
+  ui->recording->setEnabled(cameraConnected);
+  ui->chipInfoWidget->setEnabled(cameraConnected);
+  ui->camera_settings->setEnabled(cameraConnected);
 }
 
 #include "qhymainwindow.moc"
