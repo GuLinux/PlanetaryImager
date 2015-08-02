@@ -25,6 +25,10 @@
 #include <QQueue>
 #include "utils.h"
 
+#include <QMutex>
+#include <QMutexLocker>
+#include <QtConcurrent/QtConcurrent>
+
 using namespace std;
 
 class FileWriter : public ImageHandler {
@@ -156,12 +160,8 @@ SER_Writer::~SER_Writer()
 }
 
 
-#include <QMutex>
-#include <QMutexLocker>
 void SER_Writer::handle(const ImageDataPtr& imageData)
 {
-  static QMutex mutex;
-  QMutexLocker locker(&mutex);
   if(! wrote_image_data) {
     header->colorId = imageData->channels() == 1 ? SER_Header::MONO : SER_Header::RGB;
     header->pixelDepth = imageData->bpp();
@@ -213,9 +213,11 @@ void SaveImages::endRecording()
 {
   d->worker->finish();
   d->recordingThread.quit();
-  d->recordingThread.wait();
-  d->recordingThread.terminate();
-  d->worker = nullptr;
+  QtConcurrent::run([=] {
+    d->recordingThread.wait();
+    d->recordingThread.terminate();
+    d->worker = nullptr;
+  });
 }
 
 
