@@ -1,10 +1,10 @@
 #include <QApplication>
-#include "qhymainwindow.h"
+#include "planetaryimager_mainwindow.h"
 
 int main(int argc, char** argv)
 {
     QApplication app(argc, argv);
-    QHYMainWindow mainWindow;
+    PlanetaryImagerMainWindow mainWindow;
     mainWindow.show();
     return app.exec();
 }

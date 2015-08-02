@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>QHYMainWindow</class>
- <widget class="QMainWindow" name="QHYMainWindow">
+ <class>PlanetaryImagerMainWindow</class>
+ <widget class="QMainWindow" name="PlanetaryImagerMainWindow">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -11,7 +11,7 @@
    </rect>
   </property>
   <property name="windowTitle">
-   <string>QHY Imager</string>
+   <string>Planetary Imager</string>
   </property>
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
@@ -36,7 +36,7 @@
      <x>0</x>
      <y>0</y>
      <width>1025</width>
-     <height>27</height>
+     <height>28</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuDevice">
