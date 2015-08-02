@@ -74,6 +74,11 @@ public:
   StatusBarInfoWidget *statusbar_info_widget;
   shared_ptr<DisplayImage> displayImage = make_shared<DisplayImage>();
   shared_ptr<SaveImages> saveImages = make_shared<SaveImages>();
+  QRect imageRect;
+  
+  void connectCamera(const QHYDriver::Camera &camera);
+  void cameraDisconnected();
+  void enableUIWidgets(bool cameraConnected);
 private:
   QHYMainWindow *q;
 };
@@ -113,6 +118,8 @@ QHYMainWindow::Private::Private(QHYMainWindow* q) : ui{make_shared<Ui::QHYMainWi
 
 QHYMainWindow::~QHYMainWindow()
 {
+  if(d->imager)
+    d->imager->stopLive();
 }
 
 void QHYMainWindow::Private::saveState()
@@ -125,7 +132,6 @@ QHYMainWindow::QHYMainWindow(QWidget* parent, Qt::WindowFlags flags) : dpointer(
 {
     d->ui->setupUi(this);
     d->scene = new QGraphicsScene(this);
-    
     restoreState(d->settings.value("dock_settings").toByteArray());
     connect(d->ui->action_devices_rescan, &QAction::triggered, bind(&Private::rescan_devices, d.get()));
     
@@ -141,18 +147,17 @@ QHYMainWindow::QHYMainWindow(QWidget* parent, Qt::WindowFlags flags) : dpointer(
       connect(widget, &QDockWidget::visibilityChanged, bind(&Private::saveState, d.get()));
     };
     d->zoom = 1;
-    auto zoom = [=](qreal scale) {qDebug() << "scale: " << scale; d->ui->image->scale(scale, scale); };
-    connect(d->ui->zoom_in, &QPushButton::clicked, [=]{ zoom(1.05); });
-    connect(d->ui->zoom_out, &QPushButton::clicked, [=]{ zoom(0.95); });
+    auto zoom = [=](qreal scale) { d->ui->image->scale(scale, scale); };
+    connect(d->ui->actionZoom_In, &QAction::triggered, [=]{ zoom(1.05); });
+    connect(d->ui->actionZoom_Out, &QAction::triggered, [=]{ zoom(0.95); });
+    connect(d->ui->actionFit_to_window, &QAction::triggered, [=]{ d->ui->image->fitInView(d->imageRect, Qt::KeepAspectRatio); });
+    connect(d->ui->actionActual_Size, &QAction::triggered, [=]{ d->ui->image->setTransform({}); });
+    
     
     connect(d->ui->start_recording, &QPushButton::clicked, [=]{
-      if(d->imager)
-	d->imager->startLive();
       d->saveImages->startRecording();
     });
     connect(d->ui->stop_recording, &QPushButton::clicked, [=]{
-      if(d->imager)
-	d->imager->stopLive();
       d->saveImages->endRecording();
     });
     setupDockWidget(d->ui->actionChip_Info, d->ui->chipInfoWidget);
@@ -165,12 +170,14 @@ QHYMainWindow::QHYMainWindow(QWidget* parent, Qt::WindowFlags flags) : dpointer(
     connect(d->displayImage.get(), &DisplayImage::gotImage, this, [=](const QImage &image) {
       d->scene->clear();
       d->scene->addPixmap(QPixmap::fromImage(image));
+      d->imageRect = image.rect();
     }, Qt::QueuedConnection);
     // TODO: GUI for this
     d->saveImages->setOutput("/tmp/out.ser");
     connect(d->displayImage.get(), &DisplayImage::captureFps, d->statusbar_info_widget, &StatusBarInfoWidget::captureFPS, Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::saveFPS, d->statusbar_info_widget, &StatusBarInfoWidget::saveFPS, Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::savedFrames, d->statusbar_info_widget, &StatusBarInfoWidget::savedFrames, Qt::QueuedConnection);
+    connect(d->ui->actionDisconnect, &QAction::triggered, [=]{ d->imager->stopLive(); d->imager.reset(); d->cameraDisconnected(); });
 }
 
 
@@ -179,24 +186,53 @@ void QHYMainWindow::Private::rescan_devices()
   ui->menu_device_load->clear();
   for(auto device: driver.cameras()) {
     auto action = ui->menu_device_load->addAction(device.name());
-    QObject::connect(action, &QAction::triggered, [=]{
-      imager = make_shared<QHYCCDImager>(device, QList<ImageHandlerPtr>{displayImage, saveImages});
-      if(!imager)
-	return;
-      statusbar_info_widget->deviceConnected(imager->name());
-      ui->camera_name->setText(imager->name());
-      ui->camera_chip_size->setText(QString("%1x%2").arg(imager->chip().width, 2).arg(imager->chip().height, 2));
-      ui->camera_bpp->setText("%1"_q % imager->chip().bpp);
-      ui->camera_pixels_size->setText(QString("%1x%2").arg(imager->chip().pixelwidth, 2).arg(imager->chip().pixelheight, 2));
-      ui->camera_resolution->setText(QString("%1x%2").arg(imager->chip().xres, 2).arg(imager->chip().yres, 2));
-
-      auto settings_widgets = ui->settings_frame->findChildren<QWidget*>(QRegularExpression{"setting_.*"});
-      for_each(begin(settings_widgets), end(settings_widgets), bind(&QWidget::deleteLater, _1));
-      for(auto setting: imager->settings()) {
-	qDebug() << "adding setting: " << setting;
-	settings_layout->addWidget(new CameraSettingWidget{setting, imager});
-      }
-    });
+    QObject::connect(action, &QAction::triggered, bind(&Private::connectCamera, this, device));
   }
 }
+
+void QHYMainWindow::Private::connectCamera(const QHYDriver::Camera& camera)
+{
+  imager = make_shared<QHYCCDImager>(camera, QList<ImageHandlerPtr>{displayImage, saveImages});
+  if(!imager)
+    return;
+  imager->startLive();
+  statusbar_info_widget->deviceConnected(imager->name());
+  ui->camera_name->setText(imager->name());
+  ui->camera_chip_size->setText(QString("%1x%2").arg(imager->chip().width, 2).arg(imager->chip().height, 2));
+  ui->camera_bpp->setText("%1"_q % imager->chip().bpp);
+  ui->camera_pixels_size->setText(QString("%1x%2").arg(imager->chip().pixelwidth, 2).arg(imager->chip().pixelheight, 2));
+  ui->camera_resolution->setText(QString("%1x%2").arg(imager->chip().xres, 2).arg(imager->chip().yres, 2));
+
+  auto settings_widgets = ui->settings_frame->findChildren<QWidget*>(QRegularExpression{"setting_.*"});
+  for_each(begin(settings_widgets), end(settings_widgets), bind(&QWidget::deleteLater, _1));
+  for(auto setting: imager->settings()) {
+    qDebug() << "adding setting: " << setting;
+    settings_layout->addWidget(new CameraSettingWidget{setting, imager});
+  }
+  enableUIWidgets(true);
+}
+
+
+void QHYMainWindow::Private::cameraDisconnected()
+{
+  enableUIWidgets(false);
+  ui->camera_name->clear();
+  ui->camera_chip_size->clear();
+  ui->camera_bpp->clear();
+  ui->camera_pixels_size->clear();
+  ui->camera_resolution->clear();
+  auto settings_widgets = ui->settings_frame->findChildren<QWidget*>(QRegularExpression{"setting_.*"});
+  for_each(begin(settings_widgets), end(settings_widgets), bind(&QWidget::deleteLater, _1));
+  scene->clear();
+}
+
+void QHYMainWindow::Private::enableUIWidgets(bool cameraConnected)
+{
+  ui->actionZoom_In->setEnabled(cameraConnected);
+  ui->actionZoom_Out->setEnabled(cameraConnected);
+  ui->actionActual_Size->setEnabled(cameraConnected);
+  ui->actionFit_to_window->setEnabled(cameraConnected);
+  ui->actionDisconnect->setEnabled(cameraConnected);
+}
+
 #include "qhymainwindow.moc"
