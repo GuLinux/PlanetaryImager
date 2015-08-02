@@ -96,7 +96,13 @@ QHYCCDImager::QHYCCDImager(QHYDriver::Camera camera) : dpointer(camera.name(), c
 
 QHYCCDImager::~QHYCCDImager()
 {
-  CloseQHYCCD(d->handle);
+  qDebug() << "Closing QHYCCD";
+  d->imaging_thread.quit();
+  if(!d->imaging_thread.wait(5000))
+    d->imaging_thread.terminate();
+  
+  int result = CloseQHYCCD(d->handle);
+  qDebug() << "CloseQHYCCD result: " << result;
 }
 
 QHYCCDImager::Chip QHYCCDImager::chip() const
@@ -227,20 +233,19 @@ void ImagingWorker::start_live()
     if(result != QHYCCD_SUCCESS) {
       qCritical() << "Error capturing live frame: " << result;
     } else {
-//       benchmarck("create_image_data");
       ImageDataPtr imageData = ImageData::create(w, h, bpp, channels, buffer);
       count_fps.add_frame();
       QtConcurrent::run(bind(&ImagingWorker::convert_image_data, this, imageData));
       frames++;
     }
   }
-  StopQHYCCDLive(handle);
+  result = StopQHYCCDLive(handle);
+  qDebug() << "Stop live capture result: " << result;
 }
 
 
 void ImagingWorker::convert_image_data( const ImageDataPtr& imageData )
 {
-//   benchmarck("convert_image_data");
   auto ptrCopy = new ImageDataPtr(imageData);
   QImage image(imageData->data(), imageData->width(), imageData->height(), QImage::Format_Grayscale8, [](void *data){ delete reinterpret_cast<ImageDataPtr*>(data); }, ptrCopy);
   emit imager->gotImage(image);
@@ -257,12 +262,13 @@ void QHYCCDImager::stopLive()
 {
   d->worker->stop();
   d->imaging_thread.quit();
-//   auto result = StopQHYCCDLive(d->handle);
-//   if(result != QHYCCD_SUCCESS) {
-//     throw QHYDriver::error("stop live", result);
-//     return;
-//   }
-  qDebug() << "Live stopped correctly";
+  if(d->imaging_thread.wait(2000))
+    qDebug() << "Live stopped correctly";
+  else {
+    qDebug() << "Live stop error, forcing thread terminate";
+    d->imaging_thread.terminate();
+  }
+  delete d->worker;
 }
 
 

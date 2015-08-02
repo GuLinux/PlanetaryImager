@@ -37,8 +37,8 @@ public:
   Private(QHYMainWindow *q);
   shared_ptr<Ui::QHYMainWindow> ui;
   QHYDriver driver;
-  void rescan_devices();
   QHYCCDImagerPtr imager;
+  void rescan_devices();
   QSettings settings;
   void saveState();
   QBoxLayout *settings_layout;
@@ -53,10 +53,10 @@ private:
 class CameraSettingWidget : public QWidget {
   Q_OBJECT
 public:
-  CameraSettingWidget(const QHYCCDImager::Setting &setting, const QHYCCDImagerPtr &imager, QWidget* parent = 0);  
+  CameraSettingWidget(const QHYCCDImager::Setting &setting, const QHYCCDImagerPtr &imagerPtr, QWidget* parent = 0);  
 };
 
-CameraSettingWidget::CameraSettingWidget(const QHYCCDImager::Setting& setting, const QHYCCDImagerPtr& imager, QWidget* parent): QWidget(parent)
+CameraSettingWidget::CameraSettingWidget(const QHYCCDImager::Setting& setting, const QHYCCDImagerPtr& imagerPtr, QWidget* parent): QWidget(parent)
 {
   setObjectName("setting_%1"_q % setting.name);
   auto layout = new QHBoxLayout;
@@ -68,10 +68,11 @@ CameraSettingWidget::CameraSettingWidget(const QHYCCDImager::Setting& setting, c
   spinbox->setSingleStep(setting.step != 0 ? setting.step : 0.1);
   spinbox->setValue(setting.value);
   layout->addWidget(spinbox);
-  connect(spinbox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [=] (double v) mutable {
+  QHYCCDImager *imager = imagerPtr.get();
+  connect(spinbox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [=] (double v) {
     auto s = setting;
     s.value = v;
-    imager->setSetting(s);
+        imager->setSetting(s);
   });
 }
 
