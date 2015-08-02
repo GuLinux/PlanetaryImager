@@ -24,6 +24,7 @@
 #include <functional>
 #include "utils.h"
 #include "statusbarinfowidget.h"
+#include "saveimages.h"
 #include <QLabel>
 #include <QDoubleSpinBox>
 #include <QSettings>
@@ -31,6 +32,32 @@
 
 using namespace std;
 using namespace std::placeholders;
+
+class DisplayImage : public QObject, public ImageHandler {
+  Q_OBJECT
+public:
+  DisplayImage(QObject* parent = 0);
+  virtual void handle(const ImageDataPtr& imageData);
+  fps capture_fps;
+signals:
+  void gotImage(const QImage &);
+  void captureFps(double fps);
+};
+
+DisplayImage::DisplayImage(QObject* parent): QObject(parent), capture_fps([=](double fps){ emit captureFps(fps);})
+{
+
+}
+
+void DisplayImage::handle(const ImageDataPtr& imageData)
+{
+  capture_fps.add_frame();
+  auto ptrCopy = new ImageDataPtr(imageData);
+  QImage image(imageData->data(), imageData->width(), imageData->height(), QImage::Format_Grayscale8, [](void *data){ delete reinterpret_cast<ImageDataPtr*>(data); }, ptrCopy);
+  emit gotImage(image);
+}
+
+
 
 class QHYMainWindow::Private {
 public:
@@ -45,6 +72,8 @@ public:
   QGraphicsScene *scene;
   double zoom;
   StatusBarInfoWidget *statusbar_info_widget;
+  shared_ptr<DisplayImage> displayImage = make_shared<DisplayImage>();
+  shared_ptr<SaveImages> saveImages = make_shared<SaveImages>();
 private:
   QHYMainWindow *q;
 };
@@ -131,6 +160,10 @@ QHYMainWindow::QHYMainWindow(QWidget* parent, Qt::WindowFlags flags) : dpointer(
     d->ui->settings_frame->setLayout(d->settings_layout = new QVBoxLayout);
     d->ui->statusbar->addPermanentWidget(d->statusbar_info_widget = new StatusBarInfoWidget(), 1);
     d->rescan_devices();
+    connect(d->displayImage.get(), &DisplayImage::gotImage, this, [=](const QImage &image) {
+      d->scene->clear();
+      d->scene->addPixmap(QPixmap::fromImage(image));
+    }, Qt::QueuedConnection);
 }
 
 
@@ -140,17 +173,12 @@ void QHYMainWindow::Private::rescan_devices()
   for(auto device: driver.cameras()) {
     auto action = ui->menu_device_load->addAction(device.name());
     QObject::connect(action, &QAction::triggered, [=]{
-      imager = make_shared<QHYCCDImager>(device);
+      imager = make_shared<QHYCCDImager>(device, QList<ImageHandlerPtr>{displayImage, saveImages});
       if(!imager)
 	return;
       statusbar_info_widget->deviceConnected(imager->name());
-      connect(imager.get(), &QHYCCDImager::gotImage, q, [=](const QImage &image) {
-        scene->clear();
-        scene->addPixmap(QPixmap::fromImage(image));
-      }, Qt::QueuedConnection);
-      
-      connect(imager.get(), &QHYCCDImager::captureFps, statusbar_info_widget, &StatusBarInfoWidget::captureFPS, Qt::QueuedConnection);
-      connect(imager.get(), &QHYCCDImager::saveFps, statusbar_info_widget, &StatusBarInfoWidget::saveFPS, Qt::QueuedConnection);
+      connect(displayImage.get(), &DisplayImage::captureFps, statusbar_info_widget, &StatusBarInfoWidget::captureFPS, Qt::QueuedConnection);
+      connect(saveImages.get(), &SaveImages::saveFPS, statusbar_info_widget, &StatusBarInfoWidget::saveFPS, Qt::QueuedConnection);
       ui->camera_name->setText(imager->name());
       ui->camera_chip_size->setText(QString("%1x%2").arg(imager->chip().width, 2).arg(imager->chip().height, 2));
       ui->camera_bpp->setText("%1"_q % imager->chip().bpp);

@@ -21,13 +21,15 @@
 #define QHYCCD_H
 #include "qhydriver.h"
 #include "dptr.h"
+#include "imagehandler.h"
 #include <QObject>
+#include <QList>
 
 class QHYCCDImager : public QObject
 {
   Q_OBJECT
 public:
-    QHYCCDImager(QHYDriver::Camera camera);
+    QHYCCDImager(QHYDriver::Camera camera, const QList<ImageHandlerPtr> &imageHandlers);
     ~QHYCCDImager();
     struct Chip {
       double width, height, pixelwidth, pixelheight;
@@ -46,9 +48,6 @@ public:
     Settings settings() const;  
 signals:
   void settingsLoaded(const Settings settings);
-  void gotImage(const QImage &);
-  void captureFps(double fps);
-  void saveFps(double fps);
 public slots:
   void setSetting(const Setting &setting);
   void startLive();
