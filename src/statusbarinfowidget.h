@@ -34,6 +34,8 @@ public slots:
   void deviceDisconnected();
   void captureFPS(double fps);
   void saveFPS(double fps);
+  void savedFrames(uint64_t frames);
+  void saveFile(const QString &filename);
 private:
   D_PTR
 };

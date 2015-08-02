@@ -33,13 +33,13 @@ public:
     enum Format { SER };
 public slots:
   void setOutput(const QString &filename, Format format = SER);
-  void setEnabled(bool enabled);
   void startRecording();
   void endRecording();
 private:
   D_PTR
 signals:
   void saveFPS(double fps);
+  void savedFrames(uint64_t frames);
 };
 
 #endif // SAVEIMAGE_H
