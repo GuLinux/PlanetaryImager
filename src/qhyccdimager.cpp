@@ -35,8 +35,7 @@ using namespace std;
 class ImagingWorker : public QObject {
   Q_OBJECT
 public:
-  ImagingWorker(qhyccd_handle *handle, QHYCCDImager *imager, QObject* parent = 0);
-  void convert_image_data(const ImageDataPtr &imageData );
+  ImagingWorker(qhyccd_handle *handle, QHYCCDImager *imager, const QList<ImageHandlerPtr> imageHandlers, QObject* parent = 0);
 public slots:
   void start_live();
   void stop();
@@ -44,14 +43,16 @@ private:
   qhyccd_handle *handle;
   bool enabled = true;
   QHYCCDImager *imager;
+  QList<ImageHandlerPtr> imageHandlers;
 };
 
 class QHYCCDImager::Private {
 public:
-  Private(const QString &name, const QString &id, QHYCCDImager *q);
+  Private(const QString& name, const QString& id, const QList< ImageHandlerPtr >& imageHandlers, QHYCCDImager* q);
   qhyccd_handle *handle;
   QString name;
   QString id;
+  QList<ImageHandlerPtr> imageHandlers;
   Chip chip;
   Settings settings;
   void load_settings();
@@ -62,11 +63,11 @@ private:
 };
 
 
-QHYCCDImager::Private::Private(const QString &name, const QString &id, QHYCCDImager* q) : name(name), id(id), q{q}
+QHYCCDImager::Private::Private(const QString &name, const QString &id, const QList<ImageHandlerPtr> &imageHandlers, QHYCCDImager* q) : name(name), id(id), imageHandlers{imageHandlers}, q{q}
 {
 }
 
-QHYCCDImager::QHYCCDImager(QHYDriver::Camera camera) : dpointer(camera.name(), camera.id, this)
+QHYCCDImager::QHYCCDImager(QHYDriver::Camera camera, const QList<ImageHandlerPtr> &imageHandlers) : dpointer(camera.name(), camera.id, imageHandlers, this)
 {
   d->handle = OpenQHYCCD(camera.id);
   if(d->handle < QHYCCD_SUCCESS) {
@@ -194,14 +195,14 @@ void QHYCCDImager::setSetting(const QHYCCDImager::Setting& setting)
 
 void QHYCCDImager::startLive()
 {
-  d->worker = new ImagingWorker{d->handle, this};
+  d->worker = new ImagingWorker{d->handle, this, d->imageHandlers};
   d->worker->moveToThread(&d->imaging_thread);
   connect(&d->imaging_thread, SIGNAL(started()), d->worker, SLOT(start_live()));
   d->imaging_thread.start();
   qDebug() << "Live started correctly";
 }
 
-ImagingWorker::ImagingWorker(qhyccd_handle* handle, QHYCCDImager* imager, QObject* parent): QObject(parent), handle(handle), imager{imager}
+ImagingWorker::ImagingWorker(qhyccd_handle* handle, QHYCCDImager* imager, const QList< ImageHandlerPtr > imageHandlers, QObject* parent): QObject(parent), handle(handle), imager{imager}, imageHandlers{imageHandlers}
 {
 }
 
@@ -221,33 +222,19 @@ void ImagingWorker::start_live()
 
   uint8_t buffer[size];
   qDebug() << "capturing thread started, image size: " << size;
-  long frames = 0;
-  QElapsedTimer timer;
-  timer.start();
   int w, h, bpp, channels;
-  timer.start();
-  fps count_fps([=](double fps) { emit imager->captureFps(fps); } );
   while(enabled){
     result = GetQHYCCDLiveFrame(handle,&w,&h,&bpp,&channels,buffer);
     if(result != QHYCCD_SUCCESS) {
       qCritical() << "Error capturing live frame: " << result;
     } else {
       ImageDataPtr imageData = ImageData::create(w, h, bpp, channels, buffer);
-      count_fps.add_frame();
-      QtConcurrent::run(bind(&ImagingWorker::convert_image_data, this, imageData));
-      frames++;
+      foreach(ImageHandlerPtr handler, imageHandlers)
+	QtConcurrent::run(bind(&ImageHandler::handle, handler, imageData));
     }
   }
   result = StopQHYCCDLive(handle);
   qDebug() << "Stop live capture result: " << result;
-}
-
-
-void ImagingWorker::convert_image_data( const ImageDataPtr& imageData )
-{
-  auto ptrCopy = new ImageDataPtr(imageData);
-  QImage image(imageData->data(), imageData->width(), imageData->height(), QImage::Format_Grayscale8, [](void *data){ delete reinterpret_cast<ImageDataPtr*>(data); }, ptrCopy);
-  emit imager->gotImage(image);
 }
 
 

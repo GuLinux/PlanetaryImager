@@ -2,6 +2,7 @@
 #define IMAGE_H
 
 #include <memory>
+#include <cstring>
 
 class ImageData;
 typedef std::shared_ptr<ImageData> ImageDataPtr;
@@ -15,7 +16,7 @@ private:
   uint8_t *_data;
   ImageData(int width, int height, int bpp, int channels, uint8_t *data) : _width{width}, _height{height}, _bpp{bpp}, _channels{channels}, _data{new uint8_t[size()]}
   {
-    memcpy(_data, data, size());
+    std::memcpy(_data, data, size());
   }
   
 public:

@@ -6,6 +6,7 @@ set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 find_package(Qt5Widgets)
+find_package(Qt5Multimedia)
 include(FindPkgConfig)
 pkg_check_modules(LIBUSB libusb REQUIRED)
 
