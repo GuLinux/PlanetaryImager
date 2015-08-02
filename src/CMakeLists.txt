@@ -13,6 +13,6 @@ else(CMAKE_SIZEOF_VOID_P MATCHES "8")
 endif(CMAKE_SIZEOF_VOID_P MATCHES "8")
 
 
-target_link_libraries(qhyimager Qt5::Widgets qhy)
+target_link_libraries(qhyimager Qt5::Widgets ${QHY_LIBRARY})
 
 install(TARGETS qhyimager RUNTIME DESTINATION bin)
