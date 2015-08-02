@@ -97,11 +97,10 @@ class SaveImages::Private {
 public:
     Private(SaveImages *q);
     QThread recordingThread;
-    FileWriterPtr fileWriter;
     QString filename;
     Format format = SER;
-    void createWriter();
-    WriterThreadWorker *worker;
+    FileWriterPtr createWriter();
+    WriterThreadWorker *worker = nullptr;
 private:
     SaveImages *q;
 };
@@ -126,17 +125,16 @@ void SaveImages::setOutput(const QString& filename, Format format)
   d->format = format;
 }
 
-void SaveImages::Private::createWriter()
+FileWriterPtr SaveImages::Private::createWriter()
 {
   if(filename.isEmpty()) {
-    fileWriter.reset();
-    return;
+    return {};
   }
   static map<Format, FileWriterFactory> factories {
     {SER, [](const QString &filename){ return make_shared<SER_Writer>(filename); }},
   };
   
-  fileWriter = factories[format](filename);
+  return factories[format](filename);
 }
 
 SER_Writer::SER_Writer(const QString& filename) : file("%1.ser"_q % filename)
@@ -191,19 +189,21 @@ void WriterThreadWorker::run()
 
 void SaveImages::handle(const ImageDataPtr& imageData)
 {
-  if(!d->fileWriter)
+  if(!d->worker)
     return;
-  d->fileWriter->handle(imageData);
+  d->worker->handle(imageData);
 }
 
 void SaveImages::startRecording()
 {
-  d->createWriter();
-  if(d->fileWriter) {
-    d->worker = new WriterThreadWorker(d->fileWriter);
+  auto writer = d->createWriter();
+  if(writer) {
+    d->worker = new WriterThreadWorker(writer);
     connect(d->worker, SIGNAL(savedFrames(uint64_t)), this, SIGNAL(savedFrames(uint64_t)));
     connect(d->worker, SIGNAL(saveFPS(double)), this, SIGNAL(saveFPS(double)));
     d->worker->moveToThread(&d->recordingThread);
+    connect(&d->recordingThread, SIGNAL(started()), d->worker, SLOT(run()));
+    connect(&d->recordingThread, SIGNAL(finished()), d->worker, SLOT(deleteLater()));
     d->recordingThread.start();
   }
 }
@@ -214,8 +214,8 @@ void SaveImages::endRecording()
   d->worker->finish();
   d->recordingThread.quit();
   d->recordingThread.wait();
-  delete d->worker;
-  d->fileWriter.reset();
+  d->recordingThread.terminate();
+  d->worker = nullptr;
 }
 
 
