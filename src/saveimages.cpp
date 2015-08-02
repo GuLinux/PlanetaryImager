@@ -33,6 +33,17 @@ public:
 typedef shared_ptr<FileWriter> FileWriterPtr;
 typedef function<FileWriterPtr(const QString &filename)> FileWriterFactory;
 
+class WriterThreadWorker : public QObject {
+  Q_OBJECT
+public:
+  explicit WriterThreadWorker ( const FileWriterPtr &fileWriter, QObject* parent = 0 );
+public slots:
+  virtual void handle(const ImageDataPtr& imageData) {
+    fileWriter->handle(imageData);
+  }
+private:
+  FileWriterPtr fileWriter;
+};
 
 struct __attribute__ ((__packed__)) SER_Header {
     char fileId[14] = {'L', 'U', 'C', 'A', 'M', '-', 'R','E','C','O','R','D','E','R'};
@@ -173,12 +184,15 @@ void SaveImages::startRecording()
 {
   d->frames = 0;
   d->createWriter();
+  d->recordingThread.start();
+  
 }
 
 
 void SaveImages::endRecording()
 {
   d->fileWriter.reset();
+  d->recordingThread.quit();
 }
 
 
