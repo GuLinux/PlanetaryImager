@@ -148,10 +148,12 @@ QHYMainWindow::QHYMainWindow(QWidget* parent, Qt::WindowFlags flags) : dpointer(
     connect(d->ui->start_recording, &QPushButton::clicked, [=]{
       if(d->imager)
 	d->imager->startLive();
+      d->saveImages->startRecording();
     });
     connect(d->ui->stop_recording, &QPushButton::clicked, [=]{
       if(d->imager)
 	d->imager->stopLive();
+      d->saveImages->endRecording();
     });
     setupDockWidget(d->ui->actionChip_Info, d->ui->chipInfoWidget);
     setupDockWidget(d->ui->actionCamera_Settings, d->ui->camera_settings);
@@ -164,6 +166,11 @@ QHYMainWindow::QHYMainWindow(QWidget* parent, Qt::WindowFlags flags) : dpointer(
       d->scene->clear();
       d->scene->addPixmap(QPixmap::fromImage(image));
     }, Qt::QueuedConnection);
+    // TODO: GUI for this
+    d->saveImages->setOutput("/tmp/out.ser");
+    connect(d->displayImage.get(), &DisplayImage::captureFps, d->statusbar_info_widget, &StatusBarInfoWidget::captureFPS, Qt::QueuedConnection);
+    connect(d->saveImages.get(), &SaveImages::saveFPS, d->statusbar_info_widget, &StatusBarInfoWidget::saveFPS, Qt::QueuedConnection);
+    connect(d->saveImages.get(), &SaveImages::savedFrames, d->statusbar_info_widget, &StatusBarInfoWidget::savedFrames, Qt::QueuedConnection);
 }
 
 
@@ -177,8 +184,6 @@ void QHYMainWindow::Private::rescan_devices()
       if(!imager)
 	return;
       statusbar_info_widget->deviceConnected(imager->name());
-      connect(displayImage.get(), &DisplayImage::captureFps, statusbar_info_widget, &StatusBarInfoWidget::captureFPS, Qt::QueuedConnection);
-      connect(saveImages.get(), &SaveImages::saveFPS, statusbar_info_widget, &StatusBarInfoWidget::saveFPS, Qt::QueuedConnection);
       ui->camera_name->setText(imager->name());
       ui->camera_chip_size->setText(QString("%1x%2").arg(imager->chip().width, 2).arg(imager->chip().height, 2));
       ui->camera_bpp->setText("%1"_q % imager->chip().bpp);
