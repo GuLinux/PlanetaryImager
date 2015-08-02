@@ -22,7 +22,6 @@
 #include "qhyccd.h"
 #include <QDebug>
 
-#include <libusb.h>
 #include <QThread>
 #include "utils.h"
 #include <QImage>
