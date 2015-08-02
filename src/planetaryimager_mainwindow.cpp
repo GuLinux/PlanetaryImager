@@ -17,10 +17,10 @@
  *
  */
 
-#include "qhymainwindow.h"
+#include "planetaryimager_mainwindow.h"
 #include "qhydriver.h"
 #include "qhyccdimager.h"
-#include "ui_qhymainwindow.h"
+#include "ui_planetaryimager_mainwindow.h"
 #include <functional>
 #include "utils.h"
 #include "statusbarinfowidget.h"
@@ -60,10 +60,10 @@ void DisplayImage::handle(const ImageDataPtr& imageData)
 
 
 
-class QHYMainWindow::Private {
+class PlanetaryImagerMainWindow::Private {
 public:
-  Private(QHYMainWindow *q);
-  shared_ptr<Ui::QHYMainWindow> ui;
+  Private(PlanetaryImagerMainWindow *q);
+  shared_ptr<Ui::PlanetaryImagerMainWindow> ui;
   QHYDriver driver;
   QHYCCDImagerPtr imager;
   void rescan_devices();
@@ -81,7 +81,7 @@ public:
   void cameraDisconnected();
   void enableUIWidgets(bool cameraConnected);
 private:
-  QHYMainWindow *q;
+  PlanetaryImagerMainWindow *q;
 };
 
 
@@ -112,24 +112,24 @@ CameraSettingWidget::CameraSettingWidget(const QHYCCDImager::Setting& setting, c
 }
 
 
-QHYMainWindow::Private::Private(QHYMainWindow* q) : ui{make_shared<Ui::QHYMainWindow>()}, settings{"GuLinux", "QHYImager"}, q{q}
+PlanetaryImagerMainWindow::Private::Private(PlanetaryImagerMainWindow* q) : ui{make_shared<Ui::PlanetaryImagerMainWindow>()}, settings{"GuLinux", "QHYImager"}, q{q}
 {
 }
 
 
-QHYMainWindow::~QHYMainWindow()
+PlanetaryImagerMainWindow::~PlanetaryImagerMainWindow()
 {
   if(d->imager)
     d->imager->stopLive();
 }
 
-void QHYMainWindow::Private::saveState()
+void PlanetaryImagerMainWindow::Private::saveState()
 {
   settings.setValue("dock_settings", q->saveState());
 }
 
 
-QHYMainWindow::QHYMainWindow(QWidget* parent, Qt::WindowFlags flags) : dpointer(this)
+PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::WindowFlags flags) : dpointer(this)
 {
     d->ui->setupUi(this);
     d->scene = new QGraphicsScene(this);
@@ -197,7 +197,7 @@ QHYMainWindow::QHYMainWindow(QWidget* parent, Qt::WindowFlags flags) : dpointer(
 }
 
 
-void QHYMainWindow::Private::rescan_devices()
+void PlanetaryImagerMainWindow::Private::rescan_devices()
 {
   ui->menu_device_load->clear();
   for(auto device: driver.cameras()) {
@@ -206,7 +206,7 @@ void QHYMainWindow::Private::rescan_devices()
   }
 }
 
-void QHYMainWindow::Private::connectCamera(const QHYDriver::Camera& camera)
+void PlanetaryImagerMainWindow::Private::connectCamera(const QHYDriver::Camera& camera)
 {
   imager = make_shared<QHYCCDImager>(camera, QList<ImageHandlerPtr>{displayImage, saveImages});
   if(!imager)
@@ -229,7 +229,7 @@ void QHYMainWindow::Private::connectCamera(const QHYDriver::Camera& camera)
 }
 
 
-void QHYMainWindow::Private::cameraDisconnected()
+void PlanetaryImagerMainWindow::Private::cameraDisconnected()
 {
   enableUIWidgets(false);
   ui->camera_name->clear();
@@ -242,7 +242,7 @@ void QHYMainWindow::Private::cameraDisconnected()
   scene->clear();
 }
 
-void QHYMainWindow::Private::enableUIWidgets(bool cameraConnected)
+void PlanetaryImagerMainWindow::Private::enableUIWidgets(bool cameraConnected)
 {
   ui->actionZoom_In->setEnabled(cameraConnected);
   ui->actionZoom_Out->setEnabled(cameraConnected);
@@ -254,4 +254,4 @@ void QHYMainWindow::Private::enableUIWidgets(bool cameraConnected)
   ui->camera_settings->setEnabled(cameraConnected);
 }
 
-#include "qhymainwindow.moc"
+#include "planetaryimager_mainwindow.moc"

@@ -24,15 +24,15 @@
 #include "dptr.h"
 namespace Ui
 {
-class QHYMainWindow;
+class PlanetaryImagerMainWindow;
 }
 
-class QHYMainWindow : public QMainWindow
+class PlanetaryImagerMainWindow : public QMainWindow
 {
     Q_OBJECT
 public:
-    ~QHYMainWindow();
-    QHYMainWindow(QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    ~PlanetaryImagerMainWindow();
+    PlanetaryImagerMainWindow(QWidget* parent = 0, Qt::WindowFlags flags = 0);
 
 private:
   D_PTR
