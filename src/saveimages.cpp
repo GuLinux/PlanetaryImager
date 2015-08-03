@@ -127,7 +127,7 @@ public:
     QThread recordingThread;
     QString filename;
     Format format = SER;
-    FileWriterPtr createWriter();
+    FileWriterFactory writerFactory();
     WriterThreadWorker *worker = nullptr;
     bool buffered;
 private:
@@ -154,7 +154,7 @@ void SaveImages::setOutput(const QString& filename, Format format)
   d->format = format;
 }
 
-FileWriterPtr SaveImages::Private::createWriter()
+FileWriterFactory SaveImages::Private::writerFactory()
 {
   if(filename.isEmpty()) {
     return {};
@@ -163,13 +163,13 @@ FileWriterPtr SaveImages::Private::createWriter()
     {SER, [](const QString &filename, bool buffered){ return make_shared<SER_Writer>(filename, buffered); }},
   };
   
-  return factories[format](filename, buffered);
+  return factories[format];
 }
 
 class WriterThreadWorker : public QObject {
   Q_OBJECT
 public:
-  explicit WriterThreadWorker ( const FileWriterPtr &fileWriter, QObject* parent = 0 ) : QObject(parent), fileWriter(fileWriter) {}
+  explicit WriterThreadWorker ( const function<FileWriterPtr()> &fileWriterFactory, QObject* parent = 0 );
 public slots:
   virtual void handle(const ImageDataPtr& imageData);
   void finish() {stop = true; }
@@ -178,11 +178,16 @@ signals:
   void saveFPS(double fps);
   void savedFrames(uint64_t frames);
 private:
-  FileWriterPtr fileWriter;
+  function<FileWriterPtr()> fileWriterFactory;
   QQueue<ImageDataPtr> frames;
   bool stop = false;
   QMutex mutex;
 };
+
+WriterThreadWorker::WriterThreadWorker ( const function< FileWriterPtr()>& fileWriterFactory, QObject* parent )
+  : QObject(parent), fileWriterFactory(fileWriterFactory)
+{
+}
 
 
 void WriterThreadWorker::handle(const ImageDataPtr& imageData)
@@ -194,6 +199,7 @@ void WriterThreadWorker::handle(const ImageDataPtr& imageData)
 
 void WriterThreadWorker::run()
 {
+  auto fileWriter = fileWriterFactory();
   fps savefps{[=](double fps){ emit saveFPS(fps);}};
   uint64_t frames = 0;
   while(!stop) {
@@ -223,9 +229,9 @@ void SaveImages::handle(const ImageDataPtr& imageData)
 
 void SaveImages::startRecording()
 {
-  auto writer = d->createWriter();
-  if(writer) {
-    d->worker = new WriterThreadWorker(writer);
+  auto writerFactory = d->writerFactory();
+  if(writerFactory) {
+    d->worker = new WriterThreadWorker(bind(writerFactory, d->filename, d->buffered));
     connect(d->worker, &WriterThreadWorker::savedFrames, bind(&SaveImages::savedFrames, this, _1));
     connect(d->worker, SIGNAL(saveFPS(double)), this, SIGNAL(saveFPS(double)));
     d->worker->moveToThread(&d->recordingThread);
