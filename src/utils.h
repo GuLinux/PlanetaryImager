@@ -56,11 +56,12 @@ public:
   void add_frame() {
     frames++;
     if(timer.elapsed() >= fps_after_msec) {
-      onFPS(static_cast<double>(frames) * 1000/(static_cast<double>(timer.elapsed())));
+      onFPS(current());
       timer.restart();
       frames = 0;
     }
   }
+  double current() { return static_cast<double>(frames) * 1000/(static_cast<double>(timer.elapsed())); }
 private:
   OnFPS onFPS;
   int64_t fps_after_msec;

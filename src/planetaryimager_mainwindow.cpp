@@ -41,18 +41,30 @@ public:
   DisplayImage(QObject* parent = 0);
   virtual void handle(const ImageDataPtr& imageData);
   fps capture_fps;
+  void setFPSLimit(int fps);
 signals:
   void gotImage(const QImage &);
   void captureFps(double fps);
+private:
+  int milliseconds_limit = 0;
+  QElapsedTimer elapsed;
 };
 
 DisplayImage::DisplayImage(QObject* parent): QObject(parent), capture_fps([=](double fps){ emit captureFps(fps);})
 {
+}
 
+void DisplayImage::setFPSLimit(int fps)
+{
+  milliseconds_limit = (fps == 0 ? 0 : 1000/fps);
 }
 
 void DisplayImage::handle(const ImageDataPtr& imageData)
 {
+  if(milliseconds_limit > 0 && elapsed.elapsed() < milliseconds_limit ) {
+    return;
+  }
+  elapsed.restart();
   QtConcurrent::run([=]{
     capture_fps.add_frame();
     auto ptrCopy = new ImageDataPtr(imageData);
@@ -162,11 +174,13 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
       auto save_directory = d->settings.value("save_directory_output").toString();
       if(!QDir(save_directory).exists())
 	return;
+      d->displayImage->setFPSLimit(5);
       d->saveImages->setOutput("%1/%2%3"_q % save_directory % d->settings.value("save_file_prefix").toString() % QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss_zzz_t"));
       d->saveImages->startRecording();
     });
     connect(d->ui->stop_recording, &QPushButton::clicked, [=]{
       d->saveImages->endRecording();
+      d->displayImage->setFPSLimit(0);
     });
     setupDockWidget(d->ui->actionChip_Info, d->ui->chipInfoWidget);
     setupDockWidget(d->ui->actionCamera_Settings, d->ui->camera_settings);
@@ -189,6 +203,8 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     d->ui->filePrefix->setText(d->settings.value("save_file_prefix").toString());
     connect(d->ui->saveDirectory, &QLineEdit::textChanged, [=](const QString &t){ d->settings.setValue("save_directory_output", t);});
     connect(d->ui->filePrefix, &QLineEdit::textChanged, [=](const QString &t){ d->settings.setValue("save_file_prefix", t);});
+    d->saveImages->setBuffered(d->ui->save_file_buffered->isChecked());
+    connect(d->ui->save_file_buffered, &QCheckBox::toggled, bind(&SaveImages::setBuffered, d->saveImages, _1));
     auto pickDirectory = d->ui->saveDirectory->addAction(QIcon(":/resources/folder.png"), QLineEdit::TrailingPosition);
     connect(pickDirectory, &QAction::triggered, [=]{
       auto directory = QFileDialog::getExistingDirectory(this, tr("Directory to save recordings"), d->settings.value("save_directory_output").toString());
