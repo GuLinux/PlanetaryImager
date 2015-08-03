@@ -29,6 +29,7 @@
 #include <QMutexLocker>
 #include <QtConcurrent/QtConcurrent>
 #include <functional>
+#include <cstring>
 
 using namespace std;
 using namespace std::placeholders;
@@ -79,7 +80,6 @@ public:
 private:
   QFile file;
   SER_Header header;
-  uint32_t frames;
 };
 
 
@@ -102,7 +102,7 @@ SER_Writer::~SER_Writer()
   if(!mem_header) {
     qDebug() << file.errorString();
   }
-  mem_header->frames = frames;
+  std::memcpy(mem_header, &header, sizeof(header));
   file.close();
 }
 
@@ -116,7 +116,7 @@ void SER_Writer::handle(const ImageDataPtr& imageData)
     header.imageHeight = imageData->height();
   }
   file.write(reinterpret_cast<const char*>(imageData->data()), imageData->size());
-  frames++;
+  header.frames++;
 }
 
 
@@ -179,7 +179,7 @@ signals:
   void savedFrames(uint64_t frames);
 private:
   function<FileWriterPtr()> fileWriterFactory;
-  QQueue<ImageDataPtr> frames;
+  QQueue<ImageDataPtr> framesQueue;
   bool stop = false;
   QMutex mutex;
 };
@@ -193,7 +193,7 @@ WriterThreadWorker::WriterThreadWorker ( const function< FileWriterPtr()>& fileW
 void WriterThreadWorker::handle(const ImageDataPtr& imageData)
 {
   QMutexLocker lock(&mutex);
-  frames.enqueue(imageData); 
+  framesQueue.enqueue(imageData); 
 }
 
 
@@ -203,10 +203,15 @@ void WriterThreadWorker::run()
   fps savefps{[=](double fps){ emit saveFPS(fps);}};
   uint64_t frames = 0;
   while(!stop) {
-    if(this->frames.size()>0) {
+    auto framesQueueSize = framesQueue.size();
+    if(framesQueueSize>0) {
+      if(framesQueueSize> 50) {
+        qWarning() << "Frames queue too high (" << framesQueueSize << ", dropping frame";
+        return;
+      }
       {
 	QMutexLocker lock(&mutex);
-	fileWriter->handle(this->frames.dequeue());
+	fileWriter->handle(framesQueue.dequeue());
       }
       savefps.add_frame();
       emit savedFrames(++frames);
