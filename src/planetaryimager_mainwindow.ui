@@ -36,7 +36,7 @@
      <x>0</x>
      <y>0</y>
      <width>1025</width>
-     <height>27</height>
+     <height>28</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuDevice">
@@ -299,7 +299,7 @@
        </property>
       </widget>
      </item>
-     <item row="7" column="0">
+     <item row="8" column="0">
       <spacer name="horizontalSpacer_6">
        <property name="orientation">
         <enum>Qt::Horizontal</enum>
@@ -312,21 +312,21 @@
        </property>
       </spacer>
      </item>
-     <item row="7" column="1" colspan="2">
+     <item row="8" column="1" colspan="2">
       <widget class="QPushButton" name="start_recording">
        <property name="text">
         <string>Start</string>
        </property>
       </widget>
      </item>
-     <item row="7" column="3">
+     <item row="8" column="3">
       <widget class="QPushButton" name="stop_recording">
        <property name="text">
         <string>Stop</string>
        </property>
       </widget>
      </item>
-     <item row="8" column="2">
+     <item row="9" column="2">
       <spacer name="verticalSpacer_3">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
@@ -342,9 +342,6 @@
      <item row="3" column="0" colspan="4">
       <widget class="QLineEdit" name="filePrefix"/>
      </item>
-     <item row="1" column="0" colspan="4">
-      <widget class="QLineEdit" name="saveDirectory"/>
-     </item>
      <item row="6" column="3">
       <widget class="QCheckBox" name="save_file_buffered">
        <property name="text">
@@ -353,6 +350,76 @@
        <property name="checked">
         <bool>true</bool>
        </property>
+      </widget>
+     </item>
+     <item row="1" column="0" colspan="4">
+      <widget class="QLineEdit" name="saveDirectory"/>
+     </item>
+     <item row="7" column="0">
+      <widget class="QLabel" name="label_8">
+       <property name="text">
+        <string>Frames Limit</string>
+       </property>
+      </widget>
+     </item>
+     <item row="7" column="1" colspan="3">
+      <widget class="QComboBox" name="saveFramesLimit">
+       <property name="editable">
+        <bool>true</bool>
+       </property>
+       <property name="currentText">
+        <string>Infinite</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>Infinite</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>100</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>250</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>500</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>750</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>1000</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>2500</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>2000</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>3000</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>5000</string>
+        </property>
+       </item>
       </widget>
      </item>
     </layout>

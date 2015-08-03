@@ -30,6 +30,7 @@
 #include <QtConcurrent/QtConcurrent>
 #include <functional>
 #include <cstring>
+#include "fps_counter.h"
 
 using namespace std;
 using namespace std::placeholders;
@@ -37,6 +38,7 @@ using namespace std::placeholders;
 class FileWriter : public ImageHandler {
 public:
   virtual void handle(const ImageDataPtr& imageData) = 0;
+  virtual QString filename() const = 0;
 };
 typedef shared_ptr<FileWriter> FileWriterPtr;
 typedef function<FileWriterPtr(const QString &filename, bool buffered)> FileWriterFactory;
@@ -77,6 +79,7 @@ public:
   SER_Writer(const QString &filename, bool buffered);
   ~SER_Writer();
   virtual void handle(const ImageDataPtr& imageData);
+  virtual QString filename() const;
 private:
   QFile file;
   SER_Header header;
@@ -106,6 +109,11 @@ SER_Writer::~SER_Writer()
   file.close();
 }
 
+QString SER_Writer::filename() const
+{
+  return file.fileName();
+}
+
 
 void SER_Writer::handle(const ImageDataPtr& imageData)
 {
@@ -130,6 +138,7 @@ public:
     FileWriterFactory writerFactory();
     WriterThreadWorker *worker = nullptr;
     bool buffered;
+    uint64_t max_frames = std::numeric_limits<uint64_t>().max();
 private:
     SaveImages *q;
 };
@@ -169,7 +178,7 @@ FileWriterFactory SaveImages::Private::writerFactory()
 class WriterThreadWorker : public QObject {
   Q_OBJECT
 public:
-  explicit WriterThreadWorker ( const function<FileWriterPtr()> &fileWriterFactory, QObject* parent = 0 );
+  explicit WriterThreadWorker ( const function<FileWriterPtr()> &fileWriterFactory, uint64_t max_frames, QObject* parent = 0 );
 public slots:
   virtual void handle(const ImageDataPtr& imageData);
   void finish() {stop = true; }
@@ -177,15 +186,18 @@ public slots:
 signals:
   void saveFPS(double fps);
   void savedFrames(uint64_t frames);
+  void started(const QString &filename);
+  void finished();
 private:
   function<FileWriterPtr()> fileWriterFactory;
   QQueue<ImageDataPtr> framesQueue;
   bool stop = false;
   QMutex mutex;
+  uint64_t max_frames;
 };
 
-WriterThreadWorker::WriterThreadWorker ( const function< FileWriterPtr()>& fileWriterFactory, QObject* parent )
-  : QObject(parent), fileWriterFactory(fileWriterFactory)
+WriterThreadWorker::WriterThreadWorker ( const function< FileWriterPtr()>& fileWriterFactory, uint64_t max_frames, QObject* parent )
+  : QObject(parent), fileWriterFactory(fileWriterFactory), max_frames(max_frames)
 {
 }
 
@@ -200,9 +212,10 @@ void WriterThreadWorker::handle(const ImageDataPtr& imageData)
 void WriterThreadWorker::run()
 {
   auto fileWriter = fileWriterFactory();
-  fps savefps{[=](double fps){ emit saveFPS(fps);}};
+  fps_counter savefps{[=](double fps){ qDebug() << "fps: " << fps; emit saveFPS(fps);}};
   uint64_t frames = 0;
-  while(!stop) {
+  emit started(fileWriter->filename());
+  while(!stop && frames < max_frames) {
     auto framesQueueSize = framesQueue.size();
     if(framesQueueSize>0) {
       if(framesQueueSize> 50) {
@@ -213,10 +226,11 @@ void WriterThreadWorker::run()
 	QMutexLocker lock(&mutex);
 	fileWriter->handle(framesQueue.dequeue());
       }
-      savefps.add_frame();
+      savefps.frame();
       emit savedFrames(++frames);
     }
   }
+  emit finished();
 }
 
 void SaveImages::setBuffered(bool buffered)
@@ -236,7 +250,17 @@ void SaveImages::startRecording()
 {
   auto writerFactory = d->writerFactory();
   if(writerFactory) {
-    d->worker = new WriterThreadWorker(bind(writerFactory, d->filename, d->buffered));
+    d->worker = new WriterThreadWorker(bind(writerFactory, d->filename, d->buffered), d->max_frames);
+    connect(d->worker, SIGNAL(started(QString)), this, SIGNAL(recording(QString)));
+    connect(d->worker, SIGNAL(finished()), this, SIGNAL(finished()));
+    connect(d->worker, &WriterThreadWorker::finished, this, [=]{
+      d->recordingThread.quit();
+      QtConcurrent::run([=] {
+        d->recordingThread.wait();
+        d->recordingThread.terminate();
+        d->worker = nullptr;
+      });
+    }, Qt::QueuedConnection);
     connect(d->worker, &WriterThreadWorker::savedFrames, bind(&SaveImages::savedFrames, this, _1));
     connect(d->worker, SIGNAL(saveFPS(double)), this, SIGNAL(saveFPS(double)));
     d->worker->moveToThread(&d->recordingThread);
@@ -246,16 +270,15 @@ void SaveImages::startRecording()
   }
 }
 
+void SaveImages::setFramesLimit ( uint64_t max_frames )
+{
+  d->max_frames = max_frames > 0 ? max_frames : std::numeric_limits<uint64_t>().max();
+}
+
 
 void SaveImages::endRecording()
 {
   d->worker->finish();
-  d->recordingThread.quit();
-  QtConcurrent::run([=] {
-    d->recordingThread.wait();
-    d->recordingThread.terminate();
-    d->worker = nullptr;
-  });
 }
 
 

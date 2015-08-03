@@ -32,6 +32,8 @@
 #include <QFileDialog>
 #include <QDateTime>
 #include <QtConcurrent/QtConcurrent>
+#include "fps_counter.h"
+
 using namespace std;
 using namespace std::placeholders;
 
@@ -40,7 +42,7 @@ class DisplayImage : public QObject, public ImageHandler {
 public:
   DisplayImage(QObject* parent = 0);
   virtual void handle(const ImageDataPtr& imageData);
-  fps capture_fps;
+  fps_counter capture_fps;
   void setFPSLimit(int fps);
 signals:
   void gotImage(const QImage &);
@@ -66,7 +68,7 @@ void DisplayImage::handle(const ImageDataPtr& imageData)
   }
   elapsed.restart();
   QtConcurrent::run([=]{
-    capture_fps.add_frame();
+    capture_fps.frame();
     auto ptrCopy = new ImageDataPtr(imageData);
     QImage image(imageData->data(), imageData->width(), imageData->height(), QImage::Format_Grayscale8, [](void *data){ delete reinterpret_cast<ImageDataPtr*>(data); }, ptrCopy);
     emit gotImage(image);
@@ -147,6 +149,7 @@ void PlanetaryImagerMainWindow::Private::saveState()
 PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::WindowFlags flags) : dpointer(this)
 {
     d->ui->setupUi(this);
+    d->ui->statusbar->addPermanentWidget(d->statusbar_info_widget = new StatusBarInfoWidget(), 1);
     d->scene = new QGraphicsScene(this);
     restoreState(d->settings.value("dock_settings").toByteArray());
     connect(d->ui->action_devices_rescan, &QAction::triggered, bind(&Private::rescan_devices, d.get()));
@@ -174,20 +177,19 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
       auto save_directory = d->settings.value("save_directory_output").toString();
       if(!QDir(save_directory).exists())
 	return;
-      d->displayImage->setFPSLimit(5);
       d->saveImages->setOutput("%1/%2%3"_q % save_directory % d->settings.value("save_file_prefix").toString() % QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss_zzz_t"));
       d->saveImages->startRecording();
     });
-    connect(d->ui->stop_recording, &QPushButton::clicked, [=]{
-      d->saveImages->endRecording();
-      d->displayImage->setFPSLimit(0);
-    });
+    connect(d->ui->stop_recording, &QPushButton::clicked, bind(&SaveImages::endRecording, d->saveImages));
+    connect(d->saveImages.get(), &SaveImages::recording, bind(&DisplayImage::setFPSLimit, d->displayImage, 5));
+    connect(d->saveImages.get(), &SaveImages::recording, d->statusbar_info_widget, &StatusBarInfoWidget::saveFile);
+    connect(d->saveImages.get(), &SaveImages::finished, bind(&StatusBarInfoWidget::saveFile, d->statusbar_info_widget, QString{}));
+    connect(d->saveImages.get(), &SaveImages::finished, bind(&DisplayImage::setFPSLimit, d->displayImage, 0));
     setupDockWidget(d->ui->actionChip_Info, d->ui->chipInfoWidget);
     setupDockWidget(d->ui->actionCamera_Settings, d->ui->camera_settings);
     setupDockWidget(d->ui->actionRecording, d->ui->recording);
     
     d->ui->settings_frame->setLayout(d->settings_layout = new QVBoxLayout);
-    d->ui->statusbar->addPermanentWidget(d->statusbar_info_widget = new StatusBarInfoWidget(), 1);
     d->rescan_devices();
     connect(d->displayImage.get(), &DisplayImage::gotImage, this, [=](const QImage &image) {
       d->scene->clear();
@@ -207,12 +209,21 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     connect(d->ui->save_file_buffered, &QCheckBox::toggled, bind(&SaveImages::setBuffered, d->saveImages, _1));
     auto pickDirectory = d->ui->saveDirectory->addAction(QIcon(":/resources/folder.png"), QLineEdit::TrailingPosition);
     connect(pickDirectory, &QAction::triggered, [=]{
-      auto directory = QFileDialog::getExistingDirectory(this, tr("Directory to save recordings"), d->settings.value("save_directory_output").toString());
-      if(directory.isEmpty())
-	return;
-      d->ui->saveDirectory->setText(directory);
+      QFileDialog *filedialog = new QFileDialog(this);
+      filedialog->setFileMode(QFileDialog::Directory);
+      filedialog->setOption(QFileDialog::ShowDirsOnly);
+      connect(filedialog, SIGNAL(fileSelected(QString)), d->ui->saveDirectory, SLOT(setText(QString)));
+      filedialog->show();
     });
     d->enableUIWidgets(false);
+    connect(d->ui->saveFramesLimit, &QComboBox::currentTextChanged, [=](const QString &text) {
+      bool ok = false;
+      auto frameLimit = text.toLongLong(&ok);
+      if(ok)
+        d->saveImages->setFramesLimit(frameLimit);
+      else
+        d->saveImages->setFramesLimit(0);
+    });
 }
 
 

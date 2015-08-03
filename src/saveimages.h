@@ -36,11 +36,14 @@ public slots:
   void startRecording();
   void endRecording();
   void setBuffered(bool buffered);
+  void setFramesLimit(uint64_t max_frames);
 private:
   D_PTR
 signals:
   void saveFPS(double fps);
   void savedFrames(uint64_t frames);
+  void recording(const QString &filename);
+  void finished();
 };
 
 #endif // SAVEIMAGE_H
