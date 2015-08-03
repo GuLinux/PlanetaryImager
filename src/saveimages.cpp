@@ -38,24 +38,8 @@ public:
   virtual void handle(const ImageDataPtr& imageData) = 0;
 };
 typedef shared_ptr<FileWriter> FileWriterPtr;
-typedef function<FileWriterPtr(const QString &filename)> FileWriterFactory;
+typedef function<FileWriterPtr(const QString &filename, bool buffered)> FileWriterFactory;
 
-class WriterThreadWorker : public QObject {
-  Q_OBJECT
-public:
-  explicit WriterThreadWorker ( const FileWriterPtr &fileWriter, QObject* parent = 0 ) : QObject(parent), fileWriter(fileWriter) {}
-public slots:
-  virtual void handle(const ImageDataPtr& imageData) { frames.enqueue(imageData); }
-  void finish() {stop = true; }
-  void run();
-signals:
-  void saveFPS(double fps);
-  void savedFrames(uint64_t frames);
-private:
-  FileWriterPtr fileWriter;
-  QQueue<ImageDataPtr> frames;
-  bool stop = false;
-};
 
 struct __attribute__ ((__packed__)) SER_Header {
     char fileId[14] = {'L', 'U', 'C', 'A', 'M', '-', 'R','E','C','O','R','D','E','R'};
@@ -89,16 +73,54 @@ struct __attribute__ ((__packed__)) SER_Header {
 
 class SER_Writer : public FileWriter {
 public:
-  SER_Writer(const QString &filename);
+  SER_Writer(const QString &filename, bool buffered);
   ~SER_Writer();
   virtual void handle(const ImageDataPtr& imageData);
 private:
-  SER_Header *header;
   QFile file;
-  bool wrote_image_data = false;
+  SER_Header header;
+  uint32_t frames;
 };
 
 
+
+SER_Writer::SER_Writer(const QString& filename, bool buffered) : file("%1.ser"_q % filename)
+{
+  if(buffered)
+    file.open(QIODevice::ReadWrite);
+  else
+    file.open(QIODevice::ReadWrite | QIODevice::Unbuffered);
+  
+  file.write(reinterpret_cast<char*>(&header), sizeof(header));
+  file.flush();
+
+}
+
+SER_Writer::~SER_Writer()
+{
+  SER_Header *mem_header = reinterpret_cast<SER_Header*>(file.map(0, sizeof(SER_Header)));
+  if(!mem_header) {
+    qDebug() << file.errorString();
+  }
+  mem_header->frames = frames;
+  file.close();
+}
+
+
+void SER_Writer::handle(const ImageDataPtr& imageData)
+{
+  if(! header.imageWidth) {
+    header.colorId = imageData->channels() == 1 ? SER_Header::MONO : SER_Header::RGB;
+    header.pixelDepth = imageData->bpp();
+    header.imageWidth = imageData->width();
+    header.imageHeight = imageData->height();
+  }
+  file.write(reinterpret_cast<const char*>(imageData->data()), imageData->size());
+  frames++;
+}
+
+
+class WriterThreadWorker;
 class SaveImages::Private {
 public:
     Private(SaveImages *q);
@@ -107,6 +129,7 @@ public:
     Format format = SER;
     FileWriterPtr createWriter();
     WriterThreadWorker *worker = nullptr;
+    bool buffered;
 private:
     SaveImages *q;
 };
@@ -137,42 +160,35 @@ FileWriterPtr SaveImages::Private::createWriter()
     return {};
   }
   static map<Format, FileWriterFactory> factories {
-    {SER, [](const QString &filename){ return make_shared<SER_Writer>(filename); }},
+    {SER, [](const QString &filename, bool buffered){ return make_shared<SER_Writer>(filename, buffered); }},
   };
   
-  return factories[format](filename);
+  return factories[format](filename, buffered);
 }
 
-SER_Writer::SER_Writer(const QString& filename) : file("%1.ser"_q % filename)
+class WriterThreadWorker : public QObject {
+  Q_OBJECT
+public:
+  explicit WriterThreadWorker ( const FileWriterPtr &fileWriter, QObject* parent = 0 ) : QObject(parent), fileWriter(fileWriter) {}
+public slots:
+  virtual void handle(const ImageDataPtr& imageData);
+  void finish() {stop = true; }
+  void run();
+signals:
+  void saveFPS(double fps);
+  void savedFrames(uint64_t frames);
+private:
+  FileWriterPtr fileWriter;
+  QQueue<ImageDataPtr> frames;
+  bool stop = false;
+  QMutex mutex;
+};
+
+
+void WriterThreadWorker::handle(const ImageDataPtr& imageData)
 {
-  file.open(QIODevice::ReadWrite);
-
-  SER_Header header;
-  file.write(reinterpret_cast<char*>(&header), sizeof(header));
-  file.flush();
-  this->header = reinterpret_cast<SER_Header*>(file.map(0, sizeof(header)));
-  if(!this->header) {
-    qDebug() << file.errorString();
-  }
-}
-
-SER_Writer::~SER_Writer()
-{
-  file.close();
-}
-
-
-void SER_Writer::handle(const ImageDataPtr& imageData)
-{
-  if(! wrote_image_data) {
-    header->colorId = imageData->channels() == 1 ? SER_Header::MONO : SER_Header::RGB;
-    header->pixelDepth = imageData->bpp();
-    header->imageWidth = imageData->width();
-    header->imageHeight = imageData->height();
-    wrote_image_data = true;
-  }
-  header->frames++;
-  file.write(reinterpret_cast<const char*>(imageData->data()), imageData->size());
+  QMutexLocker lock(&mutex);
+  frames.enqueue(imageData); 
 }
 
 
@@ -182,11 +198,19 @@ void WriterThreadWorker::run()
   uint64_t frames = 0;
   while(!stop) {
     if(this->frames.size()>0) {
+      {
+	QMutexLocker lock(&mutex);
+	fileWriter->handle(this->frames.dequeue());
+      }
       savefps.add_frame();
-      fileWriter->handle(this->frames.dequeue());
-        emit savedFrames(++frames);
+      emit savedFrames(++frames);
     }
   }
+}
+
+void SaveImages::setBuffered(bool buffered)
+{
+  d->buffered = buffered;
 }
 
 
@@ -194,7 +218,7 @@ void SaveImages::handle(const ImageDataPtr& imageData)
 {
   if(!d->worker)
     return;
-  d->worker->handle(imageData);
+  QtConcurrent::run(bind(&WriterThreadWorker::handle, d->worker, imageData));
 }
 
 void SaveImages::startRecording()

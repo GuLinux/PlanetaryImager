@@ -35,6 +35,7 @@ public slots:
   void setOutput(const QString &filename, Format format = SER);
   void startRecording();
   void endRecording();
+  void setBuffered(bool buffered);
 private:
   D_PTR
 signals:
