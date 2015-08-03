@@ -28,8 +28,10 @@
 #include <QMutex>
 #include <QMutexLocker>
 #include <QtConcurrent/QtConcurrent>
+#include <functional>
 
 using namespace std;
+using namespace std::placeholders;
 
 class FileWriter : public ImageHandler {
 public:
@@ -180,6 +182,7 @@ void WriterThreadWorker::run()
   uint64_t frames = 0;
   while(!stop) {
     if(this->frames.size()>0) {
+      savefps.add_frame();
       fileWriter->handle(this->frames.dequeue());
         emit savedFrames(++frames);
     }
@@ -199,7 +202,7 @@ void SaveImages::startRecording()
   auto writer = d->createWriter();
   if(writer) {
     d->worker = new WriterThreadWorker(writer);
-    connect(d->worker, SIGNAL(savedFrames(uint64_t)), this, SIGNAL(savedFrames(uint64_t)));
+    connect(d->worker, &WriterThreadWorker::savedFrames, bind(&SaveImages::savedFrames, this, _1));
     connect(d->worker, SIGNAL(saveFPS(double)), this, SIGNAL(saveFPS(double)));
     d->worker->moveToThread(&d->recordingThread);
     connect(&d->recordingThread, SIGNAL(started()), d->worker, SLOT(run()));
