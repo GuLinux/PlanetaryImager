@@ -14,7 +14,8 @@ public:
       char id[255];
       QString name() const;
     };
-    QList<Camera> cameras() const;
+    typedef QList<Camera> Cameras; 
+    Cameras cameras() const;
     static QString error_name(int code);
     
   class error : public std::runtime_error {

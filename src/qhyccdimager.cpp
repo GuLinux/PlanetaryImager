@@ -167,16 +167,18 @@ void QHYCCDImager::Private::load_settings()
 
   }) {
     int result = IsQHYCCDControlAvailable(handle, control.second);
-    if(result == QHYCCD_ERROR_NOTSUPPORT) {
-      qDebug() << "control " << control.first << "not supported, skipping";
-      continue;
-    }
+//     if(result == QHYCCD_ERROR_NOTSUPPORT) {
+//       qDebug() << "control " << control.first << "not supported, skipping";
+//       continue;
+//     }
     Setting setting{control.second, control.first};
     result = GetQHYCCDParamMinMaxStep(handle, control.second, &setting.min, &setting.max, &setting.step);
     if(result != QHYCCD_SUCCESS) {
       qCritical() << "error retrieving control " << control.first << ":" << QHYDriver::error_name(result) << "(" << result << ")";
       continue;
     }
+    if(setting.step > 0)
+      setting.step /= 10;
     setting.value = GetQHYCCDParam(handle, control.second);
     qDebug() << setting;
     settings << setting;
