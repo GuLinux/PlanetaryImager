@@ -49,24 +49,5 @@ private:
   static BenchmarkCall debug_benchmark() { return [](const QString &name, int elements, double elapsed){ qDebug() << "benchmark for" << name << "(avg):"<< elapsed << "ms"; }; }
 };
 
-class fps {
-public:
-  typedef std::function<void(double fps)> OnFPS;
-  fps(OnFPS onFPS, int64_t fps_after_msec = 500) : onFPS(onFPS), fps_after_msec(fps_after_msec), frames{0} { timer.start(); }
-  void add_frame() {
-    frames++;
-    if(timer.elapsed() >= fps_after_msec) {
-      onFPS(current());
-      timer.restart();
-      frames = 0;
-    }
-  }
-  double current() { return static_cast<double>(frames) * 1000/(static_cast<double>(timer.elapsed())); }
-private:
-  OnFPS onFPS;
-  int64_t fps_after_msec;
-  int64_t frames;
-  QElapsedTimer timer;
-};
 
 #endif
