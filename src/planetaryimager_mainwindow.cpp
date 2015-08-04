@@ -157,13 +157,15 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     d->ui->image->setScene(d->scene);
     auto dockWidgetToggleVisibility = [=](QDockWidget *widget, bool visible){ widget->setVisible(visible); };
     auto dockWidgetVisibleCheck = [=](QAction *action, QDockWidget *widget) { action->setChecked(widget->isVisible()); };
-    auto setupDockWidget = [=](QAction *action, QDockWidget *widget){
+    QList<QDockWidget*> dock_widgets;
+    auto setupDockWidget = [&](QAction *action, QDockWidget *widget){
       dockWidgetVisibleCheck(action, widget);
       connect(action, &QAction::triggered, bind(dockWidgetToggleVisibility, widget, _1));
       connect(widget, &QDockWidget::visibilityChanged, bind(dockWidgetVisibleCheck, action, widget));
       connect(widget, &QDockWidget::dockLocationChanged, bind(&Private::saveState, d.get()));
       connect(widget, &QDockWidget::topLevelChanged, bind(&Private::saveState, d.get()));
       connect(widget, &QDockWidget::visibilityChanged, bind(&Private::saveState, d.get()));
+      dock_widgets.push_back(widget);
     };
     d->zoom = 1;
     auto zoom = [=](qreal scale) { d->ui->image->scale(scale, scale); };
@@ -188,6 +190,8 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     setupDockWidget(d->ui->actionChip_Info, d->ui->chipInfoWidget);
     setupDockWidget(d->ui->actionCamera_Settings, d->ui->camera_settings);
     setupDockWidget(d->ui->actionRecording, d->ui->recording);
+    connect(d->ui->actionHide_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::hide, _1) ); });
+    connect(d->ui->actionShow_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::show, _1) ); });
     
     d->ui->settings_frame->setLayout(d->settings_layout = new QVBoxLayout);
     d->rescan_devices();
