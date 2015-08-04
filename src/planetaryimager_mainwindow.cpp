@@ -234,32 +234,37 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
 void PlanetaryImagerMainWindow::Private::rescan_devices()
 {
   ui->menu_device_load->clear();
-  for(auto device: driver.cameras()) {
-    auto action = ui->menu_device_load->addAction(device.name());
-    QObject::connect(action, &QAction::triggered, bind(&Private::connectCamera, this, device));
-  }
+  future_run<QHYDriver::Cameras>([=]{ return driver.cameras(); }, [=]( const QFuture<QHYDriver::Cameras> &cameras){
+    for(auto device: cameras.result()) {
+      auto action = ui->menu_device_load->addAction(device.name());
+      QObject::connect(action, &QAction::triggered, bind(&Private::connectCamera, this, device));
+    }
+  });
+
 }
 
 void PlanetaryImagerMainWindow::Private::connectCamera(const QHYDriver::Camera& camera)
 {
-  imager = make_shared<QHYCCDImager>(camera, QList<ImageHandlerPtr>{displayImage, saveImages});
-  if(!imager)
-    return;
-  imager->startLive();
-  statusbar_info_widget->deviceConnected(imager->name());
-  ui->camera_name->setText(imager->name());
-  ui->camera_chip_size->setText(QString("%1x%2").arg(imager->chip().width, 2).arg(imager->chip().height, 2));
-  ui->camera_bpp->setText("%1"_q % imager->chip().bpp);
-  ui->camera_pixels_size->setText(QString("%1x%2").arg(imager->chip().pixelwidth, 2).arg(imager->chip().pixelheight, 2));
-  ui->camera_resolution->setText(QString("%1x%2").arg(imager->chip().xres, 2).arg(imager->chip().yres, 2));
+  future_run<QHYCCDImagerPtr>([=]{ return make_shared<QHYCCDImager>(camera, QList<ImageHandlerPtr>{displayImage, saveImages}); }, [=](const QFuture<QHYCCDImagerPtr> &f){
+    imager = f.result();
+    if(!imager)
+      return;
+    imager->startLive();
+    statusbar_info_widget->deviceConnected(imager->name());
+    ui->camera_name->setText(imager->name());
+    ui->camera_chip_size->setText(QString("%1x%2").arg(imager->chip().width, 2).arg(imager->chip().height, 2));
+    ui->camera_bpp->setText("%1"_q % imager->chip().bpp);
+    ui->camera_pixels_size->setText(QString("%1x%2").arg(imager->chip().pixelwidth, 2).arg(imager->chip().pixelheight, 2));
+    ui->camera_resolution->setText(QString("%1x%2").arg(imager->chip().xres, 2).arg(imager->chip().yres, 2));
 
-  auto settings_widgets = ui->settings_frame->findChildren<QWidget*>(QRegularExpression{"setting_.*"});
-  for_each(begin(settings_widgets), end(settings_widgets), bind(&QWidget::deleteLater, _1));
-  for(auto setting: imager->settings()) {
-    qDebug() << "adding setting: " << setting;
-    settings_layout->addWidget(new CameraSettingWidget{setting, imager});
-  }
-  enableUIWidgets(true);
+    auto settings_widgets = ui->settings_frame->findChildren<QWidget*>(QRegularExpression{"setting_.*"});
+    for_each(begin(settings_widgets), end(settings_widgets), bind(&QWidget::deleteLater, _1));
+    for(auto setting: imager->settings()) {
+      qDebug() << "adding setting: " << setting;
+      settings_layout->addWidget(new CameraSettingWidget{setting, imager});
+    }
+    enableUIWidgets(true);
+  });
 }
 
 

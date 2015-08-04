@@ -49,5 +49,18 @@ private:
   static BenchmarkCall debug_benchmark() { return [](const QString &name, int elements, double elapsed){ qDebug() << "benchmark for" << name << "(avg):"<< elapsed << "ms"; }; }
 };
 
+#include <QFuture>
+#include <QFutureWatcher>
+#include <QtConcurrent/QtConcurrent>
+template<typename T>
+void future_run(const std::function<T()> &runnable, std::function<void(QFuture<T>)> onFinished) {
+  QFutureWatcher<T> *watcher = new QFutureWatcher<T>();
+  auto future = QtConcurrent::run(runnable);
+  QObject::connect(watcher, &QFutureWatcher<T>::finished, bind(onFinished, future));
+  QObject::connect(watcher, &QFutureWatcher<T>::finished, &QFutureWatcher<T>::deleteLater);
+  QObject::connect(watcher, &QFutureWatcher<T>::canceled, &QFutureWatcher<T>::deleteLater);
+  watcher->setFuture(future);
+}
+
 
 #endif
