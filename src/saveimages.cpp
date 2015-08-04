@@ -212,7 +212,7 @@ void WriterThreadWorker::handle(const ImageDataPtr& imageData)
 void WriterThreadWorker::run()
 {
   auto fileWriter = fileWriterFactory();
-  fps_counter savefps{[=](double fps){ qDebug() << "fps: " << fps; emit saveFPS(fps);}};
+  fps_counter savefps{[=](double fps){ qDebug() << "fps: " << fps; emit saveFPS(fps);}, fps_counter::Elapsed};
   uint64_t frames = 0;
   emit started(fileWriter->filename());
   while(!stop && frames < max_frames) {
