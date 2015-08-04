@@ -60,6 +60,8 @@
     <addaction name="actionChip_Info"/>
     <addaction name="actionCamera_Settings"/>
     <addaction name="actionRecording"/>
+    <addaction name="actionHide_all"/>
+    <addaction name="actionShow_all"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -528,6 +530,22 @@
    </property>
    <property name="text">
     <string>Pick</string>
+   </property>
+  </action>
+  <action name="actionHide_all">
+   <property name="text">
+    <string>&amp;Hide all</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+H</string>
+   </property>
+  </action>
+  <action name="actionShow_all">
+   <property name="text">
+    <string>Sh&amp;ow all</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Shift+H</string>
    </property>
   </action>
  </widget>
