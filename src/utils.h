@@ -50,16 +50,16 @@ private:
 };
 
 #include <QFuture>
-#include <QFutureWatcher>
 #include <QtConcurrent/QtConcurrent>
+#include <QApplication>
 template<typename T>
 void future_run(const std::function<T()> &runnable, std::function<void(QFuture<T>)> onFinished) {
-  QFutureWatcher<T> *watcher = new QFutureWatcher<T>();
-  auto future = QtConcurrent::run(runnable);
-  QObject::connect(watcher, &QFutureWatcher<T>::finished, bind(onFinished, future));
-  QObject::connect(watcher, &QFutureWatcher<T>::finished, &QFutureWatcher<T>::deleteLater);
-  QObject::connect(watcher, &QFutureWatcher<T>::canceled, &QFutureWatcher<T>::deleteLater);
-  watcher->setFuture(future);
+  QFuture<T> future = QtConcurrent::run(runnable);
+  while(! future.isStarted() || future.isRunning()) {
+    qApp->processEvents();
+  }
+  if(future.isFinished())
+    onFinished(future);
 }
 
 

@@ -44,12 +44,16 @@ public:
   virtual void handle(const ImageDataPtr& imageData);
   fps_counter capture_fps;
   void setFPSLimit(int fps);
+  QRect imageRect() const { return _imageRect; }
 signals:
   void gotImage(const QImage &);
   void captureFps(double fps);
+private slots:
+  void create_qimage(const ImageDataPtr& imageData);
 private:
   int milliseconds_limit = 0;
   QElapsedTimer elapsed;
+  QRect _imageRect;
 };
 
 DisplayImage::DisplayImage(QObject* parent): QObject(parent), capture_fps([=](double fps){ emit captureFps(fps);})
@@ -67,12 +71,16 @@ void DisplayImage::handle(const ImageDataPtr& imageData)
     return;
   }
   elapsed.restart();
-  QtConcurrent::run([=]{
-    capture_fps.frame();
-    auto ptrCopy = new ImageDataPtr(imageData);
-    QImage image(imageData->data(), imageData->width(), imageData->height(), QImage::Format_Grayscale8, [](void *data){ delete reinterpret_cast<ImageDataPtr*>(data); }, ptrCopy);
-    emit gotImage(image);
-  });
+  QtConcurrent::run(bind(&DisplayImage::create_qimage, this, imageData));
+}
+
+void DisplayImage::create_qimage(const ImageDataPtr& imageData)
+{
+  capture_fps.frame();
+  auto ptrCopy = new ImageDataPtr(imageData);
+  QImage image{imageData->data(), imageData->width(), imageData->height(), QImage::Format_Grayscale8, [](void *data){ delete reinterpret_cast<ImageDataPtr*>(data); }, ptrCopy};
+  _imageRect = image.rect();
+  emit gotImage(image);
 }
 
 
@@ -92,7 +100,6 @@ public:
   StatusBarInfoWidget *statusbar_info_widget;
   shared_ptr<DisplayImage> displayImage = make_shared<DisplayImage>();
   shared_ptr<SaveImages> saveImages = make_shared<SaveImages>();
-  QRect imageRect;
   
   void connectCamera(const QHYDriver::Camera &camera);
   void cameraDisconnected();
@@ -171,7 +178,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     auto zoom = [=](qreal scale) { d->ui->image->scale(scale, scale); };
     connect(d->ui->actionZoom_In, &QAction::triggered, [=]{ zoom(1.05); });
     connect(d->ui->actionZoom_Out, &QAction::triggered, [=]{ zoom(0.95); });
-    connect(d->ui->actionFit_to_window, &QAction::triggered, [=]{ d->ui->image->fitInView(d->imageRect, Qt::KeepAspectRatio); });
+    connect(d->ui->actionFit_to_window, &QAction::triggered, [=]{ d->ui->image->fitInView(d->displayImage->imageRect(), Qt::KeepAspectRatio); });
     connect(d->ui->actionActual_Size, &QAction::triggered, [=]{ d->ui->image->setTransform({}); });
     
     
@@ -198,8 +205,8 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     connect(d->displayImage.get(), &DisplayImage::gotImage, this, [=](const QImage &image) {
       d->scene->clear();
       d->scene->addPixmap(QPixmap::fromImage(image));
-      d->imageRect = image.rect();
     }, Qt::QueuedConnection);
+
     
     connect(d->displayImage.get(), &DisplayImage::captureFps, d->statusbar_info_widget, &StatusBarInfoWidget::captureFPS, Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::saveFPS, d->statusbar_info_widget, &StatusBarInfoWidget::saveFPS, Qt::QueuedConnection);
@@ -234,8 +241,11 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
 void PlanetaryImagerMainWindow::Private::rescan_devices()
 {
   ui->menu_device_load->clear();
-  future_run<QHYDriver::Cameras>([=]{ return driver.cameras(); }, [=]( const QFuture<QHYDriver::Cameras> &cameras){
-    for(auto device: cameras.result()) {
+  future_run<QHYDriver::Cameras>([=]{ return driver.cameras(); }, [=]( const QHYDriver::Cameras &cameras){
+    for(auto device: cameras) {
+      auto message = tr("Found %1 devices").arg(cameras.size());
+      qDebug() << message;
+      ui->statusbar->showMessage(message, 10000);
       auto action = ui->menu_device_load->addAction(device.name());
       QObject::connect(action, &QAction::triggered, bind(&Private::connectCamera, this, device));
     }
