@@ -59,7 +59,6 @@ void future_run(const std::function<T()> &runnable, std::function<void(QFuture<T
   QObject::connect(watcher, SIGNAL(finished()), watcher, SLOT(deleteLater()));
   QObject::connect(watcher, SIGNAL(canceled()), watcher, SLOT(deleteLater()));
   watcher->setFuture(QtConcurrent::run(runnable));
-
 }
 
 

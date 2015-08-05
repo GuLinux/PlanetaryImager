@@ -13,6 +13,7 @@ set(QHYImager_SRCS
   saveimages.cpp 
   resources/resources.qrc
   fps_counter.cpp
+  camerasettingswidget.cpp
 )
 
 add_executable(planetary_imager ${QHYImager_SRCS})
