@@ -63,7 +63,7 @@ void StatusBarInfoWidget::deviceDisconnected()
 
 void StatusBarInfoWidget::saveFPS(double fps)
 {
-  d->ui->save_fps->setText(QString::number(fps, 'f', 2));
+  d->ui->save_fps->setText(fps > 0 ? QString::number(fps, 'f', 2) : "");
 }
 
 void StatusBarInfoWidget::savedFrames(uint64_t frames)

@@ -33,6 +33,8 @@
 #include <QDateTime>
 #include <QtConcurrent/QtConcurrent>
 #include "fps_counter.h"
+#include <QThread>
+#include <QMutex>
 
 using namespace std;
 using namespace std::placeholders;
@@ -48,12 +50,14 @@ public:
 signals:
   void gotImage(const QImage &);
   void captureFps(double fps);
-private slots:
-  void create_qimage(const ImageDataPtr& imageData);
+public slots:
+  void create_qimages();
 private:
+  QQueue<ImageDataPtr> images;
   int milliseconds_limit = 0;
   QElapsedTimer elapsed;
   QRect _imageRect;
+  QMutex mutex;
 };
 
 DisplayImage::DisplayImage(QObject* parent): QObject(parent), capture_fps([=](double fps){ emit captureFps(fps);})
@@ -67,20 +71,31 @@ void DisplayImage::setFPSLimit(int fps)
 
 void DisplayImage::handle(const ImageDataPtr& imageData)
 {
-  if(milliseconds_limit > 0 && elapsed.elapsed() < milliseconds_limit ) {
+  if( (milliseconds_limit > 0 && elapsed.elapsed() < milliseconds_limit) || images.size() > 50 ) {
     return;
   }
   elapsed.restart();
-  QtConcurrent::run(bind(&DisplayImage::create_qimage, this, imageData));
+  QMutexLocker lock(&mutex);
+  images.enqueue(imageData);
 }
 
-void DisplayImage::create_qimage(const ImageDataPtr& imageData)
+void DisplayImage::create_qimages()
 {
-  capture_fps.frame();
-  auto ptrCopy = new ImageDataPtr(imageData);
-  QImage image{imageData->data(), imageData->width(), imageData->height(), QImage::Format_Grayscale8, [](void *data){ delete reinterpret_cast<ImageDataPtr*>(data); }, ptrCopy};
-  _imageRect = image.rect();
-  emit gotImage(image);
+  ImageDataPtr imageData;
+  while(true) {
+    if(!images.size() > 0)
+      continue;
+    {
+      QMutexLocker lock(&mutex);
+      imageData = images.dequeue();
+    }
+      
+    capture_fps.frame();
+    auto ptrCopy = new ImageDataPtr(imageData);
+    QImage image{imageData->data(), imageData->width(), imageData->height(), QImage::Format_Grayscale8, [](void *data){ delete reinterpret_cast<ImageDataPtr*>(data); }, ptrCopy};
+    _imageRect = image.rect();
+    emit gotImage(image);
+  }
 }
 
 
@@ -99,6 +114,7 @@ public:
   double zoom;
   StatusBarInfoWidget *statusbar_info_widget;
   shared_ptr<DisplayImage> displayImage = make_shared<DisplayImage>();
+  QThread displayImageThread;
   shared_ptr<SaveImages> saveImages = make_shared<SaveImages>();
   
   void connectCamera(const QHYDriver::Camera &camera);
@@ -235,6 +251,10 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
       else
         d->saveImages->setFramesLimit(0);
     });
+    
+    d->saveImages->moveToThread(&d->displayImageThread);
+    connect(&d->displayImageThread, &QThread::started, bind(&DisplayImage::create_qimages, d->displayImage));
+    d->displayImageThread.start();
 }
 
 
