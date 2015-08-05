@@ -53,12 +53,14 @@ signals:
   void captureFps(double fps);
 public slots:
   void create_qimages();
+  void quit() { running = false; }
 private:
   QQueue<ImageDataPtr> images;
   int milliseconds_limit = 0;
   QElapsedTimer elapsed;
   QRect _imageRect;
   QMutex mutex;
+  bool running = true;
 };
 
 DisplayImage::DisplayImage(QObject* parent): QObject(parent), capture_fps([=](double fps){ emit captureFps(fps);})
@@ -83,7 +85,7 @@ void DisplayImage::handle(const ImageDataPtr& imageData)
 void DisplayImage::create_qimages()
 {
   ImageDataPtr imageData;
-  while(true) {
+  while(running) {
     if(!images.size() > 0) {
       QThread::msleep(2);
       continue;
@@ -99,6 +101,7 @@ void DisplayImage::create_qimages()
     _imageRect = image.rect();
     emit gotImage(image);
   }
+  QThread::currentThread()->quit();
 }
 
 
@@ -202,7 +205,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     connect(d->displayImage.get(), &DisplayImage::captureFps, d->statusbar_info_widget, &StatusBarInfoWidget::captureFPS, Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::saveFPS, d->statusbar_info_widget, &StatusBarInfoWidget::saveFPS, Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::savedFrames, d->statusbar_info_widget, &StatusBarInfoWidget::savedFrames, Qt::QueuedConnection);
-    connect(d->ui->actionDisconnect, &QAction::triggered, [=]{ d->imager->stopLive(); d->imager.reset(); d->cameraDisconnected(); });
+    connect(d->ui->actionDisconnect, &QAction::triggered, [=]{ d->imager.reset();});
     d->ui->saveDirectory->setText(d->settings.value("save_directory_output").toString());
     d->ui->filePrefix->setText(d->settings.value("save_file_prefix").toString());
     connect(d->ui->saveDirectory, &QLineEdit::textChanged, [=](const QString &t){ d->settings.setValue("save_directory_output", t);});
@@ -232,6 +235,8 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     d->displayImageThread.start();
     d->ui->settings_container->setLayout(new QVBoxLayout);
     d->ui->settings_container->layout()->setSpacing(0);
+    connect(qApp, &QApplication::aboutToQuit, this, [=]{ d->imager.reset(); }, Qt::QueuedConnection);
+    connect(qApp, &QApplication::aboutToQuit, this, bind(&DisplayImage::quit, d->displayImage), Qt::QueuedConnection);
 }
 
 
@@ -255,8 +260,10 @@ void PlanetaryImagerMainWindow::Private::connectCamera(const QHYDriver::Camera& 
   future_run<QHYCCDImagerPtr>([=]{ return make_shared<QHYCCDImager>(camera, QList<ImageHandlerPtr>{displayImage, saveImages}); }, [=](const QHYCCDImagerPtr &imager){
     if(!imager)
       return;
+    this->imager = imager;
     imager->startLive();
     statusbar_info_widget->deviceConnected(imager->name());
+    connect(imager.get(), &QHYCCDImager::disconnected, q, bind(&Private::cameraDisconnected, this), Qt::QueuedConnection);
     ui->camera_name->setText(imager->name());
     ui->camera_chip_size->setText(QString("%1x%2").arg(imager->chip().width, 2).arg(imager->chip().height, 2));
     ui->camera_bpp->setText("%1"_q % imager->chip().bpp);
@@ -270,6 +277,7 @@ void PlanetaryImagerMainWindow::Private::connectCamera(const QHYDriver::Camera& 
 
 void PlanetaryImagerMainWindow::Private::cameraDisconnected()
 {
+  qDebug() << "camera disconnected";
   enableUIWidgets(false);
   ui->camera_name->clear();
   ui->camera_chip_size->clear();

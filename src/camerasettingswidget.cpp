@@ -8,13 +8,12 @@ class CameraSettingsWidget::Private
 {
 public:
   Private ( const QHYCCDImagerPtr &imager, CameraSettingsWidget *q );
-  QHYCCDImagerPtr imager;
 
 private:
   CameraSettingsWidget *q;
 };
 
-CameraSettingsWidget::Private::Private ( const QHYCCDImagerPtr &imager, CameraSettingsWidget* q ) : imager(imager), q ( q )
+CameraSettingsWidget::Private::Private ( const QHYCCDImagerPtr &imager, CameraSettingsWidget* q ) : q ( q )
 {
 }
 

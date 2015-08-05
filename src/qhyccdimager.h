@@ -48,6 +48,7 @@ public:
     Settings settings() const;  
 signals:
   void changed(const Setting &setting);
+  void disconnected();
 public slots:
   void setSetting(const Setting &setting);
   void startLive();

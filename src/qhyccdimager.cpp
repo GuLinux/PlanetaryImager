@@ -99,12 +99,13 @@ QHYCCDImager::QHYCCDImager(QHYDriver::Camera camera, const QList<ImageHandlerPtr
 QHYCCDImager::~QHYCCDImager()
 {
   qDebug() << "Closing QHYCCD";
-  d->imaging_thread.quit();
-  if(!d->imaging_thread.wait(5000))
-    d->imaging_thread.terminate();
-  
+  if(d->imaging_thread.isRunning()) {
+    d->worker->stop();
+    d->imaging_thread.wait();
+  }
   int result = CloseQHYCCD(d->handle);
   qDebug() << "CloseQHYCCD result: " << result;
+  emit disconnected();
 }
 
 QHYCCDImager::Chip QHYCCDImager::chip() const
@@ -210,6 +211,7 @@ void QHYCCDImager::startLive()
   d->worker = new ImagingWorker{d->handle, this, d->imageHandlers};
   d->worker->moveToThread(&d->imaging_thread);
   connect(&d->imaging_thread, SIGNAL(started()), d->worker, SLOT(start_live()));
+  connect(&d->imaging_thread, SIGNAL(finished()), d->worker, SLOT(deleteLater()));
   d->imaging_thread.start();
   qDebug() << "Live started correctly";
 }
@@ -249,6 +251,7 @@ void ImagingWorker::start_live()
   }
   result = StopQHYCCDLive(handle);
   qDebug() << "Stop live capture result: " << result;
+  QThread::currentThread()->quit();
 }
 
 
@@ -261,14 +264,6 @@ void ImagingWorker::stop()
 void QHYCCDImager::stopLive()
 {
   d->worker->stop();
-  d->imaging_thread.quit();
-  if(d->imaging_thread.wait(2000))
-    qDebug() << "Live stopped correctly";
-  else {
-    qDebug() << "Live stop error, forcing thread terminate";
-    d->imaging_thread.terminate();
-  }
-  delete d->worker;
 }
 
 
