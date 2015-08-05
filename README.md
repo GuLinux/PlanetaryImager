@@ -15,6 +15,6 @@ Compile Howto
 -------------
 
     mkdir build
-    cmake ..
+    cmake .. -DCMAKE_INSTALL_PREFIX=/usr
     make all && sudo make install
     
