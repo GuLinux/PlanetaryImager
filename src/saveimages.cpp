@@ -179,6 +179,7 @@ class WriterThreadWorker : public QObject {
   Q_OBJECT
 public:
   explicit WriterThreadWorker ( const function<FileWriterPtr()> &fileWriterFactory, uint64_t max_frames, QObject* parent = 0 );
+  virtual ~WriterThreadWorker();
 public slots:
   virtual void handle(const ImageDataPtr& imageData);
   void finish() {stop = true; }
@@ -201,6 +202,11 @@ WriterThreadWorker::WriterThreadWorker ( const function< FileWriterPtr()>& fileW
 {
 }
 
+WriterThreadWorker::~WriterThreadWorker()
+{
+}
+
+
 
 void WriterThreadWorker::handle(const ImageDataPtr& imageData)
 {
@@ -217,7 +223,7 @@ void WriterThreadWorker::handle(const ImageDataPtr& imageData)
 void WriterThreadWorker::run()
 {
   auto fileWriter = fileWriterFactory();
-  fps_counter savefps{[=](double fps){ qDebug() << "fps: " << fps; emit saveFPS(fps);}, fps_counter::Elapsed};
+  fps_counter savefps{[=](double fps){ emit saveFPS(fps);}, fps_counter::Elapsed};
   uint64_t frames = 0;
   emit started(fileWriter->filename());
   while(!stop && frames < max_frames) {
@@ -231,6 +237,7 @@ void WriterThreadWorker::run()
     }
   }
   emit finished();
+  QThread::currentThread()->quit();
 }
 
 void SaveImages::setBuffered(bool buffered)
@@ -241,7 +248,7 @@ void SaveImages::setBuffered(bool buffered)
 
 void SaveImages::handle(const ImageDataPtr& imageData)
 {
-  if(!d->worker)
+  if(!d->recordingThread.isRunning())
     return;
   QtConcurrent::run(bind(&WriterThreadWorker::handle, d->worker, imageData));
 }
@@ -251,21 +258,14 @@ void SaveImages::startRecording()
   auto writerFactory = d->writerFactory();
   if(writerFactory) {
     d->worker = new WriterThreadWorker(bind(writerFactory, d->filename, d->buffered), d->max_frames);
-    connect(d->worker, SIGNAL(started(QString)), this, SIGNAL(recording(QString)));
-    connect(d->worker, SIGNAL(finished()), this, SIGNAL(finished()));
-    connect(d->worker, &WriterThreadWorker::finished, this, [=]{
-      d->recordingThread.quit();
-      QtConcurrent::run([=] {
-        d->recordingThread.wait();
-        d->recordingThread.terminate();
-        d->worker = nullptr;
-      });
-    }, Qt::QueuedConnection);
+    connect(d->worker, &WriterThreadWorker::started, bind(&SaveImages::recording, this, _1));
+
+    connect(&d->recordingThread, &QThread::finished, bind(&SaveImages::finished, this));
     connect(d->worker, &WriterThreadWorker::savedFrames, bind(&SaveImages::savedFrames, this, _1));
-    connect(d->worker, SIGNAL(saveFPS(double)), this, SIGNAL(saveFPS(double)));
+    connect(d->worker, &WriterThreadWorker::saveFPS, bind(&SaveImages::saveFPS, this, _1));
     d->worker->moveToThread(&d->recordingThread);
-    connect(&d->recordingThread, SIGNAL(started()), d->worker, SLOT(run()));
-    connect(&d->recordingThread, SIGNAL(finished()), d->worker, SLOT(deleteLater()));
+    connect(&d->recordingThread, &QThread::started, d->worker, &WriterThreadWorker::run);
+    connect(&d->recordingThread, &QThread::finished, d->worker, &WriterThreadWorker::deleteLater);
     d->recordingThread.start();
   }
 }

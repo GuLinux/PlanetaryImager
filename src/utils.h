@@ -54,12 +54,12 @@ private:
 #include <QApplication>
 template<typename T>
 void future_run(const std::function<T()> &runnable, std::function<void(QFuture<T>)> onFinished) {
-  QFuture<T> future = QtConcurrent::run(runnable);
-  while(! future.isStarted() || future.isRunning()) {
-    qApp->processEvents();
-  }
-  if(future.isFinished())
-    onFinished(future);
+  QFutureWatcher< T > *watcher = new QFutureWatcher<T>();
+  QObject::connect(watcher, &QFutureWatcher<T>::finished, [=]{onFinished(watcher->future()); });
+  QObject::connect(watcher, SIGNAL(finished()), watcher, SLOT(deleteLater()));
+  QObject::connect(watcher, SIGNAL(canceled()), watcher, SLOT(deleteLater()));
+  watcher->setFuture(QtConcurrent::run(runnable));
+
 }
 
 
