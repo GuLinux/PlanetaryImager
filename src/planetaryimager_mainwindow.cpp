@@ -84,8 +84,10 @@ void DisplayImage::create_qimages()
 {
   ImageDataPtr imageData;
   while(true) {
-    if(!images.size() > 0)
+    if(!images.size() > 0) {
+      QThread::msleep(2);
       continue;
+    }
     {
       QMutexLocker lock(&mutex);
       imageData = images.dequeue();

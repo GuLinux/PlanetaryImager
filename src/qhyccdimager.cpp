@@ -59,6 +59,7 @@ public:
   void load_settings();
   QThread imaging_thread;
   ImagingWorker *worker;
+  void load(Setting &setting);
 private:
   QHYCCDImager *q;
 };
@@ -177,14 +178,20 @@ void QHYCCDImager::Private::load_settings()
       qCritical() << "error retrieving control " << control.first << ":" << QHYDriver::error_name(result) << "(" << result << ")";
       continue;
     }
-    if(setting.step > 0)
+    if(setting.id == CONTROL_GAIN)
       setting.step /= 10;
-    setting.value = GetQHYCCDParam(handle, control.second);
+    load(setting);
+//     setting.value = GetQHYCCDParam(handle, control.second);
     qDebug() << setting;
     settings << setting;
   }
-  emit q->settingsLoaded(settings);
 }
+
+void QHYCCDImager::Private::load ( QHYCCDImager::Setting& setting )
+{
+  setting.value = GetQHYCCDParam(handle, static_cast<CONTROL_ID>(setting.id));
+}
+
 
 void QHYCCDImager::setSetting(const QHYCCDImager::Setting& setting)
 {
@@ -193,7 +200,9 @@ void QHYCCDImager::setSetting(const QHYCCDImager::Setting& setting)
     qCritical() << "error setting" << setting.name << ":" << QHYDriver::error_name(result) << "(" << result << ")";
     return;
   }
-  d->load_settings();
+  Setting &setting_ref = *find_if(begin(d->settings), end(d->settings), [setting](const Setting &s) { return s.id == setting.id; });
+  d->load(setting_ref);
+  emit changed(setting_ref);
 }
 
 void QHYCCDImager::startLive()
@@ -229,10 +238,13 @@ void ImagingWorker::start_live()
   while(enabled){
     result = GetQHYCCDLiveFrame(handle,&w,&h,&bpp,&channels,buffer);
     if(result != QHYCCD_SUCCESS) {
-      qCritical() << "Error capturing live frame: " << result;
+      qWarning() << "Error capturing live frame: " << result;
+      QThread::msleep(1);
     } else {
       ImageDataPtr imageData = ImageData::create(w, h, bpp, channels, buffer);
-      for_each(begin(imageHandlers), end(imageHandlers), bind(&ImageHandler::handle, _1, imageData));
+      QtConcurrent::run([=]{
+        for_each(begin(imageHandlers), end(imageHandlers), bind(&ImageHandler::handle, _1, imageData));
+      });
     }
   }
   result = StopQHYCCDLive(handle);

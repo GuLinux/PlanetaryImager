@@ -47,7 +47,7 @@ public:
     typedef QList<Setting> Settings;
     Settings settings() const;  
 signals:
-  void settingsLoaded(const Settings settings);
+  void changed(const Setting &setting);
 public slots:
   void setSetting(const Setting &setting);
   void startLive();

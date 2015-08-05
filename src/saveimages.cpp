@@ -206,14 +206,14 @@ WriterThreadWorker::~WriterThreadWorker()
 {
 }
 
-
+#define MB(arg) (arg* 1024 * 1024)
 
 void WriterThreadWorker::handle(const ImageDataPtr& imageData)
 {
   QMutexLocker lock(&mutex);
   auto framesQueueSize = framesQueue.size();
-  if(framesQueueSize> 50) {
-    qWarning() << "Frames queue too high (" << framesQueueSize << ", dropping frame";
+  if(framesQueueSize> 0 && framesQueueSize * imageData->size() > MB(15)) {
+    qWarning() << "Frames queue too high (" << framesQueueSize << ", " <<  static_cast<double>(framesQueueSize * imageData->size())/MB(1) << " MB), dropping frame";
     return;
   }
   framesQueue.enqueue(imageData); 
@@ -234,6 +234,8 @@ void WriterThreadWorker::run()
       }
       savefps.frame();
       emit savedFrames(++frames);
+    } else {
+      QThread::msleep(1);
     }
   }
   emit finished();
