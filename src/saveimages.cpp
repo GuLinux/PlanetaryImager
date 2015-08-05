@@ -205,6 +205,11 @@ WriterThreadWorker::WriterThreadWorker ( const function< FileWriterPtr()>& fileW
 void WriterThreadWorker::handle(const ImageDataPtr& imageData)
 {
   QMutexLocker lock(&mutex);
+  auto framesQueueSize = framesQueue.size();
+  if(framesQueueSize> 50) {
+    qWarning() << "Frames queue too high (" << framesQueueSize << ", dropping frame";
+    return;
+  }
   framesQueue.enqueue(imageData); 
 }
 
@@ -216,12 +221,7 @@ void WriterThreadWorker::run()
   uint64_t frames = 0;
   emit started(fileWriter->filename());
   while(!stop && frames < max_frames) {
-    auto framesQueueSize = framesQueue.size();
-    if(framesQueueSize>0) {
-      if(framesQueueSize> 50) {
-        qWarning() << "Frames queue too high (" << framesQueueSize << ", dropping frame";
-        return;
-      }
+    if(framesQueue.size()>0) {
       {
 	QMutexLocker lock(&mutex);
 	fileWriter->handle(framesQueue.dequeue());
