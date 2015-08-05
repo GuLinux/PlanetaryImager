@@ -44,6 +44,11 @@ CameraSettingWidget::CameraSettingWidget(const QHYCCDImager::Setting& setting, c
     s.value = v;
         imager->setSetting(s);
   });
+  connect(imagerPtr.get(), &QHYCCDImager::changed, [=](const QHYCCDImager::Setting &changed_setting){
+    if(changed_setting.id != setting.id)
+      return;
+    spinbox->setValue(changed_setting.value);
+  });
 }
 
 
