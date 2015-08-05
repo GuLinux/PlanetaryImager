@@ -33,6 +33,7 @@
 #include <QDateTime>
 #include <QtConcurrent/QtConcurrent>
 #include "fps_counter.h"
+#include "camerasettingswidget.h"
 #include <QThread>
 #include <QMutex>
 
@@ -109,13 +110,13 @@ public:
   void rescan_devices();
   QSettings settings;
   void saveState();
-  QBoxLayout *settings_layout;
   QGraphicsScene *scene;
   double zoom;
   StatusBarInfoWidget *statusbar_info_widget;
   shared_ptr<DisplayImage> displayImage = make_shared<DisplayImage>();
   QThread displayImageThread;
   shared_ptr<SaveImages> saveImages = make_shared<SaveImages>();
+  CameraSettingsWidget* cameraSettingsWidget;
   
   void connectCamera(const QHYDriver::Camera &camera);
   void cameraDisconnected();
@@ -123,34 +124,6 @@ public:
 private:
   PlanetaryImagerMainWindow *q;
 };
-
-
-class CameraSettingWidget : public QWidget {
-  Q_OBJECT
-public:
-  CameraSettingWidget(const QHYCCDImager::Setting &setting, const QHYCCDImagerPtr &imagerPtr, QWidget* parent = 0);  
-};
-
-CameraSettingWidget::CameraSettingWidget(const QHYCCDImager::Setting& setting, const QHYCCDImagerPtr& imagerPtr, QWidget* parent): QWidget(parent)
-{
-  setObjectName("setting_%1"_q % setting.name);
-  auto layout = new QHBoxLayout;
-  setLayout(layout);
-  layout->addWidget(new QLabel(tr(qPrintable(setting.name))));
-  QDoubleSpinBox *spinbox = new QDoubleSpinBox;
-  spinbox->setMinimum(setting.min);
-  spinbox->setMaximum(setting.max);
-  spinbox->setSingleStep(setting.step != 0 ? setting.step : 0.1);
-  spinbox->setValue(setting.value);
-  layout->addWidget(spinbox);
-  QHYCCDImager *imager = imagerPtr.get();
-  connect(spinbox, static_cast<void (QDoubleSpinBox::*)(double)>(&QDoubleSpinBox::valueChanged), [=] (double v) {
-    auto s = setting;
-    s.value = v;
-        imager->setSetting(s);
-  });
-}
-
 
 PlanetaryImagerMainWindow::Private::Private(PlanetaryImagerMainWindow* q) : ui{make_shared<Ui::PlanetaryImagerMainWindow>()}, settings{"GuLinux", "QHYImager"}, q{q}
 {
@@ -217,7 +190,6 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     connect(d->ui->actionHide_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::hide, _1) ); });
     connect(d->ui->actionShow_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::show, _1) ); });
     
-    d->ui->settings_frame->setLayout(d->settings_layout = new QVBoxLayout);
     d->rescan_devices();
     connect(d->displayImage.get(), &DisplayImage::gotImage, this, [=](const QImage &image) {
       d->scene->clear();
@@ -256,6 +228,8 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     d->saveImages->moveToThread(&d->displayImageThread);
     connect(&d->displayImageThread, &QThread::started, bind(&DisplayImage::create_qimages, d->displayImage));
     d->displayImageThread.start();
+    d->ui->settings_container->setLayout(new QVBoxLayout);
+    d->ui->settings_container->layout()->setSpacing(0);
 }
 
 
@@ -276,8 +250,7 @@ void PlanetaryImagerMainWindow::Private::rescan_devices()
 
 void PlanetaryImagerMainWindow::Private::connectCamera(const QHYDriver::Camera& camera)
 {
-  future_run<QHYCCDImagerPtr>([=]{ return make_shared<QHYCCDImager>(camera, QList<ImageHandlerPtr>{displayImage, saveImages}); }, [=](const QFuture<QHYCCDImagerPtr> &f){
-    imager = f.result();
+  future_run<QHYCCDImagerPtr>([=]{ return make_shared<QHYCCDImager>(camera, QList<ImageHandlerPtr>{displayImage, saveImages}); }, [=](const QHYCCDImagerPtr &imager){
     if(!imager)
       return;
     imager->startLive();
@@ -287,13 +260,7 @@ void PlanetaryImagerMainWindow::Private::connectCamera(const QHYDriver::Camera& 
     ui->camera_bpp->setText("%1"_q % imager->chip().bpp);
     ui->camera_pixels_size->setText(QString("%1x%2").arg(imager->chip().pixelwidth, 2).arg(imager->chip().pixelheight, 2));
     ui->camera_resolution->setText(QString("%1x%2").arg(imager->chip().xres, 2).arg(imager->chip().yres, 2));
-
-    auto settings_widgets = ui->settings_frame->findChildren<QWidget*>(QRegularExpression{"setting_.*"});
-    for_each(begin(settings_widgets), end(settings_widgets), bind(&QWidget::deleteLater, _1));
-    for(auto setting: imager->settings()) {
-      qDebug() << "adding setting: " << setting;
-      settings_layout->addWidget(new CameraSettingWidget{setting, imager});
-    }
+    ui->settings_container->layout()->addWidget(cameraSettingsWidget = new CameraSettingsWidget(imager));
     enableUIWidgets(true);
   });
 }
@@ -307,8 +274,7 @@ void PlanetaryImagerMainWindow::Private::cameraDisconnected()
   ui->camera_bpp->clear();
   ui->camera_pixels_size->clear();
   ui->camera_resolution->clear();
-  auto settings_widgets = ui->settings_frame->findChildren<QWidget*>(QRegularExpression{"setting_.*"});
-  for_each(begin(settings_widgets), end(settings_widgets), bind(&QWidget::deleteLater, _1));
+  delete cameraSettingsWidget;
   scene->clear();
 }
 
