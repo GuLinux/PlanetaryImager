@@ -19,6 +19,8 @@
 
 #include "statusbarinfowidget.h"
 #include "ui_statusbarinfowidget.h"
+#include <QDebug>
+
 using namespace std;
 
 class StatusBarInfoWidget::Private {

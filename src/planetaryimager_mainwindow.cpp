@@ -206,10 +206,11 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
       d->saveImages->startRecording();
     });
     connect(d->ui->stop_recording, &QPushButton::clicked, bind(&SaveImages::endRecording, d->saveImages));
-    connect(d->saveImages.get(), &SaveImages::recording, bind(&DisplayImage::setFPSLimit, d->displayImage, 5));
-    connect(d->saveImages.get(), &SaveImages::recording, d->statusbar_info_widget, &StatusBarInfoWidget::saveFile);
-    connect(d->saveImages.get(), &SaveImages::finished, bind(&StatusBarInfoWidget::saveFile, d->statusbar_info_widget, QString{}));
-    connect(d->saveImages.get(), &SaveImages::finished, bind(&DisplayImage::setFPSLimit, d->displayImage, 0));
+    connect(d->saveImages.get(), &SaveImages::recording, d->displayImage.get(), bind(&DisplayImage::setFPSLimit, d->displayImage, 5), Qt::QueuedConnection);
+    connect(d->saveImages.get(), &SaveImages::recording, d->statusbar_info_widget, &StatusBarInfoWidget::saveFile, Qt::QueuedConnection);
+    connect(d->saveImages.get(), &SaveImages::finished, this, bind(&StatusBarInfoWidget::saveFile, d->statusbar_info_widget, QString{}), Qt::QueuedConnection);
+    connect(d->saveImages.get(), &SaveImages::finished, d->displayImage.get(), bind(&DisplayImage::setFPSLimit, d->displayImage, 0), Qt::QueuedConnection);
+    connect(d->saveImages.get(), &SaveImages::finished, this, bind(&StatusBarInfoWidget::saveFPS, d->statusbar_info_widget, 0), Qt::QueuedConnection);
     setupDockWidget(d->ui->actionChip_Info, d->ui->chipInfoWidget);
     setupDockWidget(d->ui->actionCamera_Settings, d->ui->camera_settings);
     setupDockWidget(d->ui->actionRecording, d->ui->recording);
