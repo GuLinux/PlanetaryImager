@@ -83,7 +83,8 @@ public:
   virtual QString filename() const;
 private:
   QFile file;
-  SER_Header header;
+  SER_Header *header;
+  uint32_t frames = 0;
 };
 
 
@@ -95,19 +96,18 @@ SER_Writer::SER_Writer(const QString& filename, bool buffered) : file("%1.ser"_q
     file.open(QIODevice::ReadWrite);
   else
     file.open(QIODevice::ReadWrite | QIODevice::Unbuffered);
-  
-  file.write(reinterpret_cast<char*>(&header), sizeof(header));
+  SER_Header empty_header;
+  file.write(reinterpret_cast<char*>(&empty_header), sizeof(empty_header));
   file.flush();
-
+  header = reinterpret_cast<SER_Header*>(file.map(0, sizeof(SER_Header)));
+  if(!header) {
+    qDebug() << file.errorString();
+  }
 }
 
 SER_Writer::~SER_Writer()
 {
-  SER_Header *mem_header = reinterpret_cast<SER_Header*>(file.map(0, sizeof(SER_Header)));
-  if(!mem_header) {
-    qDebug() << file.errorString();
-  }
-  std::memcpy(mem_header, &header, sizeof(header));
+  header->frames = frames;
   file.close();
 }
 
@@ -119,14 +119,18 @@ QString SER_Writer::filename() const
 
 void SER_Writer::handle(const ImageDataPtr& imageData)
 {
-  if(! header.imageWidth) {
-    header.colorId = imageData->channels() == 1 ? SER_Header::MONO : SER_Header::RGB;
-    header.pixelDepth = imageData->bpp();
-    header.imageWidth = imageData->width();
-    header.imageHeight = imageData->height();
+  if(! header->imageWidth) {
+    header->colorId = imageData->channels() == 1 ? SER_Header::MONO : SER_Header::RGB;
+    header->pixelDepth = imageData->bpp();
+    header->imageWidth = imageData->width();
+    header->imageHeight = imageData->height();
   }
   file.write(reinterpret_cast<const char*>(imageData->data()), imageData->size());
-  header.frames++;
+  ++frames;
+  if((frames % 100) == 0) {
+    header->frames = frames;
+    file.flush();
+  }
 }
 
 
