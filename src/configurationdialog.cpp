@@ -18,15 +18,29 @@
  */
 
 #include "configurationdialog.h"
+#include "configuration.h"
 #include "ui_configurationdialog.h"
+#include "utils.h"
+#include <functional>
+using namespace std::placeholders;
 
 ConfigurationDialog::~ConfigurationDialog()
 {
     delete ui;
 }
 
-ConfigurationDialog::ConfigurationDialog(QSettings &settings, QWidget* parent) : QDialog(parent), settings(settings)
+ConfigurationDialog::ConfigurationDialog(Configuration& configuration, QWidget* parent) : QDialog(parent), configuration(configuration)
 {
     ui = new Ui::ConfigurationDialog;
     ui->setupUi(this);
+    ui->buffered_file->setChecked(configuration.bufferedOutput());
+    ui->drop_view_fps_on_save->setChecked(configuration.maxPreviewFPSOnSaving() > 0);
+    ui->memory_limit->setRange(0, 100*1024*1024);
+    connect(ui->memory_limit, &QSlider::valueChanged, [=,&configuration](int value) {
+      ui->memory_limit_label->setText("%1 MB"_q % QString::number(static_cast<double>(value/(1024.*1024)), 'f', 2));
+      configuration.setMaxMemoryUsage(value);
+    });
+    connect(ui->buffered_file, &QCheckBox::toggled, bind(&Configuration::setBufferedOutput, &configuration, _1));
+    connect(ui->drop_view_fps_on_save, &QCheckBox::toggled, [&configuration](bool checked){ configuration.setMaxPreviewFPSOnSaving(checked ? 10 : 0); });
+    ui->memory_limit->setValue(configuration.maxMemoryUsage());
 }

@@ -22,7 +22,7 @@
 
 #include <QDialog>
 
-class QSettings;
+class Configuration;
 namespace Ui
 {
 class ConfigurationDialog;
@@ -33,11 +33,11 @@ class ConfigurationDialog : public QDialog
     Q_OBJECT
 public:
     ~ConfigurationDialog();
-    ConfigurationDialog(QSettings &settings, QWidget* parent = 0);
+    ConfigurationDialog(Configuration &configuration, QWidget* parent = 0);
 
 private:
     Ui::ConfigurationDialog* ui;
-    QSettings &settings;
+    Configuration &configuration;
 };
 
 #endif // CONFIGURATIONDIALOG_H

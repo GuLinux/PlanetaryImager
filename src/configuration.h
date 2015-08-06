@@ -17,34 +17,28 @@
  *
  */
 
-#ifndef SAVEIMAGE_H
-#define SAVEIMAGE_H
-
-#include "imagehandler.h"
-#include <QObject>
+#ifndef CONFIGURATION_H
+#define CONFIGURATION_H
 #include "dptr.h"
 
-class Configuration;
-class SaveImages : public QObject, public ImageHandler
+class QSettings;
+class Configuration
 {
-  Q_OBJECT
 public:
-    SaveImages(Configuration &configuration, QObject *parent = 0);
-    ~SaveImages();
-    virtual void handle(const ImageDataPtr& imageData);
-    enum Format { SER };
-public slots:
-  void setOutput(const QString &filename, Format format = SER);
-  void startRecording();
-  void endRecording();
-  void setFramesLimit(uint64_t max_frames);
+    Configuration(QSettings &settings);
+    ~Configuration();
+        
+    long long maxMemoryUsage() const;
+    void setMaxMemoryUsage(long long memoryUsage);
+    
+    bool bufferedOutput() const;
+    void setBufferedOutput(bool buffered);
+    
+    int maxPreviewFPSOnSaving() const;
+    void setMaxPreviewFPSOnSaving(int maxFPS);
+
 private:
   D_PTR
-signals:
-  void saveFPS(double fps);
-  void savedFrames(uint64_t frames);
-  void recording(const QString &filename);
-  void finished();
 };
 
-#endif // SAVEIMAGE_H
+#endif // CONFIGURATION_H
