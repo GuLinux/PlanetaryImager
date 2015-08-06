@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>1025</width>
-    <height>851</height>
+    <width>997</width>
+    <height>543</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -35,8 +35,8 @@
     <rect>
      <x>0</x>
      <y>0</y>
-     <width>1025</width>
-     <height>28</height>
+     <width>997</width>
+     <height>27</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuDevice">
@@ -72,9 +72,18 @@
     <addaction name="actionActual_Size"/>
     <addaction name="actionFit_to_window"/>
    </widget>
+   <widget class="QMenu" name="menuSettings">
+    <property name="title">
+     <string>Configuration</string>
+    </property>
+    <addaction name="actionShow_settings"/>
+    <addaction name="actionAbout"/>
+    <addaction name="actionAbout_Qt"/>
+   </widget>
    <addaction name="menuDevice"/>
    <addaction name="menuPanels"/>
    <addaction name="menuView"/>
+   <addaction name="menuSettings"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QDockWidget" name="chipInfoWidget">
@@ -539,6 +548,21 @@
    </property>
    <property name="shortcut">
     <string>Ctrl+Shift+H</string>
+   </property>
+  </action>
+  <action name="actionShow_settings">
+   <property name="text">
+    <string>&amp;Show settings</string>
+   </property>
+  </action>
+  <action name="actionAbout">
+   <property name="text">
+    <string>&amp;About Planetary Imager</string>
+   </property>
+  </action>
+  <action name="actionAbout_Qt">
+   <property name="text">
+    <string>About Qt</string>
    </property>
   </action>
  </widget>
