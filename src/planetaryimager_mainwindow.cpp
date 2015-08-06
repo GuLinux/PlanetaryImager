@@ -130,7 +130,7 @@ private:
   PlanetaryImagerMainWindow *q;
 };
 
-PlanetaryImagerMainWindow::Private::Private(PlanetaryImagerMainWindow* q) : ui{make_shared<Ui::PlanetaryImagerMainWindow>()}, settings{"GuLinux", "QHYImager"}, q{q}
+PlanetaryImagerMainWindow::Private::Private(PlanetaryImagerMainWindow* q) : ui{make_shared<Ui::PlanetaryImagerMainWindow>()}, settings{"GuLinux", qApp->applicationName()}, q{q}
 {
 }
 
@@ -269,7 +269,7 @@ void PlanetaryImagerMainWindow::Private::connectCamera(const QHYDriver::Camera& 
     ui->camera_bpp->setText("%1"_q % imager->chip().bpp);
     ui->camera_pixels_size->setText(QString("%1x%2").arg(imager->chip().pixelwidth, 2).arg(imager->chip().pixelheight, 2));
     ui->camera_resolution->setText(QString("%1x%2").arg(imager->chip().xres, 2).arg(imager->chip().yres, 2));
-    ui->settings_container->layout()->addWidget(cameraSettingsWidget = new CameraSettingsWidget(imager));
+    ui->settings_container->layout()->addWidget(cameraSettingsWidget = new CameraSettingsWidget(imager, settings));
     enableUIWidgets(true);
   });
 }
