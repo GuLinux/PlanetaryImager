@@ -34,8 +34,10 @@
 #include <QtConcurrent/QtConcurrent>
 #include "fps_counter.h"
 #include "camerasettingswidget.h"
+#include "configurationdialog.h"
 #include <QThread>
 #include <QMutex>
+#include <QMessageBox>
 
 using namespace std;
 using namespace std::placeholders;
@@ -122,6 +124,7 @@ public:
   QThread displayImageThread;
   shared_ptr<SaveImages> saveImages = make_shared<SaveImages>();
   CameraSettingsWidget* cameraSettingsWidget;
+  ConfigurationDialog *configurationDialog;
   
   void connectCamera(const QHYDriver::Camera &camera);
   void cameraDisconnected();
@@ -150,10 +153,16 @@ void PlanetaryImagerMainWindow::Private::saveState()
 PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::WindowFlags flags) : dpointer(this)
 {
     d->ui->setupUi(this);
+    d->configurationDialog = new ConfigurationDialog(d->settings, this);
     d->ui->statusbar->addPermanentWidget(d->statusbar_info_widget = new StatusBarInfoWidget(), 1);
     d->scene = new QGraphicsScene(this);
     restoreState(d->settings.value("dock_settings").toByteArray());
+    connect(d->ui->actionAbout, &QAction::triggered, bind(&QMessageBox::about, this, tr("About"),
+							  tr("%1 version %2.\nFast imaging capture software for planetary imaging").arg(qApp->applicationDisplayName())
+							 .arg(qApp->applicationVersion())));
+    connect(d->ui->actionAbout_Qt, &QAction::triggered, &QApplication::aboutQt);
     connect(d->ui->action_devices_rescan, &QAction::triggered, bind(&Private::rescan_devices, d.get()));
+    connect(d->ui->actionShow_settings, &QAction::triggered, bind(&QDialog::show, d->configurationDialog));
     
     d->ui->image->setScene(d->scene);
     auto dockWidgetToggleVisibility = [=](QDockWidget *widget, bool visible){ widget->setVisible(visible); };
