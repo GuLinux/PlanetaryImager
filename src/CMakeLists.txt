@@ -28,6 +28,6 @@ else(CMAKE_SIZEOF_VOID_P MATCHES "8")
 endif(CMAKE_SIZEOF_VOID_P MATCHES "8")
 
 
-target_link_libraries(planetary_imager ${QHY_LIBRARY} Qt5::Widgets Qt5::Multimedia )
+target_link_libraries(planetary_imager ${QHY_LIBRARY} Qt5::Widgets )
 
 install(TARGETS planetary_imager RUNTIME DESTINATION bin)
