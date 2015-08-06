@@ -244,9 +244,7 @@ void ImagingWorker::start_live()
       QThread::msleep(1);
     } else {
       ImageDataPtr imageData = ImageData::create(w, h, bpp, channels, buffer);
-      QtConcurrent::run([=]{
-        for_each(begin(imageHandlers), end(imageHandlers), bind(&ImageHandler::handle, _1, imageData));
-      });
+      for_each(begin(imageHandlers), end(imageHandlers), bind(&ImageHandler::handle, _1, imageData));
     }
   }
   result = StopQHYCCDLive(handle);

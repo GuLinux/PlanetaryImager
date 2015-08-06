@@ -35,6 +35,7 @@
 #include "fps_counter.h"
 #include "camerasettingswidget.h"
 #include "configurationdialog.h"
+#include "configuration.h"
 #include <QThread>
 #include <QMutex>
 #include <QMessageBox>
@@ -45,10 +46,10 @@ using namespace std::placeholders;
 class DisplayImage : public QObject, public ImageHandler {
   Q_OBJECT
 public:
-  DisplayImage(QObject* parent = 0);
+  DisplayImage(Configuration &configuration, QObject* parent = 0);
   virtual void handle(const ImageDataPtr& imageData);
   fps_counter capture_fps;
-  void setFPSLimit(int fps);
+  void setRecording(bool recording);
   QRect imageRect() const { return _imageRect; }
 signals:
   void gotImage(const QImage &);
@@ -57,6 +58,7 @@ public slots:
   void create_qimages();
   void quit() { running = false; }
 private:
+  Configuration &configuration;
   QQueue<ImageDataPtr> images;
   int milliseconds_limit = 0;
   QElapsedTimer elapsed;
@@ -65,14 +67,17 @@ private:
   bool running = true;
 };
 
-DisplayImage::DisplayImage(QObject* parent): QObject(parent), capture_fps([=](double fps){ emit captureFps(fps);})
+DisplayImage::DisplayImage(Configuration& configuration, QObject* parent): QObject(parent), configuration{configuration}, capture_fps([=](double fps){ emit captureFps(fps);})
 {
 }
 
-void DisplayImage::setFPSLimit(int fps)
+
+void DisplayImage::setRecording(bool recording)
 {
+  int fps = recording ? configuration.maxPreviewFPSOnSaving() : 0;
   milliseconds_limit = (fps == 0 ? 0 : 1000/fps);
 }
+
 
 void DisplayImage::handle(const ImageDataPtr& imageData)
 {
@@ -116,13 +121,14 @@ public:
   QHYCCDImagerPtr imager;
   void rescan_devices();
   QSettings settings;
+  Configuration configuration;
   void saveState();
   QGraphicsScene *scene;
   double zoom;
   StatusBarInfoWidget *statusbar_info_widget;
-  shared_ptr<DisplayImage> displayImage = make_shared<DisplayImage>();
+  shared_ptr<DisplayImage> displayImage;
   QThread displayImageThread;
-  shared_ptr<SaveImages> saveImages = make_shared<SaveImages>();
+  shared_ptr<SaveImages> saveImages;
   CameraSettingsWidget* cameraSettingsWidget;
   ConfigurationDialog *configurationDialog;
   
@@ -133,7 +139,7 @@ private:
   PlanetaryImagerMainWindow *q;
 };
 
-PlanetaryImagerMainWindow::Private::Private(PlanetaryImagerMainWindow* q) : ui{make_shared<Ui::PlanetaryImagerMainWindow>()}, settings{"GuLinux", qApp->applicationName()}, q{q}
+PlanetaryImagerMainWindow::Private::Private(PlanetaryImagerMainWindow* q) : ui{make_shared<Ui::PlanetaryImagerMainWindow>()}, settings{"GuLinux", qApp->applicationName()}, configuration{settings}, q{q}
 {
 }
 
@@ -153,7 +159,9 @@ void PlanetaryImagerMainWindow::Private::saveState()
 PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::WindowFlags flags) : dpointer(this)
 {
     d->ui->setupUi(this);
-    d->configurationDialog = new ConfigurationDialog(d->settings, this);
+    d->configurationDialog = new ConfigurationDialog(d->configuration, this);
+    d->displayImage = make_shared<DisplayImage>(d->configuration);
+    d->saveImages = make_shared<SaveImages>(d->configuration);
     d->ui->statusbar->addPermanentWidget(d->statusbar_info_widget = new StatusBarInfoWidget(), 1);
     d->scene = new QGraphicsScene(this);
     restoreState(d->settings.value("dock_settings").toByteArray());
@@ -193,10 +201,10 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
       d->saveImages->startRecording();
     });
     connect(d->ui->stop_recording, &QPushButton::clicked, bind(&SaveImages::endRecording, d->saveImages));
-    connect(d->saveImages.get(), &SaveImages::recording, d->displayImage.get(), bind(&DisplayImage::setFPSLimit, d->displayImage, 5), Qt::QueuedConnection);
+    connect(d->saveImages.get(), &SaveImages::recording, d->displayImage.get(), bind(&DisplayImage::setRecording, d->displayImage, true), Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::recording, d->statusbar_info_widget, &StatusBarInfoWidget::saveFile, Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::finished, this, bind(&StatusBarInfoWidget::saveFile, d->statusbar_info_widget, QString{}), Qt::QueuedConnection);
-    connect(d->saveImages.get(), &SaveImages::finished, d->displayImage.get(), bind(&DisplayImage::setFPSLimit, d->displayImage, 0), Qt::QueuedConnection);
+    connect(d->saveImages.get(), &SaveImages::finished, d->displayImage.get(), bind(&DisplayImage::setRecording, d->displayImage, false), Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::finished, this, bind(&StatusBarInfoWidget::saveFPS, d->statusbar_info_widget, 0), Qt::QueuedConnection);
     setupDockWidget(d->ui->actionChip_Info, d->ui->chipInfoWidget);
     setupDockWidget(d->ui->actionCamera_Settings, d->ui->camera_settings);
@@ -219,8 +227,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     d->ui->filePrefix->setText(d->settings.value("save_file_prefix").toString());
     connect(d->ui->saveDirectory, &QLineEdit::textChanged, [=](const QString &t){ d->settings.setValue("save_directory_output", t);});
     connect(d->ui->filePrefix, &QLineEdit::textChanged, [=](const QString &t){ d->settings.setValue("save_file_prefix", t);});
-    d->saveImages->setBuffered(d->ui->save_file_buffered->isChecked());
-    connect(d->ui->save_file_buffered, &QCheckBox::toggled, bind(&SaveImages::setBuffered, d->saveImages, _1));
+
     auto pickDirectory = d->ui->saveDirectory->addAction(QIcon(":/resources/folder.png"), QLineEdit::TrailingPosition);
     connect(pickDirectory, &QAction::triggered, [=]{
       QFileDialog *filedialog = new QFileDialog(this);

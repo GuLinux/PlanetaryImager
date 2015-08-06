@@ -16,6 +16,7 @@ set(QHYImager_SRCS
   camerasettingswidget.cpp
   configurationdialog.cpp
   configurationdialog.ui
+  configuration.cpp
 )
 
 add_executable(planetary_imager ${QHYImager_SRCS})
