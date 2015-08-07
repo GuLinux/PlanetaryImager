@@ -107,8 +107,10 @@ SER_Writer::SER_Writer(const QString& filename, bool buffered) : file("%1.ser"_q
 
 SER_Writer::~SER_Writer()
 {
+  qDebug() << "closing file..";
   header->frames = frames;
   file.close();
+  qDebug() << "file correctly closed.";
 }
 
 QString SER_Writer::filename() const
@@ -229,24 +231,28 @@ void WriterThreadWorker::handle(const ImageDataPtr& imageData)
 
 void WriterThreadWorker::run()
 {
-  auto fileWriter = fileWriterFactory();
-  fps_counter savefps{[=](double fps){ emit saveFPS(fps);}, fps_counter::Elapsed};
-  uint64_t frames = 0;
-  emit started(fileWriter->filename());
-  while(!stop && frames < max_frames) {
-    if(framesQueue.size()>0) {
-      {
-	QMutexLocker lock(&mutex);
-	fileWriter->handle(framesQueue.dequeue());
+  {
+    auto fileWriter = fileWriterFactory();
+    fps_counter savefps{[=](double fps){ emit saveFPS(fps);}, fps_counter::Elapsed};
+    uint64_t frames = 0;
+    emit started(fileWriter->filename());
+    while(!stop && frames < max_frames) {
+      if(framesQueue.size()>0) {
+	{
+	  QMutexLocker lock(&mutex);
+	  fileWriter->handle(framesQueue.dequeue());
+	}
+	savefps.frame();
+	emit savedFrames(++frames);
+      } else {
+	QThread::msleep(1);
       }
-      savefps.frame();
-      emit savedFrames(++frames);
-    } else {
-      QThread::msleep(1);
     }
   }
+  qDebug() << "closing thread";
   emit finished();
   QThread::currentThread()->quit();
+  qDebug() << "finished worker";
 }
 
 

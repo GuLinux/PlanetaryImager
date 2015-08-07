@@ -22,7 +22,7 @@ VOLUME "/PlanetaryImager"
 VOLUME "/PlanetaryImager-dist"
 WORKDIR /PlanetaryImager-build
 
-RUN find /opt/ -name "*.so" -not -regex '.*examples.*' | rsync -avPh --files-from=- / /PlanetaryImager-install/
+RUN find /opt/ -name "*.so*" -not -regex '.*examples.*' | rsync -avPh --files-from=- / /PlanetaryImager-install/
 RUN mkdir -p /PlanetaryImager-install/usr/bin
 COPY planetary_imager_launcher /PlanetaryImager-install/usr/bin/
 
