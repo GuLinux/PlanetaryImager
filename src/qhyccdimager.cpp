@@ -88,7 +88,7 @@ QHYCCDImager::QHYCCDImager(QHYDriver::Camera camera, const QList<ImageHandlerPtr
   GetQHYCCDFWVersion(d->handle, st);
   copy(begin(st), end(st), begin(buf));
   qDebug() << "firmware version: " << QByteArray{buf};
-  GetQHYCCDChipInfo(d->handle, &d->chip.width, &d->chip.height, &d->chip.xres, &d->chip.yres, &d->chip.pixelwidth, &d->chip.pixelwidth, &d->chip.bpp);
+  GetQHYCCDChipInfo(d->handle, &d->chip.width, &d->chip.height, &d->chip.xres, &d->chip.yres, &d->chip.pixelwidth, &d->chip.pixelheight, &d->chip.bpp);
   qDebug() << d->chip;
   d->load_settings();
   qDebug() << d->settings;
