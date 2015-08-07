@@ -23,7 +23,8 @@ VOLUME "/PlanetaryImager-dist"
 WORKDIR /PlanetaryImager-build
 
 RUN find /opt/ -name "*.so" -not -regex '.*examples.*' | rsync -avPh --files-from=- / /PlanetaryImager-install/
-
+RUN mkdir -p /PlanetaryImager-install/usr/bin
+COPY planetary_imager_launcher /PlanetaryImager-install/usr/bin/
 
 CMD cmake /PlanetaryImager -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DQt5Widgets_DIR=/opt/qt-5.5/lib/cmake/Qt5Widgets -DQt5Test_DIR=/opt/qt-5.5/lib/cmake/Qt5Test/ \
   && make -j4 && make install DESTDIR=/PlanetaryImager-install && cd /PlanetaryImager-install && tar czvf /PlanetaryImager-dist/PlanetaryImager.tar.gz .
