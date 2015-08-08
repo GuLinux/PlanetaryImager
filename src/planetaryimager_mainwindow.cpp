@@ -69,13 +69,15 @@ private:
 
 DisplayImage::DisplayImage(Configuration& configuration, QObject* parent): QObject(parent), configuration{configuration}, capture_fps([=](double fps){ emit captureFps(fps);})
 {
+    setRecording(false);
 }
 
 
 void DisplayImage::setRecording(bool recording)
 {
   int fps = recording ? configuration.maxPreviewFPSOnSaving() : 0;
-  milliseconds_limit = (fps == 0 ? 0 : 1000/fps);
+  milliseconds_limit = (fps == 0 ? 1000./40. : 1000/fps);
+  elapsed.restart();
 }
 
 
@@ -204,7 +206,9 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     connect(d->saveImages.get(), &SaveImages::recording, d->displayImage.get(), bind(&DisplayImage::setRecording, d->displayImage, true), Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::recording, d->statusbar_info_widget, &StatusBarInfoWidget::saveFile, Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::finished, this, bind(&StatusBarInfoWidget::saveFile, d->statusbar_info_widget, QString{}), Qt::QueuedConnection);
-    connect(d->saveImages.get(), &SaveImages::finished, d->displayImage.get(), bind(&DisplayImage::setRecording, d->displayImage, false), Qt::QueuedConnection);
+    connect(d->saveImages.get(), &SaveImages::finished, d->displayImage.get(), [=]{
+        QTimer::singleShot(5000,  bind(&DisplayImage::setRecording, d->displayImage, false));
+    }, Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::finished, this, bind(&StatusBarInfoWidget::saveFPS, d->statusbar_info_widget, 0), Qt::QueuedConnection);
     setupDockWidget(d->ui->actionChip_Info, d->ui->chipInfoWidget);
     setupDockWidget(d->ui->actionCamera_Settings, d->ui->camera_settings);
