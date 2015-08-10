@@ -39,74 +39,10 @@
 #include <QThread>
 #include <QMutex>
 #include <QMessageBox>
+#include "displayimage.h"
 
 using namespace std;
 using namespace std::placeholders;
-
-class DisplayImage : public QObject, public ImageHandler {
-  Q_OBJECT
-public:
-  DisplayImage(Configuration &configuration, QObject* parent = 0);
-  virtual void handle(const ImageDataPtr& imageData);
-  fps_counter capture_fps;
-  void setRecording(bool recording);
-  QRect imageRect() const { return _imageRect; }
-signals:
-  void gotImage(const QImage &);
-  void captureFps(double fps);
-public slots:
-  void create_qimages();
-  void quit() { running = false; }
-private:
-  Configuration &configuration;
-  ImageDataPtr imageData;
-  int milliseconds_limit = 0;
-  QElapsedTimer elapsed;
-  QRect _imageRect;
-  QMutex mutex;
-  bool running = true;
-};
-
-DisplayImage::DisplayImage(Configuration& configuration, QObject* parent): QObject(parent), configuration{configuration}, capture_fps([=](double fps){ emit captureFps(fps);})
-{
-    setRecording(false);
-}
-
-
-void DisplayImage::setRecording(bool recording)
-{
-  int fps = recording ? configuration.maxPreviewFPSOnSaving() : 0;
-  milliseconds_limit = (fps == 0 ? 1000./40. : 1000/fps);
-  elapsed.restart();
-}
-
-
-void DisplayImage::handle(const ImageDataPtr& imageData)
-{
-  if( (milliseconds_limit > 0 && elapsed.elapsed() < milliseconds_limit) || !imageData ) {
-    return;
-  }
-  elapsed.restart();
-  this->imageData = imageData;
-}
-
-void DisplayImage::create_qimages()
-{
-  while(running) {
-    QThread::msleep(30);
-    if(!imageData) {
-      QThread::msleep(2);
-      continue;
-    }
-
-    capture_fps.frame();
-    auto ptrCopy = new ImageDataPtr(imageData);
-    QImage image{ptrCopy->get()->data(), ptrCopy->get()->width(), ptrCopy->get()->height(), QImage::Format_Grayscale8, [](void *data){ delete reinterpret_cast<ImageDataPtr*>(data); }, ptrCopy};
-    _imageRect = image.rect();
-    emit gotImage(image);
-  }
-  QThread::currentThread()->quit();
-}
 
 
 
@@ -267,7 +203,6 @@ void PlanetaryImagerMainWindow::Private::rescan_devices()
       QObject::connect(action, &QAction::triggered, bind(&Private::connectCamera, this, device));
     }
   });
-
 }
 
 void PlanetaryImagerMainWindow::Private::connectCamera(const QHYDriver::Camera& camera)
