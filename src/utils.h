@@ -61,7 +61,7 @@ void future_run(const std::function<T()> &runnable, std::function<void(QFuture<T
   watcher->setFuture(QtConcurrent::run(runnable));
 }
 
-#define print_thread_id \
+#define dbg_print_thread_id \
   static bool printed = false; \
   if(!printed) { \
     qDebug() << __PRETTY_FUNCTION__ << ": thread_id=" << QThread::currentThreadId(); \

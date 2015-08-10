@@ -91,7 +91,6 @@ private:
 
 SER_Writer::SER_Writer(const QString& filename, bool buffered) : file("%1.ser"_q % filename)
 {
-  print_thread_id
   qDebug() << "Using buffered output: " << buffered;
   if(buffered)
     file.open(QIODevice::ReadWrite);
@@ -220,7 +219,6 @@ WriterThreadWorker::~WriterThreadWorker()
 
 void WriterThreadWorker::handle(const ImageDataPtr& imageData)
 {
-  print_thread_id
   QMutexLocker lock(&mutex);
   auto framesQueueSize = framesQueue.size();
   if(framesQueueSize> 0 && framesQueueSize * imageData->size() > max_memory) {
@@ -233,7 +231,6 @@ void WriterThreadWorker::handle(const ImageDataPtr& imageData)
 
 void WriterThreadWorker::run()
 {
-  print_thread_id
   {
     auto fileWriter = fileWriterFactory();
     fps_counter savefps{[=](double fps){ emit saveFPS(fps);}, fps_counter::Elapsed};
@@ -262,7 +259,6 @@ void WriterThreadWorker::run()
 
 void SaveImages::handle(const ImageDataPtr& imageData)
 {
-  print_thread_id
   if(!d->is_recording)
     return;
   QtConcurrent::run(bind(&WriterThreadWorker::handle, d->worker, imageData));
@@ -270,7 +266,6 @@ void SaveImages::handle(const ImageDataPtr& imageData)
 
 void SaveImages::startRecording()
 {
-  print_thread_id
   auto writerFactory = d->writerFactory();
   if(writerFactory) {
     d->worker = new WriterThreadWorker(bind(writerFactory, d->filename, d->configuration.bufferedOutput()), d->max_frames, d->configuration.maxMemoryUsage(), d->is_recording);
