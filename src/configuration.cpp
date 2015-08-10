@@ -19,11 +19,18 @@
 
 #include "configuration.h"
 #include <QSettings>
+#include "utils.h"
+#include <QMetaType>
+
+Q_DECLARE_METATYPE(Configuration::SaveFormat);
+
 
 class Configuration::Private {
 public:
   Private(QSettings &settings, Configuration *q);
   QSettings &settings;
+  template<typename T> T value(const QString &key, const T &defaultValue = {}) const { return qvariant_cast<T>(settings.value(key, defaultValue)); }
+  template<typename T> void set(const QString &key, const T &value) { settings.setValue(key, value); }
 private:
   Configuration *q;
 };
@@ -41,32 +48,101 @@ Configuration::~Configuration()
 {
 }
 
+
 bool Configuration::bufferedOutput() const
 {
-  return d->settings.value("buffered_output", true).toBool();
+  return d->value("buffered_output", true);
 }
 
 void Configuration::setBufferedOutput(bool buffered)
 {
-  d->settings.setValue("buffered_output", buffered);
+  d->set("buffered_output", buffered);
 }
 
 long long Configuration::maxMemoryUsage() const
 {
-  return d->settings.value("max_save_memory_usage", 20*1024*1024).toLongLong();
+  return d->value("max_save_memory_usage", 20*1024*1024);
 }
 
 void Configuration::setMaxMemoryUsage(long long memoryUsage)
 {
-  d->settings.setValue("max_save_memory_usage", memoryUsage);
+  d->set("max_save_memory_usage", memoryUsage);
 }
 
 int Configuration::maxPreviewFPSOnSaving() const
 {
-  return d->settings.value("max_preview_fps", 0).toInt();
+  return d->value("max_preview_fps", 0);
 }
 
 void Configuration::setMaxPreviewFPSOnSaving(int maxFPS)
 {
-  d->settings.setValue("max_preview_fps", maxFPS);
+  d->set("max_preview_fps", maxFPS);
+}
+
+
+long long int Configuration::recordingFramesLimit() const
+{
+  return d->value("recording_frames_limit", 0);
+}
+
+void Configuration::setRecordingFramesLimit(long long int limit)
+{
+  d->set("recording_frames_limit", limit);
+}
+
+QString Configuration::saveFilePrefix() const
+{
+  return d->value<QString>("save_file_prefix");
+}
+
+void Configuration::setSaveFilePrefix(const QString& prefix)
+{
+  d->set("save_file_prefix", prefix);
+}
+
+
+QString Configuration::saveFileSuffix() const
+{
+  return d->value<QString>("save_file_suffix");
+}
+
+void Configuration::setSaveFileSuffix(const QString& suffix)
+{
+  d->set("save_file_suffix", suffix);
+}
+
+QString Configuration::saveDirectory() const
+{
+  return d->value<QString>("save_directory");
+}
+
+void Configuration::setSaveDirectory(const QString& directory)
+{
+  d->set("save_directory", directory);
+}
+
+Configuration::SaveFormat Configuration::saveFormat() const
+{
+  return d->value<SaveFormat>("save_format", SER);
+}
+
+void Configuration::setSaveFormat(Configuration::SaveFormat format)
+{
+  d->set("save_format", format);
+}
+
+
+QString Configuration::savefile() const
+{
+  QMap<SaveFormat, QString> extension {
+    { SER, ".ser" },
+  };
+  return "%1%2%3%4%5%6"_q
+    % saveDirectory()
+    % QDir::separator()
+    % saveFilePrefix()
+    % QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss_zzz_t")
+    % saveFileSuffix()
+    % extension[saveFormat()]
+    ;
 }

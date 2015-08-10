@@ -32,17 +32,15 @@ public:
     SaveImages(Configuration &configuration, QObject *parent = 0);
     ~SaveImages();
     virtual void handle(const ImageDataPtr& imageData);
-    enum Format { SER };
 public slots:
-  void setOutput(const QString &filename, Format format = SER);
   void startRecording();
   void endRecording();
-  void setFramesLimit(uint64_t max_frames);
 private:
   D_PTR
 signals:
   void saveFPS(double fps);
   void savedFrames(uint64_t frames);
+  void droppedFrames(uint64_t frames);
   void recording(const QString &filename);
   void finished();
 };

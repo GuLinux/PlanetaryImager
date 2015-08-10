@@ -63,20 +63,5 @@ void StatusBarInfoWidget::deviceDisconnected()
   d->ui->device_status->setText(tr("Disconnected"));
 }
 
-void StatusBarInfoWidget::saveFPS(double fps)
-{
-  d->ui->save_fps->setText(fps > 0 ? QString::number(fps, 'f', 2) : "");
-}
-
-void StatusBarInfoWidget::savedFrames(uint64_t frames)
-{
-  d->ui->frames->setText(QString::number(frames));
-}
-
-void StatusBarInfoWidget::saveFile(const QString& filename)
-{
-  d->ui->outputFile->setText(filename);
-}
-
 
 #include "statusbarinfowidget.moc"

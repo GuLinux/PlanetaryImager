@@ -17,24 +17,29 @@
  *
  */
 
-#ifndef STATUSBARINFOWIDGET_H
-#define STATUSBARINFOWIDGET_H
+#ifndef RECORDINGPANEL_H
+#define RECORDINGPANEL_H
 
 #include <QWidget>
 #include "dptr.h"
 
-class StatusBarInfoWidget : public QWidget
+class Configuration;
+class RecordingPanel : public QWidget
 {
-  Q_OBJECT
+    Q_OBJECT
 public:
-    ~StatusBarInfoWidget();
-    StatusBarInfoWidget(QWidget* parent = 0, Qt::WindowFlags = 0);
+    ~RecordingPanel();
+    RecordingPanel(Configuration &configuration, QWidget* parent = 0);
 public slots:
-  void deviceConnected(const QString &name);
-  void deviceDisconnected();
-  void captureFPS(double fps);
+  void recording(bool recording = false, const QString &filename = {});
+  void saveFPS(double fps);
+  void saved(int frames);
+  void dropped(int frames);
+signals:
+  void start();
+  void stop();
 private:
-  D_PTR
+  D_PTR;
 };
 
-#endif // STATUSBARINFOWIDGET_H
+#endif // RECORDINGPANEL_H
