@@ -78,9 +78,10 @@ RecordingPanel::RecordingPanel(Configuration& configuration, QWidget* parent) : 
   });
   
   auto pickDirectory = d->ui->saveDirectory->addAction(QIcon(":/resources/folder.png"), QLineEdit::TrailingPosition);
-  connect(pickDirectory, &QAction::triggered, [=]{
+  connect(pickDirectory, &QAction::triggered, [&]{
     QFileDialog *filedialog = new QFileDialog(this);
     filedialog->setFileMode(QFileDialog::Directory);
+    filedialog->setDirectory(configuration.saveDirectory());
     filedialog->setOption(QFileDialog::ShowDirsOnly);
     connect(filedialog, SIGNAL(fileSelected(QString)), d->ui->saveDirectory, SLOT(setText(QString)));
     connect(filedialog, SIGNAL(finished(int)), filedialog, SLOT(deleteLater()));
