@@ -89,7 +89,7 @@ private:
 
 
 
-SER_Writer::SER_Writer(const QString& filename, bool buffered) : file("%1.ser"_q % filename)
+SER_Writer::SER_Writer(const QString& filename, bool buffered) : file(filename)
 {
   qDebug() << "Using buffered output: " << buffered;
   if(buffered)
@@ -129,10 +129,6 @@ void SER_Writer::handle(const ImageDataPtr& imageData)
   }
   file.write(reinterpret_cast<const char*>(imageData->data()), imageData->size());
   ++frames;
-  if((frames % 100) == 0) {
-    header->frames = frames;
-    file.flush();
-  }
 }
 
 
@@ -142,11 +138,8 @@ public:
     Private(Configuration &configuration, SaveImages *q);
     Configuration &configuration;
     QThread recordingThread;
-    QString filename;
-    Format format = SER;
     FileWriterFactory writerFactory();
     WriterThreadWorker *worker = nullptr;
-    uint64_t max_frames = std::numeric_limits<uint64_t>().max();
     bool is_recording = false;
 private:
     SaveImages *q;
@@ -166,22 +159,16 @@ SaveImages::~SaveImages()
 }
 
 
-void SaveImages::setOutput(const QString& filename, Format format)
-{
-  d->filename = filename;
-  d->format = format;
-}
-
 FileWriterFactory SaveImages::Private::writerFactory()
 {
-  if(filename.isEmpty()) {
+  if(configuration.savefile().isEmpty()) {
     return {};
   }
-  static map<Format, FileWriterFactory> factories {
-    {SER, [](const QString &filename, bool buffered){ return make_shared<SER_Writer>(filename, buffered); }},
+  static map<Configuration::SaveFormat, FileWriterFactory> factories {
+    {Configuration::SER, [](const QString &filename, bool buffered){ return make_shared<SER_Writer>(filename, buffered); }},
   };
   
-  return factories[format];
+  return factories[configuration.saveFormat()];
 }
 
 class WriterThreadWorker : public QObject {
@@ -195,6 +182,7 @@ public slots:
 signals:
   void saveFPS(double fps);
   void savedFrames(uint64_t frames);
+  void droppedFrames(uint64_t frames);
   void started(const QString &filename);
   void finished();
 private:
@@ -204,6 +192,7 @@ private:
   uint64_t max_frames;
   long long max_memory;
   bool &is_recording;
+  uint64_t dropped_frames = 0;
 };
 
 WriterThreadWorker::WriterThreadWorker ( const function<FileWriterPtr()>& fileWriterFactory, uint64_t max_frames, long long max_memory, bool &is_recording, QObject *parent )
@@ -223,6 +212,7 @@ void WriterThreadWorker::handle(const ImageDataPtr& imageData)
   auto framesQueueSize = framesQueue.size();
   if(framesQueueSize> 0 && framesQueueSize * imageData->size() > max_memory) {
     qWarning() << "Frames queue too high (" << framesQueueSize << ", " <<  static_cast<double>(framesQueueSize * imageData->size())/MB(1) << " MB), dropping frame";
+    emit droppedFrames(++dropped_frames);
     return;
   }
   framesQueue.enqueue(imageData); 
@@ -268,11 +258,17 @@ void SaveImages::startRecording()
 {
   auto writerFactory = d->writerFactory();
   if(writerFactory) {
-    d->worker = new WriterThreadWorker(bind(writerFactory, d->filename, d->configuration.bufferedOutput()), d->max_frames, d->configuration.maxMemoryUsage(), d->is_recording);
+    d->worker = new WriterThreadWorker(bind(writerFactory, 
+					    d->configuration.savefile(), 
+					    d->configuration.bufferedOutput()),
+				       d->configuration.recordingFramesLimit() == 0 ? std::numeric_limits<long long>().max() : d->configuration.recordingFramesLimit(), 
+				       d->configuration.maxMemoryUsage(), 
+				       d->is_recording);
     connect(d->worker, &WriterThreadWorker::started, bind(&SaveImages::recording, this, _1));
 
     connect(&d->recordingThread, &QThread::finished, bind(&SaveImages::finished, this));
     connect(d->worker, &WriterThreadWorker::savedFrames, bind(&SaveImages::savedFrames, this, _1));
+    connect(d->worker, &WriterThreadWorker::droppedFrames, bind(&SaveImages::droppedFrames, this, _1));
     connect(d->worker, &WriterThreadWorker::saveFPS, bind(&SaveImages::saveFPS, this, _1));
     d->worker->moveToThread(&d->recordingThread);
     connect(&d->recordingThread, &QThread::started, d->worker, &WriterThreadWorker::run);
@@ -282,10 +278,6 @@ void SaveImages::startRecording()
   }
 }
 
-void SaveImages::setFramesLimit ( uint64_t max_frames )
-{
-  d->max_frames = max_frames > 0 ? max_frames : std::numeric_limits<uint64_t>().max();
-}
 
 
 void SaveImages::endRecording()

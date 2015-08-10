@@ -40,6 +40,7 @@
 #include <QMutex>
 #include <QMessageBox>
 #include "displayimage.h"
+#include "recordingpanel.h"
 
 using namespace std;
 using namespace std::placeholders;
@@ -64,6 +65,7 @@ public:
   shared_ptr<SaveImages> saveImages;
   CameraSettingsWidget* cameraSettingsWidget;
   ConfigurationDialog *configurationDialog;
+    RecordingPanel* recording_panel;
   
   void connectCamera(const QHYDriver::Camera &camera);
   void cameraDisconnected();
@@ -92,6 +94,7 @@ void PlanetaryImagerMainWindow::Private::saveState()
 PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::WindowFlags flags) : dpointer(this)
 {
     d->ui->setupUi(this);
+    d->ui->recording->setWidget(d->recording_panel = new RecordingPanel{d->configuration});
     d->configurationDialog = new ConfigurationDialog(d->configuration, this);
     d->displayImage = make_shared<DisplayImage>(d->configuration);
     d->saveImages = make_shared<SaveImages>(d->configuration);
@@ -125,22 +128,15 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     connect(d->ui->actionFit_to_window, &QAction::triggered, [=]{ d->ui->image->fitInView(d->displayImage->imageRect(), Qt::KeepAspectRatio); });
     connect(d->ui->actionActual_Size, &QAction::triggered, [=]{ d->ui->image->setTransform({}); });
     
+    connect(d->recording_panel, &RecordingPanel::start, bind(&SaveImages::startRecording, d->saveImages));
+    connect(d->recording_panel, &RecordingPanel::stop, bind(&SaveImages::endRecording, d->saveImages));
     
-    connect(d->ui->start_recording, &QPushButton::clicked, [=]{
-      auto save_directory = d->settings.value("save_directory_output").toString();
-      if(!QDir(save_directory).exists())
-	return;
-      d->saveImages->setOutput("%1/%2%3"_q % save_directory % d->settings.value("save_file_prefix").toString() % QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss_zzz_t"));
-      d->saveImages->startRecording();
-    });
-    connect(d->ui->stop_recording, &QPushButton::clicked, bind(&SaveImages::endRecording, d->saveImages));
     connect(d->saveImages.get(), &SaveImages::recording, d->displayImage.get(), bind(&DisplayImage::setRecording, d->displayImage, true), Qt::QueuedConnection);
-    connect(d->saveImages.get(), &SaveImages::recording, d->statusbar_info_widget, &StatusBarInfoWidget::saveFile, Qt::QueuedConnection);
-    connect(d->saveImages.get(), &SaveImages::finished, this, bind(&StatusBarInfoWidget::saveFile, d->statusbar_info_widget, QString{}), Qt::QueuedConnection);
+    connect(d->saveImages.get(), &SaveImages::recording, d->recording_panel, bind(&RecordingPanel::recording, d->recording_panel, true, _1), Qt::QueuedConnection);
+    connect(d->saveImages.get(), &SaveImages::finished, d->recording_panel, bind(&RecordingPanel::recording, d->recording_panel, false, QString{}), Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::finished, d->displayImage.get(), [=]{
         QTimer::singleShot(5000,  bind(&DisplayImage::setRecording, d->displayImage, false));
     }, Qt::QueuedConnection);
-    connect(d->saveImages.get(), &SaveImages::finished, this, bind(&StatusBarInfoWidget::saveFPS, d->statusbar_info_widget, 0), Qt::QueuedConnection);
     setupDockWidget(d->ui->actionChip_Info, d->ui->chipInfoWidget);
     setupDockWidget(d->ui->actionCamera_Settings, d->ui->camera_settings);
     setupDockWidget(d->ui->actionRecording, d->ui->recording);
@@ -155,32 +151,14 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
 
     
     connect(d->displayImage.get(), &DisplayImage::captureFps, d->statusbar_info_widget, &StatusBarInfoWidget::captureFPS, Qt::QueuedConnection);
-    connect(d->saveImages.get(), &SaveImages::saveFPS, d->statusbar_info_widget, &StatusBarInfoWidget::saveFPS, Qt::QueuedConnection);
-    connect(d->saveImages.get(), &SaveImages::savedFrames, d->statusbar_info_widget, &StatusBarInfoWidget::savedFrames, Qt::QueuedConnection);
+    connect(d->saveImages.get(), &SaveImages::saveFPS, d->recording_panel, &RecordingPanel::saveFPS, Qt::QueuedConnection);
+    connect(d->saveImages.get(), &SaveImages::savedFrames, d->recording_panel, &RecordingPanel::saved, Qt::QueuedConnection);
+    connect(d->saveImages.get(), &SaveImages::droppedFrames, d->recording_panel, &RecordingPanel::dropped, Qt::QueuedConnection);
     connect(d->ui->actionDisconnect, &QAction::triggered, [=]{ d->imager.reset();});
-    d->ui->saveDirectory->setText(d->settings.value("save_directory_output").toString());
-    d->ui->filePrefix->setText(d->settings.value("save_file_prefix").toString());
-    connect(d->ui->saveDirectory, &QLineEdit::textChanged, [=](const QString &t){ d->settings.setValue("save_directory_output", t);});
-    connect(d->ui->filePrefix, &QLineEdit::textChanged, [=](const QString &t){ d->settings.setValue("save_file_prefix", t);});
 
-    auto pickDirectory = d->ui->saveDirectory->addAction(QIcon(":/resources/folder.png"), QLineEdit::TrailingPosition);
-    connect(pickDirectory, &QAction::triggered, [=]{
-      QFileDialog *filedialog = new QFileDialog(this);
-      filedialog->setFileMode(QFileDialog::Directory);
-      filedialog->setOption(QFileDialog::ShowDirsOnly);
-      connect(filedialog, SIGNAL(fileSelected(QString)), d->ui->saveDirectory, SLOT(setText(QString)));
-      filedialog->show();
-    });
+
     d->enableUIWidgets(false);
-    connect(d->ui->saveFramesLimit, &QComboBox::currentTextChanged, [=](const QString &text) {
-      bool ok = false;
-      auto frameLimit = text.toLongLong(&ok);
-      if(ok)
-        d->saveImages->setFramesLimit(frameLimit);
-      else
-        d->saveImages->setFramesLimit(0);
-    });
-    
+
     d->saveImages->moveToThread(&d->displayImageThread);
     connect(&d->displayImageThread, &QThread::started, bind(&DisplayImage::create_qimages, d->displayImage));
     d->displayImageThread.start();

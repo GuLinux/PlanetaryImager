@@ -20,6 +20,7 @@
 #ifndef CONFIGURATION_H
 #define CONFIGURATION_H
 #include "dptr.h"
+#include <QString>
 
 class QSettings;
 class Configuration
@@ -36,9 +37,27 @@ public:
     
     int maxPreviewFPSOnSaving() const;
     void setMaxPreviewFPSOnSaving(int maxFPS);
+    
+    void setRecordingFramesLimit(long long limit);
+    long long recordingFramesLimit() const;
+    
+    void setSaveDirectory(const QString &directory);
+    QString saveDirectory() const;
+    
+    void setSaveFilePrefix(const QString &prefix);
+    QString saveFilePrefix() const;
+    
+    void setSaveFileSuffix(const QString &suffix);
+    QString saveFileSuffix() const;
+    
+    QString savefile() const;
 
+    enum SaveFormat { SER };
+    void setSaveFormat(SaveFormat format);
+    SaveFormat saveFormat() const;
 private:
   D_PTR
 };
+
 
 #endif // CONFIGURATION_H
