@@ -59,7 +59,7 @@ public slots:
   void quit() { running = false; }
 private:
   Configuration &configuration;
-  QQueue<ImageDataPtr> images;
+  ImageDataPtr imageData;
   int milliseconds_limit = 0;
   QElapsedTimer elapsed;
   QRect _imageRect;
@@ -84,30 +84,25 @@ void DisplayImage::setRecording(bool recording)
 void DisplayImage::handle(const ImageDataPtr& imageData)
 {
   print_thread_id
-  if( (milliseconds_limit > 0 && elapsed.elapsed() < milliseconds_limit) || images.size() > 50 ) {
+  if( (milliseconds_limit > 0 && elapsed.elapsed() < milliseconds_limit) || !imageData ) {
     return;
   }
   elapsed.restart();
-  QMutexLocker lock(&mutex);
-  images.enqueue(imageData);
+  this->imageData = imageData;
 }
 
 void DisplayImage::create_qimages()
 {
-  ImageDataPtr imageData;
   while(running) {
-    if(!images.size() > 0) {
+    QThread::msleep(30);
+    if(!imageData) {
       QThread::msleep(2);
       continue;
     }
-    {
-      QMutexLocker lock(&mutex);
-      imageData = images.dequeue();
-    }
-      
+
     capture_fps.frame();
     auto ptrCopy = new ImageDataPtr(imageData);
-    QImage image{imageData->data(), imageData->width(), imageData->height(), QImage::Format_Grayscale8, [](void *data){ delete reinterpret_cast<ImageDataPtr*>(data); }, ptrCopy};
+    QImage image{ptrCopy->get()->data(), ptrCopy->get()->width(), ptrCopy->get()->height(), QImage::Format_Grayscale8, [](void *data){ delete reinterpret_cast<ImageDataPtr*>(data); }, ptrCopy};
     _imageRect = image.rect();
     emit gotImage(image);
   }
