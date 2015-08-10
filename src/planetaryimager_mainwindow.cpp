@@ -83,7 +83,6 @@ void DisplayImage::setRecording(bool recording)
 
 void DisplayImage::handle(const ImageDataPtr& imageData)
 {
-  print_thread_id
   if( (milliseconds_limit > 0 && elapsed.elapsed() < milliseconds_limit) || !imageData ) {
     return;
   }
@@ -253,7 +252,6 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     d->ui->settings_container->layout()->setSpacing(0);
     connect(qApp, &QApplication::aboutToQuit, this, [=]{ d->imager.reset(); }, Qt::QueuedConnection);
     connect(qApp, &QApplication::aboutToQuit, this, bind(&DisplayImage::quit, d->displayImage), Qt::QueuedConnection);
-    print_thread_id
 }
 
 
