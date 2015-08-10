@@ -24,6 +24,7 @@
 #include <QElapsedTimer>
 #include <QRect>
 #include <QImage>
+#include <QMutexLocker>
 
 class DisplayImage::Private {
 public:
@@ -35,6 +36,7 @@ public:
   QElapsedTimer elapsed;
   QRect imageRect;
   bool running = true;
+  QMutex mutex;
 private:
   DisplayImage *q;
 };
@@ -68,20 +70,26 @@ void DisplayImage::handle(const ImageDataPtr& imageData)
     return;
   }
   d->elapsed.restart();
-  d->imageData = imageData;
+  {
+    QMutexLocker lock{&d->mutex};
+    d->imageData = imageData;
+  }
 }
 
 void DisplayImage::create_qimages()
 {
   while(d->running) {
-    QThread::msleep(30);
     if(!d->imageData) {
       QThread::msleep(2);
       continue;
     }
-
     d->capture_fps.frame();
-    auto ptrCopy = new ImageDataPtr(d->imageData);
+    ImageDataPtr *ptrCopy;
+    {
+      QMutexLocker lock{&d->mutex};
+      ptrCopy = new ImageDataPtr(d->imageData);
+      d->imageData.reset();
+    }
     QImage image{ptrCopy->get()->data(), ptrCopy->get()->width(), ptrCopy->get()->height(), QImage::Format_Grayscale8, [](void *data){ delete reinterpret_cast<ImageDataPtr*>(data); }, ptrCopy};
     d->imageRect = image.rect();
     emit gotImage(image);
