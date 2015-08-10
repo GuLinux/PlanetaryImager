@@ -222,6 +222,7 @@ ImagingWorker::ImagingWorker(qhyccd_handle* handle, QHYCCDImager* imager, const 
 
 void ImagingWorker::start_live()
 {
+  print_thread_id
   auto size = GetQHYCCDMemLength(handle);
   auto result =  SetQHYCCDStreamMode(handle,1);
   if(result != QHYCCD_SUCCESS) {
