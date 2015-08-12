@@ -22,7 +22,6 @@ public:
     int xres, yres, bpp;
   };
   virtual QString name() const = 0;
-  virtual QString id() const = 0;
   virtual Chip chip() const = 0;
 public slots:
   virtual void setSetting(const Setting &setting) = 0;

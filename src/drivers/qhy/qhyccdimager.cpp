@@ -113,11 +113,6 @@ QHYCCDImager::Chip QHYCCDImager::chip() const
   return d->chip;
 }
 
-QString QHYCCDImager::id() const
-{
-  return d->id;
-}
-
 QString QHYCCDImager::name() const
 {
   return d->name;
