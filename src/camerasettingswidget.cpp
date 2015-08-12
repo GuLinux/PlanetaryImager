@@ -23,10 +23,10 @@ CameraSettingsWidget::Private::Private ( CameraSettingsWidget* q ) : q ( q )
 class CameraSettingWidget : public QWidget {
   Q_OBJECT
 public:
-  CameraSettingWidget(const QHYCCDImager::Setting &setting, QHYCCDImager *imager, QSettings &settings, QWidget* parent = 0);  
+  CameraSettingWidget(const Imager::Setting &setting, Imager *imager, QSettings &settings, QWidget* parent = 0);  
 };
 
-CameraSettingWidget::CameraSettingWidget(const QHYCCDImager::Setting& setting, QHYCCDImager* imager, QSettings& settings, QWidget* parent): QWidget(parent)
+CameraSettingWidget::CameraSettingWidget(const Imager::Setting& setting, Imager* imager, QSettings& settings, QWidget* parent): QWidget(parent)
 {
   auto layout = new QHBoxLayout;
   setLayout(layout);
@@ -42,7 +42,7 @@ CameraSettingWidget::CameraSettingWidget(const QHYCCDImager::Setting& setting, Q
     s.value = v;
         imager->setSetting(s);
   });
-  connect(imager, &QHYCCDImager::changed, [=,&settings](const QHYCCDImager::Setting &changed_setting){
+  connect(imager, &Imager::changed, [=,&settings](const Imager::Setting &changed_setting){
     if(changed_setting.id != setting.id)
       return;
     spinbox->setValue(changed_setting.value);
@@ -60,7 +60,7 @@ CameraSettingsWidget::~CameraSettingsWidget()
 
 
 
-CameraSettingsWidget::CameraSettingsWidget(const QHYCCDImagerPtr& imager, QSettings& settings, QWidget* parent)
+CameraSettingsWidget::CameraSettingsWidget(const ImagerPtr& imager, QSettings& settings, QWidget* parent)
   : QWidget(parent), dpointer (this )
 {
   setLayout(new QVBoxLayout);

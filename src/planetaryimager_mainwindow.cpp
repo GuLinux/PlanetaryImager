@@ -18,8 +18,8 @@
  */
 
 #include "planetaryimager_mainwindow.h"
-#include "qhydriver.h"
-#include "qhyccdimager.h"
+#include "drivers/driver.h"
+#include "drivers/imager.h"
 #include "ui_planetaryimager_mainwindow.h"
 #include <functional>
 #include "utils.h"
@@ -51,8 +51,8 @@ class PlanetaryImagerMainWindow::Private {
 public:
   Private(PlanetaryImagerMainWindow *q);
   shared_ptr<Ui::PlanetaryImagerMainWindow> ui;
-  QHYDriver driver;
-  QHYCCDImagerPtr imager;
+  DriverPtr driver = make_shared<SupportedDrivers>();
+  ImagerPtr imager;
   void rescan_devices();
   QSettings settings;
   Configuration configuration;
@@ -67,7 +67,7 @@ public:
   ConfigurationDialog *configurationDialog;
     RecordingPanel* recording_panel;
   
-  void connectCamera(const QHYDriver::Camera &camera);
+  void connectCamera(const Driver::Camera &camera);
   void cameraDisconnected();
   void enableUIWidgets(bool cameraConnected);
 private:
@@ -172,7 +172,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
 void PlanetaryImagerMainWindow::Private::rescan_devices()
 {
   ui->menu_device_load->clear();
-  future_run<QHYDriver::Cameras>([=]{ return driver.cameras(); }, [=]( const QHYDriver::Cameras &cameras){
+  future_run<Driver::Cameras>([=]{ return driver->cameras(); }, [=]( const Driver::Cameras &cameras){
     for(auto device: cameras) {
       auto message = tr("Found %1 devices").arg(cameras.size());
       qDebug() << message;
@@ -183,15 +183,15 @@ void PlanetaryImagerMainWindow::Private::rescan_devices()
   });
 }
 
-void PlanetaryImagerMainWindow::Private::connectCamera(const QHYDriver::Camera& camera)
+void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::Camera& camera)
 {
-  future_run<QHYCCDImagerPtr>([=]{ return make_shared<QHYCCDImager>(camera, QList<ImageHandlerPtr>{displayImage, saveImages}); }, [=](const QHYCCDImagerPtr &imager){
+  future_run<ImagerPtr>([=]{ return driver->imager(camera, QList<ImageHandlerPtr>{displayImage, saveImages}); }, [=](const ImagerPtr &imager){
     if(!imager)
       return;
     this->imager = imager;
     imager->startLive();
     statusbar_info_widget->deviceConnected(imager->name());
-    connect(imager.get(), &QHYCCDImager::disconnected, q, bind(&Private::cameraDisconnected, this), Qt::QueuedConnection);
+    connect(imager.get(), &Imager::disconnected, q, bind(&Private::cameraDisconnected, this), Qt::QueuedConnection);
     ui->camera_name->setText(imager->name());
     ui->camera_chip_size->setText(QString("%1x%2").arg(imager->chip().width, 2).arg(imager->chip().height, 2));
     ui->camera_bpp->setText("%1"_q % imager->chip().bpp);

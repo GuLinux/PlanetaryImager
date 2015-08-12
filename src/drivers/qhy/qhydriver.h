@@ -2,21 +2,16 @@
 #define QHYDRIVER_H
 #include "dptr.h"
 
-#include <QList>
-#include <QString>
-class QHYDriver
+#include "drivers/driver.h"
+
+class QHYDriver : public Driver
 {
 public:
     QHYDriver();
     ~QHYDriver();
-    struct Camera {
-      int index;
-      char id[255];
-      QString name() const;
-    };
-    typedef QList<Camera> Cameras; 
-    Cameras cameras() const;
+    virtual Cameras cameras() const;
     static QString error_name(int code);
+    virtual ImagerPtr imager(Camera camera, const QList< ImageHandlerPtr >& imageHandlers);
     
   class error : public std::runtime_error {
   public:
