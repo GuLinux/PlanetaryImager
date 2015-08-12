@@ -32,10 +32,9 @@ SupportedDrivers::~SupportedDrivers()
 Driver::Cameras SupportedDrivers::cameras() const
 {
   Cameras cameras;
+  
   for(auto driver: d->drivers) {
-    for(auto camera: driver->cameras()) {
-      cameras.push_back(camera);
-    }
+    cameras.append(driver->cameras());
   }
   return cameras;
 }
