@@ -17,26 +17,22 @@
  *
  */
 
-#ifndef QHYCCD_H
-#define QHYCCD_H
-#include "qhydriver.h"
-#include <drivers/imager.h>
+#ifndef QMULTIMEDIAIMAGER_H
+#define QMULTIMEDIAIMAGER_H
+
+#include "drivers/imager.h"
 #include "dptr.h"
-#include <QObject>
-#include <QList>
-
-class QHYCCDImager : public Imager
+class QCameraInfo;
+class QMultimediaImager : public Imager
 {
-  Q_OBJECT
+    Q_OBJECT
+
 public:
-    QHYCCDImager(const QString &cameraName, const char *id, const ImageHandlers &imageHandlers);
-    ~QHYCCDImager();
-
-    virtual QString name() const;
-    virtual Chip chip() const;
-
-    virtual Settings settings() const;  
-
+  QMultimediaImager(const QCameraInfo &cameraInfo);
+  ~QMultimediaImager();
+  virtual Imager::Chip chip() const;
+  virtual QString name() const;
+  virtual Imager::Settings settings() const;
 public slots:
   virtual void setSetting(const Setting &setting);
   virtual void startLive();
@@ -45,8 +41,4 @@ private:
   D_PTR
 };
 
-typedef std::shared_ptr<QHYCCDImager> QHYCCDImagerPtr;
-
-
-
-#endif // QHYCCD_H
+#endif // QMULTIMEDIAIMAGER_H

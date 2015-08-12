@@ -1,5 +1,6 @@
 #include "driver.h"
 #include "qhy/qhydriver.h"
+#include "qmultimedia/qmultimediadriver.h"
 
 using namespace std;
 
@@ -19,7 +20,7 @@ SupportedDrivers::Private::Private(const Drivers& drivers, SupportedDrivers* q) 
 
 }
 
-SupportedDrivers::SupportedDrivers() : dpointer({make_shared<QHYDriver>(), }, this)
+SupportedDrivers::SupportedDrivers() : dpointer({make_shared<QHYDriver>(), make_shared<QMultimediaDriver>() }, this)
 {
 
 }
