@@ -7,17 +7,15 @@
 
 class Driver {
 public:
-
-  // TODO: proper class with factory for camera
-  struct Camera {
-    int index;
-    char id[255];
-    QString name() const;
-    bool operator ==(const Camera& o) const;
+  class Camera {
+  public:
+    virtual QString name() const = 0;
+    virtual ImagerPtr imager(const ImageHandlers &imageHandlers) const = 0;
   };
-  typedef QList<Camera> Cameras; 
+  typedef std::shared_ptr<Camera> CameraPtr;
+  typedef QList<CameraPtr> Cameras; 
+  
   virtual Cameras cameras() const = 0;
-  virtual ImagerPtr imager(Camera camera, const QList<ImageHandlerPtr> &imageHandlers) = 0;
 };
 typedef std::shared_ptr<Driver> DriverPtr;
 
@@ -26,7 +24,6 @@ public:
   SupportedDrivers();
   ~SupportedDrivers();
   virtual Cameras cameras() const;
-  virtual ImagerPtr imager(Camera camera, const QList< ImageHandlerPtr >& imageHandlers);
 private:
   D_PTR;
 };

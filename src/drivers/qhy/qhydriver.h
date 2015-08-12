@@ -11,7 +11,6 @@ public:
     ~QHYDriver();
     virtual Cameras cameras() const;
     static QString error_name(int code);
-    virtual ImagerPtr imager(Camera camera, const QList< ImageHandlerPtr >& imageHandlers);
     
   class error : public std::runtime_error {
   public:

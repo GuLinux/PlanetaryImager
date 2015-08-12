@@ -67,7 +67,7 @@ public:
   ConfigurationDialog *configurationDialog;
     RecordingPanel* recording_panel;
   
-  void connectCamera(const Driver::Camera &camera);
+  void connectCamera(const Driver::CameraPtr &camera);
   void cameraDisconnected();
   void enableUIWidgets(bool cameraConnected);
 private:
@@ -177,15 +177,15 @@ void PlanetaryImagerMainWindow::Private::rescan_devices()
       auto message = tr("Found %1 devices").arg(cameras.size());
       qDebug() << message;
       ui->statusbar->showMessage(message, 10000);
-      auto action = ui->menu_device_load->addAction(device.name());
+      auto action = ui->menu_device_load->addAction(device->name());
       QObject::connect(action, &QAction::triggered, bind(&Private::connectCamera, this, device));
     }
   });
 }
 
-void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::Camera& camera)
+void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::CameraPtr& camera)
 {
-  future_run<ImagerPtr>([=]{ return driver->imager(camera, QList<ImageHandlerPtr>{displayImage, saveImages}); }, [=](const ImagerPtr &imager){
+  future_run<ImagerPtr>([=]{ return camera->imager(ImageHandlers{displayImage, saveImages}); }, [=](const ImagerPtr &imager){
     if(!imager)
       return;
     this->imager = imager;
