@@ -36,7 +36,7 @@ using namespace std::placeholders;
 class ImagingWorker : public QObject {
   Q_OBJECT
 public:
-  ImagingWorker(qhyccd_handle *handle, QHYCCDImager *imager, const QList<ImageHandlerPtr> imageHandlers, QObject* parent = 0);
+  ImagingWorker(qhyccd_handle *handle, QHYCCDImager *imager, const ImageHandlers imageHandlers, QObject* parent = 0);
 public slots:
   void start_live();
   void stop();
@@ -44,16 +44,16 @@ private:
   qhyccd_handle *handle;
   bool enabled = true;
   QHYCCDImager *imager;
-  QList<ImageHandlerPtr> imageHandlers;
+  ImageHandlers imageHandlers;
 };
 
 class QHYCCDImager::Private {
 public:
-  Private(const QString& name, const QString& id, const QList< ImageHandlerPtr >& imageHandlers, QHYCCDImager* q);
+  Private(const QString& name, const QString& id, const ImageHandlers& imageHandlers, QHYCCDImager* q);
   qhyccd_handle *handle;
   QString name;
   QString id;
-  QList<ImageHandlerPtr> imageHandlers;
+  ImageHandlers imageHandlers;
   Chip chip;
   Settings settings;
   void load_settings();
@@ -65,20 +65,20 @@ private:
 };
 
 
-QHYCCDImager::Private::Private(const QString &name, const QString &id, const QList<ImageHandlerPtr> &imageHandlers, QHYCCDImager* q) : name(name), id(id), imageHandlers{imageHandlers}, q{q}
+QHYCCDImager::Private::Private(const QString &name, const QString &id, const ImageHandlers &imageHandlers, QHYCCDImager* q) : name(name), id(id), imageHandlers{imageHandlers}, q{q}
 {
 }
 
-QHYCCDImager::QHYCCDImager(QHYDriver::Camera camera, const QList<ImageHandlerPtr> &imageHandlers) : dpointer(camera.name(), camera.id, imageHandlers, this)
+QHYCCDImager::QHYCCDImager(const QString &cameraName, const char *id, const ImageHandlers &imageHandlers) : dpointer(cameraName, id, imageHandlers, this)
 {
-  d->handle = OpenQHYCCD(camera.id);
+  d->handle = OpenQHYCCD(const_cast<char*>(id));
   if(d->handle < QHYCCD_SUCCESS) {
-    throw QHYDriver::error("Initializing Camera %1"_q % camera.id, (long)(d->handle));
+    throw QHYDriver::error("Initializing Camera %1"_q % id, (long)(d->handle));
   }
   if(int result = InitQHYCCD(d->handle) != QHYCCD_SUCCESS) {
-    throw QHYDriver::error("Initializing Camera %1"_q % camera.id, result);
+    throw QHYDriver::error("Initializing Camera %1"_q % id, result);
   }
-  qDebug() << "Camera " << camera.id << "initialized correctly";
+  qDebug() << "Camera " << id << "initialized correctly";
   qDebug() << "gain: " << GetQHYCCDParam(d->handle, CONTROL_GAIN) << ", gamma: " << GetQHYCCDParam(d->handle, CONTROL_GAMMA) << ", exposure: " << GetQHYCCDParam(d->handle, CONTROL_EXPOSURE);
   char buf[1024];
   uint8_t st[1024];
@@ -216,7 +216,7 @@ void QHYCCDImager::startLive()
   qDebug() << "Live started correctly";
 }
 
-ImagingWorker::ImagingWorker(qhyccd_handle* handle, QHYCCDImager* imager, const QList< ImageHandlerPtr > imageHandlers, QObject* parent): QObject(parent), handle(handle), imager{imager}, imageHandlers{imageHandlers}
+ImagingWorker::ImagingWorker(qhyccd_handle* handle, QHYCCDImager* imager, const ImageHandlers imageHandlers, QObject* parent): QObject(parent), handle(handle), imager{imager}, imageHandlers{imageHandlers}
 {
 }
 

@@ -23,6 +23,15 @@ private:
 
 #include "qhy_messages.cpp"
 
+class QHYCamera : public Driver::Camera {
+public:
+  QHYCamera(int index) : index{index} {}
+  virtual ImagerPtr imager(const ImageHandlers& imageHandlers) const { return make_shared<QHYCCDImager>(name(), id, imageHandlers); }
+  virtual QString name() const {   return QString(id).remove(QRegularExpression{"-[\\da-f]+$"}); }
+  char id[255];
+  int index;
+};
+
 QHYDriver::Private::Private(QHYDriver* q) : q(q)
 {
 
@@ -53,9 +62,9 @@ QHYDriver::~QHYDriver()
 }
 
 
-QList< QHYDriver::Camera > QHYDriver::cameras() const
+Driver::Cameras QHYDriver::cameras() const
 {
-  QList<Camera> cameras;
+  Cameras cameras;
   int scan_result= ScanQHYCCD();
   if(scan_result == QHYCCD_ERROR_NO_DEVICE) {
     return cameras;
@@ -64,17 +73,12 @@ QList< QHYDriver::Camera > QHYDriver::cameras() const
     throw error{"getting QHY cameras list", scan_result};
   }
   for(int i=0; i<scan_result; i++) {
-    Camera camera{i};
-    if(int result = GetQHYCCDId(i, &camera.id[0]) != QHYCCD_SUCCESS)
+    auto camera = make_shared<QHYCamera>(i);
+    if(int result = GetQHYCCDId(i, &camera->id[0]) != QHYCCD_SUCCESS)
       throw error{"getting QHY Camera ID", result};
-    qDebug() << "Found device at index " << i << " with id=" << camera.id << ")";
+    qDebug() << "Found device at index " << i << " with id=" << camera->id << ")";
     cameras.push_back(camera);
   }
   return cameras;
-}
-
-ImagerPtr QHYDriver::imager(Driver::Camera camera, const QList< ImageHandlerPtr >& imageHandlers)
-{
-  return make_shared<QHYCCDImager>(camera, imageHandlers);
 }
 
