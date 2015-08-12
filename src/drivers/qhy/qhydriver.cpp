@@ -1,4 +1,5 @@
 #include "qhydriver.h"
+#include "qhyccdimager.h"
 #include "qhyccd.h"
 #include <map>
 #include "utils.h"
@@ -72,7 +73,8 @@ QList< QHYDriver::Camera > QHYDriver::cameras() const
   return cameras;
 }
 
-QString QHYDriver::Camera::name() const
+ImagerPtr QHYDriver::imager(Driver::Camera camera, const QList< ImageHandlerPtr >& imageHandlers)
 {
-  return QString(id).remove(QRegularExpression{"-[\\da-f]+$"});
+  return make_shared<QHYCCDImager>(camera, imageHandlers);
 }
+

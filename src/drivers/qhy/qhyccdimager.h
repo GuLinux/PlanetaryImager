@@ -20,46 +20,34 @@
 #ifndef QHYCCD_H
 #define QHYCCD_H
 #include "qhydriver.h"
+#include <drivers/imager.h>
 #include "dptr.h"
-#include "imagehandler.h"
 #include <QObject>
 #include <QList>
 
-class QHYCCDImager : public QObject
+class QHYCCDImager : public Imager
 {
   Q_OBJECT
 public:
-    QHYCCDImager(QHYDriver::Camera camera, const QList<ImageHandlerPtr> &imageHandlers);
+    QHYCCDImager(Driver::Camera camera, const QList<ImageHandlerPtr> &imageHandlers);
     ~QHYCCDImager();
-    struct Chip {
-      double width, height, pixelwidth, pixelheight;
-      int xres, yres, bpp;
-    };
-    QString name() const;
-    QString id() const;
-    Chip chip() const;
 
-    struct Setting {
-      int id;
-      QString name;
-      double min, max, step, value;
-    };
-    typedef QList<Setting> Settings;
-    Settings settings() const;  
-signals:
-  void changed(const Setting &setting);
-  void disconnected();
+    virtual QString name() const;
+    virtual QString id() const;
+    virtual Chip chip() const;
+
+    virtual Settings settings() const;  
+
 public slots:
-  void setSetting(const Setting &setting);
-  void startLive();
-  void stopLive();
+  virtual void setSetting(const Setting &setting);
+  virtual void startLive();
+  virtual void stopLive();
 private:
   D_PTR
 };
 
 typedef std::shared_ptr<QHYCCDImager> QHYCCDImagerPtr;
 
-QDebug operator<<(QDebug dbg, const QHYCCDImager::Chip &chip);
-QDebug operator<<(QDebug dbg, const QHYCCDImager::Setting &setting);
+
 
 #endif // QHYCCD_H

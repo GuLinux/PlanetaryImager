@@ -1,13 +1,11 @@
 execute_process(COMMAND ${CMAKE_SOURCE_DIR}/scripts/qhy_errors_to_map ${CMAKE_SOURCE_DIR}/QHYCCD_Linux/qhyccderr.h OUTPUT_VARIABLE qhy_error_codes)
 execute_process(COMMAND ${CMAKE_SOURCE_DIR}/scripts/qhy_devices_to_map ${CMAKE_SOURCE_DIR}/QHYCCD_Linux/qhyccdcamdef.h OUTPUT_VARIABLE qhy_devices_codes)
-configure_file(qhy_messages.in qhy_messages.cpp)
+
 
 set(QHYImager_SRCS 
   main.cpp 
-  qhydriver.cpp 
   planetaryimager_mainwindow.cpp 
   planetaryimager_mainwindow.ui 
-  qhyccdimager.cpp 
   statusbarinfowidget.cpp 
   statusbarinfowidget.ui 
   saveimages.cpp 
@@ -20,8 +18,12 @@ set(QHYImager_SRCS
   displayimage.cpp
   recordingpanel.cpp
   recordingpanel.ui
+  drivers/imager.cpp
+  drivers/driver.cpp
 )
 
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+add_subdirectory(drivers)
 add_executable(planetary_imager ${QHYImager_SRCS})
 
 if(CMAKE_SIZEOF_VOID_P MATCHES "8")
@@ -31,6 +33,7 @@ else(CMAKE_SIZEOF_VOID_P MATCHES "8")
 endif(CMAKE_SIZEOF_VOID_P MATCHES "8")
 
 
-target_link_libraries(planetary_imager ${QHY_LIBRARY} Qt5::Widgets )
+target_link_libraries(planetary_imager qhy_driver ${QHY_LIBRARY} Qt5::Widgets )
 
 install(TARGETS planetary_imager RUNTIME DESTINATION bin)
+
