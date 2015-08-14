@@ -33,6 +33,7 @@ public slots:
   void deviceConnected(const QString &name);
   void deviceDisconnected();
   void captureFPS(double fps);
+  void displayFPS(double fps);
 private:
   D_PTR
 };

@@ -28,6 +28,7 @@ public slots:
   virtual void startLive() = 0;
   virtual void stopLive() = 0;
 signals:
+  void fps(double rate);
   void changed(const Setting &setting);
   void disconnected();
 };
