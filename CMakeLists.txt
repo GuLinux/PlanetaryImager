@@ -10,6 +10,11 @@ find_package(Qt5Widgets)
 find_package(Qt5Multimedia)
 include(FindPkgConfig)
 pkg_check_modules(LIBUSB libusb-1.0 REQUIRED)
+option(cflags_fpic "Use -fPIC for compilation " on)
+if(cflags_fpic)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+endif(cflags_fpic)
+  
 
 add_subdirectory(QHYCCD_Linux)
 include_directories(QHYCCD_Linux ${LIBUSB_INCLUDE_DIRS})
