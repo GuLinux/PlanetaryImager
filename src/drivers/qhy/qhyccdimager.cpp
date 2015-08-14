@@ -234,9 +234,11 @@ void ImagingWorker::start_live()
   uint8_t buffer[size];
   qDebug() << "capturing thread started, image size: " << size;
   int w, h, bpp, channels;
+  auto buffer_real_size = [&] { return w*h*channels*(bpp<=8?1:2); };
+  auto is_zero = [](uint8_t v) { return v==0; };
   while(enabled){
     result = GetQHYCCDLiveFrame(handle,&w,&h,&bpp,&channels,buffer);
-    if(result != QHYCCD_SUCCESS) {
+    if(result != QHYCCD_SUCCESS || all_of(buffer, &buffer[buffer_real_size()], is_zero )) {
       qWarning() << "Error capturing live frame: " << result;
       QThread::msleep(1);
     } else {
