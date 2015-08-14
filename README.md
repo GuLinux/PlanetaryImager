@@ -11,6 +11,18 @@ Requirements
 ------------
 Qt version 5.5
 
+Source download
+---------------
+
+Remember to clone the submodule repository, or it won't compile!
+  
+
+    git clone https://github.com/GuLinux/PlanetaryImager.git
+    cd PlanetaryImager
+    git submodule init
+    git submodule update
+    
+
 Compile Howto
 -------------
 
