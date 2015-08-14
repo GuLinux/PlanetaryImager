@@ -28,6 +28,7 @@
 #include <QElapsedTimer>
 #include <QtConcurrent/QtConcurrent>
 #include "image_data.h"
+#include <fps_counter.h>
 
 using namespace std;
 using namespace std::placeholders;
@@ -229,6 +230,7 @@ void ImagingWorker::start_live()
     return;
   }
 
+  fps_counter _fps([=](double rate){ emit imager->fps(rate); }, fps_counter::Elapsed);
   uint8_t buffer[size];
   qDebug() << "capturing thread started, image size: " << size;
   int w, h, bpp, channels;
@@ -238,6 +240,7 @@ void ImagingWorker::start_live()
       qWarning() << "Error capturing live frame: " << result;
       QThread::msleep(1);
     } else {
+      _fps.frame();
       ImageDataPtr imageData = ImageData::create(w, h, bpp, channels, buffer);
       for_each(begin(imageHandlers), end(imageHandlers), bind(&ImageHandler::handle, _1, imageData));
     }

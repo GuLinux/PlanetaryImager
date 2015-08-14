@@ -41,7 +41,7 @@ private:
   DisplayImage *q;
 };
 
-DisplayImage::Private::Private(Configuration& configuration, DisplayImage* q) : configuration{configuration}, capture_fps{[=](double fps){ emit q->captureFps(fps);}}, q{q}
+DisplayImage::Private::Private(Configuration& configuration, DisplayImage* q) : configuration{configuration}, capture_fps{[=](double fps){ emit q->displayFPS(fps);}}, q{q}
 {
 
 }

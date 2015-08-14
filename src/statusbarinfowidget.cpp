@@ -46,12 +46,22 @@ StatusBarInfoWidget::~StatusBarInfoWidget()
 StatusBarInfoWidget::StatusBarInfoWidget(QWidget* parent, Qt::WindowFlags f) : QWidget(parent, f), dpointer(this)
 {
     d->ui->setupUi(this);
+    captureFPS(0);
+    displayFPS(0);
 }
 
 void StatusBarInfoWidget::captureFPS(double fps)
 {
+  d->ui->capture_fps_frame->setHidden(fps <= 0);
   d->ui->capture_fps->setText(QString::number(fps, 'f', 2));
 }
+
+void StatusBarInfoWidget::displayFPS(double fps)
+{
+  d->ui->display_fps_frame->setHidden(fps <= 0);
+  d->ui->display_fps->setText(QString::number(fps, 'f', 2));
+}
+
 
 void StatusBarInfoWidget::deviceConnected(const QString& name)
 {

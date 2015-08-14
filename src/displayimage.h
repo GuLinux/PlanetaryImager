@@ -36,7 +36,7 @@ public:
     QRect imageRect() const;
 signals:
   void gotImage(const QImage &);
-  void captureFps(double fps);
+  void displayFPS(double fps);
 public slots:
   void create_qimages();
   void quit();

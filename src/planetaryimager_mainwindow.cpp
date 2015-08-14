@@ -150,7 +150,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     }, Qt::QueuedConnection);
 
     
-    connect(d->displayImage.get(), &DisplayImage::captureFps, d->statusbar_info_widget, &StatusBarInfoWidget::captureFPS, Qt::QueuedConnection);
+    connect(d->displayImage.get(), &DisplayImage::displayFPS, d->statusbar_info_widget, &StatusBarInfoWidget::displayFPS, Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::saveFPS, d->recording_panel, &RecordingPanel::saveFPS, Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::savedFrames, d->recording_panel, &RecordingPanel::saved, Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::droppedFrames, d->recording_panel, &RecordingPanel::dropped, Qt::QueuedConnection);
@@ -192,6 +192,7 @@ void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::CameraPtr& 
     imager->startLive();
     statusbar_info_widget->deviceConnected(imager->name());
     connect(imager.get(), &Imager::disconnected, q, bind(&Private::cameraDisconnected, this), Qt::QueuedConnection);
+    connect(imager.get(), &Imager::fps, statusbar_info_widget, &StatusBarInfoWidget::captureFPS, Qt::QueuedConnection);
     ui->camera_name->setText(imager->name());
     ui->camera_chip_size->setText(QString("%1x%2").arg(imager->chip().width, 2).arg(imager->chip().height, 2));
     ui->camera_bpp->setText("%1"_q % imager->chip().bpp);
@@ -214,6 +215,7 @@ void PlanetaryImagerMainWindow::Private::cameraDisconnected()
   ui->camera_resolution->clear();
   delete cameraSettingsWidget;
   scene->clear();
+  statusbar_info_widget->captureFPS(0);
 }
 
 void PlanetaryImagerMainWindow::Private::enableUIWidgets(bool cameraConnected)
