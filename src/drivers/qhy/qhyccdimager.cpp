@@ -240,7 +240,7 @@ void ImagingWorker::start_live()
     result = GetQHYCCDLiveFrame(handle,&w,&h,&bpp,&channels,buffer);
     if(result != QHYCCD_SUCCESS || all_of(buffer, &buffer[buffer_real_size()], is_zero )) {
       qWarning() << "Error capturing live frame: " << result;
-      QThread::msleep(1);
+//       QThread::msleep(1);
     } else {
       _fps.frame();
       ImageDataPtr imageData = ImageData::create(w, h, bpp, channels, buffer);
