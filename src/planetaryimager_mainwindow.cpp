@@ -98,7 +98,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     d->configurationDialog = new ConfigurationDialog(d->configuration, this);
     d->displayImage = make_shared<DisplayImage>(d->configuration);
     d->saveImages = make_shared<SaveImages>(d->configuration);
-    d->ui->statusbar->addPermanentWidget(d->statusbar_info_widget = new StatusBarInfoWidget(), 1);
+    d->ui->statusbar->addPermanentWidget(d->statusbar_info_widget = new StatusBarInfoWidget());
     d->scene = new QGraphicsScene(this);
     restoreState(d->settings.value("dock_settings").toByteArray());
     connect(d->ui->actionAbout, &QAction::triggered, bind(&QMessageBox::about, this, tr("About"),
