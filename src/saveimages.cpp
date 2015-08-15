@@ -42,7 +42,7 @@ public:
   virtual QString filename() const = 0;
 };
 typedef shared_ptr<FileWriter> FileWriterPtr;
-typedef function<FileWriterPtr(const QString &filename, bool buffered)> FileWriterFactory;
+typedef function<FileWriterPtr(const QString &deviceName, Configuration &configuration)> FileWriterFactory;
 
 
 struct __attribute__ ((__packed__)) SER_Header {
@@ -71,16 +71,17 @@ struct __attribute__ ((__packed__)) SER_Header {
     char observer[40] = {};
     char camera[40] = {};
     char telescope[40] = {};
-    uint8_t datetime[8] = {};
-    uint8_t datetime_utc[8] = {};
+    uint64_t datetime = 0;
+    uint64_t datetime_utc = 0;
 };
 
 class SER_Writer : public FileWriter {
 public:
-  SER_Writer(const QString &filename, bool buffered);
+  SER_Writer(const QString &deviceName, Configuration &configuration);
   ~SER_Writer();
   virtual void handle(const ImageDataPtr& imageData);
   virtual QString filename() const;
+  vector<uint64_t> timestamps;
 private:
   QFile file;
   SER_Header *header;
@@ -89,14 +90,20 @@ private:
 
 
 
-SER_Writer::SER_Writer(const QString& filename, bool buffered) : file(filename)
+SER_Writer::SER_Writer(const QString &deviceName, Configuration &configuration) : file(configuration.savefile())
 {
-  qDebug() << "Using buffered output: " << buffered;
-  if(buffered)
+  qDebug() << "Using buffered output: " << configuration.bufferedOutput();
+  if(configuration.bufferedOutput())
     file.open(QIODevice::ReadWrite);
   else
     file.open(QIODevice::ReadWrite | QIODevice::Unbuffered);
   SER_Header empty_header;
+  empty_header.datetime = QDateTime({1, 1, 1}, {0,0,0}).msecsTo(QDateTime::currentDateTime()) * 10000;
+  empty_header.datetime_utc = QDateTime({1, 1, 1}, {0,0,0}, Qt::UTC).msecsTo(QDateTime::currentDateTimeUtc()) * 10000;
+  ::strcpy(empty_header.camera, deviceName.left(40).toLatin1());
+  ::strcpy(empty_header.observer, configuration.observer().left(40).toLatin1());
+  ::strcpy(empty_header.telescope, configuration.telescope().left(40).toLatin1());
+  qDebug() << "datetime: " << empty_header.datetime << ", utc: " << empty_header.datetime_utc;
   file.write(reinterpret_cast<char*>(&empty_header), sizeof(empty_header));
   file.flush();
   header = reinterpret_cast<SER_Header*>(file.map(0, sizeof(SER_Header)));
@@ -109,6 +116,9 @@ SER_Writer::~SER_Writer()
 {
   qDebug() << "closing file..";
   header->frames = frames;
+  for(auto timestamp: timestamps) {
+    file.write(reinterpret_cast<char*>(&timestamp), sizeof(timestamp));
+  }
   file.close();
   qDebug() << "file correctly closed.";
 }
@@ -118,7 +128,6 @@ QString SER_Writer::filename() const
   return file.fileName();
 }
 
-
 void SER_Writer::handle(const ImageDataPtr& imageData)
 {
   if(! header->imageWidth) {
@@ -127,6 +136,7 @@ void SER_Writer::handle(const ImageDataPtr& imageData)
     header->imageWidth = imageData->width();
     header->imageHeight = imageData->height();
   }
+  timestamps.push_back(QDateTime({1, 1, 1}, {0,0,0}, Qt::UTC).msecsTo(QDateTime::currentDateTimeUtc()) * 10000);
   file.write(reinterpret_cast<const char*>(imageData->data()), imageData->size());
   ++frames;
 }
@@ -165,7 +175,7 @@ FileWriterFactory SaveImages::Private::writerFactory()
     return {};
   }
   static map<Configuration::SaveFormat, FileWriterFactory> factories {
-    {Configuration::SER, [](const QString &filename, bool buffered){ return make_shared<SER_Writer>(filename, buffered); }},
+    {Configuration::SER, [](const QString &deviceName, Configuration &configuration){ return make_shared<SER_Writer>(deviceName, configuration); }},
   };
   
   return factories[configuration.saveFormat()];
@@ -254,13 +264,13 @@ void SaveImages::handle(const ImageDataPtr& imageData)
   QtConcurrent::run(bind(&WriterThreadWorker::handle, d->worker, imageData));
 }
 
-void SaveImages::startRecording()
+void SaveImages::startRecording(const QString &deviceName)
 {
   auto writerFactory = d->writerFactory();
   if(writerFactory) {
     d->worker = new WriterThreadWorker(bind(writerFactory, 
-					    d->configuration.savefile(), 
-					    d->configuration.bufferedOutput()),
+					    deviceName, 
+					    std::ref<Configuration>(d->configuration)),
 				       d->configuration.recordingFramesLimit() == 0 ? std::numeric_limits<long long>().max() : d->configuration.recordingFramesLimit(), 
 				       d->configuration.maxMemoryUsage(), 
 				       d->is_recording);
