@@ -24,19 +24,18 @@
 #include <QElapsedTimer>
 #include <QRect>
 #include <QImage>
-#include <QMutexLocker>
+#include <boost/lockfree/spsc_queue.hpp>
 
 class DisplayImage::Private {
 public:
   Private(Configuration &configuration, DisplayImage *q);
   Configuration &configuration;
   fps_counter capture_fps;
-  ImageDataPtr imageData;
   int milliseconds_limit = 0;
   QElapsedTimer elapsed;
   QRect imageRect;
   bool running = true;
-  QMutex mutex;
+  boost::lockfree::spsc_queue<ImageDataPtr, boost::lockfree::capacity<5>> queue;
 private:
   DisplayImage *q;
 };
@@ -66,30 +65,22 @@ void DisplayImage::setRecording(bool recording)
 
 void DisplayImage::handle(const ImageDataPtr& imageData)
 {
-  if( (d->milliseconds_limit > 0 && d->elapsed.elapsed() < d->milliseconds_limit) || !imageData ) {
+  if( (d->milliseconds_limit > 0 && d->elapsed.elapsed() < d->milliseconds_limit) || !imageData || ! d->queue.push(imageData) ) {
     return;
   }
   d->elapsed.restart();
-  {
-    QMutexLocker lock{&d->mutex};
-    d->imageData = imageData;
-  }
 }
 
 void DisplayImage::create_qimages()
 {
+  ImageDataPtr imageData;
   while(d->running) {
-    if(!d->imageData) {
-      QThread::msleep(2);
+    if(!d->queue.pop(imageData)) {
+      QThread::msleep(1);
       continue;
     }
     ++d->capture_fps;
-    ImageDataPtr *ptrCopy;
-    {
-      QMutexLocker lock{&d->mutex};
-      ptrCopy = new ImageDataPtr(d->imageData);
-      d->imageData.reset();
-    }
+    ImageDataPtr *ptrCopy = new ImageDataPtr(imageData);
     QImage image{ptrCopy->get()->data(), ptrCopy->get()->width(), ptrCopy->get()->height(), QImage::Format_Grayscale8, [](void *data){ delete reinterpret_cast<ImageDataPtr*>(data); }, ptrCopy};
     d->imageRect = image.rect();
     emit gotImage(image);
