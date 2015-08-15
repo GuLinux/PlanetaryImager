@@ -33,5 +33,7 @@ RUN find /opt/ \( -name "*.so*" -or -name "DejaVu*ttf" \) -not -regex '.*example
 RUN mkdir -p /PlanetaryImager-install/usr/bin
 COPY planetary_imager_launcher /PlanetaryImager-install/usr/bin/
 
+RUN apt-get install -y libboost-dev
+
 CMD cmake /PlanetaryImager -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release -DQt5Widgets_DIR=/opt/qt-5.5/lib/cmake/Qt5Widgets -DQt5Multimedia_DIR=/opt/qt-5.5/lib/cmake/Qt5Multimedia -DQt5Test_DIR=/opt/qt-5.5/lib/cmake/Qt5Test/ \
   && make -j4 && make install DESTDIR=/PlanetaryImager-install && cd /PlanetaryImager-install && tar czf /PlanetaryImager-dist/PlanetaryImager.tar.gz .
