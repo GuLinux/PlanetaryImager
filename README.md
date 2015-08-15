@@ -32,3 +32,8 @@ Compile Howto
     cmake .. -DCMAKE_INSTALL_PREFIX=/usr
     make all && sudo make install
     
+
+Credits
+-------
+
+Icon: [Hat Saturn](https://www.iconfinder.com/icons/37878/hat_planet_saturn_icon) by [Denis Sazhin](http://iconka.com/)

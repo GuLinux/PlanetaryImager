@@ -19,9 +19,10 @@ endif(cflags_fpic)
 
 set(MAJOR_VERSION 0)
 set(MINOR_VERSION 2)
-set(PATCH_VERSION 0)
+set(PATCH_VERSION 1)
 
 add_subdirectory(QHYCCD_Linux)
 include_directories(QHYCCD_Linux ${LIBUSB_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 add_subdirectory(src)
 add_subdirectory(tests)
+add_subdirectory(files)
