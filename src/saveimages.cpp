@@ -22,16 +22,14 @@
 #include <QThread>
 #include <QDebug>
 #include <functional>
-#include <QQueue>
 #include "utils.h"
 
-#include <QMutex>
-#include <QMutexLocker>
 #include <QtConcurrent/QtConcurrent>
 #include <functional>
 #include <cstring>
 #include "fps_counter.h"
 #include "configuration.h"
+#include <boost/lockfree/spsc_queue.hpp>
 
 using namespace std;
 using namespace std::placeholders;
@@ -190,8 +188,7 @@ public slots:
   void run();
 private:
   function<FileWriterPtr()> fileWriterFactory;
-  QQueue<ImageDataPtr> framesQueue;
-  QMutex mutex;
+  shared_ptr<boost::lockfree::spsc_queue<ImageDataPtr>> framesQueue;
   uint64_t max_frames;
   long long max_memory;
   bool &is_recording;
@@ -212,14 +209,15 @@ WriterThreadWorker::~WriterThreadWorker()
 
 void WriterThreadWorker::handle(const ImageDataPtr& imageData)
 {
-  QMutexLocker lock(&mutex);
-  auto framesQueueSize = framesQueue.size();
-  if(framesQueueSize> 0 && framesQueueSize * imageData->size() > max_memory) {
-    qWarning() << "Frames queue too high (" << framesQueueSize << ", " <<  static_cast<double>(framesQueueSize * imageData->size())/MB(1) << " MB), dropping frame";
-    emit saveImages->droppedFrames(++dropped_frames);
-    return;
+  if(!framesQueue) {
+    framesQueue = make_shared<boost::lockfree::spsc_queue<ImageDataPtr>>(max_memory/imageData->size());
+    qDebug() << "allocated framesqueue with " << max_memory << " bytes capacity (" << max_memory/imageData->size() << " frames)";
   }
-  framesQueue.enqueue(imageData); 
+  
+  if(!framesQueue->push(imageData)) {
+    qWarning() << "Frames queue too high, dropping frame";
+    emit saveImages->droppedFrames(++dropped_frames);
+  }
 }
 
 
@@ -232,11 +230,9 @@ void WriterThreadWorker::run()
     uint64_t frames = 0;
     emit saveImages->recording(fileWriter->filename());
     while(is_recording && frames < max_frames) {
-      if(framesQueue.size()>0) {
-	{
-	  QMutexLocker lock(&mutex);
-	  fileWriter->handle(framesQueue.dequeue());
-	}
+      ImageDataPtr frame;
+      if(framesQueue && framesQueue->pop(frame)) {
+	  fileWriter->handle(frame);
 	++savefps;
 	++meanfps;
 	emit saveImages->savedFrames(++frames);
