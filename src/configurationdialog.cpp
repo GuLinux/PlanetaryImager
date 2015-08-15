@@ -23,6 +23,7 @@
 #include "utils.h"
 #include <functional>
 using namespace std::placeholders;
+using namespace std;
 
 ConfigurationDialog::~ConfigurationDialog()
 {
@@ -42,5 +43,7 @@ ConfigurationDialog::ConfigurationDialog(Configuration& configuration, QWidget* 
     });
     connect(ui->buffered_file, &QCheckBox::toggled, bind(&Configuration::setBufferedOutput, &configuration, _1));
     connect(ui->drop_view_fps_on_save, &QCheckBox::toggled, [&configuration](bool checked){ configuration.setMaxPreviewFPSOnSaving(checked ? 10 : 0); });
+    connect(ui->observer, &QLineEdit::textChanged, bind(&Configuration::setObserver, &configuration, _1));
+    connect(ui->telescope, &QLineEdit::textChanged, bind(&Configuration::setTelescope, &configuration, _1));
     ui->memory_limit->setValue(configuration.maxMemoryUsage());
 }

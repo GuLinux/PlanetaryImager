@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>386</width>
-    <height>188</height>
+    <height>479</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -52,6 +52,43 @@
        <widget class="QCheckBox" name="drop_view_fps_on_save">
         <property name="text">
          <string>Slow down preview while saving (uses less CPU)</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </widget>
+   </item>
+   <item>
+    <widget class="QGroupBox" name="groupBox_2">
+     <property name="title">
+      <string>File Metadata</string>
+     </property>
+     <layout class="QVBoxLayout" name="verticalLayout_2">
+      <item>
+       <widget class="QLabel" name="label_2">
+        <property name="text">
+         <string>Observer</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="observer">
+        <property name="maxLength">
+         <number>40</number>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="label_3">
+        <property name="text">
+         <string>Telescope</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="telescope">
+        <property name="maxLength">
+         <number>40</number>
         </property>
        </widget>
       </item>

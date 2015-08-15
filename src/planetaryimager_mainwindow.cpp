@@ -128,7 +128,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     connect(d->ui->actionFit_to_window, &QAction::triggered, [=]{ d->ui->image->fitInView(d->displayImage->imageRect(), Qt::KeepAspectRatio); });
     connect(d->ui->actionActual_Size, &QAction::triggered, [=]{ d->ui->image->setTransform({}); });
     
-    connect(d->recording_panel, &RecordingPanel::start, bind(&SaveImages::startRecording, d->saveImages));
+    connect(d->recording_panel, &RecordingPanel::start, [=]{d->saveImages->startRecording(d->imager->name());});
     connect(d->recording_panel, &RecordingPanel::stop, bind(&SaveImages::endRecording, d->saveImages));
     
     connect(d->saveImages.get(), &SaveImages::recording, d->displayImage.get(), bind(&DisplayImage::setRecording, d->displayImage, true), Qt::QueuedConnection);

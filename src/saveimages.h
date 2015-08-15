@@ -33,7 +33,7 @@ public:
     ~SaveImages();
     virtual void handle(const ImageDataPtr& imageData);
 public slots:
-  void startRecording();
+  void startRecording(const QString &deviceName);
   void endRecording();
 private:
   D_PTR

@@ -50,6 +50,12 @@ public:
     void setSaveFileSuffix(const QString &suffix);
     QString saveFileSuffix() const;
     
+    void setObserver(const QString &observer);
+    QString observer() const;
+    
+    void setTelescope(const QString &telescope);
+    QString telescope() const;
+    
     QString savefile() const;
 
     enum SaveFormat { SER };

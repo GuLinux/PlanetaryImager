@@ -131,6 +131,26 @@ void Configuration::setSaveFormat(Configuration::SaveFormat format)
   d->set("save_format", format);
 }
 
+QString Configuration::observer() const
+{
+  return d->value<QString>("save_observer");
+}
+
+void Configuration::setObserver(const QString& observer)
+{
+  d->set<QString>("save_observer", observer);
+}
+
+QString Configuration::telescope() const
+{
+  return d->value<QString>("save_telescope");
+}
+
+void Configuration::setTelescope(const QString& telescope)
+{
+  d->set<QString>("save_telescope", telescope);
+}
+
 
 QString Configuration::savefile() const
 {
