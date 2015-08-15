@@ -36,7 +36,7 @@ ConfigurationDialog::ConfigurationDialog(Configuration& configuration, QWidget* 
     ui->setupUi(this);
     ui->buffered_file->setChecked(configuration.bufferedOutput());
     ui->drop_view_fps_on_save->setChecked(configuration.maxPreviewFPSOnSaving() > 0);
-    ui->memory_limit->setRange(0, 100*1024*1024);
+    ui->memory_limit->setRange(0, 500*1024*1024);
     connect(ui->memory_limit, &QSlider::valueChanged, [=,&configuration](int value) {
       ui->memory_limit_label->setText("%1 MB"_q % QString::number(static_cast<double>(value/(1024.*1024)), 'f', 2));
       configuration.setMaxMemoryUsage(value);

@@ -242,7 +242,7 @@ void ImagingWorker::start_live()
       qWarning() << "Error capturing live frame: " << result;
 //       QThread::msleep(1);
     } else {
-      _fps.frame();
+      ++_fps;
       ImageDataPtr imageData = ImageData::create(w, h, bpp, channels, buffer);
       for_each(begin(imageHandlers), end(imageHandlers), bind(&ImageHandler::handle, _1, imageData));
     }
