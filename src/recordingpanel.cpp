@@ -111,6 +111,12 @@ void RecordingPanel::saveFPS(double fps)
   d->ui->fps->setText(QString::number(fps, 'f', 2));
 }
 
+void RecordingPanel::meanFPS(double fps)
+{
+  d->ui->mean_fps->setText(QString::number(fps, 'f', 2));
+}
+
+
 void RecordingPanel::dropped(int frames)
 {
   d->ui->dropped->setText(QString::number(frames));

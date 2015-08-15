@@ -83,7 +83,7 @@ void DisplayImage::create_qimages()
       QThread::msleep(2);
       continue;
     }
-    d->capture_fps.frame();
+    ++d->capture_fps;
     ImageDataPtr *ptrCopy;
     {
       QMutexLocker lock{&d->mutex};

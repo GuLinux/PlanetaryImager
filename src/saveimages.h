@@ -39,6 +39,7 @@ private:
   D_PTR
 signals:
   void saveFPS(double fps);
+  void meanFPS(double fps);
   void savedFrames(uint64_t frames);
   void droppedFrames(uint64_t frames);
   void recording(const QString &filename);

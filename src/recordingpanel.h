@@ -33,6 +33,7 @@ public:
 public slots:
   void recording(bool recording = false, const QString &filename = {});
   void saveFPS(double fps);
+  void meanFPS(double fps);
   void saved(int frames);
   void dropped(int frames);
 signals:
