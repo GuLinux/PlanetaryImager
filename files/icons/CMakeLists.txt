@@ -1,0 +1,6 @@
+file(GLOB_RECURSE icons *.png)
+foreach(icon ${icons})
+  get_filename_component(size ${icon} DIRECTORY)
+  get_filename_component(size ${size} NAME)
+  install(FILES ${icon} DESTINATION ${CMAKE_INSTALL_PREFIX}/share/icons/hicolor/${size}/apps/)
+endforeach(icon)

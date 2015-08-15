@@ -94,6 +94,7 @@ void PlanetaryImagerMainWindow::Private::saveState()
 PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::WindowFlags flags) : dpointer(this)
 {
     d->ui->setupUi(this);
+    setWindowIcon(QIcon::fromTheme("planetary_imager"));
     d->ui->recording->setWidget(d->recording_panel = new RecordingPanel{d->configuration});
     d->configurationDialog = new ConfigurationDialog(d->configuration, this);
     d->displayImage = make_shared<DisplayImage>(d->configuration);

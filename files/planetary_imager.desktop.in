@@ -1,0 +1,9 @@
+[Desktop Entry]
+Type=Application
+Version=${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}
+Name=Planetary Imager
+Comment=Astronomy Planetary Imager, designed for speed and usability
+Exec=${application_name}
+Icon=planetary_imager
+Terminal=false
+Categories=Science;Graphics
