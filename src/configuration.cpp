@@ -21,6 +21,7 @@
 #include <QSettings>
 #include "utils.h"
 #include <QMetaType>
+#include "Qt/strings.h"
 
 Q_DECLARE_METATYPE(Configuration::SaveFormat);
 

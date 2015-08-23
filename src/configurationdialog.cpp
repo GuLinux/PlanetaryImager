@@ -22,6 +22,8 @@
 #include "ui_configurationdialog.h"
 #include "utils.h"
 #include <functional>
+#include "Qt/strings.h"
+
 using namespace std::placeholders;
 using namespace std;
 

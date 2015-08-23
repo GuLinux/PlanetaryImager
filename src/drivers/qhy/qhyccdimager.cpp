@@ -29,6 +29,8 @@
 #include <QtConcurrent/QtConcurrent>
 #include "image_data.h"
 #include <fps_counter.h>
+#include "Qt/strings.h"
+
 
 using namespace std;
 using namespace std::placeholders;

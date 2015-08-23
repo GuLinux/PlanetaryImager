@@ -6,6 +6,8 @@
 #include <QDebug>
 #include <QString>
 #include <QRegularExpression>
+#include "Qt/strings.h"
+
 using namespace std;
 
 class QHYDriver::Private {
