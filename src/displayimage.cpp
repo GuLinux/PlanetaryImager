@@ -73,6 +73,37 @@ void DisplayImage::handle(const ImageDataPtr& imageData)
 
 void DisplayImage::create_qimages()
 {
+  struct __attribute__ ((__packed__)) Pixel {
+    Pixel() {}
+    Pixel(char gray) : r{gray}, g{gray}, b{gray} {}
+    Pixel(char r, char g, char b) : r{r}, g{g}, b{b} {}
+    const char a = 0xff;
+    char r;
+    char g;
+    char b;
+  };
+  
+  ImageDataPtr imageData;
+  while(d->running) {
+    if(!d->queue.pop(imageData)) {
+      QThread::msleep(1);
+      continue;
+    }
+    ++d->capture_fps;
+    Pixel *pixels = new Pixel[imageData->width() * imageData->height()];
+    if(imageData->channels() == 1) {
+    } else {
+    }
+    QImage image{reinterpret_cast<uint8_t*>(pixels), imageData->width(), imageData->height(), QImage::Format_ARGB32, [](void *data){ delete [] reinterpret_cast<Pixel*>(data); }, pixels};
+    d->imageRect = image.rect();
+    emit gotImage(image);
+  }
+  QThread::currentThread()->quit();
+}
+
+void DisplayImage::create_qimages_qt55()
+{
+
   ImageDataPtr imageData;
   while(d->running) {
     if(!d->queue.pop(imageData)) {
@@ -87,6 +118,7 @@ void DisplayImage::create_qimages()
   }
   QThread::currentThread()->quit();
 }
+
 
 QRect DisplayImage::imageRect() const
 {
