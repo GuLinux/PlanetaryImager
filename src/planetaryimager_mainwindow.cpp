@@ -42,6 +42,8 @@
 #include "displayimage.h"
 #include "recordingpanel.h"
 
+#include "Qt/strings.h"
+
 using namespace std;
 using namespace std::placeholders;
 
