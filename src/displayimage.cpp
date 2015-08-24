@@ -37,6 +37,7 @@ public:
   QRect imageRect;
   bool running = true;
   boost::lockfree::spsc_queue<ImageDataPtr, boost::lockfree::capacity<5>> queue;
+    bool detectEdges;
 private:
   DisplayImage *q;
 };
@@ -82,10 +83,17 @@ void DisplayImage::create_qimages()
       QThread::msleep(1);
       continue;
     }
-    ++d->capture_fps;
     auto blob = new Magick::Blob(imageData->data(), imageData->size());
-    Magick::Image image(*blob, {imageData->width(), imageData->height()}, imageData->bpp(), imageData->channels() == 1 ? "GRAY" : "RGB");
-    image.write(blob, "RGBA", 8);
+    try {
+      Magick::Image image(*blob, {imageData->width(), imageData->height()}, imageData->bpp(), imageData->channels() == 1 ? "GRAY" : "RGB");
+      if(d->detectEdges)
+	image.edge();
+      image.write(blob, "RGBA", 8);
+    } catch(std::exception &e) {
+      qWarning() << e.what();
+      delete blob;
+    }
+    ++d->capture_fps;
     QImage qimage{reinterpret_cast<const uint8_t*>(blob->data()), imageData->width(), imageData->height(), QImage::Format_RGBX8888, [](void *data){ delete reinterpret_cast<Magick::Blob*>(data); }, blob};
     d->imageRect = qimage.rect();
     emit gotImage(qimage);
@@ -122,6 +130,11 @@ void DisplayImage::quit()
   d->running = false;
 }
 
+
+void DisplayImage::detectEdges(bool detect)
+{
+  d->detectEdges = detect;
+}
 
 
 

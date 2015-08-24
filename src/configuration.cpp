@@ -152,6 +152,17 @@ void Configuration::setTelescope(const QString& telescope)
   d->set<QString>("save_telescope", telescope);
 }
 
+void Configuration::detectEdges(bool detect)
+{
+  d->set<bool>("detect_edges", detect);
+}
+
+bool Configuration::detectEdges() const
+{
+  return d->value<bool>("detect_edges", false);
+}
+
+
 
 QString Configuration::savefile() const
 {
