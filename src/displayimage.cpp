@@ -74,7 +74,7 @@ void DisplayImage::handle(const ImageDataPtr& imageData)
 }
 
 #include <Magick++.h>
-
+#include "utils.h"
 void DisplayImage::create_qimages()
 {
   ImageDataPtr imageData;
@@ -83,18 +83,29 @@ void DisplayImage::create_qimages()
       QThread::msleep(1);
       continue;
     }
-    auto blob = new Magick::Blob(imageData->data(), imageData->size());
+    int w = imageData->width();
+    int h= imageData->height();
+    
+    auto b1 = new benchmark("create blob");
+    Magick::Blob blob(imageData->data(), imageData->size());
+    auto data = new uint8_t[w*h*4]{0};
+    delete b1;
     try {
-      Magick::Image image(*blob, {imageData->width(), imageData->height()}, imageData->bpp(), imageData->channels() == 1 ? "GRAY" : "RGB");
+      auto b2 = new benchmark("create image");
+      Magick::Image image(blob, {w, h}, imageData->bpp(), imageData->channels() == 1 ? "GRAY" : "RGB");
+      delete b2;
       if(d->detectEdges)
 	image.edge();
-      image.write(blob, "RGBA", 8);
+      auto b3 = new benchmark("write image");
+      image.write(0, 0, w, h, "RGBA", Magick::StorageType::CharPixel, data);
+      delete b3;
     } catch(std::exception &e) {
       qWarning() << e.what();
-      delete blob;
+      delete [] data;
+      continue;
     }
     ++d->capture_fps;
-    QImage qimage{reinterpret_cast<const uint8_t*>(blob->data()), imageData->width(), imageData->height(), QImage::Format_RGBX8888, [](void *data){ delete reinterpret_cast<Magick::Blob*>(data); }, blob};
+    QImage qimage{data, w, h, QImage::Format_RGBX8888, [](void *data){ delete reinterpret_cast<uint8_t*>(data); }, data};
     d->imageRect = qimage.rect();
     emit gotImage(qimage);
   }

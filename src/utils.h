@@ -6,12 +6,12 @@
 #include <functional>
 #include <QDebug>
 
-class benchmarck {
+class benchmark {
 public:
   typedef std::function<void(const QString &, int, double)> BenchmarkCall;
-  benchmarck(const QString &name, BenchmarkCall benchmark_f = benchmarck::debug_benchmark(), int print_every = 20) 
+  benchmark(const QString &name, BenchmarkCall benchmark_f = benchmark::debug_benchmark(), int print_every = 20) 
     : name(name), print_every(print_every), benchmark_f(benchmark_f) { timer.start(); }
-  ~benchmarck() {
+  ~benchmark() {
     static QMap<QString, QVector<double>> timers;
     timers[name].push_back(timer.elapsed());
     if(timers[name].size() >= print_every) {
