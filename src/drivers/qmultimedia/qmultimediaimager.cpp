@@ -34,7 +34,7 @@ QMultimediaImager::Private::Private(const QCameraInfo& cameraInfo, QMultimediaIm
 }
 
 
-QMultimediaImager::QMultimediaImager(const QCameraInfo& cameraInfo) : dpointer(cameraInfo, this)
+QMultimediaImager::QMultimediaImager(const QCameraInfo& cameraInfo) : dptr(cameraInfo, this)
 {
 }
 

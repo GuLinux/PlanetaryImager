@@ -44,7 +44,7 @@ RecordingPanel::~RecordingPanel()
 {
 }
 
-RecordingPanel::RecordingPanel(Configuration& configuration, QWidget* parent) : QWidget{parent}, dpointer(this)
+RecordingPanel::RecordingPanel(Configuration& configuration, QWidget* parent) : QWidget{parent}, dptr(this)
 {
   d->ui.reset(new Ui::RecordingPanel);
   d->ui->setupUi(this);

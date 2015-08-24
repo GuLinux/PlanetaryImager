@@ -49,7 +49,7 @@ QString QHYDriver::error_name(int code)
   return Private::error_codes[code];
 }
 
-QHYDriver::QHYDriver() : dpointer(this)
+QHYDriver::QHYDriver() : dptr(this)
 {
   if(int result = InitQHYCCDResource() != QHYCCD_SUCCESS)
     throw error("initializing QHY Driver", result);

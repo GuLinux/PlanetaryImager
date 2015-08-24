@@ -58,7 +58,7 @@ QMultimediaDriver::Private::Private(QMultimediaDriver* q) : q{q}
 
 }
 
-QMultimediaDriver::QMultimediaDriver() : dpointer(this)
+QMultimediaDriver::QMultimediaDriver() : dptr(this)
 {
 
 }

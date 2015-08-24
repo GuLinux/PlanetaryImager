@@ -42,7 +42,7 @@ void fps_counter::Private::timeout()
 }
 
 fps_counter::fps_counter ( const OnFPS& onFPS, fps_counter::Mode mode, int fps_trigger_milliseconds, bool mean, QObject* parent ) 
-  : QObject ( parent ), dpointer ( onFPS, mode, fps_trigger_milliseconds, mean, this )
+  : QObject ( parent ), dptr ( onFPS, mode, fps_trigger_milliseconds, mean, this )
 {
   if(mode == Timer) {
     QTimer *timer = new QTimer{this};
