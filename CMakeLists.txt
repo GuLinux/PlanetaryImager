@@ -11,7 +11,7 @@ set(CMAKE_AUTORCC ON)
 find_package(Qt5Widgets REQUIRED )
 find_package(Qt5Multimedia REQUIRED)
 find_package(Boost REQUIRED)
-include(GuLinux-Commons/cmake/FindMagick.cmake)
+
 include_directories(${MAGICK_INCLUDE_DIRS})
 include(FindPkgConfig)
 pkg_check_modules(LIBUSB libusb-1.0 REQUIRED)
