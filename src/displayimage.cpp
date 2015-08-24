@@ -26,6 +26,8 @@
 #include <QImage>
 #include <boost/lockfree/spsc_queue.hpp>
 #include <QDebug>
+#include "Qt/strings.h"
+#include "utils.h"
 
 class DisplayImage::Private {
 public:
@@ -37,14 +39,16 @@ public:
   QRect imageRect;
   bool running = true;
   boost::lockfree::spsc_queue<ImageDataPtr, boost::lockfree::capacity<5>> queue;
-    bool detectEdges;
+  bool detectEdges;
+  QVector<QRgb> grayScale;
 private:
   DisplayImage *q;
 };
 
 DisplayImage::Private::Private(Configuration& configuration, DisplayImage* q) : configuration{configuration}, capture_fps{[=](double fps){ emit q->displayFPS(fps);}}, q{q}
 {
-
+  for(int i=0; i<0xff; i++)
+    grayScale.push_back(qRgb(i, i, i));
 }
 
 
@@ -73,8 +77,6 @@ void DisplayImage::handle(const ImageDataPtr& imageData)
   d->elapsed.restart();
 }
 
-#include <Magick++.h>
-#include "utils.h"
 void DisplayImage::create_qimages()
 {
   ImageDataPtr imageData;
@@ -83,33 +85,16 @@ void DisplayImage::create_qimages()
       QThread::msleep(1);
       continue;
     }
-    int w = imageData->width();
-    int h= imageData->height();
-    QtConcurrent::run([=] {
+    ++d->capture_fps;
+    auto format = imageData->channels() == 1 ? QImage::Format_Indexed8 : QImage::Format_RGB888;
+    ImageDataPtr *ptrCopy = new ImageDataPtr(imageData);
+    QImage image{ptrCopy->get()->data(), ptrCopy->get()->width(), ptrCopy->get()->height(), format, [](void *data){ delete reinterpret_cast<ImageDataPtr*>(data); }, ptrCopy};
+    if(imageData->channels() == 1) {
+      image.setColorTable(d->grayScale);
+    }
     
-      auto b1 = new benchmark("create blob");
-      Magick::Blob blob(imageData->data(), imageData->size());
-      auto data = new uint8_t[w*h*4]{0};
-      delete b1;
-      try {
-	auto b2 = new benchmark("create image");
-	Magick::Image image(blob, {w, h}, imageData->bpp(), imageData->channels() == 1 ? "GRAY" : "RGB");
-	delete b2;
-	if(d->detectEdges)
-	  image.edge();
-	auto b3 = new benchmark("write image");
-	image.write(0, 0, w, h, "RGBA", Magick::StorageType::CharPixel, data);
-	delete b3;
-      } catch(std::exception &e) {
-	qWarning() << e.what();
-	delete [] data;
-	return;
-      }
-      ++d->capture_fps;
-      QImage qimage{data, w, h, QImage::Format_RGBX8888, [](void *data){ delete reinterpret_cast<uint8_t*>(data); }, data};
-      d->imageRect = qimage.rect();
-      emit gotImage(qimage);
-    });
+    d->imageRect = image.rect();
+    emit gotImage(image);
   }
   QThread::currentThread()->quit();
 }
