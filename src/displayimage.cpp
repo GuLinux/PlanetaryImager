@@ -25,6 +25,7 @@
 #include <QRect>
 #include <QImage>
 #include <boost/lockfree/spsc_queue.hpp>
+#include <QDebug>
 
 class DisplayImage::Private {
 public:
@@ -71,17 +72,10 @@ void DisplayImage::handle(const ImageDataPtr& imageData)
   d->elapsed.restart();
 }
 
+#include <Magick++.h>
+
 void DisplayImage::create_qimages()
 {
-  struct __attribute__ ((__packed__)) Pixel {
-    void gray(char c) { _r = c; _g = c; _b = c; }
-    void rgb(char r, char g, char b) { _r = r; _g = g; _b = b; }
-    const char a = 0xff;
-    char _r;
-    char _g;
-    char _b;
-  };
-  
   ImageDataPtr imageData;
   while(d->running) {
     if(!d->queue.pop(imageData)) {
@@ -89,21 +83,16 @@ void DisplayImage::create_qimages()
       continue;
     }
     ++d->capture_fps;
-    Pixel *pixels = new Pixel[imageData->width() * imageData->height()];
-    for(int i=0; i<imageData->width() * imageData->height(); i++) {
-      if(imageData->channels() == 1) {
-        pixels[i].gray(imageData->data()[i]);
-      } else {
-        pixels[i].rgb(imageData->data()[i*3], imageData->data()[i*3]+1, imageData->data()[i*3]+2);
-      }
-    }
-    QImage image{reinterpret_cast<uint8_t*>(pixels), imageData->width(), imageData->height(), QImage::Format_ARGB32, [](void *data){ delete [] reinterpret_cast<Pixel*>(data); }, pixels};
-    d->imageRect = image.rect();
-    emit gotImage(image);
+    auto blob = new Magick::Blob(imageData->data(), imageData->size());
+    Magick::Image image(*blob, {imageData->width(), imageData->height()}, imageData->bpp(), imageData->channels() == 1 ? "GRAY" : "RGB");
+    image.write(blob, "RGBA", 8);
+    QImage qimage{reinterpret_cast<const uint8_t*>(blob->data()), imageData->width(), imageData->height(), QImage::Format_RGBX8888, [](void *data){ delete reinterpret_cast<Magick::Blob*>(data); }, blob};
+    d->imageRect = qimage.rect();
+    emit gotImage(qimage);
   }
   QThread::currentThread()->quit();
 }
-
+/*
 void DisplayImage::create_qimages_qt55()
 {
 
@@ -122,7 +111,7 @@ void DisplayImage::create_qimages_qt55()
   QThread::currentThread()->quit();
 }
 
-
+*/
 QRect DisplayImage::imageRect() const
 {
   return d->imageRect;
