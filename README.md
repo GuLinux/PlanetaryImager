@@ -9,7 +9,7 @@ Currently this application supports only QHY based cameras, mainly QHY5IIm-L (mi
 
 Requirements
 ------------
- * Qt version 5.5
+ * Qt version >= 5.4
  * A recent boost library version (tested with 1.55 and above).
 
 

@@ -101,26 +101,7 @@ void DisplayImage::create_qimages()
   }
   QThread::currentThread()->quit();
 }
-/*
-void DisplayImage::create_qimages_qt55()
-{
 
-  ImageDataPtr imageData;
-  while(d->running) {
-    if(!d->queue.pop(imageData)) {
-      QThread::msleep(1);
-      continue;
-    }
-    ++d->capture_fps;
-    ImageDataPtr *ptrCopy = new ImageDataPtr(imageData);
-    QImage image{ptrCopy->get()->data(), ptrCopy->get()->width(), ptrCopy->get()->height(), QImage::Format_Grayscale8, [](void *data){ delete reinterpret_cast<ImageDataPtr*>(data); }, ptrCopy};
-    d->imageRect = image.rect();
-    emit gotImage(image);
-  }
-  QThread::currentThread()->quit();
-}
-
-*/
 QRect DisplayImage::imageRect() const
 {
   return d->imageRect;

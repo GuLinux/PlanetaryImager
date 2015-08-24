@@ -58,8 +58,6 @@ public:
     
     QString savefile() const;
     
-    bool detectEdges() const;
-    void detectEdges(bool detect);
 
     enum SaveFormat { SER };
     void setSaveFormat(SaveFormat format);
