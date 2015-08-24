@@ -1,10 +1,9 @@
 #include <QApplication>
 #include "planetaryimager_mainwindow.h"
 #include "version.h"
-#include "Magick++.h"
+
 int main(int argc, char** argv)
 {
-    Magick::InitializeMagick(*argv);
     QApplication app(argc, argv);
     app.setApplicationName("PlanetaryImager");
     app.setApplicationDisplayName("Planetary Imager");
