@@ -170,6 +170,12 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     d->ui->settings_container->layout()->setSpacing(0);
     connect(qApp, &QApplication::aboutToQuit, this, [=]{ d->imager.reset(); }, Qt::QueuedConnection);
     connect(qApp, &QApplication::aboutToQuit, this, bind(&DisplayImage::quit, d->displayImage), Qt::QueuedConnection);
+    d->ui->actionEdges_Detection->setChecked(d->configuration.detectEdges());
+    d->displayImage->detectEdges(d->configuration.detectEdges());
+    connect(d->ui->actionEdges_Detection, &QAction::toggled, [=](bool detect){
+      d->configuration.detectEdges(detect);
+      d->displayImage->detectEdges(detect);
+    });
 }
 
 
