@@ -43,7 +43,7 @@ StatusBarInfoWidget::~StatusBarInfoWidget()
 
 }
 
-StatusBarInfoWidget::StatusBarInfoWidget(QWidget* parent, Qt::WindowFlags f) : QWidget(parent, f), dpointer(this)
+StatusBarInfoWidget::StatusBarInfoWidget(QWidget* parent, Qt::WindowFlags f) : QWidget(parent, f), dptr(this)
 {
     d->ui->setupUi(this);
     captureFPS(0);

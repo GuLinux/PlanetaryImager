@@ -20,7 +20,7 @@ SupportedDrivers::Private::Private(const Drivers& drivers, SupportedDrivers* q) 
 
 }
 
-SupportedDrivers::SupportedDrivers() : dpointer({
+SupportedDrivers::SupportedDrivers() : dptr({
   make_shared<QHYDriver>(),
 //   make_shared<QMultimediaDriver>(),
   

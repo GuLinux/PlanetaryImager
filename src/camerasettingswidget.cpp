@@ -61,7 +61,7 @@ CameraSettingsWidget::~CameraSettingsWidget()
 
 
 CameraSettingsWidget::CameraSettingsWidget(const ImagerPtr& imager, QSettings& settings, QWidget* parent)
-  : QWidget(parent), dpointer (this )
+  : QWidget(parent), dptr (this )
 {
   setLayout(new QVBoxLayout);
   layout()->setSpacing(2);

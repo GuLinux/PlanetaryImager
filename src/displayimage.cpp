@@ -52,7 +52,7 @@ DisplayImage::~DisplayImage()
 }
 
 DisplayImage::DisplayImage(Configuration& configuration, QObject* parent)
-  : QObject(parent), dpointer(configuration, this)
+  : QObject(parent), dptr(configuration, this)
 {
   setRecording(false);
 }

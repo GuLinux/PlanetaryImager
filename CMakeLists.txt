@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8.6)
 enable_testing()
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} GuLinux-Commons/cmake)
-include_directories(GuLinux-Commons)
+include_directories(GuLinux-Commons GuLinux-Commons/c++)
 project(PlanetaryImager)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)

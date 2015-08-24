@@ -93,7 +93,7 @@ void PlanetaryImagerMainWindow::Private::saveState()
 }
 
 
-PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::WindowFlags flags) : dpointer(this)
+PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::WindowFlags flags) : dptr(this)
 {
     d->ui->setupUi(this);
     setWindowIcon(QIcon::fromTheme("planetary_imager"));

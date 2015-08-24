@@ -72,7 +72,7 @@ QHYCCDImager::Private::Private(const QString &name, const QString &id, const Ima
 {
 }
 
-QHYCCDImager::QHYCCDImager(const QString &cameraName, const char *id, const ImageHandlers &imageHandlers) : dpointer(cameraName, id, imageHandlers, this)
+QHYCCDImager::QHYCCDImager(const QString &cameraName, const char *id, const ImageHandlers &imageHandlers) : dptr(cameraName, id, imageHandlers, this)
 {
   d->handle = OpenQHYCCD(const_cast<char*>(id));
   if(d->handle < QHYCCD_SUCCESS) {

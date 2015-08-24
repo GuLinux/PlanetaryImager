@@ -156,7 +156,7 @@ SaveImages::Private::Private(Configuration &configuration, SaveImages* q) : conf
 {
 }
 
-SaveImages::SaveImages(Configuration& configuration, QObject* parent) : QObject(parent), dpointer(configuration, this)
+SaveImages::SaveImages(Configuration& configuration, QObject* parent) : QObject(parent), dptr(configuration, this)
 {
 }
 

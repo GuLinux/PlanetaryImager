@@ -41,7 +41,7 @@ Configuration::Private::Private(QSettings& settings, Configuration* q) : setting
 }
 
 
-Configuration::Configuration(QSettings &settings) : dpointer(settings, this)
+Configuration::Configuration(QSettings &settings) : dptr(settings, this)
 {
 }
 
