@@ -14,4 +14,4 @@ VOLUME "/PlanetaryImager-dist"
 WORKDIR /PlanetaryImager-build
 RUN rm -rf /qtmultimedia*
 
-CMD cmake /PlanetaryImager -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release && make -j4 && make install DESTDIR=/PlanetaryImager-install && cd /PlanetaryImager-install && tar czf /PlanetaryImager-dist/PlanetaryImager.tar.gz .
+CMD cmake /PlanetaryImager -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=Release && make -j4 && make package && cp -av PlanetaryImager* /PlanetaryImager-dist
