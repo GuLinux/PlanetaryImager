@@ -2,6 +2,7 @@
  - Removed Qt 5.5 dependency, now it compiles with Qt 5.4 too (found in much more distributions)
  - Edge detection for focus help
  - Support for color cameras, still untested but it might work
+ - Added ser_extract_frames, command line utility to select single frames and ranges to a new file
  
 ## 0.3.0 2015-08-25
  - Removed Qt 5.5 dependency, now it compiles with Qt 5.4 too (found in much more distributions)

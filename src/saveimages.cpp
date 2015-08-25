@@ -30,6 +30,7 @@
 #include "fps_counter.h"
 #include "configuration.h"
 #include <boost/lockfree/spsc_queue.hpp>
+#include "ser_header.h"
 
 using namespace std;
 using namespace std::placeholders;
@@ -43,35 +44,6 @@ typedef shared_ptr<FileWriter> FileWriterPtr;
 typedef function<FileWriterPtr(const QString &deviceName, Configuration &configuration)> FileWriterFactory;
 
 
-struct __attribute__ ((__packed__)) SER_Header {
-    char fileId[14] = {'L', 'U', 'C', 'A', 'M', '-', 'R','E','C','O','R','D','E','R'};
-    int32_t luId = 0;
-    enum ColorId {
-        MONO = 0,
-        BAYER_RGGB = 8,
-        BAYER_GRBG = 9,
-        BAYER_GBRG = 10,
-        BAYER_BGGR = 11,
-        BAYER_CYYM = 16,
-        BAYER_YCMY = 17,
-        BAYER_YMCY = 18,
-        BAYER_MYYC = 19,
-        RGB = 100,
-        BGR = 101,
-    };
-    int32_t colorId = MONO;
-    enum Endian { BigEndian = 0, LittleEndian = 1 };
-    int32_t endian = BigEndian;
-    uint32_t imageWidth = 0;
-    uint32_t imageHeight = 0;
-    uint32_t pixelDepth = 0;
-    uint32_t frames = 0;
-    char observer[40] = {};
-    char camera[40] = {};
-    char telescope[40] = {};
-    uint64_t datetime = 0;
-    uint64_t datetime_utc = 0;
-};
 
 class SER_Writer : public FileWriter {
 public:
@@ -79,7 +51,7 @@ public:
   ~SER_Writer();
   virtual void handle(const ImageDataPtr& imageData);
   virtual QString filename() const;
-  vector<uint64_t> timestamps;
+  vector<SER_Timestamp> timestamps;
 private:
   QFile file;
   SER_Header *header;
