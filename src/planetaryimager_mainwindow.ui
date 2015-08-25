@@ -16,17 +16,7 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QGraphicsView" name="image">
-      <property name="interactive">
-       <bool>false</bool>
-      </property>
-      <property name="viewportUpdateMode">
-       <enum>QGraphicsView::MinimalViewportUpdate</enum>
-      </property>
-      <property name="optimizationFlags">
-       <set>QGraphicsView::DontAdjustForAntialiasing</set>
-      </property>
-     </widget>
+     <widget class="QWidget" name="image" native="true"/>
     </item>
    </layout>
   </widget>

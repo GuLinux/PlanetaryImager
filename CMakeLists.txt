@@ -24,6 +24,7 @@ set(MAJOR_VERSION 0)
 set(MINOR_VERSION 3)
 set(PATCH_VERSION 0)
 
+add_subdirectory(GuLinux-Commons/Qt)
 add_subdirectory(QHYCCD_Linux)
 include_directories(QHYCCD_Linux ${LIBUSB_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 add_subdirectory(src)

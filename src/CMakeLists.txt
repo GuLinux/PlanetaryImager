@@ -33,7 +33,7 @@ else(CMAKE_SIZEOF_VOID_P MATCHES "8")
 endif(CMAKE_SIZEOF_VOID_P MATCHES "8")
 
 
-target_link_libraries(planetary_imager qhy_driver ${QHY_LIBRARY} qmultimedia_driver Qt5::Widgets Qt5::Multimedia ${Boost_LIBRARIES} )
+target_link_libraries(planetary_imager qhy_driver GuLinux_Qt_Commons ${QHY_LIBRARY} qmultimedia_driver Qt5::Widgets Qt5::Multimedia ${Boost_LIBRARIES} )
 
 install(TARGETS planetary_imager RUNTIME DESTINATION bin)
 

@@ -41,7 +41,9 @@
 #include <QMessageBox>
 #include "displayimage.h"
 #include "recordingpanel.h"
-
+#include "Qt/zoomableimage.h"
+#include <QGridLayout>
+#include <QToolBar>
 #include "Qt/strings.h"
 
 using namespace std;
@@ -59,8 +61,7 @@ public:
   QSettings settings;
   Configuration configuration;
   void saveState();
-  QGraphicsScene *scene;
-  double zoom;
+
   StatusBarInfoWidget *statusbar_info_widget;
   shared_ptr<DisplayImage> displayImage;
   QThread displayImageThread;
@@ -72,6 +73,7 @@ public:
   void connectCamera(const Driver::CameraPtr &camera);
   void cameraDisconnected();
   void enableUIWidgets(bool cameraConnected);
+  ZoomableImage *image;
 private:
   PlanetaryImagerMainWindow *q;
 };
@@ -102,7 +104,13 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     d->displayImage = make_shared<DisplayImage>(d->configuration);
     d->saveImages = make_shared<SaveImages>(d->configuration);
     d->ui->statusbar->addPermanentWidget(d->statusbar_info_widget = new StatusBarInfoWidget());
-    d->scene = new QGraphicsScene(this);
+
+    d->ui->image->setLayout(new QGridLayout);
+    d->ui->image->layout()->setMargin(0);
+    d->ui->image->layout()->setSpacing(0);
+    d->ui->image->layout()->addWidget(d->image = new ZoomableImage(true));
+    d->image->toolbar()->setToolButtonStyle(Qt::ToolButtonTextOnly); // TODO: Temporary workaround for png bug in QHYCCD Driver
+    
     restoreState(d->settings.value("dock_settings").toByteArray());
     connect(d->ui->actionAbout, &QAction::triggered, bind(&QMessageBox::about, this, tr("About"),
 							  tr("%1 version %2.\nFast imaging capture software for planetary imaging").arg(qApp->applicationDisplayName())
@@ -111,7 +119,6 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     connect(d->ui->action_devices_rescan, &QAction::triggered, bind(&Private::rescan_devices, d.get()));
     connect(d->ui->actionShow_settings, &QAction::triggered, bind(&QDialog::show, d->configurationDialog));
     
-    d->ui->image->setScene(d->scene);
     auto dockWidgetToggleVisibility = [=](QDockWidget *widget, bool visible){ widget->setVisible(visible); };
     auto dockWidgetVisibleCheck = [=](QAction *action, QDockWidget *widget) { action->setChecked(widget->isVisible()); };
     QList<QDockWidget*> dock_widgets;
@@ -124,12 +131,12 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
       connect(widget, &QDockWidget::visibilityChanged, bind(&Private::saveState, d.get()));
       dock_widgets.push_back(widget);
     };
-    d->zoom = 1;
-    auto zoom = [=](qreal scale) { d->ui->image->scale(scale, scale); };
-    connect(d->ui->actionZoom_In, &QAction::triggered, [=]{ zoom(1.05); });
-    connect(d->ui->actionZoom_Out, &QAction::triggered, [=]{ zoom(0.95); });
-    connect(d->ui->actionFit_to_window, &QAction::triggered, [=]{ d->ui->image->fitInView(d->displayImage->imageRect(), Qt::KeepAspectRatio); });
-    connect(d->ui->actionActual_Size, &QAction::triggered, [=]{ d->ui->image->setTransform({}); });
+
+    // TODO: remove?
+    connect(d->ui->actionZoom_In, &QAction::triggered, bind(&ZoomableImage::scale, d->image, 1.1));
+    connect(d->ui->actionZoom_Out, &QAction::triggered, bind(&ZoomableImage::scale, d->image, 0.9));
+    connect(d->ui->actionFit_to_window, &QAction::triggered, bind(&ZoomableImage::fitToWindow, d->image));
+    connect(d->ui->actionActual_Size, &QAction::triggered, bind(&ZoomableImage::normalSize, d->image));
     
     connect(d->recording_panel, &RecordingPanel::start, [=]{d->saveImages->startRecording(d->imager->name());});
     connect(d->recording_panel, &RecordingPanel::stop, bind(&SaveImages::endRecording, d->saveImages));
@@ -147,10 +154,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     connect(d->ui->actionShow_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::show, _1) ); });
     
     d->rescan_devices();
-    connect(d->displayImage.get(), &DisplayImage::gotImage, this, [=](const QImage &image) {
-      d->scene->clear();
-      d->scene->addPixmap(QPixmap::fromImage(image));
-    }, Qt::QueuedConnection);
+    connect(d->displayImage.get(), &DisplayImage::gotImage, this, bind(&ZoomableImage::setImage, d->image, _1), Qt::QueuedConnection);
 
     
     connect(d->displayImage.get(), &DisplayImage::displayFPS, d->statusbar_info_widget, &StatusBarInfoWidget::displayFPS, Qt::QueuedConnection);
@@ -221,7 +225,7 @@ void PlanetaryImagerMainWindow::Private::cameraDisconnected()
   ui->camera_pixels_size->clear();
   ui->camera_resolution->clear();
   delete cameraSettingsWidget;
-  scene->clear();
+  image->setImage({});
   statusbar_info_widget->captureFPS(0);
 }
 
