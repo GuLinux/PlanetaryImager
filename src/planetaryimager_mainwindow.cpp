@@ -108,7 +108,8 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     d->ui->image->setLayout(new QGridLayout);
     d->ui->image->layout()->setMargin(0);
     d->ui->image->layout()->setSpacing(0);
-    d->ui->image->layout()->addWidget(d->image = new ZoomableImage(true));
+    d->ui->image->layout()->addWidget(d->image = new ZoomableImage(false));
+    addToolBar(d->image->toolbar());
     d->image->toolbar()->setToolButtonStyle(Qt::ToolButtonTextOnly); // TODO: Temporary workaround for png bug in QHYCCD Driver
     
     restoreState(d->settings.value("dock_settings").toByteArray());
