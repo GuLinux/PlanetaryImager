@@ -14,13 +14,13 @@ private:
   const int _bpp;
   const int _channels;
   uint8_t *_data;
-  ImageData(int width, int height, int bpp, int channels, uint8_t *data) : _width{width}, _height{height}, _bpp{bpp}, _channels{channels}, _data{new uint8_t[size()]}
+  ImageData(int width, int height, int bpp, int channels, const uint8_t *data) : _width{width}, _height{height}, _bpp{bpp}, _channels{channels}, _data{new uint8_t[size()]}
   {
     std::memcpy(_data, data, size());
   }
   
 public:
-  static ImageDataPtr create(int width, int height, int bpp, int channels, uint8_t *data) { return std::shared_ptr<ImageData>(new ImageData{width, height, bpp, channels, data}); }
+  static ImageDataPtr create(int width, int height, int bpp, int channels, const uint8_t *data) { return std::shared_ptr<ImageData>(new ImageData{width, height, bpp, channels, data}); }
   ~ImageData() {
     delete [] _data;
   }

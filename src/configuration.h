@@ -57,6 +57,7 @@ public:
     QString telescope() const;
     
     QString savefile() const;
+    
 
     enum SaveFormat { SER };
     void setSaveFormat(SaveFormat format);
