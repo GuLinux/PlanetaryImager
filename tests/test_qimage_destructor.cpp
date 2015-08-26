@@ -11,7 +11,7 @@ private slots:
   void testSharedPointerStruct();
 private:
   bool destroyed;
-  uchar image_data[4];
+  uchar image_data[4*4];
 };
 
 using namespace std;
@@ -32,7 +32,7 @@ void TestQImageDestructor::testPlainStruct()
 {
   Foo *foo = new Foo{destroyed};
   {
-    QImage image(image_data, 2, 2, QImage::Format_Grayscale8, [](void *mem){ Foo *foo = (Foo*) mem; delete foo; }, foo);
+    QImage image(image_data, 2, 2, QImage::Format_RGBX8888, [](void *mem){ Foo *foo = (Foo*) mem; delete foo; }, foo);
     QVERIFY(!image.isNull());
   }
   QVERIFY(destroyed);
@@ -44,7 +44,7 @@ void TestQImageDestructor::testSharedPointerStruct()
     auto foo = make_shared<Foo>(destroyed);
     auto bla = new shared_ptr<Foo>(foo);
     {
-      QImage image(image_data, 2, 2, QImage::Format_Grayscale8, [](void *mem){ shared_ptr<Foo> *foo = (shared_ptr<Foo>*) mem; delete foo; }, bla);
+      QImage image(image_data, 2, 2, QImage::Format_RGBX8888, [](void *mem){ shared_ptr<Foo> *foo = (shared_ptr<Foo>*) mem; delete foo; }, bla);
       QVERIFY(!image.isNull());
     }
     QVERIFY(!destroyed);

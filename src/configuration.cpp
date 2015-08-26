@@ -153,6 +153,7 @@ void Configuration::setTelescope(const QString& telescope)
 }
 
 
+
 QString Configuration::savefile() const
 {
   QMap<SaveFormat, QString> extension {

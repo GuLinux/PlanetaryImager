@@ -16,17 +16,7 @@
   <widget class="QWidget" name="centralwidget">
    <layout class="QVBoxLayout" name="verticalLayout">
     <item>
-     <widget class="QGraphicsView" name="image">
-      <property name="interactive">
-       <bool>false</bool>
-      </property>
-      <property name="viewportUpdateMode">
-       <enum>QGraphicsView::MinimalViewportUpdate</enum>
-      </property>
-      <property name="optimizationFlags">
-       <set>QGraphicsView::DontAdjustForAntialiasing</set>
-      </property>
-     </widget>
+     <widget class="QWidget" name="image" native="true"/>
     </item>
    </layout>
   </widget>
@@ -71,6 +61,7 @@
     <addaction name="actionZoom_Out"/>
     <addaction name="actionActual_Size"/>
     <addaction name="actionFit_to_window"/>
+    <addaction name="actionEdges_Detection"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
@@ -425,6 +416,17 @@
   <action name="actionAbout_Qt">
    <property name="text">
     <string>About &amp;Qt</string>
+   </property>
+  </action>
+  <action name="actionEdges_Detection">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>&amp;Edges Detection</string>
    </property>
   </action>
  </widget>
