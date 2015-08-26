@@ -17,18 +17,21 @@
  *
  */
 #include <QCameraInfo>
+#include <QCamera>
+#include <QCameraImageCapture>
 #include "qmultimediaimager.h"
 
 class QMultimediaImager::Private {
 public:
   Private(const QCameraInfo &cameraInfo, QMultimediaImager *q);
   QCameraInfo cameraInfo;
+  QCamera camera;
 private:
   QMultimediaImager *q;
 };
 
 
-QMultimediaImager::Private::Private(const QCameraInfo& cameraInfo, QMultimediaImager* q) : cameraInfo{cameraInfo}, q{q}
+QMultimediaImager::Private::Private(const QCameraInfo& cameraInfo, QMultimediaImager* q) : cameraInfo{cameraInfo}, camera{cameraInfo}, q{q}
 {
   
 }
@@ -36,10 +39,16 @@ QMultimediaImager::Private::Private(const QCameraInfo& cameraInfo, QMultimediaIm
 
 QMultimediaImager::QMultimediaImager(const QCameraInfo& cameraInfo) : dptr(cameraInfo, this)
 {
+  qDebug() << "initializing camera: " << cameraInfo.deviceName();
+  d->camera.load();
+  auto resolutions = d->camera.supportedViewfinderResolutions();
+  qDebug() << resolutions;
+  qDebug() << "camera state" << d->camera.state() << ", status" << d->camera.status() << d->camera.errorString();
 }
 
 QMultimediaImager::~QMultimediaImager()
 {
+  d->camera.unload();
 }
 
 Imager::Chip QMultimediaImager::chip() const
