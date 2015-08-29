@@ -33,6 +33,6 @@ else(CMAKE_SIZEOF_VOID_P MATCHES "8")
 endif(CMAKE_SIZEOF_VOID_P MATCHES "8")
 
 # TODO: remove png from here, it's temporary until issue https://github.com/qhyccd-lzr/QHYCCD_Linux/issues/12 is solved
-target_link_libraries(planetary_imager png GuLinux_Qt_Commons Qt5::Widgets Qt5::Multimedia ${Boost_LIBRARIES} qhy_driver ${QHY_LIBRARY})
+target_link_libraries(planetary_imager png GuLinux_Qt_Commons Qt5::Widgets ${Boost_LIBRARIES} qhy_driver ${QHY_LIBRARY})
 install(TARGETS planetary_imager RUNTIME DESTINATION bin)
 
