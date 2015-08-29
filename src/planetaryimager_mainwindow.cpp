@@ -73,6 +73,7 @@ public:
   void connectCamera(const Driver::CameraPtr &camera);
   void cameraDisconnected();
   void enableUIWidgets(bool cameraConnected);
+    void init_devices_watcher();
   ZoomableImage *image;
 private:
   PlanetaryImagerMainWindow *q;
@@ -179,6 +180,33 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     connect(d->ui->actionEdges_Detection, &QAction::toggled, [=](bool detect){
       d->displayImage->detectEdges(detect);
     });
+    d->init_devices_watcher();
+}
+
+#include <iostream>
+
+void PlanetaryImagerMainWindow::Private::init_devices_watcher()
+{
+#ifdef Q_OS_LINUX
+  auto notifyTimer = new QTimer(q);
+  QString usbfsdir;
+  for(auto path: QStringList{"/proc/bus/usb/devices", "/sys/bus/usb/devices"}) {
+    if(QDir(path).exists())
+      usbfsdir = path;
+  }
+  if(usbfsdir.isEmpty())
+    return;
+  connect(notifyTimer, &QTimer::timeout, [=]{
+    static QStringList entries;
+    auto current = QDir(usbfsdir).entryList();
+    if(current != entries) {
+      qDebug() << "usb devices changed";
+      entries = current;
+      rescan_devices();
+    }
+  });
+  notifyTimer->start(1500);
+#endif
 }
 
 
