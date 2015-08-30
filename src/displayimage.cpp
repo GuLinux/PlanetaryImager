@@ -39,7 +39,7 @@ public:
   QRect imageRect;
   bool running = true;
   boost::lockfree::spsc_queue<ImageDataPtr, boost::lockfree::capacity<5>> queue;
-  bool detectEdges;
+  bool detectEdges = false;
   QVector<QRgb> grayScale;
   QImage edgeDetection(QImage &source);
 
