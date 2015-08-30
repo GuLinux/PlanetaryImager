@@ -1,6 +1,6 @@
 #include "driver.h"
 #include "qhy/qhydriver.h"
-#include "qmultimedia/qmultimediadriver.h"
+#include "simulator/simulatordriver.h"
 
 using namespace std;
 
@@ -22,6 +22,9 @@ SupportedDrivers::Private::Private(const Drivers& drivers, SupportedDrivers* q) 
 
 SupportedDrivers::SupportedDrivers() : dptr({
   make_shared<QHYDriver>(),
+#ifdef HAVE_SIMULATOR
+  make_shared<SimulatorDriver>(),
+#endif
 //  make_shared<QMultimediaDriver>(),
   
   }, this)
@@ -37,8 +40,9 @@ SupportedDrivers::~SupportedDrivers()
 Driver::Cameras SupportedDrivers::cameras() const
 {
   Cameras cameras;
-  
+  qDebug() << "drivers: " << d->drivers.size();
   for(auto driver: d->drivers) {
+    qDebug() << "driver cameras: " << driver->cameras().size();
     cameras.append(driver->cameras());
   }
   return cameras;
