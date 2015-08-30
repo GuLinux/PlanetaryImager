@@ -1,0 +1,12 @@
+#ifndef _AVAILABLE_DRIVERS_H
+#define _AVAILABLE_DRIVERS_H
+
+#include "drivers/driver.h"
+${available_drivers_INCLUDES}
+
+typedef QList<DriverPtr> Drivers;
+
+static Drivers drivers{${available_drivers}};
+
+
+#endif
