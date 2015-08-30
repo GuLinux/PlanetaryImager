@@ -6,7 +6,7 @@ endif(CMAKE_SIZEOF_VOID_P MATCHES "8")
 
 
 # TODO: remove png and jpeg from here, it's temporary until issue https://github.com/qhyccd-lzr/QHYCCD_Linux/issues/12 is solved
-set(planetary_imager_DEPS ${planetary_imager_DEPS} png jpeg qhy_driver ${QHY_LIBRARY} CACHE INTERNAL "qhy dependencies" )
+add_imager_dependencies(png jpeg qhy_driver ${QHY_LIBRARY})
 set(qhy_SOURCES qhydriver.cpp qhyccdimager.cpp)
 configure_file(qhy_messages.in qhy_messages.cpp)
 add_library(qhy_driver STATIC ${qhy_SOURCES})

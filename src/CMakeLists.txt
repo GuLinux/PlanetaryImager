@@ -23,8 +23,16 @@ set(QHYImager_SRCS
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
+
+unset(planetary_imager_DEPS CACHE)
+function(add_imager_dependencies)
+  set(planetary_imager_DEPS ${planetary_imager_DEPS} ${ARGN} CACHE INTERNAL "planetary imager deps" FORCE)
+endfunction(add_imager_dependencies)
+
 add_subdirectory(drivers)
 add_executable(planetary_imager ${QHYImager_SRCS})
+
+
 
 message("dependencies: ${planetary_imager_DEPS}")
 target_link_libraries(planetary_imager GuLinux_Qt_Commons Qt5::Widgets ${Boost_LIBRARIES} ${planetary_imager_DEPS})
