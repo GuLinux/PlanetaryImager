@@ -26,13 +26,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 add_subdirectory(drivers)
 add_executable(planetary_imager ${QHYImager_SRCS})
 
-if(CMAKE_SIZEOF_VOID_P MATCHES "8")
-  set(QHY_LIBRARY ${CMAKE_SOURCE_DIR}/QHYCCD_Linux/libqhy_64.bin)
-else(CMAKE_SIZEOF_VOID_P MATCHES "8")
-  set(QHY_LIBRARY ${CMAKE_SOURCE_DIR}/QHYCCD_Linux/libqhy_32.bin)
-endif(CMAKE_SIZEOF_VOID_P MATCHES "8")
-
-# TODO: remove png from here, it's temporary until issue https://github.com/qhyccd-lzr/QHYCCD_Linux/issues/12 is solved
-target_link_libraries(planetary_imager png GuLinux_Qt_Commons Qt5::Widgets ${Boost_LIBRARIES} qhy_driver ${QHY_LIBRARY})
+message("dependencies: ${planetary_imager_DEPS}")
+target_link_libraries(planetary_imager GuLinux_Qt_Commons Qt5::Widgets ${Boost_LIBRARIES} ${planetary_imager_DEPS})
 install(TARGETS planetary_imager RUNTIME DESTINATION bin)
 
