@@ -10,7 +10,7 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 find_package(Qt5Widgets REQUIRED )
 find_package(Boost REQUIRED)
-find_package( OpenCV REQUIRED )
+find_package( OpenCV 2.3 REQUIRED )
 
 include_directories(${OpenCV_INCLUDE_DIRS})
 include(FindPkgConfig)
