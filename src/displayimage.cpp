@@ -98,7 +98,7 @@ void DisplayImage::create_qimages()
     auto cv_image = new cv::Mat;
     cv::cvtColor(origin, *cv_image, imageData->channels() == 1 ? CV_GRAY2RGB : CV_BGR2RGB);
     cv::imwrite("/tmp/decoded.png", *cv_image);
-    QImage image{cv_image->data, cv_image->cols, cv_image->rows, QImage::Format_RGB888, [](void *data){ delete reinterpret_cast<cv::Mat*>(data); }, cv_image};
+    QImage image{cv_image->data, cv_image->cols, cv_image->rows, cv_image->step, QImage::Format_RGB888, [](void *data){ delete reinterpret_cast<cv::Mat*>(data); }, cv_image};
     if(imageData->channels() == 1) {
       image.setColorTable(d->grayScale);
     }
