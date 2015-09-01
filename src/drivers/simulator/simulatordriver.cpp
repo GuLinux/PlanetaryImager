@@ -24,9 +24,10 @@
 #include <QImage>
 #include <QColor>
 #include <QFile>
-#include <Magick++.h>
 #include <QMutex>
 #include <QMutexLocker>
+#include <opencv2/opencv.hpp>
+#include "opencv_utils.h"
 
 using namespace std;
 
@@ -67,7 +68,10 @@ Driver::Cameras SimulatorDriver::cameras() const
   return {simulatorCamera};
 }
 
-SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{handler}, _settings{{"exposure", {1, "exposure", 0, 100, 1, 50}}}
+SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{handler}, _settings{
+    {"exposure", {1, "exposure", 0, 100, 1, 1}},
+    {"gamma",    {2, "gamma", 0, 3, 0.1, 1}}
+  }
 {
 }
 
@@ -101,36 +105,54 @@ int SimulatorImager::rand(int a, int b)
 
 void SimulatorImager::startLive()
 {
-  QFile file(":/simulator/jupiter.png");
-  file.open(QIODevice::ReadOnly);
-  QByteArray file_data = file.readAll();
     
   started = true;
   QtConcurrent::run([=]{
-    Magick::Blob blob(file_data.data(), file_data.size());
-    auto image = make_shared<Magick::Image>(blob);
-    int h = image->size().height();
-    int w = image->size().width();
+    QFile file(":/simulator/jupiter.png");
+    file.open(QIODevice::ReadOnly);
+    QByteArray file_data = file.readAll();
     while(started) {
+      cv::Mat image = cv::imdecode(cv::InputArray{file_data.data(), file_data.size()}, CV_LOAD_IMAGE_COLOR);
+      int h = image.rows;
+      int w = image.cols;
       Setting exposure;
+      Setting gamma;
       {
 	QMutexLocker lock_settings(&settingsMutex);
-	exposure = _settings["exposure"];
+        exposure = _settings["exposure"];
+	gamma = _settings["gamma"];
       }
       int crop_factor = 4;
       int pix_w = rand(0, crop_factor);
       int pix_h = rand(0, crop_factor);
-      
-      Magick::Blob writeBlob;
-      Magick::Image copy = *image;
-      copy.blur(0, rand(0, 3)/3.);
-      Magick::Geometry crop(w-crop_factor, h-crop_factor, pix_w, pix_h);
-      copy.gamma(exposure.value/50.);
-      copy.crop(crop);
-      copy.write(&writeBlob, "GRAY", 8);
-      auto imageData = ImageData::create(w-crop_factor, h-crop_factor, 8, 1, reinterpret_cast<const uint8_t*>(writeBlob.data()));
+
+      cv::Rect crop_rect(0, 0, w, h);
+      crop_rect -= cv::Size{crop_factor, crop_factor};
+      crop_rect += cv::Point{pix_w, pix_h};
+      cv::Mat cropped = image(crop_rect);
+      cv::Mat blur;
+      if(rand(0, 4) > 2) {
+        cv::GaussianBlur(cropped, blur, {5, 5}, rand(0,7), rand(0,7));
+      } else {
+        cropped.copyTo(blur);
+      }
+      cv::Mat result = cv::Mat::zeros(blur.size(), blur.type());
+      for( int y = 0; y < cropped.rows; y++ ) {
+        for( int x = 0; x < cropped.cols; x++ ) {
+            for( int c = 0; c < 3; c++ ) {
+              result.at<cv::Vec3b>(y,x)[c] = cv::saturate_cast<uchar>( gamma.value * ( cropped.at<cv::Vec3b>(y,x)[c]) + exposure.value ) ;
+            }
+        }
+      }
+      cv::imwrite("/tmp/prova.png", result);
+      int depth = 8;
+      if(result.depth() > CV_8S)
+        depth = 16;
+      if(result.depth() > CV_16S)
+        depth = 32;
+      auto imageData = ImageData::create(result.cols, result.rows, depth, result.channels(), result.data);
       imageHandler->handle(imageData);
-      QThread::msleep(10);
+//       QThread::msleep(10);
     }
     qDebug() << "Testing image: capture finished";
   });
@@ -143,6 +165,5 @@ void SimulatorImager::stopLive()
 
 SimulatorDriver::SimulatorDriver()
 {
-  Magick::InitializeMagick(0);
   Q_INIT_RESOURCE(simulator);
 }
