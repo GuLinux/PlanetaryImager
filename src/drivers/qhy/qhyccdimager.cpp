@@ -249,7 +249,11 @@ void ImagingWorker::start_live()
         type = bpp==8 ? CV_8UC3 : CV_16UC3;
       cv::Mat image({w, h}, type, buffer);
       ++_fps;
-      imageHandler->handle(image); // TODO: deep copy needed?
+      cv::Mat copy;
+      image.copyTo(copy);
+      imageHandler->handle(copy);
+      cv::VideoCapture cap;
+      cap.
     }
   }
   result = StopQHYCCDLive(handle);
