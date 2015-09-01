@@ -1,1 +1,0 @@
-add_library(qmultimedia_driver STATIC qmultimediadriver.cpp qmultimediaimager.cpp )
