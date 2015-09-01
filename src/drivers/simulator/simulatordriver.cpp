@@ -43,6 +43,7 @@ public:
     virtual Settings settings() const;
     virtual void startLive();
     virtual void stopLive();
+    int rand(int a, int b);
 private:
   ImageHandlerPtr imageHandler;
     bool started = false;
@@ -86,28 +87,39 @@ Imager::Settings SimulatorImager::settings() const
 {
   return {};
 }
-#include <QLabel>
+
+
+int SimulatorImager::rand(int a, int b)
+{
+   return qrand() % ((b + 1) - a) + a;
+}
+
 void SimulatorImager::startLive()
 {
   QFile file(":/simulator/jupiter.png");
   file.open(QIODevice::ReadOnly);
   QByteArray file_data = file.readAll();
-  qDebug() << "read " << file_data.size() << "bytes: " << file_data.mid(0, 5);
     
   started = true;
   QtConcurrent::run([=]{
     Magick::Blob blob(file_data.data(), file_data.size());
-    qDebug() << "blob created";
     auto image = make_shared<Magick::Image>(blob);
-    qDebug() << "image created: " << image->isValid();
     int h = image->size().height();
     int w = image->size().width();
-    qDebug() << "image valid: " << image->isValid() << ", " << w << "x" << h;
     while(started) {
+      int crop_factor = 4;
+      int pix_w = rand(0, crop_factor);
+      int pix_h = rand(0, crop_factor);
+      
       Magick::Blob writeBlob;
-      image->write(&writeBlob, "GRAY", 8);
-      auto imageData = ImageData::create(w, h, 8, 1, reinterpret_cast<const uint8_t*>(writeBlob.data()));
+      Magick::Image copy = *image;
+      copy.blur(0, rand(0, 3)/3.);
+      Magick::Geometry crop(w-crop_factor, h-crop_factor, pix_w, pix_h);
+      copy.crop(crop);
+      copy.write(&writeBlob, "GRAY", 8);
+      auto imageData = ImageData::create(w-crop_factor, h-crop_factor, 8, 1, reinterpret_cast<const uint8_t*>(writeBlob.data()));
       imageHandler->handle(imageData);
+      QThread::msleep(10);
     }
     qDebug() << "Testing image: capture finished";
   });
