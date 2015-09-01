@@ -12,8 +12,7 @@ find_package(Qt5Widgets REQUIRED )
 find_package(Boost REQUIRED)
 find_package( OpenCV REQUIRED )
 
-
-include_directories(${MAGICK_INCLUDE_DIRS})
+include_directories(${OpenCV_INCLUDE_DIRS})
 include(FindPkgConfig)
 pkg_check_modules(LIBUSB libusb-1.0 REQUIRED)
 option(cflags_fpic "Use -fPIC for compilation " on)

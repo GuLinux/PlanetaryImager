@@ -30,6 +30,7 @@
 #include "utils.h"
 #include <opencv2/opencv.hpp>
 
+using namespace std;
 
 class DisplayImage::Private {
 public:
@@ -91,12 +92,14 @@ void DisplayImage::create_qimages()
       QThread::msleep(1);
       continue;
     }
-    cv::Mat m{imageData->height(), imageData->width(), CV_8UC1, imageData->data()};
-    cv::imwrite("/tmp/prova.png", m);
     ++d->capture_fps;
     auto format = imageData->channels() == 1 ? QImage::Format_Indexed8 : QImage::Format_RGB888;
-    ImageDataPtr *ptrCopy = new ImageDataPtr(imageData);
-    QImage image{ptrCopy->get()->data(), ptrCopy->get()->width(), ptrCopy->get()->height(), format, [](void *data){ delete reinterpret_cast<ImageDataPtr*>(data); }, ptrCopy};
+//     ImageDataPtr *ptrCopy = new ImageDataPtr(imageData);
+    cv::Mat origin{imageData->height(), imageData->width(), imageData->channels() == 1 ? CV_8UC1 : CV_8UC3, imageData->data()};
+    auto cv_image = new cv::Mat;
+    origin.copyTo(*cv_image);
+    cv::imwrite("/tmp/decoded.png", *cv_image);
+    QImage image{cv_image->data, cv_image->cols, cv_image->rows, format, [](void *data){ delete reinterpret_cast<cv::Mat*>(data); }, cv_image};
     if(imageData->channels() == 1) {
       image.setColorTable(d->grayScale);
     }

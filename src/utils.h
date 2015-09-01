@@ -39,6 +39,7 @@ void future_run(const std::function<T()> &runnable, std::function<void(QFuture<T
   watcher->setFuture(QtConcurrent::run(runnable));
 }
 
+
 #define dbg_print_thread_id \
   static bool printed = false; \
   if(!printed) { \
@@ -46,5 +47,5 @@ void future_run(const std::function<T()> &runnable, std::function<void(QFuture<T
     printed = true; \
   }
 
-
+  
 #endif

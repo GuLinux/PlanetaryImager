@@ -35,6 +35,6 @@ add_executable(planetary_imager ${QHYImager_SRCS})
 
 
 message("dependencies: ${planetary_imager_DEPS}")
-target_link_libraries(planetary_imager png jpeg ${OpenCV_LIBS} GuLinux_Qt_Commons Qt5::Widgets ${Boost_LIBRARIES} ${planetary_imager_DEPS})
+target_link_libraries(planetary_imager GuLinux_Qt_Commons Qt5::Widgets ${Boost_LIBRARIES} ${planetary_imager_DEPS} ${OpenCV_LIBS} )
 install(TARGETS planetary_imager RUNTIME DESTINATION bin)
 
