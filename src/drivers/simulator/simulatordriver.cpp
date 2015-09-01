@@ -25,6 +25,8 @@
 #include <QColor>
 #include <QFile>
 #include <Magick++.h>
+#include <QMutex>
+#include <QMutexLocker>
 
 using namespace std;
 
@@ -44,6 +46,8 @@ public:
     virtual void startLive();
     virtual void stopLive();
     int rand(int a, int b);
+    QMap<QString, Imager::Setting> _settings;
+    QMutex settingsMutex;
 private:
   ImageHandlerPtr imageHandler;
     bool started = false;
@@ -63,7 +67,7 @@ Driver::Cameras SimulatorDriver::cameras() const
   return {simulatorCamera};
 }
 
-SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{handler}
+SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{handler}, _settings{{"exposure", {1, "exposure", 0, 100, 1, 50}}}
 {
 }
 
@@ -80,12 +84,13 @@ QString SimulatorImager::name() const
 
 void SimulatorImager::setSetting(const Imager::Setting& setting)
 {
-
+  QMutexLocker lock_settings(&settingsMutex);
+  _settings[setting.name] = setting;
 }
 
 Imager::Settings SimulatorImager::settings() const
 {
-  return {};
+  return _settings.values();
 }
 
 
@@ -107,6 +112,11 @@ void SimulatorImager::startLive()
     int h = image->size().height();
     int w = image->size().width();
     while(started) {
+      Setting exposure;
+      {
+	QMutexLocker lock_settings(&settingsMutex);
+	exposure = _settings["exposure"];
+      }
       int crop_factor = 4;
       int pix_w = rand(0, crop_factor);
       int pix_h = rand(0, crop_factor);
@@ -115,6 +125,7 @@ void SimulatorImager::startLive()
       Magick::Image copy = *image;
       copy.blur(0, rand(0, 3)/3.);
       Magick::Geometry crop(w-crop_factor, h-crop_factor, pix_w, pix_h);
+      copy.gamma(exposure.value/50.);
       copy.crop(crop);
       copy.write(&writeBlob, "GRAY", 8);
       auto imageData = ImageData::create(w-crop_factor, h-crop_factor, 8, 1, reinterpret_cast<const uint8_t*>(writeBlob.data()));
