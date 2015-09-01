@@ -70,7 +70,10 @@ Driver::Cameras SimulatorDriver::cameras() const
 
 SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{handler}, _settings{
     {"exposure", {1, "exposure", 0, 100, 1, 1}},
-    {"gamma",    {2, "gamma", 0, 3, 0.1, 1}}
+    {"gamma",    {2, "gamma", 0, 3, 0.1, 1}},
+    {"movement",    {3, "movement", 0, 5, 1, 1}},
+    {"seeing",    {4, "seeing", 0, 5, 1, 1}},
+    {"delay",    {5, "delay", 0, 100, 1, 1}},
   }
 {
 }
@@ -115,14 +118,16 @@ void SimulatorImager::startLive()
       cv::Mat image = cv::imdecode(cv::InputArray{file_data.data(), file_data.size()}, CV_LOAD_IMAGE_COLOR);
       int h = image.rows;
       int w = image.cols;
-      Setting exposure;
-      Setting gamma;
+      Setting exposure, gamma, delay, seeing, movement;
       {
 	QMutexLocker lock_settings(&settingsMutex);
         exposure = _settings["exposure"];
 	gamma = _settings["gamma"];
+        seeing = _settings["seeing"];
+        movement = _settings["movement"];
+        delay = _settings["delay"];
       }
-      int crop_factor = 4;
+      int crop_factor = movement.value;
       int pix_w = rand(0, crop_factor);
       int pix_h = rand(0, crop_factor);
 
@@ -131,16 +136,17 @@ void SimulatorImager::startLive()
       crop_rect += cv::Point{pix_w, pix_h};
       cv::Mat cropped = image(crop_rect);
       cv::Mat blur;
-      if(rand(0, 4) > 2) {
-        cv::GaussianBlur(cropped, blur, {5, 5}, rand(0,7), rand(0,7));
+      if(rand(0, seeing.max) > seeing.value) {
+        auto ker_size = rand(1, 7);
+        cv::blur(cropped, blur, {ker_size, ker_size});
       } else {
         cropped.copyTo(blur);
       }
       cv::Mat result = cv::Mat::zeros(blur.size(), blur.type());
-      for( int y = 0; y < cropped.rows; y++ ) {
-        for( int x = 0; x < cropped.cols; x++ ) {
+      for( int y = 0; y < blur.rows; y++ ) {
+        for( int x = 0; x < blur.cols; x++ ) {
             for( int c = 0; c < 3; c++ ) {
-              result.at<cv::Vec3b>(y,x)[c] = cv::saturate_cast<uchar>( gamma.value * ( cropped.at<cv::Vec3b>(y,x)[c]) + exposure.value ) ;
+              result.at<cv::Vec3b>(y,x)[c] = cv::saturate_cast<uchar>( gamma.value * ( blur.at<cv::Vec3b>(y,x)[c]) + exposure.value ) ;
             }
         }
       }
@@ -151,7 +157,7 @@ void SimulatorImager::startLive()
         depth = 32;
       auto imageData = ImageData::create(result.cols, result.rows, depth, result.channels(), result.data);
       imageHandler->handle(imageData);
-//       QThread::msleep(10);
+      QThread::msleep(delay.value);
     }
     qDebug() << "Testing image: capture finished";
   });
