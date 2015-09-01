@@ -39,7 +39,7 @@ using namespace std::placeholders;
 class ImagingWorker : public QObject {
   Q_OBJECT
 public:
-  ImagingWorker(qhyccd_handle *handle, QHYCCDImager *imager, const ImageHandlers imageHandlers, QObject* parent = 0);
+  ImagingWorker(qhyccd_handle *handle, QHYCCDImager *imager, const ImageHandlerPtr imageHandler, QObject* parent = 0);
 public slots:
   void start_live();
   void stop();
@@ -47,16 +47,16 @@ private:
   qhyccd_handle *handle;
   bool enabled = true;
   QHYCCDImager *imager;
-  ImageHandlers imageHandlers;
+  ImageHandlerPtr imageHandler;
 };
 
 class QHYCCDImager::Private {
 public:
-  Private(const QString& name, const QString& id, const ImageHandlers& imageHandlers, QHYCCDImager* q);
+  Private(const QString& name, const QString& id, const ImageHandlerPtr& imageHandler, QHYCCDImager* q);
   qhyccd_handle *handle;
   QString name;
   QString id;
-  ImageHandlers imageHandlers;
+  ImageHandlerPtr imageHandler;
   Chip chip;
   Settings settings;
   void load_settings();
@@ -68,11 +68,11 @@ private:
 };
 
 
-QHYCCDImager::Private::Private(const QString &name, const QString &id, const ImageHandlers &imageHandlers, QHYCCDImager* q) : name(name), id(id), imageHandlers{imageHandlers}, q{q}
+QHYCCDImager::Private::Private(const QString &name, const QString &id, const ImageHandlerPtr &imageHandler, QHYCCDImager* q) : name(name), id(id), imageHandler{imageHandler}, q{q}
 {
 }
 
-QHYCCDImager::QHYCCDImager(const QString &cameraName, const char *id, const ImageHandlers &imageHandlers) : dptr(cameraName, id, imageHandlers, this)
+QHYCCDImager::QHYCCDImager(const QString &cameraName, const char *id, const ImageHandlerPtr &imageHandler) : dptr(cameraName, id, imageHandler, this)
 {
   d->handle = OpenQHYCCD(const_cast<char*>(id));
   if(d->handle < QHYCCD_SUCCESS) {
@@ -206,7 +206,7 @@ void QHYCCDImager::setSetting(const QHYCCDImager::Setting& setting)
 
 void QHYCCDImager::startLive()
 {
-  d->worker = new ImagingWorker{d->handle, this, d->imageHandlers};
+  d->worker = new ImagingWorker{d->handle, this, d->imageHandler};
   d->worker->moveToThread(&d->imaging_thread);
   connect(&d->imaging_thread, SIGNAL(started()), d->worker, SLOT(start_live()));
   connect(&d->imaging_thread, SIGNAL(finished()), d->worker, SLOT(deleteLater()));
@@ -214,7 +214,7 @@ void QHYCCDImager::startLive()
   qDebug() << "Live started correctly";
 }
 
-ImagingWorker::ImagingWorker(qhyccd_handle* handle, QHYCCDImager* imager, const ImageHandlers imageHandlers, QObject* parent): QObject(parent), handle(handle), imager{imager}, imageHandlers{imageHandlers}
+ImagingWorker::ImagingWorker(qhyccd_handle* handle, QHYCCDImager* imager, const ImageHandlerPtr imageHandler, QObject* parent): QObject(parent), handle(handle), imager{imager}, imageHandler{imageHandler}
 {
 }
 
@@ -245,8 +245,7 @@ void ImagingWorker::start_live()
 //       QThread::msleep(1);
     } else {
       ++_fps;
-      ImageDataPtr imageData = ImageData::create(w, h, bpp, channels, buffer);
-      for_each(begin(imageHandlers), end(imageHandlers), bind(&ImageHandler::handle, _1, imageData));
+      imageHandler->handle(ImageData::create(w, h, bpp, channels, buffer));
     }
   }
   result = StopQHYCCDLive(handle);

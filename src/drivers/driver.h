@@ -10,7 +10,7 @@ public:
   class Camera {
   public:
     virtual QString name() const = 0;
-    virtual ImagerPtr imager(const ImageHandlers &imageHandlers) const = 0;
+    virtual ImagerPtr imager(const ImageHandlerPtr &imageHandler) const = 0;
   };
   typedef std::shared_ptr<Camera> CameraPtr;
   typedef QList<CameraPtr> Cameras; 
