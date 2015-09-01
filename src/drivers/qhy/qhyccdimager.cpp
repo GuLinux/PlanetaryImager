@@ -244,8 +244,12 @@ void ImagingWorker::start_live()
       qWarning() << "Error capturing live frame: " << result;
 //       QThread::msleep(1);
     } else {
+      int type = bpp==8 ? CV_8UC1 : CV_16UC1;
+      if(channels == 3)
+        type = bpp==8 ? CV_8UC3 : CV_16UC3;
+      cv::Mat image({w, h}, type, buffer);
       ++_fps;
-      imageHandler->handle(ImageData::create(w, h, bpp, channels, buffer));
+      imageHandler->handle(image); // TODO: deep copy needed?
     }
   }
   result = StopQHYCCDLive(handle);
