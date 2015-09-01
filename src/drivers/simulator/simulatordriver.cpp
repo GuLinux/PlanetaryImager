@@ -144,7 +144,6 @@ void SimulatorImager::startLive()
             }
         }
       }
-      cv::imwrite("/tmp/prova.png", result);
       int depth = 8;
       if(result.depth() > CV_8S)
         depth = 16;
