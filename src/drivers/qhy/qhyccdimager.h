@@ -29,7 +29,7 @@ class QHYCCDImager : public Imager
 {
   Q_OBJECT
 public:
-    QHYCCDImager(const QString &cameraName, const char *id, const ImageHandlers &imageHandlers);
+    QHYCCDImager(const QString &cameraName, const char *id, const ImageHandlerPtr &imageHandler);
     ~QHYCCDImager();
 
     virtual QString name() const;

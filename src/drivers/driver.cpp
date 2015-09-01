@@ -1,33 +1,23 @@
 #include "driver.h"
 #include "qhy/qhydriver.h"
 #include "simulator/simulatordriver.h"
+#include "drivers/available_drivers.h"
 
 using namespace std;
 
-typedef QList<shared_ptr<Driver>> Drivers;
-
 class SupportedDrivers::Private {
 public:
-  Private(const Drivers &drivers, SupportedDrivers *q);
-  Drivers drivers;
-  
+  Private(SupportedDrivers *q);  
 private:
   SupportedDrivers *q;
 };
 
-SupportedDrivers::Private::Private(const Drivers& drivers, SupportedDrivers* q) : drivers{drivers}, q{q}
+SupportedDrivers::Private::Private(SupportedDrivers* q) : q{q}
 {
 
 }
 
-SupportedDrivers::SupportedDrivers() : dptr({
-  make_shared<QHYDriver>(),
-#ifdef HAVE_SIMULATOR
-  make_shared<SimulatorDriver>(),
-#endif
-//  make_shared<QMultimediaDriver>(),
-  
-  }, this)
+SupportedDrivers::SupportedDrivers() : dptr(this)
 {
 
 }
@@ -40,8 +30,8 @@ SupportedDrivers::~SupportedDrivers()
 Driver::Cameras SupportedDrivers::cameras() const
 {
   Cameras cameras;
-  qDebug() << "drivers: " << d->drivers.size();
-  for(auto driver: d->drivers) {
+  qDebug() << "drivers: " << AvailableDrivers::drivers.size();
+  for(auto driver: AvailableDrivers::drivers) {
     qDebug() << "driver cameras: " << driver->cameras().size();
     cameras.append(driver->cameras());
   }

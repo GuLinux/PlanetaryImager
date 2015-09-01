@@ -25,7 +25,8 @@
 class SimulatorDriver : public Driver
 {
 public:
-virtual Driver::Cameras cameras() const;
+  SimulatorDriver();
+  virtual Driver::Cameras cameras() const;
 };
 
 #endif // SIMULATORDRIVER_H

@@ -6,7 +6,8 @@ ${available_drivers_INCLUDES}
 
 typedef QList<DriverPtr> Drivers;
 
-static Drivers drivers{${available_drivers}};
-
+namespace AvailableDrivers {
+  static Drivers drivers{${available_drivers_CLASSES}};
+}
 
 #endif

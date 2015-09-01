@@ -226,7 +226,7 @@ void PlanetaryImagerMainWindow::Private::rescan_devices()
 
 void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::CameraPtr& camera)
 {
-  future_run<ImagerPtr>([=]{ return camera->imager(ImageHandlers{displayImage, saveImages}); }, [=](const ImagerPtr &imager){
+  future_run<ImagerPtr>([=]{ return camera->imager(ImageHandlerPtr{new ImageHandlers{displayImage, saveImages}}); }, [=](const ImagerPtr &imager){
     if(!imager)
       return;
     this->imager = imager;
