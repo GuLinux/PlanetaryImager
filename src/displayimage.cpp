@@ -29,6 +29,7 @@
 #include "Qt/strings.h"
 #include "utils.h"
 #include <opencv2/opencv.hpp>
+#include "opencv_utils.h"
 
 using namespace std;
 
@@ -45,7 +46,8 @@ public:
   bool detectEdges = false;
   QVector<QRgb> grayScale;
   QImage edgeDetection(QImage &source);
-
+  void canny(cv::Mat& source, int lowThreshold = 1, int ratio = 3, int kernel_size = 3);
+  void sobel( cv::Mat& source, int ker_size = 3, int scale = 1, int delta = 0 );
 private:
   DisplayImage *q;
 };
@@ -97,12 +99,18 @@ void DisplayImage::create_qimages()
     cv::Mat origin{imageData->height(), imageData->width(), imageData->channels() == 1 ? CV_8UC1 : CV_8UC3, imageData->data()};
     auto cv_image = new cv::Mat;
     cv::cvtColor(origin, *cv_image, imageData->channels() == 1 ? CV_GRAY2RGB : CV_BGR2RGB);
-    QImage image{cv_image->data, cv_image->cols, cv_image->rows, cv_image->step, QImage::Format_RGB888, [](void *data){ delete reinterpret_cast<cv::Mat*>(data); }, cv_image};
-    if(imageData->channels() == 1) {
+    if(d->detectEdges) {
+      benchmark edge_b{"edge detection"};
+      d->canny(*cv_image);
+    }
+    QImage image{cv_image->data, cv_image->cols, cv_image->rows, cv_image->step, cv_image->channels() == 1 ? QImage::Format_Indexed8: QImage::Format_RGB888, 
+      [](void *data){ delete reinterpret_cast<cv::Mat*>(data); }, cv_image};
+    if(cv_image->channels() == 1) {
       image.setColorTable(d->grayScale);
     }
     d->imageRect = image.rect();
-    emit gotImage(d->detectEdges ? d->edgeDetection(image) : image);
+    emit gotImage(image);
+//     emit gotImage(d->detectEdges ? d->edgeDetection(image) : image);
   }
   QThread::currentThread()->quit();
 }
@@ -122,6 +130,37 @@ void DisplayImage::detectEdges(bool detect)
 {
   d->detectEdges = detect;
 }
+
+void DisplayImage::Private::canny( cv::Mat& source, int lowThreshold, int ratio, int kernel_size )
+{
+  cv::Mat src_gray, detected_edges, dst;
+  cv::cvtColor( source, src_gray, CV_RGB2GRAY);
+  cv::blur( src_gray, detected_edges, {3,3} );
+  cv::Canny( detected_edges, detected_edges, lowThreshold, lowThreshold*ratio, kernel_size );
+  dst.create( source.size(), source.type() );
+  dst = cv::Scalar::all(0);
+  source.copyTo(dst, detected_edges);
+  source = dst;
+}
+
+
+void DisplayImage::Private::sobel( cv::Mat& source, int ker_size, int scale, int delta )
+{
+  cv::Mat blurred, blurred_gray, grad;
+  cv::GaussianBlur(source, blurred, {3, 3}, 0, 0);
+  cv::cvtColor( blurred, blurred_gray, CV_RGB2GRAY );
+  cv::Mat grad_x, grad_y;
+  cv::Mat abs_grad_x, abs_grad_y;
+
+  /// Gradient X
+  cv::Sobel( blurred_gray, grad_x, CV_32F, 1, 0, ker_size, scale, delta );
+  /// Gradient Y
+  cv::Sobel( blurred_gray, grad_y, CV_32F, 0, 1, ker_size, scale, delta );
+  cv::convertScaleAbs( grad_x, abs_grad_x );
+  cv::convertScaleAbs( grad_y, abs_grad_y );
+  cv::addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, source );
+}
+
 
 /** Begin qimageblitz copied code
  * As this project seemed to be unmaintained, I simply copied the edge detection algorithm
