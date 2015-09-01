@@ -31,13 +31,15 @@
 #include "configuration.h"
 #include <boost/lockfree/spsc_queue.hpp>
 #include "ser_header.h"
+#include "opencv_utils.h"
+
 
 using namespace std;
 using namespace std::placeholders;
 
 class FileWriter : public ImageHandler {
 public:
-  virtual void handle(const ImageDataPtr& imageData) = 0;
+  virtual void handle(const cv::Mat& imageData) = 0;
   virtual QString filename() const = 0;
 };
 typedef shared_ptr<FileWriter> FileWriterPtr;
@@ -49,7 +51,7 @@ class SER_Writer : public FileWriter {
 public:
   SER_Writer(const QString &deviceName, Configuration &configuration);
   ~SER_Writer();
-  virtual void handle(const ImageDataPtr& imageData);
+  virtual void handle(const cv::Mat& imageData);
   virtual QString filename() const;
   vector<SER_Timestamp> timestamps;
 private:
@@ -97,16 +99,16 @@ QString SER_Writer::filename() const
   return file.fileName();
 }
 
-void SER_Writer::handle(const ImageDataPtr& imageData)
+void SER_Writer::handle(const cv::Mat& imageData)
 {
   if(! header->imageWidth) {
-    header->colorId = imageData->channels() == 1 ? SER_Header::MONO : SER_Header::RGB;
-    header->pixelDepth = imageData->bpp();
-    header->imageWidth = imageData->width();
-    header->imageHeight = imageData->height();
+    header->colorId = imageData.channels() == 1 ? SER_Header::MONO : SER_Header::RGB;
+    header->pixelDepth = 8; // TODO imageData->bpp();
+    header->imageWidth = imageData.cols;
+    header->imageHeight = imageData.rows;
   }
   timestamps.push_back(QDateTime({1, 1, 1}, {0,0,0}, Qt::UTC).msecsTo(QDateTime::currentDateTimeUtc()) * 10000);
-  file.write(reinterpret_cast<const char*>(imageData->data()), imageData->size());
+  file.write(reinterpret_cast<const char*>(imageData.data), imageData.total() * imageData.elemSize());
   ++frames;
 }
 
@@ -156,11 +158,11 @@ public:
   explicit WriterThreadWorker ( const function< FileWriterPtr() >& fileWriterFactory, uint64_t max_frames, long long int max_memory, bool& is_recording, SaveImages *saveImages, QObject* parent = 0 );
   virtual ~WriterThreadWorker();
 public slots:
-  virtual void handle(const ImageDataPtr& imageData);
+  virtual void handle(const cv::Mat& imageData);
   void run();
 private:
   function<FileWriterPtr()> fileWriterFactory;
-  shared_ptr<boost::lockfree::spsc_queue<ImageDataPtr>> framesQueue;
+  shared_ptr<boost::lockfree::spsc_queue<cv::Mat>> framesQueue;
   uint64_t max_frames;
   long long max_memory;
   bool &is_recording;
@@ -179,11 +181,12 @@ WriterThreadWorker::~WriterThreadWorker()
 
 #define MB(arg) (arg* 1024 * 1024)
 
-void WriterThreadWorker::handle(const ImageDataPtr& imageData)
+void WriterThreadWorker::handle(const cv::Mat& imageData)
 {
+  auto imageDataSize = imageData.total()* imageData.elemSize();
   if(!framesQueue) {
-    framesQueue = make_shared<boost::lockfree::spsc_queue<ImageDataPtr>>(max_memory/imageData->size());
-    qDebug() << "allocated framesqueue with " << max_memory << " bytes capacity (" << max_memory/imageData->size() << " frames)";
+    framesQueue = make_shared<boost::lockfree::spsc_queue<cv::Mat>>(max_memory/imageDataSize);
+    qDebug() << "allocated framesqueue with " << max_memory << " bytes capacity (" << max_memory/imageDataSize << " frames)";
   }
   
   if(!framesQueue->push(imageData)) {
@@ -202,7 +205,7 @@ void WriterThreadWorker::run()
     uint64_t frames = 0;
     emit saveImages->recording(fileWriter->filename());
     while(is_recording && frames < max_frames) {
-      ImageDataPtr frame;
+      cv::Mat frame;
       if(framesQueue && framesQueue->pop(frame)) {
 	  fileWriter->handle(frame);
 	++savefps;
@@ -221,7 +224,7 @@ void WriterThreadWorker::run()
 }
 
 
-void SaveImages::handle(const ImageDataPtr& imageData)
+void SaveImages::handle(const cv::Mat& imageData)
 {
   if(!d->is_recording)
     return;
