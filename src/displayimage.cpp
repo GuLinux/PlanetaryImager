@@ -28,6 +28,8 @@
 #include <QDebug>
 #include "Qt/strings.h"
 #include "utils.h"
+#include <opencv2/opencv.hpp>
+
 
 class DisplayImage::Private {
 public:
@@ -89,6 +91,8 @@ void DisplayImage::create_qimages()
       QThread::msleep(1);
       continue;
     }
+    cv::Mat m{imageData->height(), imageData->width(), CV_8UC1, imageData->data()};
+    cv::imwrite("/tmp/prova.png", m);
     ++d->capture_fps;
     auto format = imageData->channels() == 1 ? QImage::Format_Indexed8 : QImage::Format_RGB888;
     ImageDataPtr *ptrCopy = new ImageDataPtr(imageData);

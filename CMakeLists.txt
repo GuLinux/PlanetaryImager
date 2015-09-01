@@ -10,6 +10,8 @@ set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 find_package(Qt5Widgets REQUIRED )
 find_package(Boost REQUIRED)
+find_package( OpenCV REQUIRED )
+
 
 include_directories(${MAGICK_INCLUDE_DIRS})
 include(FindPkgConfig)
