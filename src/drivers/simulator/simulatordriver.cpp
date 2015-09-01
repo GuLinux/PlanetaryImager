@@ -155,8 +155,7 @@ void SimulatorImager::startLive()
         depth = 16;
       if(result.depth() > CV_16S)
         depth = 32;
-      auto imageData = ImageData::create(result.cols, result.rows, depth, result.channels(), result.data);
-      imageHandler->handle(imageData);
+      imageHandler->handle(result);
       QThread::msleep(delay.value);
     }
     qDebug() << "Testing image: capture finished";

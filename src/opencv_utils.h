@@ -27,4 +27,5 @@ inline QDebug operator<<(QDebug dbg, const cv::Mat &mat) {
     << ", valid=" << (mat.data == nullptr ? "false" : "true");
   return dbg.space();
 }
+
 #endif

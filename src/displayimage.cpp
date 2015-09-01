@@ -42,7 +42,7 @@ public:
   QElapsedTimer elapsed;
   QRect imageRect;
   bool running = true;
-  boost::lockfree::spsc_queue<ImageDataPtr, boost::lockfree::capacity<5>> queue;
+  boost::lockfree::spsc_queue<cv::Mat, boost::lockfree::capacity<5>> queue;
   bool detectEdges = false;
   QVector<QRgb> grayScale;
   QImage edgeDetection(QImage &source);
@@ -78,9 +78,9 @@ void DisplayImage::setRecording(bool recording)
   d->elapsed.restart();
 }
 
-void DisplayImage::handle(const ImageDataPtr& imageData)
+void DisplayImage::handle( const cv::Mat& imageData )
 {
-  if( (d->milliseconds_limit > 0 && d->elapsed.elapsed() < d->milliseconds_limit) || !imageData || ! d->queue.push(imageData) ) {
+  if( (d->milliseconds_limit > 0 && d->elapsed.elapsed() < d->milliseconds_limit) || !imageData.data || ! d->queue.push(imageData) ) {
     return;
   }
   d->elapsed.restart();
@@ -88,21 +88,21 @@ void DisplayImage::handle(const ImageDataPtr& imageData)
 
 void DisplayImage::create_qimages()
 {
-  ImageDataPtr imageData;
+  cv::Mat imageData;
   while(d->running) {
     if(!d->queue.pop(imageData)) {
       QThread::msleep(1);
       continue;
     }
     ++d->capture_fps;
-    auto format = imageData->channels() == 1 ? QImage::Format_Indexed8 : QImage::Format_RGB888;
-    cv::Mat origin{imageData->height(), imageData->width(), imageData->channels() == 1 ? CV_8UC1 : CV_8UC3, imageData->data()};
+//     cv::Mat origin{imageData->height(), imageData->width(), imageData->channels() == 1 ? CV_8UC1 : CV_8UC3, imageData->data()};
     auto cv_image = new cv::Mat;
-    cv::cvtColor(origin, *cv_image, imageData->channels() == 1 ? CV_GRAY2RGB : CV_BGR2RGB);
+    cv::cvtColor(imageData, *cv_image, imageData.channels() == 1 ? CV_GRAY2RGB : CV_BGR2RGB);
     if(d->detectEdges) {
       benchmark edge_b{"edge detection"};
-      d->canny(*cv_image);
+      d->sobel(*cv_image);
     }
+    qDebug() << "image: " << *cv_image;
     QImage image{cv_image->data, cv_image->cols, cv_image->rows, cv_image->step, cv_image->channels() == 1 ? QImage::Format_Indexed8: QImage::Format_RGB888, 
       [](void *data){ delete reinterpret_cast<cv::Mat*>(data); }, cv_image};
     if(cv_image->channels() == 1) {
