@@ -100,7 +100,11 @@ void DisplayImage::create_qimages()
     cv::cvtColor(imageData, *cv_image, imageData.channels() == 1 ? CV_GRAY2RGB : CV_BGR2RGB);
     if(d->detectEdges) {
       benchmark edge_b{"edge detection"};
-      d->sobel(*cv_image);
+      if(d->configuration.edgeAlgorithm() == Configuration::Sobel) {
+	d->sobel(*cv_image, d->configuration.sobelKernel());
+      } else {
+	d->canny(*cv_image, d->configuration.cannyLowThreshold(), d->configuration.cannyThresholdRatio());
+      }
     }
     qDebug() << "image: " << *cv_image;
     QImage image{cv_image->data, cv_image->cols, cv_image->rows, cv_image->step, cv_image->channels() == 1 ? QImage::Format_Indexed8: QImage::Format_RGB888, 
