@@ -21,6 +21,8 @@
 #include <QtConcurrent/QtConcurrent>
 #include <QDebug>
 
+using namespace std;
+
 class WebcamImager::Private
 {
 public:
@@ -29,6 +31,7 @@ public:
   int index;
   ImageHandlerPtr handler;
   bool live = false;
+  shared_ptr<cv::VideoCapture> capture;
 private:
   WebcamImager *q;
 };
@@ -36,11 +39,16 @@ private:
 WebcamImager::Private::Private ( const QString& name, int index, const ImageHandlerPtr& handler, WebcamImager* q ) 
   : name{name}, index{index}, handler{handler}, q{q}
 {
+
 }
 
 WebcamImager::WebcamImager(const QString &name, int index, const ImageHandlerPtr &handler)
   : dptr ( name, index, handler, this )
 {
+  d->capture = make_shared<cv::VideoCapture>(d->index);
+  if(!d->capture->isOpened()) {
+    qDebug() << "error opening device";
+  }
 }
 
 
@@ -61,7 +69,25 @@ QString WebcamImager::name() const
 
 Imager::Settings WebcamImager::settings() const
 {
-  return {};
+  static QList<Setting> defaults {
+    {CV_CAP_PROP_FRAME_WIDTH, "Width", 0, std::numeric_limits<int>().max(), 0, 0},
+    {CV_CAP_PROP_FRAME_HEIGHT, "Height", 0, std::numeric_limits<int>().max(), 0, 0},
+    {CV_CAP_PROP_FORMAT, "Format", 0, std::numeric_limits<int>().max(), 0, 0},
+    {CV_CAP_PROP_MODE, "Mode", 0, std::numeric_limits<int>().max(), 0, 0},
+    {CV_CAP_PROP_BRIGHTNESS, "Brightness", 0, std::numeric_limits<int>().max(), 0, 0},
+    {CV_CAP_PROP_CONTRAST, "Contrast", 0, std::numeric_limits<int>().max(), 0, 0},
+    {CV_CAP_PROP_SATURATION, "Saturation", 0, std::numeric_limits<int>().max(), 0, 0},
+    {CV_CAP_PROP_HUE, "Hue", 0, std::numeric_limits<int>().max(), 0, 0},
+    {CV_CAP_PROP_GAIN, "Gain", 0, std::numeric_limits<int>().max(), 0, 0},
+    {CV_CAP_PROP_EXPOSURE, "Exposure", 0, std::numeric_limits<int>().max(), 0, 0},
+    {CV_CAP_PROP_CONVERT_RGB, "Convert RGB", 0, std::numeric_limits<int>().max(), 0, 0},
+  };
+  Imager::Settings _settings;
+  for(auto setting: defaults) {
+    setting.value = d->capture->get(setting.id);
+    _settings.push_back(setting);
+  }
+  return _settings;
 }
 
 void WebcamImager::setSetting ( const Imager::Setting& setting )
@@ -73,14 +99,10 @@ void WebcamImager::startLive()
 {
   d->live = true;
   QtConcurrent::run([=]{
-    cv::VideoCapture capture(d->index);
-    if(!capture.isOpened()) {
-      qDebug() << "error opening device";
-      return;
-    }
+
     while(d->live) {
       cv::Mat frame;
-      capture >> frame;
+      *d->capture >> frame;
       d->handler->handle(frame);
     }
   });
