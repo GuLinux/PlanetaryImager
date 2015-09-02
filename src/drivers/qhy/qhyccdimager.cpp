@@ -252,8 +252,6 @@ void ImagingWorker::start_live()
       cv::Mat copy;
       image.copyTo(copy);
       imageHandler->handle(copy);
-      cv::VideoCapture cap;
-      cap.
     }
   }
   result = StopQHYCCDLive(handle);
