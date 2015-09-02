@@ -20,5 +20,6 @@ if(enable_simulator)
   add_subdirectory(simulator)
 endif(enable_simulator)
 
+add_subdirectory(webcam)
 
 configure_file(available_drivers.h.in available_drivers.h)
