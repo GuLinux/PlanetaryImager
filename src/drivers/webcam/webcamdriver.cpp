@@ -18,8 +18,12 @@
  */
 
 #include "webcamdriver.h"
+#include "webcamimager.h"
 #include <QDir>
 #include <QDebug>
+
+using namespace std;
+
 class WebcamDriver::Private
 {
 public:
@@ -42,8 +46,20 @@ WebcamDriver::~WebcamDriver()
 {
 }
 
+
+class WebcamDeviceInfo : public Driver::Camera {
+public:
+  WebcamDeviceInfo(int index, const QString &name) : _index {index}, _name{name} {}
+  virtual ImagerPtr imager ( const ImageHandlerPtr& imageHandler ) const { return make_shared<WebcamImager>(_name , _index, imageHandler); }
+  virtual QString name() const { return _name; }
+private:
+  int _index;
+  const QString _name;
+};
+
 Driver::Cameras WebcamDriver::cameras() const
 {
+  QList<CameraPtr> _cameras;
 #ifdef Q_OS_LINUX
   auto entries = QDir("/sys/class/video4linux").entryInfoList();
   for(auto entry: entries) {
@@ -55,7 +71,10 @@ Driver::Cameras WebcamDriver::cameras() const
     name = name.trimmed();
     int index = QString{index_file.readAll()}.toInt();
     qDebug() << entry.baseName() << name << index;
+    _cameras.push_back(make_shared<WebcamDeviceInfo>(index, name));
   }
 #endif
-  return {};
+  return _cameras;
 }
+
+
