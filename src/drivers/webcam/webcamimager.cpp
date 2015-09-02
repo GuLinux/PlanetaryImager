@@ -49,6 +49,8 @@ WebcamImager::WebcamImager(const QString &name, int index, const ImageHandlerPtr
   if(!d->capture->isOpened()) {
     qDebug() << "error opening device";
   }
+  d->capture->set(CV_CAP_PROP_FRAME_WIDTH, 1280);
+  d->capture->set(CV_CAP_PROP_FRAME_HEIGHT, 720);
 }
 
 
