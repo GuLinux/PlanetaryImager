@@ -21,7 +21,7 @@
 #define CONFIGURATIONDIALOG_H
 
 #include <QDialog>
-
+#include "dptr.h"
 class Configuration;
 namespace Ui
 {
@@ -36,8 +36,7 @@ public:
     ConfigurationDialog(Configuration &configuration, QWidget* parent = 0);
 
 private:
-    Ui::ConfigurationDialog* ui;
-    Configuration &configuration;
+  D_PTR
 };
 
 #endif // CONFIGURATIONDIALOG_H

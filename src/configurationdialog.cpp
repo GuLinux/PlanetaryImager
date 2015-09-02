@@ -23,31 +23,70 @@
 #include "utils.h"
 #include <functional>
 #include "Qt/strings.h"
+#include "Qt/functional.h"
 
 using namespace std::placeholders;
 using namespace std;
 
-ConfigurationDialog::~ConfigurationDialog()
+class ConfigurationDialog::Private {
+public:
+  Private(Configuration &configuration, ConfigurationDialog *q);
+  Configuration &configuration;
+  shared_ptr<Ui::ConfigurationDialog> ui;
+private:
+  ConfigurationDialog *q;
+};
+
+ConfigurationDialog::Private::Private(Configuration& configuration, ConfigurationDialog* q) : configuration{configuration}, ui{make_shared<Ui::ConfigurationDialog>()}, q{q}
 {
-    delete ui;
 }
 
-ConfigurationDialog::ConfigurationDialog(Configuration& configuration, QWidget* parent) : QDialog(parent), configuration(configuration)
+
+ConfigurationDialog::~ConfigurationDialog()
 {
-    ui = new Ui::ConfigurationDialog;
-    ui->setupUi(this);
-    ui->buffered_file->setChecked(configuration.bufferedOutput());
-    ui->drop_view_fps_on_save->setChecked(configuration.maxPreviewFPSOnSaving() > 0);
-    ui->memory_limit->setRange(0, 500*1024*1024);
-    connect(ui->memory_limit, &QSlider::valueChanged, [=,&configuration](int value) {
-      ui->memory_limit_label->setText("%1 MB"_q % QString::number(static_cast<double>(value/(1024.*1024)), 'f', 2));
+}
+
+ConfigurationDialog::ConfigurationDialog(Configuration& configuration, QWidget* parent) : QDialog(parent), dptr(configuration, this)
+{
+    d->ui->setupUi(this);
+    
+    auto edge_settings = [=] {
+      d->ui->cannySettingsBox->setVisible(d->configuration.edgeAlgorithm() == Configuration::Canny);
+      d->ui->sobelSettingsBox->setVisible(d->configuration.edgeAlgorithm() == Configuration::Sobel);
+    };
+    edge_settings();
+    QButtonGroup *edgeAlgorithm = new QButtonGroup(this);
+    edgeAlgorithm->addButton(d->ui->edge_canny);
+    edgeAlgorithm->addButton(d->ui->edge_sobel);
+    
+    d->ui->edge_canny->setChecked(configuration.edgeAlgorithm() == Configuration::Canny);
+    d->ui->edge_sobel->setChecked(configuration.edgeAlgorithm() == Configuration::Sobel);
+    
+    connect(edgeAlgorithm, F_PTR(QButtonGroup, buttonToggled, QAbstractButton*, bool), [=]{
+      d->configuration.setEdgeAlgorithm(edgeAlgorithm->checkedButton() == d->ui->edge_canny ? Configuration::Canny : Configuration::Sobel);
+      edge_settings();
+    });
+    
+    d->ui->sobelKernel->setCurrentText(QString::number(d->configuration.sobelKernel()));
+    connect(d->ui->sobelKernel, &QComboBox::currentTextChanged, [=](const QString &text) { d->configuration.setSobelKernel(static_cast<Configuration::EdgeAlgorithm>(text.toInt())); });
+    
+    d->ui->cannyThreshold->setValue(d->configuration.cannyLowThreshold());
+    d->ui->cannyRatio->setValue(d->configuration.cannyThresholdRatio());
+    connect(d->ui->cannyThreshold, F_PTR(QDoubleSpinBox, valueChanged, double), bind(&Configuration::setCannyLowThreshold, &d->configuration, _1));
+    connect(d->ui->cannyRatio, F_PTR(QDoubleSpinBox, valueChanged, double), bind(&Configuration::setCannyThresholdRatio, &d->configuration, _1));
+    
+    d->ui->buffered_file->setChecked(configuration.bufferedOutput());
+    d->ui->drop_view_fps_on_save->setChecked(configuration.maxPreviewFPSOnSaving() > 0);
+    d->ui->memory_limit->setRange(0, 500*1024*1024);
+    connect(d->ui->memory_limit, &QSlider::valueChanged, [=,&configuration](int value) {
+      d->ui->memory_limit_label->setText("%1 MB"_q % QString::number(static_cast<double>(value/(1024.*1024)), 'f', 2));
       configuration.setMaxMemoryUsage(value);
     });
-    connect(ui->buffered_file, &QCheckBox::toggled, bind(&Configuration::setBufferedOutput, &configuration, _1));
-    connect(ui->drop_view_fps_on_save, &QCheckBox::toggled, [&configuration](bool checked){ configuration.setMaxPreviewFPSOnSaving(checked ? 10 : 0); });
-    ui->telescope->setText(configuration.telescope());
-    ui->observer->setText(configuration.observer());
-    connect(ui->observer, &QLineEdit::textChanged, bind(&Configuration::setObserver, &configuration, _1));
-    connect(ui->telescope, &QLineEdit::textChanged, bind(&Configuration::setTelescope, &configuration, _1));
-    ui->memory_limit->setValue(configuration.maxMemoryUsage());
+    connect(d->ui->buffered_file, &QCheckBox::toggled, bind(&Configuration::setBufferedOutput, &configuration, _1));
+    connect(d->ui->drop_view_fps_on_save, &QCheckBox::toggled, [&configuration](bool checked){ configuration.setMaxPreviewFPSOnSaving(checked ? 10 : 0); });
+    d->ui->telescope->setText(configuration.telescope());
+    d->ui->observer->setText(configuration.observer());
+    connect(d->ui->observer, &QLineEdit::textChanged, bind(&Configuration::setObserver, &configuration, _1));
+    connect(d->ui->telescope, &QLineEdit::textChanged, bind(&Configuration::setTelescope, &configuration, _1));
+    d->ui->memory_limit->setValue(configuration.maxMemoryUsage());
 }
