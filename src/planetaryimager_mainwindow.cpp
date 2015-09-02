@@ -66,7 +66,7 @@ public:
   shared_ptr<DisplayImage> displayImage;
   QThread displayImageThread;
   shared_ptr<SaveImages> saveImages;
-  CameraSettingsWidget* cameraSettingsWidget;
+  CameraSettingsWidget* cameraSettingsWidget = nullptr;
   ConfigurationDialog *configurationDialog;
     RecordingPanel* recording_panel;
   
@@ -229,6 +229,7 @@ void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::CameraPtr& 
   future_run<ImagerPtr>([=]{ return camera->imager(ImageHandlerPtr{new ImageHandlers{displayImage, saveImages}}); }, [=](const ImagerPtr &imager){
     if(!imager)
       return;
+    cameraDisconnected();
     this->imager = imager;
     imager->startLive();
     statusbar_info_widget->deviceConnected(imager->name());
@@ -255,6 +256,7 @@ void PlanetaryImagerMainWindow::Private::cameraDisconnected()
   ui->camera_pixels_size->clear();
   ui->camera_resolution->clear();
   delete cameraSettingsWidget;
+  cameraSettingsWidget = 0;
   image->setImage({});
   statusbar_info_widget->captureFPS(0);
 }
