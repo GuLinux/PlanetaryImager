@@ -57,15 +57,11 @@
     <property name="title">
      <string>View</string>
     </property>
-    <addaction name="actionZoom_In"/>
-    <addaction name="actionZoom_Out"/>
-    <addaction name="actionActual_Size"/>
-    <addaction name="actionFit_to_window"/>
     <addaction name="actionEdges_Detection"/>
    </widget>
    <widget class="QMenu" name="menuSettings">
     <property name="title">
-     <string>Configuration</string>
+     <string>Config&amp;uration</string>
     </property>
     <addaction name="actionShow_settings"/>
     <addaction name="actionAbout"/>
@@ -269,7 +265,7 @@
           <x>0</x>
           <y>0</y>
           <width>250</width>
-          <height>184</height>
+          <height>110</height>
          </rect>
         </property>
        </widget>
@@ -288,6 +284,18 @@
    <widget class="QWidget" name="dockWidgetContents_3">
     <layout class="QGridLayout" name="gridLayout_3"/>
    </widget>
+  </widget>
+  <widget class="QToolBar" name="imageManipulation">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionEdges_Detection"/>
   </widget>
   <action name="action_devices_rescan">
    <property name="text">
@@ -331,50 +339,6 @@
   <action name="actionStart_Live">
    <property name="text">
     <string>Start Live</string>
-   </property>
-  </action>
-  <action name="actionZoom_In">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>&amp;Zoom In</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl++</string>
-   </property>
-  </action>
-  <action name="actionZoom_Out">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Zoom &amp;Out</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+-</string>
-   </property>
-  </action>
-  <action name="actionActual_Size">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>&amp;Actual Size</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+.</string>
-   </property>
-  </action>
-  <action name="actionFit_to_window">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>&amp;Fit to window</string>
-   </property>
-   <property name="shortcut">
-    <string>Ctrl+S</string>
    </property>
   </action>
   <action name="actionDisconnect">
@@ -431,6 +395,10 @@
    </property>
    <property name="enabled">
     <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="resources/resources.qrc">
+     <normaloff>:/resources/action_edges_detection.png</normaloff>:/resources/action_edges_detection.png</iconset>
    </property>
    <property name="text">
     <string>&amp;Edges Detection</string>

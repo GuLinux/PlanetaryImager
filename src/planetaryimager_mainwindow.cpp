@@ -110,6 +110,15 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     d->ui->image->layout()->setMargin(0);
     d->ui->image->layout()->setSpacing(0);
     d->ui->image->layout()->addWidget(d->image = new ZoomableImage(false));
+    for(auto item: d->image->actions())
+      d->ui->menuView->insertAction(d->ui->actionEdges_Detection, item);
+    d->ui->menuView->insertSeparator(d->ui->actionEdges_Detection);
+    
+    d->image->actions()[ZoomableImage::Actions::ZoomIn]->setShortcut({Qt::CTRL + Qt::Key_Plus});
+    d->image->actions()[ZoomableImage::Actions::ZoomOut]->setShortcut({Qt::CTRL + Qt::Key_Minus});
+    d->image->actions()[ZoomableImage::Actions::ZoomFit]->setShortcut({Qt::CTRL + Qt::Key_Space});
+    d->image->actions()[ZoomableImage::Actions::ZoomRealSize]->setShortcut({Qt::CTRL + Qt::Key_Backspace});
+    
     addToolBar(d->image->toolbar());
     d->image->toolbar()->setFloatable(true);
     d->image->toolbar()->setMovable(true);
@@ -135,12 +144,6 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
       dock_widgets.push_back(widget);
     };
 
-    // TODO: remove?
-    connect(d->ui->actionZoom_In, &QAction::triggered, bind(&ZoomableImage::scale, d->image, 1.1));
-    connect(d->ui->actionZoom_Out, &QAction::triggered, bind(&ZoomableImage::scale, d->image, 0.9));
-    connect(d->ui->actionFit_to_window, &QAction::triggered, bind(&ZoomableImage::fitToWindow, d->image));
-    connect(d->ui->actionActual_Size, &QAction::triggered, bind(&ZoomableImage::normalSize, d->image));
-    
     connect(d->recording_panel, &RecordingPanel::start, [=]{d->saveImages->startRecording(d->imager->name());});
     connect(d->recording_panel, &RecordingPanel::stop, bind(&SaveImages::endRecording, d->saveImages));
     
@@ -262,10 +265,6 @@ void PlanetaryImagerMainWindow::Private::cameraDisconnected()
 
 void PlanetaryImagerMainWindow::Private::enableUIWidgets(bool cameraConnected)
 {
-  ui->actionZoom_In->setEnabled(cameraConnected);
-  ui->actionZoom_Out->setEnabled(cameraConnected);
-  ui->actionActual_Size->setEnabled(cameraConnected);
-  ui->actionFit_to_window->setEnabled(cameraConnected);
   ui->actionDisconnect->setEnabled(cameraConnected);
   ui->recording->setEnabled(cameraConnected);
   ui->chipInfoWidget->setEnabled(cameraConnected);
