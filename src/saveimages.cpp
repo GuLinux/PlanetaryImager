@@ -32,6 +32,7 @@
 #include <boost/lockfree/spsc_queue.hpp>
 #include "ser_header.h"
 #include "opencv_utils.h"
+#include <Qt/strings.h>
 
 
 using namespace std;
@@ -135,11 +136,13 @@ void cvVideoWriter::handle ( const cv::Mat& imageData )
   try {
     if(!videoWriter)
       videoWriter = make_shared<cv::VideoWriter>(_filename.toStdString(), CV_FOURCC('X', '2', '6', '4'), 25, cv::Size{imageData.cols, imageData.rows});
-    if(!videoWriter)
+    if(!videoWriter || ! videoWriter->isOpened()) {
       qWarning() << "unable to open video file" << _filename;
+      return;
+    }
     *videoWriter << imageData;
-  } catch(std::exception &e) {
-    qWarning() << e.what();
+  } catch(cv::Exception &e) {
+    qWarning() << "error on handle:" << e.msg << e.code << e.file << e.line << e.func;
   }
 }
 
