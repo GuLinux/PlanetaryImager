@@ -106,7 +106,6 @@ void DisplayImage::create_qimages()
 	d->canny(*cv_image, d->configuration.cannyLowThreshold(), d->configuration.cannyThresholdRatio());
       }
     }
-    qDebug() << "image: " << *cv_image;
     QImage image{cv_image->data, cv_image->cols, cv_image->rows, cv_image->step, cv_image->channels() == 1 ? QImage::Format_Indexed8: QImage::Format_RGB888, 
       [](void *data){ delete reinterpret_cast<cv::Mat*>(data); }, cv_image};
     if(cv_image->channels() == 1) {
