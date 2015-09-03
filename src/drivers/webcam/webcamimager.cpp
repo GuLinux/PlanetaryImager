@@ -21,6 +21,15 @@
 #include <QtConcurrent/QtConcurrent>
 #include <QDebug>
 #include <linux/videodev2.h>
+#include "Qt/strings.h"
+
+#include <cstdio>
+#include <cstdlib>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/ioctl.h>
+#include <fcntl.h>
+#include <unistd.h>
 
 using namespace std;
 
@@ -33,9 +42,25 @@ public:
   ImageHandlerPtr handler;
   bool live = false;
   shared_ptr<cv::VideoCapture> capture;
+  void read_v4l2_parameters();
+  struct Resolution {
+    int width, height;
+    bool operator<(const Resolution &other) const { return width*height < other.width*other.height; };
+    bool operator==(const Resolution &other) const { return width == other.width && height == other.height; }
+    operator bool() const { return width > 0 && height > 0; }
+    operator QString() const { return "%1x%2"_q % width % height; }
+    friend QDebug operator<<(QDebug d, const WebcamImager::Private::Resolution &r) {
+      d.nospace() << "{" << r.operator QString() << "}";
+      return d.space();
+    }
+  };
+  QList<Resolution> resolutions;
 private:
   WebcamImager *q;
 };
+
+
+
 
 WebcamImager::Private::Private ( const QString& name, int index, const ImageHandlerPtr& handler, WebcamImager* q ) 
   : name{name}, index{index}, handler{handler}, q{q}
@@ -46,13 +71,52 @@ WebcamImager::Private::Private ( const QString& name, int index, const ImageHand
 WebcamImager::WebcamImager(const QString &name, int index, const ImageHandlerPtr &handler)
   : dptr ( name, index, handler, this )
 {
+  d->read_v4l2_parameters();
   d->capture = make_shared<cv::VideoCapture>(d->index);
   if(!d->capture->isOpened()) {
     qDebug() << "error opening device";
   }
-  d->capture->set(CV_CAP_PROP_FRAME_WIDTH, 1280);
-  d->capture->set(CV_CAP_PROP_FRAME_HEIGHT, 720);
+  d->capture->set(CV_CAP_PROP_FRAME_WIDTH, d->resolutions.last().width);
+  d->capture->set(CV_CAP_PROP_FRAME_HEIGHT, d->resolutions.last().height);
 }
+
+void WebcamImager::Private::read_v4l2_parameters()
+{
+  auto dev_name = "/dev/video%1"_q % index;
+  int fd = ::open(dev_name.toLatin1(), O_RDWR, O_NONBLOCK, 0);
+  if (-1 == fd) {
+    qWarning() << "Cannot open '%1': %2, %3"_q % dev_name % errno % strerror(errno);
+    return;
+  }
+  
+  enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+  struct v4l2_fmtdesc fmt;
+  struct v4l2_frmsizeenum frmsize;
+  struct v4l2_frmivalenum frmival;
+
+  fmt.index = 0;
+  fmt.type = type;
+  while (::ioctl(fd, VIDIOC_ENUM_FMT, &fmt) >= 0) {
+      frmsize.pixel_format = fmt.pixelformat;
+      frmsize.index = 0;
+      while (ioctl(fd, VIDIOC_ENUM_FRAMESIZES, &frmsize) >= 0) {
+        Resolution resolution;
+        if (frmsize.type == V4L2_FRMSIZE_TYPE_DISCRETE) {
+          resolution = {frmsize.discrete.width , frmsize.discrete.height};
+        } else if (frmsize.type == V4L2_FRMSIZE_TYPE_STEPWISE) {
+          resolution = {frmsize.stepwise.max_width , frmsize.stepwise.max_height};
+        }
+          if(resolution && ! resolutions.contains(resolution))
+            resolutions.push_back(resolution);
+          frmsize.index++;
+        }
+        fmt.index++;
+  }
+  qSort(resolutions);
+  qDebug() << "available resolutions: " << resolutions;
+  ::close(fd);
+}
+
 
 
 
