@@ -1,5 +1,6 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource prefix="/resources">
     <file alias="folder.png">folder.png</file>
+    <file>action_edges_detection.png</file>
 </qresource>
 </RCC>
