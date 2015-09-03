@@ -20,6 +20,7 @@
 #include "webcamimager.h"
 #include <QtConcurrent/QtConcurrent>
 #include <QDebug>
+#include <linux/videodev2.h>
 
 using namespace std;
 

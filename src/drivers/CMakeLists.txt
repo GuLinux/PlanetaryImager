@@ -20,6 +20,8 @@ if(enable_simulator)
   add_subdirectory(simulator)
 endif(enable_simulator)
 
-add_subdirectory(webcam)
+if(${CMAKE_SYSTEM_NAME} EQUAL Linux)
+  add_subdirectory(webcam)
+endif(${CMAKE_SYSTEM_NAME} EQUAL Linux)
 
 configure_file(available_drivers.h.in available_drivers.h)
