@@ -1,7 +1,7 @@
 FROM ubuntu:15.04
 MAINTAINER Marco Gulino <marco@gulinux.net>
 
-RUN apt-get update && apt-get install -y build-essential cmake git bash curl "^libxcb.*" libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev qtbase5-dev qtmultimedia5-dev pkg-config libusb-1.0-0-dev rsync libboost-dev
+RUN apt-get update && apt-get install -y build-essential cmake git bash curl "^libxcb.*" libx11-xcb-dev libglu1-mesa-dev libxrender-dev libxi-dev qtbase5-dev qtmultimedia5-dev pkg-config libusb-1.0-0-dev rsync libboost-dev libopencv-dev
 ENV QT5_MAJOR=5
 ENV QT5_MINOR=5
 ENV QT5_PATCH=0
