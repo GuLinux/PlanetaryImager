@@ -23,15 +23,13 @@
 #include <QMetaType>
 #include "Qt/strings.h"
 
-Q_DECLARE_METATYPE(Configuration::SaveFormat);
-
-
 class Configuration::Private {
 public:
   Private(QSettings &settings, Configuration *q);
   QSettings &settings;
-  template<typename T> T value(const QString &key, const T &defaultValue = {}) const { return qvariant_cast<T>(settings.value(key, defaultValue)); }
-  template<typename T> void set(const QString &key, const T &value) { settings.setValue(key, value); }
+  template<typename T> T value(const QString &key, const T &defaultValue = {}) const;
+  template<typename T> void set(const QString &key, const T &value);
+  mutable QVariantMap values_cache;
 private:
   Configuration *q;
 };
@@ -47,6 +45,25 @@ Configuration::Configuration(QSettings &settings) : dptr(settings, this)
 
 Configuration::~Configuration()
 {
+}
+
+template<typename T> T Configuration::Private::value(const QString& key, const T& defaultValue) const
+{
+  QVariant found_value;
+  if(values_cache.count(key)) {
+    found_value = values_cache[key];
+  } else {
+    found_value = settings.value(key, defaultValue);
+    values_cache[key] = found_value;
+  }
+  return qvariant_cast<T>(found_value);
+}
+
+
+template<typename T> void Configuration::Private::set(const QString& key, const T& value)
+{
+  settings.setValue(key, value);
+  values_cache[key] = value;
 }
 
 
@@ -124,12 +141,12 @@ void Configuration::setSaveDirectory(const QString& directory)
 
 Configuration::SaveFormat Configuration::saveFormat() const
 {
-  return d->value<SaveFormat>("save_format", SER);
+  return static_cast<SaveFormat>(d->value<int>("save_format", SER));
 }
 
 void Configuration::setSaveFormat(Configuration::SaveFormat format)
 {
-  d->set("save_format", format);
+  d->set("save_format", static_cast<int>(format));
 }
 
 QString Configuration::observer() const
@@ -151,6 +168,48 @@ void Configuration::setTelescope(const QString& telescope)
 {
   d->set<QString>("save_telescope", telescope);
 }
+
+Configuration::EdgeAlgorithm Configuration::edgeAlgorithm() const
+{
+  return static_cast<EdgeAlgorithm>(d->value<int>("edge_algorithm", Canny));
+}
+
+void Configuration::setEdgeAlgorithm(Configuration::EdgeAlgorithm algorithm)
+{
+  d->set("edge_algorithm", static_cast<int>(algorithm));
+}
+
+int Configuration::sobelKernel() const
+{
+  return d->value<int>("sobel_kernel_size", 3);
+}
+
+void Configuration::setSobelKernel(int size)
+{
+  d->set("sobel_kernel_size", size);
+}
+
+double Configuration::cannyLowThreshold() const
+{
+  return d->value("canny_low_threshold", 1);
+}
+
+void Configuration::setCannyLowThreshold(double threshold)
+{
+  d->set("canny_low_threshold", threshold);
+}
+
+
+double Configuration::cannyThresholdRatio() const
+{
+  return d->value("canny_threshold_ratio", 3);
+}
+
+void Configuration::setCannyThresholdRatio(double ratio)
+{
+  d->set("canny_threshold_ratio", ratio);
+}
+
 
 
 

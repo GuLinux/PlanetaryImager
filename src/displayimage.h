@@ -40,7 +40,6 @@ signals:
 public slots:
   void create_qimages();
   void detectEdges(bool detect);
-//   void create_qimages_qt55();
   void quit();
 private:
   D_PTR

@@ -58,7 +58,20 @@ public:
     
     QString savefile() const;
     
-
+    enum EdgeAlgorithm { Sobel, Canny };
+    
+    void setEdgeAlgorithm(EdgeAlgorithm algorithm);
+    EdgeAlgorithm edgeAlgorithm() const;
+    
+    void setSobelKernel(int size);
+    int sobelKernel() const;
+    
+    double cannyLowThreshold() const;
+    void setCannyLowThreshold(double threshold);
+    
+    double cannyThresholdRatio() const;
+    void setCannyThresholdRatio(double ratio);
+    
     enum SaveFormat { SER };
     void setSaveFormat(SaveFormat format);
     SaveFormat saveFormat() const;

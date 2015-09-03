@@ -66,7 +66,7 @@ public:
   shared_ptr<DisplayImage> displayImage;
   QThread displayImageThread;
   shared_ptr<SaveImages> saveImages;
-  CameraSettingsWidget* cameraSettingsWidget;
+  CameraSettingsWidget* cameraSettingsWidget = nullptr;
   ConfigurationDialog *configurationDialog;
     RecordingPanel* recording_panel;
   
@@ -173,8 +173,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     d->saveImages->moveToThread(&d->displayImageThread);
     connect(&d->displayImageThread, &QThread::started, bind(&DisplayImage::create_qimages, d->displayImage));
     d->displayImageThread.start();
-    d->ui->settings_container->setLayout(new QVBoxLayout);
-    d->ui->settings_container->layout()->setSpacing(0);
+
     connect(qApp, &QApplication::aboutToQuit, this, [=]{ d->imager.reset(); }, Qt::QueuedConnection);
     connect(qApp, &QApplication::aboutToQuit, this, bind(&DisplayImage::quit, d->displayImage), Qt::QueuedConnection);
     connect(d->ui->actionEdges_Detection, &QAction::toggled, [=](bool detect){
@@ -229,6 +228,7 @@ void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::CameraPtr& 
   future_run<ImagerPtr>([=]{ return camera->imager(ImageHandlerPtr{new ImageHandlers{displayImage, saveImages}}); }, [=](const ImagerPtr &imager){
     if(!imager)
       return;
+    cameraDisconnected();
     this->imager = imager;
     imager->startLive();
     statusbar_info_widget->deviceConnected(imager->name());
@@ -239,7 +239,7 @@ void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::CameraPtr& 
     ui->camera_bpp->setText("%1"_q % imager->chip().bpp);
     ui->camera_pixels_size->setText(QString("%1x%2").arg(imager->chip().pixelwidth, 2).arg(imager->chip().pixelheight, 2));
     ui->camera_resolution->setText(QString("%1x%2").arg(imager->chip().xres, 2).arg(imager->chip().yres, 2));
-    ui->settings_container->layout()->addWidget(cameraSettingsWidget = new CameraSettingsWidget(imager, settings));
+    ui->settings_container->setWidget(cameraSettingsWidget = new CameraSettingsWidget(imager, settings));
     enableUIWidgets(true);
   });
 }
@@ -255,6 +255,7 @@ void PlanetaryImagerMainWindow::Private::cameraDisconnected()
   ui->camera_pixels_size->clear();
   ui->camera_resolution->clear();
   delete cameraSettingsWidget;
+  cameraSettingsWidget = 0;
   image->setImage({});
   statusbar_info_widget->captureFPS(0);
 }
