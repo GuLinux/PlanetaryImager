@@ -72,7 +72,7 @@ public:
     double cannyThresholdRatio() const;
     void setCannyThresholdRatio(double ratio);
     
-    enum SaveFormat { SER };
+    enum SaveFormat { SER, Video };
     void setSaveFormat(SaveFormat format);
     SaveFormat saveFormat() const;
 private:

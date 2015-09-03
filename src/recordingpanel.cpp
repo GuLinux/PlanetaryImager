@@ -21,7 +21,7 @@
 #include "ui_recordingpanel.h"
 #include "configuration.h"
 #include <QFileDialog>
-
+#include <Qt/functional.h>
 using namespace std;
 
 class RecordingPanel::Private {
@@ -53,6 +53,13 @@ RecordingPanel::RecordingPanel(Configuration& configuration, QWidget* parent) : 
   d->ui->saveFramesLimit->setCurrentText(configuration.recordingFramesLimit() == 0 ? tr("Infinite") : QString::number(configuration.recordingFramesLimit()));
   d->ui->filePrefix->setText(configuration.saveFilePrefix());
   d->ui->fileSuffix->setText(configuration.saveFileSuffix());
+  d->ui->videoOutputType->setCurrentIndex(configuration.saveFormat() == Configuration::SER ? 0 : 1);
+  connect(d->ui->videoOutputType, F_PTR(QComboBox, currentIndexChanged, int), [&](int index) {
+    if(index == 0)
+      configuration.setSaveFormat(Configuration::SER);
+    if(index == 1)
+      configuration.setSaveFormat(Configuration::Video);
+  });
   connect(d->ui->saveDirectory, &QLineEdit::textChanged, [&configuration](const QString &directory){
     configuration.setSaveDirectory(directory);
   });
