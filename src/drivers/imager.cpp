@@ -1,6 +1,5 @@
 #include "imager.h"
 
-
 QDebug operator<<(QDebug dbg, const Imager::Chip& chip)
 {
   dbg.nospace() << "{ size: " << chip.width << "x" << chip.height << ", pixels size: " << chip.pixelwidth << "x" << chip.pixelheight <<

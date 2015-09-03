@@ -101,6 +101,7 @@ QHYCCDImager::QHYCCDImager(const QString &cameraName, const char *id, const Imag
 
 QHYCCDImager::~QHYCCDImager()
 {
+  stopLive();
   qDebug() << "Closing QHYCCD";
   if(d->imaging_thread.isRunning()) {
     d->worker->stop();

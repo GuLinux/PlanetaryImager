@@ -28,6 +28,8 @@
 #include <QMutexLocker>
 #include <opencv2/opencv.hpp>
 #include "opencv_utils.h"
+#include "fps_counter.h"
+#include "utils.h"
 
 using namespace std;
 
@@ -40,6 +42,7 @@ public:
 class SimulatorImager : public Imager {
 public:
     SimulatorImager(const ImageHandlerPtr &handler);
+    virtual ~SimulatorImager() { stopLive(); }
     virtual Chip chip() const;
     virtual QString name() const;
     virtual void setSetting(const Setting& setting);
@@ -52,12 +55,12 @@ public:
 private:
   ImageHandlerPtr imageHandler;
     bool started = false;
+  QFuture< void > worker_future;
 };
 
 ImagerPtr SimulatorCamera::imager ( const ImageHandlerPtr& imageHandler ) const
 {
-  static ImagerPtr _imager = make_shared<SimulatorImager>(imageHandler);
-  return _imager;
+  return make_shared<SimulatorImager>(imageHandler);
 }
 
 
@@ -69,8 +72,7 @@ Driver::Cameras SimulatorDriver::cameras() const
 }
 
 SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{handler}, _settings{
-    {"exposure", {1, "exposure", 0, 100, 1, 1}},
-    {"gamma",    {2, "gamma", 0, 3, 0.1, 1}},
+    {"exposure", {1, "exposure", 0, 100, 1, 50}},
     {"movement",    {3, "movement", 0, 5, 1, 1}},
     {"seeing",    {4, "seeing", 0, 5, 1, 1}},
     {"delay",    {5, "delay", 0, 100, 1, 1}},
@@ -108,14 +110,15 @@ int SimulatorImager::rand(int a, int b)
 
 void SimulatorImager::startLive()
 {
-    
   started = true;
-  QtConcurrent::run([=]{
+  worker_future = QtConcurrent::run([=]{
     QFile file(":/simulator/jupiter.png");
     file.open(QIODevice::ReadOnly);
     QByteArray file_data = file.readAll();
+    const cv::Mat image = cv::imdecode(cv::InputArray{file_data.data(), file_data.size()}, CV_LOAD_IMAGE_COLOR);
+    fps_counter fps([=](double rate){ emit this->fps(rate);}, fps_counter::Mode::Elapsed);
     while(started) {
-      cv::Mat image = cv::imdecode(cv::InputArray{file_data.data(), file_data.size()}, CV_LOAD_IMAGE_COLOR);
+      cv::Mat cropped, blurred, result;
       int h = image.rows;
       int w = image.cols;
       Setting exposure, gamma, delay, seeing, movement;
@@ -134,27 +137,21 @@ void SimulatorImager::startLive()
       cv::Rect crop_rect(0, 0, w, h);
       crop_rect -= cv::Size{crop_factor, crop_factor};
       crop_rect += cv::Point{pix_w, pix_h};
-      cv::Mat cropped = image(crop_rect);
-      cv::Mat blur;
+      cropped = image(crop_rect);
       if(rand(0, seeing.max) > seeing.value) {
         auto ker_size = rand(1, 7);
-        cv::blur(cropped, blur, {ker_size, ker_size});
+        cv::blur(cropped, blurred, {ker_size, ker_size});
       } else {
-        cropped.copyTo(blur);
+        cropped.copyTo(blurred);
       }
-      cv::Mat result = cv::Mat::zeros(blur.size(), blur.type());
-      for( int y = 0; y < blur.rows; y++ ) {
-        for( int x = 0; x < blur.cols; x++ ) {
-            for( int c = 0; c < 3; c++ ) {
-              result.at<cv::Vec3b>(y,x)[c] = cv::saturate_cast<uchar>( gamma.value * ( blur.at<cv::Vec3b>(y,x)[c]) + exposure.value ) ;
-            }
-        }
-      }
+        int exposure_offset = exposure.value * 2 - 100;
+        result = blurred + cv::Scalar{exposure_offset, exposure_offset, exposure_offset};
       int depth = 8;
       if(result.depth() > CV_8S)
         depth = 16;
       if(result.depth() > CV_16S)
         depth = 32;
+      ++fps;
       imageHandler->handle(result);
       QThread::msleep(delay.value);
     }
@@ -164,10 +161,17 @@ void SimulatorImager::startLive()
 
 void SimulatorImager::stopLive()
 {
-  this->started = false;
+  if(worker_future.isStarted()) {
+    this->started = false;
+    worker_future.waitForFinished();
+    worker_future = {};
+  }
 }
 
 SimulatorDriver::SimulatorDriver()
 {
   Q_INIT_RESOURCE(simulator);
 }
+
+
+
