@@ -2,5 +2,6 @@
 <qresource prefix="/resources">
     <file alias="folder.png">folder.png</file>
     <file>action_edges_detection.png</file>
+    <file>target.png</file>
 </qresource>
 </RCC>
