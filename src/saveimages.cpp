@@ -60,6 +60,18 @@ private:
   uint32_t frames = 0;
 };
 
+class cvVideoWriter : public FileWriter {
+public:
+  cvVideoWriter(const QString &deviceName, Configuration &configuration);
+  ~cvVideoWriter();
+  virtual void handle(const cv::Mat& imageData);
+  virtual QString filename() const { return _filename; }
+private:
+  QString _filename;
+  Configuration &configuration;
+  shared_ptr<cv::VideoWriter> videoWriter;
+};
+
 
 
 SER_Writer::SER_Writer(const QString &deviceName, Configuration &configuration) : file(configuration.savefile())
@@ -113,6 +125,31 @@ void SER_Writer::handle(const cv::Mat& imageData)
 }
 
 
+cvVideoWriter::cvVideoWriter ( const QString& deviceName, Configuration& configuration ) : _filename(configuration.savefile()), configuration{configuration}
+{
+  qDebug() <<__PRETTY_FUNCTION__ << "filename: " << filename();
+}
+
+void cvVideoWriter::handle ( const cv::Mat& imageData )
+{
+  try {
+    if(!videoWriter)
+      videoWriter = make_shared<cv::VideoWriter>(_filename.toStdString(), CV_FOURCC('X', '2', '6', '4'), 25, cv::Size{imageData.cols, imageData.rows});
+    if(!videoWriter)
+      qWarning() << "unable to open video file" << _filename;
+    *videoWriter << imageData;
+  } catch(std::exception &e) {
+    qWarning() << e.what();
+  }
+}
+
+cvVideoWriter::~cvVideoWriter()
+{
+  videoWriter->release();
+}
+
+
+
 class WriterThreadWorker;
 class SaveImages::Private {
 public:
@@ -147,6 +184,7 @@ FileWriterFactory SaveImages::Private::writerFactory()
   }
   static map<Configuration::SaveFormat, FileWriterFactory> factories {
     {Configuration::SER, [](const QString &deviceName, Configuration &configuration){ return make_shared<SER_Writer>(deviceName, configuration); }},
+    {Configuration::Video, [](const QString &deviceName, Configuration &configuration){ return make_shared<cvVideoWriter>(deviceName, configuration); }},
   };
   
   return factories[configuration.saveFormat()];
