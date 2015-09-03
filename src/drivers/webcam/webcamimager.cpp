@@ -22,6 +22,7 @@
 #include <QDebug>
 #include <linux/videodev2.h>
 #include "Qt/strings.h"
+#include "fps_counter.h"
 
 #include <cstdio>
 #include <cstdlib>
@@ -122,6 +123,7 @@ void WebcamImager::Private::read_v4l2_parameters()
 
 WebcamImager::~WebcamImager()
 {
+  stopLive();
 }
 
 Imager::Chip WebcamImager::chip() const
@@ -166,11 +168,13 @@ void WebcamImager::startLive()
 {
   d->live = true;
   QtConcurrent::run([=]{
+    fps_counter fps([=](double rate){ emit this->fps(rate);}, fps_counter::Mode::Elapsed);
 
     while(d->live) {
       cv::Mat frame;
       *d->capture >> frame;
       d->handler->handle(frame);
+      ++fps;
     }
   });
 }
