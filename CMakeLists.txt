@@ -21,7 +21,7 @@ if(enable_qhy)
   set(enable_simulator Off)
   add_definitions(-DCV_LINK_BUG)
 endif(enable_qhy)
-
+message("workaround for cv link in libqhy: ${opencv_LINK_BUG}")
 
 include_directories(${OpenCV_INCLUDE_DIRS})
 include(FindPkgConfig)
