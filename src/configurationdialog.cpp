@@ -58,6 +58,7 @@ ConfigurationDialog::ConfigurationDialog(Configuration& configuration, QWidget* 
     QButtonGroup *edgeAlgorithm = new QButtonGroup(this);
     edgeAlgorithm->addButton(d->ui->edge_canny);
     edgeAlgorithm->addButton(d->ui->edge_sobel);
+    edgeAlgorithm->addButton(d->ui->edge_sobel_deprecated);
     
 #ifdef CV_LINK_BUG
     d->ui->edge_canny->setDisabled(true);
@@ -68,8 +69,13 @@ ConfigurationDialog::ConfigurationDialog(Configuration& configuration, QWidget* 
     d->ui->edge_sobel_deprecated->setChecked(configuration.edgeAlgorithm() == Configuration::SobelDeprecated);
 #endif
     
+    QMap<QAbstractButton*, Configuration::EdgeAlgorithm> edgeAlgorithmWidgets {
+        {d->ui->edge_canny, Configuration::Canny},
+        {d->ui->edge_sobel, Configuration::Sobel},
+        {d->ui->edge_sobel_deprecated, Configuration::SobelDeprecated}
+    };
     connect(edgeAlgorithm, F_PTR(QButtonGroup, buttonToggled, QAbstractButton*, bool), [=]{
-      d->configuration.setEdgeAlgorithm(edgeAlgorithm->checkedButton() == d->ui->edge_canny ? Configuration::Canny : Configuration::Sobel);
+      d->configuration.setEdgeAlgorithm(edgeAlgorithmWidgets[edgeAlgorithm->checkedButton()]);
       edge_settings();
     });
     

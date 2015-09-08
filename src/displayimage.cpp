@@ -102,7 +102,7 @@ void DisplayImage::create_qimages()
       benchmark edge_b{"edge detection"};
       if(d->configuration.edgeAlgorithm() == Configuration::Sobel) {
 	d->sobel(*cv_image, d->configuration.sobelKernel());
-      } else {
+      } else if(d->configuration.edgeAlgorithm() == Configuration::Canny) {
 	d->canny(*cv_image, d->configuration.cannyLowThreshold(), d->configuration.cannyThresholdRatio());
       }
     }
@@ -112,7 +112,10 @@ void DisplayImage::create_qimages()
       image.setColorTable(d->grayScale);
     }
     d->imageRect = image.rect();
-    emit gotImage(image);
+    if(d->detectEdges && d->configuration.edgeAlgorithm() == Configuration::SobelDeprecated)
+        emit gotImage(d->edgeDetection(image));
+    else
+        emit gotImage(image);
 //     emit gotImage(d->detectEdges ? d->edgeDetection(image) : image);
   }
   QThread::currentThread()->quit();

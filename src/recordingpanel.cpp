@@ -48,6 +48,9 @@ RecordingPanel::RecordingPanel(Configuration& configuration, QWidget* parent) : 
 {
   d->ui.reset(new Ui::RecordingPanel);
   d->ui->setupUi(this);
+#ifdef CV_LINK_BUG
+  d->ui->videoOutputType->setDisabled(true);
+#endif
   recording(false);
   d->ui->saveDirectory->setText(configuration.saveDirectory());
   d->ui->saveFramesLimit->setCurrentText(configuration.recordingFramesLimit() == 0 ? tr("Infinite") : QString::number(configuration.recordingFramesLimit()));
