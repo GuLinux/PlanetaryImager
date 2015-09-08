@@ -41,11 +41,6 @@ Configuration::Private::Private(QSettings& settings, Configuration* q) : setting
 
 Configuration::Configuration(QSettings &settings) : dptr(settings, this)
 {
-    qDebug() << "canny threshold: " << cannyLowThreshold();
-    qDebug() << "canny threshold ratio: " << cannyThresholdRatio();
-    qDebug() << "sobel blur size: " << sobelBlurSize();
-    qDebug() << "sobel delta : " << sobelDelta();
-    qDebug() << "sobel scale: " << sobelScale();
 }
 
 Configuration::~Configuration()
@@ -271,6 +266,24 @@ int Configuration::cannyBlurSize() const
 void Configuration::setCannyBlurSize(int size)
 {
   d->set("canny_blur", size);
+}
+
+void Configuration::resetCannyAdvancedSettings()
+{
+    d->settings.remove("canny_blur");
+    d->settings.remove("canny_kernel");
+    d->settings.remove("canny_threshold_ratio");
+    d->settings.remove("canny_low_threshold");
+    d->values_cache.clear();
+}
+
+void Configuration::resetSobelAdvancedSettings()
+{
+    d->settings.remove("sobel_blur_size");
+    d->settings.remove("sobel_delta");
+    d->settings.remove("sobel_scale");
+    d->settings.remove("sobel_kernel_size");
+    d->values_cache.clear();
 }
 
 

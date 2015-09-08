@@ -86,6 +86,9 @@ public:
     
     int cannyBlurSize() const;
     void setCannyBlurSize(int size);
+    
+    void resetCannyAdvancedSettings();
+    void resetSobelAdvancedSettings();
 
     enum SaveFormat { SER, Video };
     void setSaveFormat(SaveFormat format);
