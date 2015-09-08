@@ -221,7 +221,7 @@ QString Configuration::savefile() const
 {
   QMap<SaveFormat, QString> extension {
     { SER, ".ser" },
-    { Video, ".mp4" },
+    { Video, ".mkv" },
   };
   return "%1%2%3%4%5%6"_q
     % saveDirectory()

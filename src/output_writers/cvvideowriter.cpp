@@ -20,6 +20,7 @@
 #include <QDebug>
 #include "Qt/strings.h"
 #include "cvvideowriter.h"
+#include "opencv_utils.h"
 using namespace std;
 
 class cvVideoWriter::Private
@@ -28,7 +29,7 @@ public:
   Private ( const QString& deviceName, Configuration& configuration, cvVideoWriter* q );
   QString filename;
   Configuration &configuration;
-  shared_ptr<cv::VideoWriter> videoWriter;
+  cv::VideoWriter videoWriter;
 private:
   cvVideoWriter *q;
 };
@@ -45,7 +46,7 @@ cvVideoWriter::cvVideoWriter( const QString& deviceName, Configuration& configur
 
 cvVideoWriter::~cvVideoWriter()
 {
-  d->videoWriter->release();
+  d->videoWriter.release();
 }
 
 QString cvVideoWriter::filename() const
@@ -56,14 +57,15 @@ QString cvVideoWriter::filename() const
 void cvVideoWriter::handle ( const cv::Mat& imageData )
 {
   auto fourcc = [](const string &s) { return CV_FOURCC(s[0], s[1], s[2], s[3]); };
+  auto size = cv::Size{imageData.cols, imageData.rows};
   try {
-    if(!d->videoWriter)
-      d->videoWriter = make_shared<cv::VideoWriter>(d->filename.toStdString(), fourcc("X264"), 25, cv::Size{imageData.cols, imageData.rows});
-    if(!d->videoWriter || ! d->videoWriter->isOpened()) {
-      qWarning() << "unable to open video file" << d->filename;
+    if(!d->videoWriter.isOpened())
+      d->videoWriter.open(d->filename.toStdString(), fourcc("HFYU"), 25, size);
+    if(! d->videoWriter.isOpened()) {
+      qWarning() << "unable to open video file" << d->filename << size;
       return;
     }
-    *d->videoWriter << imageData;
+    d->videoWriter << imageData;
   } catch(cv::Exception &e) {
     qWarning() << "error on handle:" << e.msg << e.code << e.file << e.line << e.func;
   }
