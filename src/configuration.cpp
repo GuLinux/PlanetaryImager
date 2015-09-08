@@ -196,6 +196,17 @@ void Configuration::setSobelKernel(int size)
   d->set("sobel_kernel_size", size);
 }
 
+int Configuration::sobelBlurSize() const
+{
+    return d->value<int>("sobel_blur_size", 3);
+}
+
+void Configuration::setSobelBlurSize(int size)
+{
+    d->set("sobel_blur_size", size);
+}
+
+
 double Configuration::cannyLowThreshold() const
 {
   return d->value("canny_low_threshold", 1);
@@ -217,6 +228,25 @@ void Configuration::setCannyThresholdRatio(double ratio)
   d->set("canny_threshold_ratio", ratio);
 }
 
+void Configuration::setSobelDelta(double delta)
+{
+  d->set("sobel_delta", delta);
+}
+
+double Configuration::sobelDelta() const
+{
+  return d->value("sobel_delta", 0);
+}
+
+double Configuration::sobelScale() const
+{
+  return d->value("sobel_scale", 1);
+}
+
+void Configuration::setSobelScale(double scale)
+{
+  d->set("sobel_scale", scale);
+}
 
 
 
