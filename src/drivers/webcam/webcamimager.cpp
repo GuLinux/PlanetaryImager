@@ -56,11 +56,34 @@ public:
     }
   };
   QList<Resolution> resolutions;
+  int fd;
 private:
   WebcamImager *q;
 };
 
 
+
+struct v4l2_queryctrl queryctrl;
+struct v4l2_querymenu querymenu;
+
+static void enumerate_menu (int fd)
+{
+        qDebug()<< "  Menu items:";
+
+        memset (&querymenu, 0, sizeof (querymenu));
+        querymenu.id = queryctrl.id;
+
+        for (querymenu.index = queryctrl.minimum;
+             querymenu.index <= queryctrl.maximum;
+              querymenu.index++) {
+                if (0 == ioctl (fd, VIDIOC_QUERYMENU, &querymenu)) {
+                        qDebug() << "    " << (char*) querymenu.name << ":" << querymenu.value;
+                } else {
+                        qDebug() << "VIDIOC_QUERYMENU error:" << strerror (errno);
+                        exit (EXIT_FAILURE);
+                }
+        }
+}
 
 
 WebcamImager::Private::Private ( const QString& name, int index, const ImageHandlerPtr& handler, WebcamImager* q ) 
@@ -81,10 +104,18 @@ WebcamImager::WebcamImager(const QString &name, int index, const ImageHandlerPtr
   d->capture->set(CV_CAP_PROP_FRAME_HEIGHT, d->resolutions.last().height);
 }
 
+
+QDebug operator <<(QDebug dbg, const v4l2_queryctrl &q) {
+  dbg.nospace() << "v4l2_queryctrl{";
+  dbg << "type=" << q.type << ", name=" << (char*)(q.name)<< ", default_value=" << q.default_value << ", min=" << q.minimum << ", max=" << q.maximum;
+  dbg << "}";
+  return dbg.space();
+}
+
 void WebcamImager::Private::read_v4l2_parameters()
 {
   auto dev_name = "/dev/video%1"_q % index;
-  int fd = ::open(dev_name.toLatin1(), O_RDWR, O_NONBLOCK, 0);
+  fd = ::open(dev_name.toLatin1(), O_RDWR, O_NONBLOCK, 0);
   if (-1 == fd) {
     qWarning() << "Cannot open '%1': %2, %3"_q % dev_name % errno % strerror(errno);
     return;
@@ -115,7 +146,51 @@ void WebcamImager::Private::read_v4l2_parameters()
   }
   qSort(resolutions);
   qDebug() << "available resolutions: " << resolutions;
-  ::close(fd);
+  
+  
+  
+  memset (&queryctrl, 0, sizeof (queryctrl));
+
+for (queryctrl.id = V4L2_CID_BASE;
+     queryctrl.id < V4L2_CID_LASTP1;
+     queryctrl.id++) {
+        if (0 == ioctl (fd, VIDIOC_QUERYCTRL, &queryctrl)) {
+                if (queryctrl.flags & V4L2_CTRL_FLAG_DISABLED)
+                        continue;
+
+                qDebug() << "Control "<<  queryctrl;
+
+                if (queryctrl.type == V4L2_CTRL_TYPE_MENU)
+                        enumerate_menu (fd);
+        } else {
+                if (errno == EINVAL)
+                        continue;
+
+                qDebug() << "Error on VIDIOC_QUERYCTRL" <<  strerror (errno);
+                exit (EXIT_FAILURE);
+        }
+}
+qDebug() << "PRIVATE BASE:";
+for (queryctrl.id = V4L2_CID_PRIVATE_BASE;;
+     queryctrl.id++) {
+        if (0 == ioctl (fd, VIDIOC_QUERYCTRL, &queryctrl)) {
+                if (queryctrl.flags & V4L2_CTRL_FLAG_DISABLED)
+                        continue;
+
+                qDebug() << "Control "<< queryctrl;
+
+                if (queryctrl.type == V4L2_CTRL_TYPE_MENU)
+                        enumerate_menu (fd);
+        } else {
+                if (errno == EINVAL)
+                        break;
+
+                qDebug() << "error on VIDIOC_QUERYCTRL" << strerror (errno);
+                exit (EXIT_FAILURE);
+        }
+}
+  
+  
 }
 
 
@@ -124,6 +199,7 @@ void WebcamImager::Private::read_v4l2_parameters()
 WebcamImager::~WebcamImager()
 {
   stopLive();
+  ::close(d->fd);
 }
 
 Imager::Chip WebcamImager::chip() const
