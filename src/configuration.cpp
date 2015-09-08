@@ -141,6 +141,9 @@ void Configuration::setSaveDirectory(const QString& directory)
 
 Configuration::SaveFormat Configuration::saveFormat() const
 {
+#ifdef CV_LINK_BUG
+    return SER;
+#endif
   return static_cast<SaveFormat>(d->value<int>("save_format", SER));
 }
 
