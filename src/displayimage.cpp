@@ -46,7 +46,7 @@ public:
   bool detectEdges = false;
   QVector<QRgb> grayScale;
   QImage edgeDetection(QImage &source);
-  void canny(cv::Mat& source, int lowThreshold = 1, int ratio = 3, int kernel_size = 3);
+  void canny(cv::Mat& source, int lowThreshold = 1, int ratio = 3, int kernel_size = 3, int blurSize = 3);
   void sobel( cv::Mat& source, int blur_size = 3, int ker_size = 3, int scale = 1, int delta = 0 );
 private:
   DisplayImage *q;
@@ -103,7 +103,7 @@ void DisplayImage::create_qimages()
       if(d->configuration.edgeAlgorithm() == Configuration::Sobel) {
 	d->sobel(*cv_image, d->configuration.sobelBlurSize(), d->configuration.sobelKernel(), d->configuration.sobelScale(), d->configuration.sobelDelta());
       } else if(d->configuration.edgeAlgorithm() == Configuration::Canny) {
-	d->canny(*cv_image, d->configuration.cannyLowThreshold(), d->configuration.cannyThresholdRatio());
+	d->canny(*cv_image, d->configuration.cannyLowThreshold(), d->configuration.cannyThresholdRatio(), d->configuration.cannyKernelSize(), d->configuration.cannyBlurSize());
       }
     }
     QImage image{cv_image->data, cv_image->cols, cv_image->rows, cv_image->step, cv_image->channels() == 1 ? QImage::Format_Indexed8: QImage::Format_RGB888, 
@@ -137,12 +137,12 @@ void DisplayImage::detectEdges(bool detect)
   d->detectEdges = detect;
 }
 
-void DisplayImage::Private::canny( cv::Mat& source, int lowThreshold, int ratio, int kernel_size )
+void DisplayImage::Private::canny( cv::Mat &source, int lowThreshold, int ratio, int kernel_size, int blurSize )
 {
 #ifndef CV_LINK_BUG
   cv::Mat src_gray, detected_edges, dst;
   cv::cvtColor( source, src_gray, CV_RGB2GRAY);
-  cv::blur( src_gray, detected_edges, {3,3} );
+  cv::blur( src_gray, detected_edges, {blurSize,blurSize} );
   cv::Canny( detected_edges, detected_edges, lowThreshold, lowThreshold*ratio, kernel_size );
   dst.create( source.size(), source.type() );
   dst = cv::Scalar::all(0);

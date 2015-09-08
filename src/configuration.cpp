@@ -248,6 +248,25 @@ void Configuration::setSobelScale(double scale)
   d->set("sobel_scale", scale);
 }
 
+int Configuration::cannyKernelSize() const
+{
+  return d->value("canny_kernel", 3);
+}
+
+void Configuration::setCannyKernelSize(int size)
+{
+  d->set("canny_kernel", size);
+}
+
+int Configuration::cannyBlurSize() const
+{
+  return d->value("canny_blur", 3);
+}
+
+void Configuration::setCannyBlurSize(int size)
+{
+  d->set("canny_blur", size);
+}
 
 
 QString Configuration::savefile() const
