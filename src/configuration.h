@@ -66,6 +66,15 @@ public:
     void setSobelKernel(int size);
     int sobelKernel() const;
     
+    void setSobelBlurSize(int size);
+    int sobelBlurSize() const;
+    
+    void setSobelScale(double scale);
+    double sobelScale() const;
+    
+    void setSobelDelta(double delta);
+    double sobelDelta() const;
+    
     double cannyLowThreshold() const;
     void setCannyLowThreshold(double threshold);
     

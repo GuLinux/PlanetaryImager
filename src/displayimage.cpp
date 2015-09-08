@@ -47,7 +47,7 @@ public:
   QVector<QRgb> grayScale;
   QImage edgeDetection(QImage &source);
   void canny(cv::Mat& source, int lowThreshold = 1, int ratio = 3, int kernel_size = 3);
-  void sobel( cv::Mat& source, int ker_size = 3, int scale = 1, int delta = 0 );
+  void sobel( cv::Mat& source, int blur_size = 3, int ker_size = 3, int scale = 1, int delta = 0 );
 private:
   DisplayImage *q;
 };
@@ -101,7 +101,7 @@ void DisplayImage::create_qimages()
     if(d->detectEdges) {
       benchmark edge_b{"edge detection"};
       if(d->configuration.edgeAlgorithm() == Configuration::Sobel) {
-	d->sobel(*cv_image, d->configuration.sobelKernel());
+	d->sobel(*cv_image, d->configuration.sobelBlurSize(), d->configuration.sobelKernel(), d->configuration.sobelScale(), d->configuration.sobelDelta());
       } else if(d->configuration.edgeAlgorithm() == Configuration::Canny) {
 	d->canny(*cv_image, d->configuration.cannyLowThreshold(), d->configuration.cannyThresholdRatio());
       }
@@ -152,11 +152,11 @@ void DisplayImage::Private::canny( cv::Mat& source, int lowThreshold, int ratio,
 }
 
 
-void DisplayImage::Private::sobel( cv::Mat& source, int ker_size, int scale, int delta )
+void DisplayImage::Private::sobel( cv::Mat &source, int blur_size, int ker_size, int scale, int delta )
 {
 #ifndef CV_LINK_BUG
   cv::Mat blurred, blurred_gray, grad;
-  cv::GaussianBlur(source, blurred, {3, 3}, 0, 0);
+  cv::GaussianBlur(source, blurred, {blur_size, blur_size}, 0, 0);
   cv::cvtColor( blurred, blurred_gray, CV_RGB2GRAY );
   cv::Mat grad_x, grad_y;
   cv::Mat abs_grad_x, abs_grad_y;
