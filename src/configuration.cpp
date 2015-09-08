@@ -41,6 +41,11 @@ Configuration::Private::Private(QSettings& settings, Configuration* q) : setting
 
 Configuration::Configuration(QSettings &settings) : dptr(settings, this)
 {
+    qDebug() << "canny threshold: " << cannyLowThreshold();
+    qDebug() << "canny threshold ratio: " << cannyThresholdRatio();
+    qDebug() << "sobel blur size: " << sobelBlurSize();
+    qDebug() << "sobel delta : " << sobelDelta();
+    qDebug() << "sobel scale: " << sobelScale();
 }
 
 Configuration::~Configuration()
@@ -209,43 +214,43 @@ void Configuration::setSobelBlurSize(int size)
 
 double Configuration::cannyLowThreshold() const
 {
-  return d->value("canny_low_threshold", 1);
+  return d->value<double>("canny_low_threshold", 1);
 }
 
 void Configuration::setCannyLowThreshold(double threshold)
 {
-  d->set("canny_low_threshold", threshold);
+  d->set<double>("canny_low_threshold", threshold);
 }
 
 
 double Configuration::cannyThresholdRatio() const
 {
-  return d->value("canny_threshold_ratio", 3);
+  return d->value<double>("canny_threshold_ratio", 3);
 }
 
 void Configuration::setCannyThresholdRatio(double ratio)
 {
-  d->set("canny_threshold_ratio", ratio);
+  d->set<double>("canny_threshold_ratio", ratio);
 }
 
 void Configuration::setSobelDelta(double delta)
 {
-  d->set("sobel_delta", delta);
+  d->set<double>("sobel_delta", delta);
 }
 
 double Configuration::sobelDelta() const
 {
-  return d->value("sobel_delta", 0);
+  return d->value<double>("sobel_delta", 0);
 }
 
 double Configuration::sobelScale() const
 {
-  return d->value("sobel_scale", 1);
+  return d->value<double>("sobel_scale", 1);
 }
 
 void Configuration::setSobelScale(double scale)
 {
-  d->set("sobel_scale", scale);
+  d->set<double>("sobel_scale", scale);
 }
 
 int Configuration::cannyKernelSize() const

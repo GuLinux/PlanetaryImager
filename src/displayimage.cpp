@@ -99,10 +99,11 @@ void DisplayImage::create_qimages()
     auto cv_image = new cv::Mat;
     cv::cvtColor(imageData, *cv_image, imageData.channels() == 1 ? CV_GRAY2RGB : CV_BGR2RGB);
     if(d->detectEdges) {
-      benchmark edge_b{"edge detection"};
       if(d->configuration.edgeAlgorithm() == Configuration::Sobel) {
+        benchmark edge_b{"sobel edge detection"};
 	d->sobel(*cv_image, d->configuration.sobelBlurSize(), d->configuration.sobelKernel(), d->configuration.sobelScale(), d->configuration.sobelDelta());
       } else if(d->configuration.edgeAlgorithm() == Configuration::Canny) {
+        benchmark edge_b{"canny edge detection"};
 	d->canny(*cv_image, d->configuration.cannyLowThreshold(), d->configuration.cannyThresholdRatio(), d->configuration.cannyKernelSize(), d->configuration.cannyBlurSize());
       }
     }
@@ -112,8 +113,10 @@ void DisplayImage::create_qimages()
       image.setColorTable(d->grayScale);
     }
     d->imageRect = image.rect();
-    if(d->detectEdges && d->configuration.edgeAlgorithm() == Configuration::SobelDeprecated)
+    if(d->detectEdges && d->configuration.edgeAlgorithm() == Configuration::SobelDeprecated) {
+        benchmark edge_b{"deprecated sobel edge detection"};
         emit gotImage(d->edgeDetection(image));
+    }
     else
         emit gotImage(image);
 //     emit gotImage(d->detectEdges ? d->edgeDetection(image) : image);
