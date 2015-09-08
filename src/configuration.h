@@ -81,6 +81,12 @@ public:
     double cannyThresholdRatio() const;
     void setCannyThresholdRatio(double ratio);
     
+    int cannyKernelSize() const;
+    void setCannyKernelSize(int size);
+    
+    int cannyBlurSize() const;
+    void setCannyBlurSize(int size);
+
     enum SaveFormat { SER, Video };
     void setSaveFormat(SaveFormat format);
     SaveFormat saveFormat() const;
