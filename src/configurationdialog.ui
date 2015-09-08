@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>507</width>
-    <height>411</height>
+    <height>448</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -246,6 +246,13 @@
             </property>
            </widget>
           </item>
+          <item row="2" column="3">
+           <widget class="QPushButton" name="cannyResetDefaults">
+            <property name="text">
+             <string>Reset Defaults</string>
+            </property>
+           </widget>
+          </item>
          </layout>
         </widget>
        </item>
@@ -255,17 +262,17 @@
           <string>Sobel Settings</string>
          </property>
          <layout class="QGridLayout" name="gridLayout_5">
-          <item row="1" column="2">
-           <widget class="QLabel" name="label_10">
-            <property name="text">
-             <string>Delta</string>
-            </property>
-           </widget>
-          </item>
           <item row="0" column="2">
            <widget class="QLabel" name="label_9">
             <property name="text">
              <string>Scale</string>
+            </property>
+           </widget>
+          </item>
+          <item row="1" column="2">
+           <widget class="QLabel" name="label_10">
+            <property name="text">
+             <string>Delta</string>
             </property>
            </widget>
           </item>
@@ -331,6 +338,13 @@
            <widget class="QDoubleSpinBox" name="sobelDelta">
             <property name="singleStep">
              <double>0.100000000000000</double>
+            </property>
+           </widget>
+          </item>
+          <item row="2" column="3">
+           <widget class="QPushButton" name="sobelResetDefaults">
+            <property name="text">
+             <string>Reset Defaults</string>
             </property>
            </widget>
           </item>

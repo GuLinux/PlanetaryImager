@@ -80,12 +80,18 @@ ConfigurationDialog::ConfigurationDialog(Configuration& configuration, QWidget* 
       edge_settings();
     });
     
-    d->ui->sobelKernel->setCurrentText(QString::number(d->configuration.sobelKernel()));
-    d->ui->sobelBlurSize->setValue(d->configuration.sobelBlurSize());
-    d->ui->sobelScale->setValue(d->configuration.sobelScale());
-    d->ui->sobelDelta->setValue(d->configuration.sobelDelta());
-    d->ui->cannyKernelSize->setValue(d->configuration.cannyKernelSize());
-    d->ui->cannyBlurSize->setValue(d->configuration.cannyBlurSize());
+    auto reload_advanced_edge_settings = [=] {
+        d->ui->sobelKernel->setCurrentText(QString::number(d->configuration.sobelKernel()));
+        d->ui->sobelScale->setValue(d->configuration.sobelScale());
+        d->ui->sobelDelta->setValue(d->configuration.sobelDelta());
+        d->ui->sobelBlurSize->setValue(d->configuration.sobelBlurSize());
+        
+        d->ui->cannyKernelSize->setValue(d->configuration.cannyKernelSize());
+        d->ui->cannyBlurSize->setValue(d->configuration.cannyBlurSize());
+        d->ui->cannyThreshold->setValue(d->configuration.cannyLowThreshold());
+        d->ui->cannyRatio->setValue(d->configuration.cannyThresholdRatio());
+    };
+    reload_advanced_edge_settings();
     connect(d->ui->sobelKernel, &QComboBox::currentTextChanged, [=](const QString &text) { d->configuration.setSobelKernel(static_cast<Configuration::EdgeAlgorithm>(text.toInt())); });
     connect(d->ui->sobelBlurSize, F_PTR(QSpinBox, valueChanged, int), [=](int size) { d->configuration.setSobelBlurSize(size); });
     connect(d->ui->sobelScale, F_PTR(QDoubleSpinBox, valueChanged, double), [=](double scale) { d->configuration.setSobelScale(scale); });
@@ -94,10 +100,17 @@ ConfigurationDialog::ConfigurationDialog(Configuration& configuration, QWidget* 
     connect(d->ui->cannyKernelSize, F_PTR(QSpinBox, valueChanged, int), [=](double size) { d->configuration.setCannyKernelSize(size); });
     connect(d->ui->cannyBlurSize, F_PTR(QSpinBox, valueChanged, int), [=](double size) { d->configuration.setCannyBlurSize(size); });
     
-    d->ui->cannyThreshold->setValue(d->configuration.cannyLowThreshold());
-    d->ui->cannyRatio->setValue(d->configuration.cannyThresholdRatio());
     connect(d->ui->cannyThreshold, F_PTR(QDoubleSpinBox, valueChanged, double), bind(&Configuration::setCannyLowThreshold, &d->configuration, _1));
     connect(d->ui->cannyRatio, F_PTR(QDoubleSpinBox, valueChanged, double), bind(&Configuration::setCannyThresholdRatio, &d->configuration, _1));
+    
+    connect(d->ui->cannyResetDefaults, &QPushButton::clicked, [=]{
+        d->configuration.resetCannyAdvancedSettings();
+        reload_advanced_edge_settings();
+    });
+    connect(d->ui->sobelResetDefaults, &QPushButton::clicked, [=]{
+        d->configuration.resetSobelAdvancedSettings();
+        reload_advanced_edge_settings();
+    });
     
     d->ui->buffered_file->setChecked(configuration.bufferedOutput());
     d->ui->drop_view_fps_on_save->setChecked(configuration.maxPreviewFPSOnSaving() > 0);
