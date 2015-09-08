@@ -136,6 +136,7 @@ void DisplayImage::detectEdges(bool detect)
 
 void DisplayImage::Private::canny( cv::Mat& source, int lowThreshold, int ratio, int kernel_size )
 {
+#ifndef CV_LINK_BUG
   cv::Mat src_gray, detected_edges, dst;
   cv::cvtColor( source, src_gray, CV_RGB2GRAY);
   cv::blur( src_gray, detected_edges, {3,3} );
@@ -144,11 +145,13 @@ void DisplayImage::Private::canny( cv::Mat& source, int lowThreshold, int ratio,
   dst = cv::Scalar::all(0);
   source.copyTo(dst, detected_edges);
   source = dst;
+#endif
 }
 
 
 void DisplayImage::Private::sobel( cv::Mat& source, int ker_size, int scale, int delta )
 {
+#ifndef CV_LINK_BUG
   cv::Mat blurred, blurred_gray, grad;
   cv::GaussianBlur(source, blurred, {3, 3}, 0, 0);
   cv::cvtColor( blurred, blurred_gray, CV_RGB2GRAY );
@@ -162,6 +165,7 @@ void DisplayImage::Private::sobel( cv::Mat& source, int ker_size, int scale, int
   cv::convertScaleAbs( grad_x, abs_grad_x );
   cv::convertScaleAbs( grad_y, abs_grad_y );
   cv::addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, source );
+#endif
 }
 
 

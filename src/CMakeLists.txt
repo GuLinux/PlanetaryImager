@@ -30,11 +30,17 @@ function(add_imager_dependencies)
 endfunction(add_imager_dependencies)
 
 add_subdirectory(drivers)
+add_subdirectory(output_writers)
 add_executable(planetary_imager ${QHYImager_SRCS})
 
 
 
 message("dependencies: ${planetary_imager_DEPS}")
-target_link_libraries(planetary_imager GuLinux_Qt_Commons Qt5::Widgets ${Boost_LIBRARIES} ${planetary_imager_DEPS} ${OpenCV_LIBS} )
+if(NOT opencv_LINK_BUG)
+  set(cv_libs ${OpenCV_LIBS})
+endif(NOT opencv_LINK_BUG)
+  
+target_link_libraries(planetary_imager GuLinux_Qt_Commons Qt5::Widgets ${Boost_LIBRARIES} ${planetary_imager_DEPS} ${cv_libs} )
 install(TARGETS planetary_imager RUNTIME DESTINATION bin)
+
 

@@ -58,7 +58,7 @@ public:
     
     QString savefile() const;
     
-    enum EdgeAlgorithm { Sobel, Canny };
+    enum EdgeAlgorithm { Sobel, Canny, SobelDeprecated };
     
     void setEdgeAlgorithm(EdgeAlgorithm algorithm);
     EdgeAlgorithm edgeAlgorithm() const;

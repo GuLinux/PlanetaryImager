@@ -9,8 +9,19 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 find_package(Qt5Widgets REQUIRED )
+include_directories(${Qt5Widgets_INCLUDE_DIRS})
+
 find_package(Boost REQUIRED)
 find_package( OpenCV 2.3 REQUIRED )
+
+option(enable_qhy "Enable QHY Driver (default: ON)" ON) # TODO move again in drivers/CMakeLists.txt
+option(enable_simulator "Enable fake driver simulator (default: OFF)" OFF)
+if(enable_qhy)
+  set(opencv_LINK_BUG On)
+  set(enable_simulator Off)
+  add_definitions(-DCV_LINK_BUG)
+endif(enable_qhy)
+
 
 include_directories(${OpenCV_INCLUDE_DIRS})
 include(FindPkgConfig)
