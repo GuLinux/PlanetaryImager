@@ -65,6 +65,8 @@ private:
 
 struct v4l2_queryctrl queryctrl;
 struct v4l2_querymenu querymenu;
+struct v4l2_control control;
+// http://www.linuxtv.org/downloads/legacy/video4linux/API/V4L2_API/spec-single/v4l2.html#control
 
 static void enumerate_menu (int fd)
 {
@@ -106,8 +108,24 @@ WebcamImager::WebcamImager(const QString &name, int index, const ImageHandlerPtr
 
 
 QDebug operator <<(QDebug dbg, const v4l2_queryctrl &q) {
+  static QMap<int, QString> types {
+        { V4L2_CTRL_TYPE_INTEGER, "V4L2_CTRL_TYPE_INTEGER" },
+        { V4L2_CTRL_TYPE_BOOLEAN, "V4L2_CTRL_TYPE_BOOLEAN" },
+        { V4L2_CTRL_TYPE_MENU, "V4L2_CTRL_TYPE_MENU" },
+        { V4L2_CTRL_TYPE_BUTTON, "V4L2_CTRL_TYPE_BUTTON" },
+        { V4L2_CTRL_TYPE_INTEGER64, "V4L2_CTRL_TYPE_INTEGER64" },
+        { V4L2_CTRL_TYPE_CTRL_CLASS, "V4L2_CTRL_TYPE_CTRL_CLASS" },
+        { V4L2_CTRL_TYPE_STRING, "V4L2_CTRL_TYPE_STRING" },
+        { V4L2_CTRL_TYPE_BITMASK, "V4L2_CTRL_TYPE_BITMASK" },
+        { V4L2_CTRL_TYPE_INTEGER_MENU, "V4L2_CTRL_TYPE_INTEGER_MENU" },
+        { V4L2_CTRL_COMPOUND_TYPES, "V4L2_CTRL_COMPOUND_TYPES" },
+        { V4L2_CTRL_TYPE_U8, "V4L2_CTRL_TYPE_U8" },
+        { V4L2_CTRL_TYPE_U16, "V4L2_CTRL_TYPE_U16" },
+        { V4L2_CTRL_TYPE_U32, "V4L2_CTRL_TYPE_U32" },
+  };
   dbg.nospace() << "v4l2_queryctrl{";
-  dbg << "type=" << q.type << ", name=" << (char*)(q.name)<< ", default_value=" << q.default_value << ", min=" << q.minimum << ", max=" << q.maximum;
+  dbg << "type=" << types[q.type] << ", name=" << (char*)(q.name)<< ", default_value=" << q.default_value 
+    << ", min=" << q.minimum << ", max=" << q.maximum << ", step=" << q.step;
   dbg << "}";
   return dbg.space();
 }
@@ -157,8 +175,11 @@ for (queryctrl.id = V4L2_CID_BASE;
         if (0 == ioctl (fd, VIDIOC_QUERYCTRL, &queryctrl)) {
                 if (queryctrl.flags & V4L2_CTRL_FLAG_DISABLED)
                         continue;
-
-                qDebug() << "Control "<<  queryctrl;
+                control.id = queryctrl.id;
+        if (-1 == ioctl (fd, VIDIOC_G_CTRL, &control)) {
+                qDebug() << "error on VIDIOC_G_CTRL" << strerror (errno);
+        }
+                qDebug() << "Control "<<  queryctrl << ", value: " << control.value;
 
                 if (queryctrl.type == V4L2_CTRL_TYPE_MENU)
                         enumerate_menu (fd);
