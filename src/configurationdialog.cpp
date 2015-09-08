@@ -59,8 +59,14 @@ ConfigurationDialog::ConfigurationDialog(Configuration& configuration, QWidget* 
     edgeAlgorithm->addButton(d->ui->edge_canny);
     edgeAlgorithm->addButton(d->ui->edge_sobel);
     
+#ifdef CV_LINK_BUG
+    d->ui->edge_canny->setDisabled(true);
+    d->ui->edge_sobel->setDisabled(true);
+#else
     d->ui->edge_canny->setChecked(configuration.edgeAlgorithm() == Configuration::Canny);
     d->ui->edge_sobel->setChecked(configuration.edgeAlgorithm() == Configuration::Sobel);
+    d->ui->edge_sobel_deprecated->setChecked(configuration.edgeAlgorithm() == Configuration::SobelDeprecated);
+#endif
     
     connect(edgeAlgorithm, F_PTR(QButtonGroup, buttonToggled, QAbstractButton*, bool), [=]{
       d->configuration.setEdgeAlgorithm(edgeAlgorithm->checkedButton() == d->ui->edge_canny ? Configuration::Canny : Configuration::Sobel);

@@ -171,7 +171,11 @@ void Configuration::setTelescope(const QString& telescope)
 
 Configuration::EdgeAlgorithm Configuration::edgeAlgorithm() const
 {
+#ifdef CV_LINK_BUG
+  return SobelDeprecated;
+#else
   return static_cast<EdgeAlgorithm>(d->value<int>("edge_algorithm", Canny));
+#endif
 }
 
 void Configuration::setEdgeAlgorithm(Configuration::EdgeAlgorithm algorithm)
@@ -217,6 +221,7 @@ QString Configuration::savefile() const
 {
   QMap<SaveFormat, QString> extension {
     { SER, ".ser" },
+    { Video, ".mp4" },
   };
   return "%1%2%3%4%5%6"_q
     % saveDirectory()

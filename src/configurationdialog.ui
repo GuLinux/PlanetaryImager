@@ -160,6 +160,13 @@
         </widget>
        </item>
        <item>
+        <widget class="QRadioButton" name="edge_sobel_deprecated">
+         <property name="text">
+          <string>Sobel &amp;QImageBlitz (deprecated, to be removed soon)</string>
+         </property>
+        </widget>
+       </item>
+       <item>
         <widget class="QGroupBox" name="cannySettingsBox">
          <property name="title">
           <string>Canny Settings</string>

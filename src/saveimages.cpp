@@ -30,128 +30,13 @@
 #include "fps_counter.h"
 #include "configuration.h"
 #include <boost/lockfree/spsc_queue.hpp>
-#include "ser_header.h"
 #include "opencv_utils.h"
 #include <Qt/strings.h>
+#include "output_writers/filewriter.h"
 
 
 using namespace std;
 using namespace std::placeholders;
-
-class FileWriter : public ImageHandler {
-public:
-  virtual void handle(const cv::Mat& imageData) = 0;
-  virtual QString filename() const = 0;
-};
-typedef shared_ptr<FileWriter> FileWriterPtr;
-typedef function<FileWriterPtr(const QString &deviceName, Configuration &configuration)> FileWriterFactory;
-
-
-
-class SER_Writer : public FileWriter {
-public:
-  SER_Writer(const QString &deviceName, Configuration &configuration);
-  ~SER_Writer();
-  virtual void handle(const cv::Mat& imageData);
-  virtual QString filename() const;
-  vector<SER_Timestamp> timestamps;
-private:
-  QFile file;
-  SER_Header *header;
-  uint32_t frames = 0;
-};
-
-class cvVideoWriter : public FileWriter {
-public:
-  cvVideoWriter(const QString &deviceName, Configuration &configuration);
-  ~cvVideoWriter();
-  virtual void handle(const cv::Mat& imageData);
-  virtual QString filename() const { return _filename; }
-private:
-  QString _filename;
-  Configuration &configuration;
-  shared_ptr<cv::VideoWriter> videoWriter;
-};
-
-
-
-SER_Writer::SER_Writer(const QString &deviceName, Configuration &configuration) : file(configuration.savefile())
-{
-  qDebug() << "Using buffered output: " << configuration.bufferedOutput();
-  if(configuration.bufferedOutput())
-    file.open(QIODevice::ReadWrite);
-  else
-    file.open(QIODevice::ReadWrite | QIODevice::Unbuffered);
-  SER_Header empty_header;
-  empty_header.datetime = QDateTime({1, 1, 1}, {0,0,0}).msecsTo(QDateTime::currentDateTime()) * 10000;
-  empty_header.datetime_utc = QDateTime({1, 1, 1}, {0,0,0}, Qt::UTC).msecsTo(QDateTime::currentDateTimeUtc()) * 10000;
-  ::strcpy(empty_header.camera, deviceName.left(40).toLatin1());
-  ::strcpy(empty_header.observer, configuration.observer().left(40).toLatin1());
-  ::strcpy(empty_header.telescope, configuration.telescope().left(40).toLatin1());
-  file.write(reinterpret_cast<char*>(&empty_header), sizeof(empty_header));
-  file.flush();
-  header = reinterpret_cast<SER_Header*>(file.map(0, sizeof(SER_Header)));
-  if(!header) {
-    qDebug() << file.errorString();
-  }
-}
-
-SER_Writer::~SER_Writer()
-{
-  qDebug() << "closing file..";
-  header->frames = frames;
-  for(auto timestamp: timestamps) {
-    file.write(reinterpret_cast<char*>(&timestamp), sizeof(timestamp));
-  }
-  file.close();
-  qDebug() << "file correctly closed.";
-}
-
-QString SER_Writer::filename() const
-{
-  return file.fileName();
-}
-
-void SER_Writer::handle(const cv::Mat& imageData)
-{
-  if(! header->imageWidth) {
-    header->colorId = imageData.channels() == 1 ? SER_Header::MONO : SER_Header::RGB;
-    header->pixelDepth = 8; // TODO imageData->bpp();
-    header->imageWidth = imageData.cols;
-    header->imageHeight = imageData.rows;
-  }
-  timestamps.push_back(QDateTime({1, 1, 1}, {0,0,0}, Qt::UTC).msecsTo(QDateTime::currentDateTimeUtc()) * 10000);
-  file.write(reinterpret_cast<const char*>(imageData.data), imageData.total() * imageData.elemSize());
-  ++frames;
-}
-
-
-cvVideoWriter::cvVideoWriter ( const QString& deviceName, Configuration& configuration ) : _filename(configuration.savefile()), configuration{configuration}
-{
-  qDebug() <<__PRETTY_FUNCTION__ << "filename: " << filename();
-}
-
-void cvVideoWriter::handle ( const cv::Mat& imageData )
-{
-  try {
-    if(!videoWriter)
-      videoWriter = make_shared<cv::VideoWriter>(_filename.toStdString(), CV_FOURCC('X', '2', '6', '4'), 25, cv::Size{imageData.cols, imageData.rows});
-    if(!videoWriter || ! videoWriter->isOpened()) {
-      qWarning() << "unable to open video file" << _filename;
-      return;
-    }
-    *videoWriter << imageData;
-  } catch(cv::Exception &e) {
-    qWarning() << "error on handle:" << e.msg << e.code << e.file << e.line << e.func;
-  }
-}
-
-cvVideoWriter::~cvVideoWriter()
-{
-  videoWriter->release();
-}
-
-
 
 class WriterThreadWorker;
 class SaveImages::Private {
@@ -159,7 +44,7 @@ public:
     Private(Configuration &configuration, SaveImages *q);
     Configuration &configuration;
     QThread recordingThread;
-    FileWriterFactory writerFactory();
+    FileWriter::Factory writerFactory();
     WriterThreadWorker *worker = nullptr;
     bool is_recording = false;
 private:
@@ -180,29 +65,25 @@ SaveImages::~SaveImages()
 }
 
 
-FileWriterFactory SaveImages::Private::writerFactory()
+FileWriter::Factory SaveImages::Private::writerFactory()
 {
   if(configuration.savefile().isEmpty()) {
     return {};
   }
-  static map<Configuration::SaveFormat, FileWriterFactory> factories {
-    {Configuration::SER, [](const QString &deviceName, Configuration &configuration){ return make_shared<SER_Writer>(deviceName, configuration); }},
-    {Configuration::Video, [](const QString &deviceName, Configuration &configuration){ return make_shared<cvVideoWriter>(deviceName, configuration); }},
-  };
-  
-  return factories[configuration.saveFormat()];
+
+  return FileWriter::factories()[configuration.saveFormat()];
 }
 
 class WriterThreadWorker : public QObject {
   Q_OBJECT
 public:
-  explicit WriterThreadWorker ( const function< FileWriterPtr() >& fileWriterFactory, uint64_t max_frames, long long int max_memory, bool& is_recording, SaveImages *saveImages, QObject* parent = 0 );
+  explicit WriterThreadWorker ( const function< FileWriter::Ptr() >& fileWriterFactory, uint64_t max_frames, long long int max_memory, bool& is_recording, SaveImages *saveImages, QObject* parent = 0 );
   virtual ~WriterThreadWorker();
 public slots:
   virtual void handle(const cv::Mat& imageData);
   void run();
 private:
-  function<FileWriterPtr()> fileWriterFactory;
+  function<FileWriter::Ptr()> fileWriterFactory;
   shared_ptr<boost::lockfree::spsc_queue<cv::Mat>> framesQueue;
   uint64_t max_frames;
   long long max_memory;
@@ -211,7 +92,7 @@ private:
   SaveImages *saveImages;
 };
 
-WriterThreadWorker::WriterThreadWorker ( const function<FileWriterPtr()>& fileWriterFactory, uint64_t max_frames, long long int max_memory, bool& is_recording, SaveImages* saveImages, QObject* parent )
+WriterThreadWorker::WriterThreadWorker ( const function<FileWriter::Ptr()>& fileWriterFactory, uint64_t max_frames, long long int max_memory, bool& is_recording, SaveImages* saveImages, QObject* parent )
   : QObject(parent), fileWriterFactory(fileWriterFactory), max_frames(max_frames), max_memory{max_memory}, is_recording{is_recording}, saveImages{saveImages}
 {
 }
