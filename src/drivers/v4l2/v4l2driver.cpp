@@ -17,48 +17,48 @@
  *
  */
 
-#include "webcamdriver.h"
-#include "webcamimager.h"
+#include "v4l2driver.h"
+#include "v4l2imager.h"
 #include <QDir>
 #include <QDebug>
 #include "Qt/strings.h"
 
 using namespace std;
 
-class WebcamDriver::Private
+class V4L2Driver::Private
 {
 public:
-  Private ( WebcamDriver *q );
+  Private ( V4L2Driver *q );
 
 private:
-  WebcamDriver *q;
+  V4L2Driver *q;
 };
 
-WebcamDriver::Private::Private ( WebcamDriver* q ) : q ( q )
+V4L2Driver::Private::Private ( V4L2Driver* q ) : q ( q )
 {
 }
 
-WebcamDriver::WebcamDriver()
+V4L2Driver::V4L2Driver()
   : dptr ( this )
 {
 }
 
-WebcamDriver::~WebcamDriver()
+V4L2Driver::~V4L2Driver()
 {
 }
 
 
-class WebcamDeviceInfo : public Driver::Camera {
+class V4L2DeviceInfo : public Driver::Camera {
 public:
-  WebcamDeviceInfo(int index, const QString &name) : _index {index}, _name{name} {}
-  virtual ImagerPtr imager ( const ImageHandlerPtr& imageHandler ) const { return make_shared<WebcamImager>(_name , _index, imageHandler); }
+  V4L2DeviceInfo(int index, const QString &name) : _index {index}, _name{name} {}
+  virtual ImagerPtr imager ( const ImageHandlerPtr& imageHandler ) const { return make_shared<V4L2Imager>(_name , _index, imageHandler); }
   virtual QString name() const { return _name; }
 private:
   int _index;
   const QString _name;
 };
 
-Driver::Cameras WebcamDriver::cameras() const
+Driver::Cameras V4L2Driver::cameras() const
 {
   QList<CameraPtr> _cameras;
 #ifdef Q_OS_LINUX
@@ -71,7 +71,7 @@ Driver::Cameras WebcamDriver::cameras() const
     name = name.trimmed();
     int index = entry.baseName().remove("video").toInt();
     qDebug() << entry.baseName() << name  << index;
-    _cameras.push_back(make_shared<WebcamDeviceInfo>(index, "%1 (OpenCV VideoCapture)"_q % name));
+    _cameras.push_back(make_shared<V4L2DeviceInfo>(index, "%1 (v4l2)"_q % name));
   }
 #endif
   return _cameras;
