@@ -94,6 +94,7 @@ WebcamImager::WebcamImager(const QString &name, int index, const ImageHandlerPtr
     if (!d->capture->isOpened()) {
         qDebug() << "error opening device";
     }
+    qDebug() << "driver:" << d->driver << ", bus:" << d->bus << ", devicename:" << d->cameraname;
     d->capture->set(CV_CAP_PROP_FRAME_WIDTH, d->resolutions.last().width);
     d->capture->set(CV_CAP_PROP_FRAME_HEIGHT, d->resolutions.last().height);
 }
@@ -197,7 +198,6 @@ WebcamImager::Private::V4lSetting WebcamImager::Private::setting(int id)
     v4l2_queryctrl ctrl{id};
     setting.querycode = ioctl(v4l_fd, VIDIOC_QUERYCTRL, &ctrl);
     if (0 != setting.querycode) {
-        qWarning() << "Error querying setting id " << id << strerror(errno);
         return setting;
     }
     setting.disabled = (ctrl.flags & V4L2_CTRL_FLAG_DISABLED);
@@ -215,10 +215,9 @@ WebcamImager::Private::V4lSetting WebcamImager::Private::setting(int id)
     v4l2_control control{ctrl.id};
     setting.valuecode = ioctl(v4l_fd, VIDIOC_G_CTRL, &control);
     if (-1 == setting.valuecode) {
-        qDebug() << "error on VIDIOC_G_CTRL" << strerror(errno);
+        qWarning() << "error on VIDIOC_G_CTRL" << strerror(errno);
         return setting;
     }
-    qDebug() << "Control " <<  ctrl << ", value: " << control.value;
     setting.setting = Imager::Setting{ctrl.id, reinterpret_cast<char*>(ctrl.name), ctrl.minimum, ctrl.maximum, ctrl.step, control.value, ctrl.default_value};
     setting.setting.type = types[ctrl.type];
     if(ctrl.type == V4L2_CTRL_TYPE_MENU) {
@@ -226,7 +225,6 @@ WebcamImager::Private::V4lSetting WebcamImager::Private::setting(int id)
         for(menu.index = ctrl.minimum; menu.index <= ctrl.maximum; menu.index++) {
             QString value;
             if (0 == ioctl (v4l_fd, VIDIOC_QUERYMENU, &menu)) {
-                qDebug() << "name: " << (char*) menu.name << ", value: " << menu.value << ", id=" << menu.id ;
                 value = {(char*)menu.name};
             }
             setting.setting.choices.push_back(value);
@@ -242,7 +240,6 @@ Imager::Settings WebcamImager::settings() const
     Imager::Settings _settings;
 
     for (int ctrlid = V4L2_CID_BASE; ctrlid < V4L2_CID_LASTP1; ctrlid++) {
-        qDebug() << "querying base control";
         auto v4lsetting = d->setting(ctrlid);
         if(!v4lsetting)
             continue;
@@ -250,7 +247,6 @@ Imager::Settings WebcamImager::settings() const
     }
     
     for (int ctrlid = V4L2_CID_PRIVATE_BASE;; ctrlid++) {
-        qDebug() << "querying private control";
         auto v4lsetting = d->setting(ctrlid);
         if (!v4lsetting && errno == EINVAL)
                 break;
@@ -260,7 +256,6 @@ Imager::Settings WebcamImager::settings() const
     Private::V4lSetting v4lsetting;
     int ctrlid = V4L2_CTRL_FLAG_NEXT_CTRL;
     while ( (v4lsetting = d->setting(ctrlid)) && v4lsetting.querycode != -1) {
-        qDebug() << "querying extended control";
         if(v4lsetting)
             _settings.push_back(v4lsetting.setting);
         ctrlid = v4lsetting.setting.id | V4L2_CTRL_FLAG_NEXT_CTRL;
