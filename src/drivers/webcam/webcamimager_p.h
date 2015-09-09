@@ -84,4 +84,5 @@ public:
 private:
     WebcamImager *q;
 };
+
 #endif
