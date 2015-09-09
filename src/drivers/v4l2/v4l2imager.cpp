@@ -214,12 +214,12 @@ void V4L2Imager::startLive()
                     continue;
                 }
                 cv::Mat image{format.fmt.pix.height, format.fmt.pix.width, CV_8UC3};
-                if(format.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
+                if(format.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG) {
                     cv::InputArray inputArray{buffer_start,  bufferinfo.bytesused};
                     image = cv::imdecode(inputArray, -1);
                 } else if(format.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
                     cv::Mat source{format.fmt.pix.height, format.fmt.pix.width, CV_8UC2, buffer_start};
-                    cv::cvtColor(source, image, CV_YUV2BGR_YUY2);
+                    cv::cvtColor(source, image, CV_YUV2RGB_YVYU);
                 } else {
                     qCritical() << "Unsupported image format: " << FOURCC2QS(format.fmt.pix.pixelformat);
                     return;
