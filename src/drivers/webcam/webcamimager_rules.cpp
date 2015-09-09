@@ -24,8 +24,8 @@ void WebcamImager::Private::populate_rules()
 {
  // Exposure to combo in Microsoft Lifecam 3000
   setting_rules.push_back( [=](Setting &s){
-   if( s.id != V4L2_CID_EXPOSURE_ABSOLUTE && cameraname.contains("Microsoft") && (cameraname.contains("LifeCam HD-3000") || cameraname.contains("LifeCam HD-5000")) );
-    return;
+   if(s.id != V4L2_CID_EXPOSURE_ABSOLUTE || (cameraname != "Microsoft\u00AE LifeCam HD-3000" && cameraname != "Microsoft\u00AE LifeCam HD-5000"))
+      return;
    s.type = Setting::Combo;
    s.choices = {{"5", 5}, {"9", 9}, {"10", 10}, {"19", 19}, {"20", 20}, {"39", 39}, {"78", 78}, {"156", 156}, {"312", 312}, {"625", 625}, {"1250", 1250}, {"2500", 2500}, {"5000", 5000}, {"10000", 10000}};
   });
