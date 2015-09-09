@@ -171,39 +171,63 @@ void V4L2Imager::startLive()
             format = d->query_format();
             qDebug() << "format: " << FOURCC2QS(format.fmt.pix.pixelformat) << ", " << format.fmt.pix.width << "x" << format.fmt.pix.height;
             
-            struct v4l2_requestbuffers req = {0};
-            req.count = 1;
-            req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-            req.memory = V4L2_MEMORY_MMAP;
-            if (-1 == Private::ioctl(d->v4l_fd, VIDIOC_REQBUFS, &req)) {
-                qWarning() << "error requesting buffer: " << strerror(errno);
+            v4l2_requestbuffers bufrequest;
+            bufrequest.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+            bufrequest.memory = V4L2_MEMORY_MMAP;
+            bufrequest.count = 1;
+            if(Private::ioctl(d->v4l_fd, VIDIOC_REQBUFS, &bufrequest) < 0) {
+                qDebug() << "error requesting buffers: " << strerror(errno);
                 return;
             }
-            struct v4l2_buffer buf = {0};
-            buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-            buf.memory = V4L2_MEMORY_MMAP;
-            buf.index = 0;
-            if(-1 == Private::ioctl(d->v4l_fd, VIDIOC_QUERYBUF, &buf)) {
-                qWarning() << "error querying buffer: " << strerror(errno);
+            
+            v4l2_buffer bufferinfo;
+            memset(&bufferinfo, 0, sizeof(bufferinfo));
+            
+            bufferinfo.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+            bufferinfo.memory = V4L2_MEMORY_MMAP;
+            bufferinfo.index = 0;
+            
+            if(Private::ioctl(d->v4l_fd, VIDIOC_QUERYBUF, &bufferinfo) < 0){
+                qDebug() << "error allocating buffers: " << strerror(errno);
                 return;
             }
-
-            auto buffer = mmap (NULL, buf.length, PROT_READ | PROT_WRITE, MAP_SHARED, d->v4l_fd, buf.m.offset);
-            if(-1 == Private::ioctl(d->v4l_fd, VIDIOC_STREAMON, &buf.type)) {
-                qDebug() << "error starting capture: " << strerror(errno);
-                return ;
+            
+            char* buffer_start = (char*) mmap(NULL, bufferinfo.length, PROT_READ | PROT_WRITE, MAP_SHARED, d->v4l_fd, bufferinfo.m.offset);
+            
+            if(buffer_start == MAP_FAILED){
+                qDebug() << "error memmapping buffer: " << strerror(errno);
+                return;
+            }
+            memset(buffer_start, 0, bufferinfo.length);
+            if(Private::ioctl(d->v4l_fd, VIDIOC_QBUF, &bufferinfo) < 0){
+                qDebug() << "error queuing buffer: " << strerror(errno);
+                return;
+            }
+            int type = bufferinfo.type;
+            if(Private::ioctl(d->v4l_fd, VIDIOC_STREAMON, &type) < 0){
+                qDebug() << "error starting streaming: " << strerror(errno);
+                return;
             }
             while (d->live) {
-                if(-1 == Private::ioctl(d->v4l_fd, VIDIOC_DQBUF, &buf)) {
-                    qDebug() << "error retrieving frame: " << strerror(errno);
+                if(Private::ioctl(d->v4l_fd, VIDIOC_DQBUF, &bufferinfo) < 0){
+                    qDebug() << "error dequeuing buffer: " << strerror(errno);
                     continue;
                 }
-                
+                cv::Mat inputArray(format.fmt.pix.height, format.fmt.pix.width, CV_8UC3, buffer_start);
+                d->handler->handle(cv::imdecode(inputArray, -1));
+                bufferinfo.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+                bufferinfo.memory = V4L2_MEMORY_MMAP;
+                if(Private::ioctl(d->v4l_fd, VIDIOC_QBUF, &bufferinfo) < 0){
+                    qDebug() << "error queuing buffer: " << strerror(errno);
+                    return;
+                }
+//                 cv::Mat frame(format.fmt.pix.height, format.fmt.pix.width, CV_8UC3);
+//                 int read_size = read(d->v4l_fd, frame.data, frame.elemSize());
+//                 qDebug() << "Read " << read_size << "bytes (max: " << frame.elemSize() << ")" << strerror(errno);
 
-                cv::Mat frame(format.fmt.pix.height, format.fmt.pix.width, CV_8UC3, buffer);
-                d->handler->handle(frame);
                 ++fps;
             }
+            Private::ioctl(d->v4l_fd, VIDIOC_STREAMOFF, &type);
         }, 
         [=]{ d->live_thread = nullptr; }, 
         [=](Thread *thread) { d->live_thread = thread; d->live = true; }
