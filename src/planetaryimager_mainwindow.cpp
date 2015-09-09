@@ -45,6 +45,7 @@
 #include <QGridLayout>
 #include <QToolBar>
 #include "Qt/strings.h"
+#include <Qt/functional.h>
 
 using namespace std;
 using namespace std::placeholders;
