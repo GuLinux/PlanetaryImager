@@ -15,6 +15,7 @@ public:
     double min, max, step, value, defaut_value;
     enum Type { Number, String, Combo, Bool } type;
     QStringList choices;
+    operator bool() const;
   };
   typedef QList<Setting> Settings;
 

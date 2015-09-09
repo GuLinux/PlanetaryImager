@@ -19,3 +19,8 @@ QDebug operator<<(QDebug dbg, const Imager::Setting& setting)
   << ", type: " << types_map[setting.type] << ", choices: " << setting.choices << ", default: " << setting.defaut_value << " }";
   return dbg.space();
 }
+
+Imager::Setting::operator bool() const
+{
+    return ! name.isEmpty();
+}
