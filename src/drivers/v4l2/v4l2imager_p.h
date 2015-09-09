@@ -15,6 +15,7 @@
 #include <unistd.h>
 #include "Qt/strings.h"
 #include "Qt/functional.h"
+#include <sys/mman.h>
 
 class V4L2Imager::Private
 {

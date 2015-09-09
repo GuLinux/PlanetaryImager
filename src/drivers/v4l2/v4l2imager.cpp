@@ -157,8 +157,50 @@ void V4L2Imager::startLive()
             fps_counter fps([ = ](double rate) {
                 emit this->fps(rate);
             }, fps_counter::Mode::Elapsed);
+            v4l2_format format = d->query_format();
+            format.fmt.pix.width = 640;
+            format.fmt.pix.height= 480;
+            format.fmt.pix.pixelformat= V4L2_PIX_FMT_MJPEG;
+            format.fmt.pix.field= V4L2_FIELD_NONE;
+            
+            
+            if (-1 == Private::ioctl(d->v4l_fd, VIDIOC_S_FMT, &format)) {
+                qDebug() << "error setting pixel format: " << strerror(errno);
+                return;
+            }
+            format = d->query_format();
+            qDebug() << "format: " << FOURCC2QS(format.fmt.pix.pixelformat) << ", " << format.fmt.pix.width << "x" << format.fmt.pix.height;
+            
+            struct v4l2_requestbuffers req = {0};
+            req.count = 1;
+            req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+            req.memory = V4L2_MEMORY_MMAP;
+            if (-1 == Private::ioctl(d->v4l_fd, VIDIOC_REQBUFS, &req)) {
+                qWarning() << "error requesting buffer: " << strerror(errno);
+                return;
+            }
+            struct v4l2_buffer buf = {0};
+            buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+            buf.memory = V4L2_MEMORY_MMAP;
+            buf.index = 0;
+            if(-1 == Private::ioctl(d->v4l_fd, VIDIOC_QUERYBUF, &buf)) {
+                qWarning() << "error querying buffer: " << strerror(errno);
+                return;
+            }
+
+            auto buffer = mmap (NULL, buf.length, PROT_READ | PROT_WRITE, MAP_SHARED, d->v4l_fd, buf.m.offset);
+            if(-1 == Private::ioctl(d->v4l_fd, VIDIOC_STREAMON, &buf.type)) {
+                qDebug() << "error starting capture: " << strerror(errno);
+                return ;
+            }
             while (d->live) {
-                cv::Mat frame;
+                if(-1 == Private::ioctl(d->v4l_fd, VIDIOC_DQBUF, &buf)) {
+                    qDebug() << "error retrieving frame: " << strerror(errno);
+                    continue;
+                }
+                
+
+                cv::Mat frame(format.fmt.pix.height, format.fmt.pix.width, CV_8UC3, buffer);
                 d->handler->handle(frame);
                 ++fps;
             }
