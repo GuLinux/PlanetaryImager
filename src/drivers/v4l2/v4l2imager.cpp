@@ -19,6 +19,7 @@
 
 #include "v4l2imager_p.h"
 using namespace std;
+using namespace GuLinux;
 
 QString FOURCC2QS(int32_t _4cc)
 {
@@ -27,12 +28,12 @@ QString FOURCC2QS(int32_t _4cc)
     return {data};
 }
 
-V4L2Imager::Private::Private(V4L2Imager *q) : q(q)
+V4L2Imager::Private::Private(const ImageHandlerPtr &handler, V4L2Imager *q) : handler{handler}, q(q)
 {
 }
 
 V4L2Imager::V4L2Imager(const QString &name, int index, const ImageHandlerPtr &handler)
-    : dptr(this)
+    : dptr(handler, this)
 {
     auto dev_name = "/dev/video%1"_q % index;
     d->v4l_fd = ::open(dev_name.toLatin1(), O_RDWR, O_NONBLOCK, 0);
@@ -150,11 +151,27 @@ void V4L2Imager::setSetting(const Setting &setting)
 
 void V4L2Imager::startLive()
 {
-
+    d->live = true;
+    Thread::Run<void>{
+        [=]{
+            fps_counter fps([ = ](double rate) {
+                emit this->fps(rate);
+            }, fps_counter::Mode::Elapsed);
+            while (d->live) {
+                cv::Mat frame;
+                d->handler->handle(frame);
+                ++fps;
+            }
+        }, 
+        [=]{ d->live_thread = nullptr; }, 
+        [=](Thread *thread) { d->live_thread = thread; d->live = true; }
+    };
 }
 
 void V4L2Imager::stopLive()
 {
+    d->live = false;
+    d->live_thread->wait();
 }
 
 
