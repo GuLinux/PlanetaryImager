@@ -106,6 +106,42 @@ void WebcamImager::Private::read_v4l2_parameters()
     driver = {(char*) cap.driver};
     bus = {(char*) cap.bus_info};
     cameraname = {(char*) cap.card};
+    
+    /*
+    v4l2_fmtdesc formats;
+    QList<v4l2_fmtdesc> formats_list;
+    formats.index = 0;
+    formats.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    while(0 == ioctl(v4l_fd, VIDIOC_ENUM_FMT, &formats)) {
+        qDebug() << "found format: " << formats.index << (char*)formats.description;
+        formats_list.push_back(formats);
+        formats.index++;
+    }
+        
+    v4l2_format format;
+    format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    if(-1 == ioctl(v4l_fd, VIDIOC_G_FMT , &format)) {
+        qWarning() << "Unable to query webcam format: " << strerror(errno);
+        return;
+    } 
+    format.fmt.pix.pixelformat = formats_list[1].pixelformat;
+    format.fmt.pix.flags= formats_list[1].flags;
+    if(-1 == ioctl(v4l_fd, VIDIOC_S_FMT , &format)) {
+        qWarning() << "Unable to query webcam format: " << strerror(errno);
+        return;
+    } 
+    if(-1 == ioctl(v4l_fd, VIDIOC_G_FMT , &format)) {
+        qWarning() << "Unable to query webcam format: " << strerror(errno);
+        return;
+    } 
+
+    
+    qDebug() << "format: " << format.fmt.pix.pixelformat
+        << (char) (format.fmt.pix.pixelformat & 0xff) 
+        << (char) (format.fmt.pix.pixelformat >> 8 & 0xff) 
+        << (char) (format.fmt.pix.pixelformat >> 0x10 & 0xff) 
+        << (char) (format.fmt.pix.pixelformat >> 0x18 & 0xff);
+        */
 }
 
 
