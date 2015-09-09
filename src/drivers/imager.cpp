@@ -15,12 +15,19 @@ QDebug operator<<(QDebug dbg, const Imager::Setting& setting)
     {Imager::Setting::Combo, "Combo"},
     {Imager::Setting::Bool, "Bool"},
   };
-  dbg.nospace() << "{ name: " << setting.name << ", min: " << setting.min << ", max: " << setting.max << ", step: " << setting.step << ", value: " << setting.value 
+  dbg.nospace() << "{ id:" << setting.id << ", name: " << setting.name << ", min: " << setting.min << ", max: " << setting.max << ", step: " << setting.step << ", value: " << setting.value 
   << ", type: " << types_map[setting.type] << ", choices: " << setting.choices << ", default: " << setting.defaut_value << " }";
   return dbg.space();
+}
+
+QDebug operator<<(QDebug dbg, const Imager::Setting::Choice &choice)
+{
+    dbg.nospace() << "{" << choice.label << "," << choice.value << "}";
+    return dbg.space();
 }
 
 Imager::Setting::operator bool() const
 {
     return ! name.isEmpty();
 }
+

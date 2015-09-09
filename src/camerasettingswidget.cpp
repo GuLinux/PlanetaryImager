@@ -96,15 +96,16 @@ private:
 MenuSettingWidget::MenuSettingWidget(QWidget* parent): SettingWidget(parent)
 {
   layout()->addWidget(edit = new QComboBox);
-  connect(edit, F_PTR(QComboBox, currentIndexChanged, int), [=](int index) { emit valueChanged(index); });
+  connect(edit, F_PTR(QComboBox, currentIndexChanged, int), [=](int index) { emit valueChanged(edit->itemData(index).toDouble()); });
 }
 
 void MenuSettingWidget::update(const Imager::Setting& setting)
 {
   edit->clear();
-  for(auto item: setting.choices)
-    edit->addItem(item);
-  edit->setCurrentIndex(setting.value);
+  for(auto item: setting.choices) {
+    edit->addItem(item.label, item.value);
+  }
+  edit->setCurrentIndex(edit->findData(setting.value));
 }
 
 

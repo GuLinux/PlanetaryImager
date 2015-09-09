@@ -14,7 +14,11 @@ public:
     QString name;
     double min, max, step, value, defaut_value;
     enum Type { Number, String, Combo, Bool } type;
-    QStringList choices;
+    struct Choice {
+     QString label;
+     double value;
+    };
+    QList<Choice> choices;
     operator bool() const;
   };
   typedef QList<Setting> Settings;
@@ -39,5 +43,6 @@ signals:
 typedef std::shared_ptr<Imager> ImagerPtr;
 QDebug operator<<(QDebug dbg, const Imager::Chip &chip);
 QDebug operator<<(QDebug dbg, const Imager::Setting &setting);
+QDebug operator<<(QDebug dbg, const Imager::Setting::Choice &choice);
 
 #endif

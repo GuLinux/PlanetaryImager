@@ -17,73 +17,13 @@
  *
  */
 
-#include "webcamimager.h"
-#include <QtConcurrent/QtConcurrent>
-#include <QDebug>
-#include <linux/videodev2.h>
-#include "Qt/strings.h"
-#include "fps_counter.h"
-
-#include <cstdio>
-#include <cstdlib>
-#include <sys/types.h>
-#include <sys/stat.h>
-#include <sys/ioctl.h>
-#include <fcntl.h>
-#include <unistd.h>
-
+#include "webcamimager_p.h"
 using namespace std;
-
-class WebcamImager::Private
-{
-public:
-    Private(const QString &name, int index, const ImageHandlerPtr &handler, WebcamImager *q);
-    const QString name;
-    int index;
-    ImageHandlerPtr handler;
-    bool live = false;
-    shared_ptr<cv::VideoCapture> capture;
-    void read_v4l2_parameters();
-    struct Resolution {
-        int width, height;
-        bool operator< (const Resolution &other) const {
-            return width * height < other.width * other.height;
-        };
-        bool operator== (const Resolution &other) const {
-            return width == other.width && height == other.height;
-        }
-        operator bool() const {
-            return width > 0 && height > 0;
-        }
-        operator QString() const {
-            return "%1x%2"_q % width % height;
-        }
-        friend QDebug operator<< (QDebug d, const WebcamImager::Private::Resolution &r) {
-            d.nospace() << "{" << r.operator QString() << "}";
-            return d.space();
-        }
-    };
-    struct V4lSetting {
-        Imager::Setting setting;
-        int querycode;
-        int valuecode;
-        bool disabled;
-        bool unknown_type;
-        operator bool() const { return querycode != -1 && valuecode != -1 && !disabled && !unknown_type; }
-    };
-    V4lSetting setting(int id);
-    QList<Resolution> resolutions;
-    QFuture<void> future;
-    int v4l_fd;
-    QString driver, bus, cameraname;
-private:
-    WebcamImager *q;
-};
 
 
 WebcamImager::Private::Private(const QString &name, int index, const ImageHandlerPtr &handler, WebcamImager *q)
     : name {name}, index {index}, handler {handler}, q {q} {
-
+        populate_rules();
 }
 
 WebcamImager::WebcamImager(const QString &name, int index, const ImageHandlerPtr &handler)
@@ -227,10 +167,12 @@ WebcamImager::Private::V4lSetting WebcamImager::Private::setting(int id)
             if (0 == ioctl (v4l_fd, VIDIOC_QUERYMENU, &menu)) {
                 value = {(char*)menu.name};
             }
-            setting.setting.choices.push_back(value);
+            setting.setting.choices.push_back({value, menu.index});
         }
     }
-    qDebug() << "setting: " << setting.setting;
+//     qDebug() << "setting: " << setting.setting << "(exposure: " << V4L2_CID_EXPOSURE_ABSOLUTE << ")";
+    for(auto rule: setting_rules)
+        rule(setting.setting);
     return setting;
 }
 
@@ -253,13 +195,14 @@ Imager::Settings WebcamImager::settings() const
         _settings.push_back(v4lsetting.setting);
     }
     
-    Private::V4lSetting v4lsetting;
     int ctrlid = V4L2_CTRL_FLAG_NEXT_CTRL;
-    while ( (v4lsetting = d->setting(ctrlid)) && v4lsetting.querycode != -1) {
+    Private::V4lSetting v4lsetting;
+    do {
+        v4lsetting = d->setting(ctrlid);
         if(v4lsetting)
             _settings.push_back(v4lsetting.setting);
         ctrlid = v4lsetting.setting.id | V4L2_CTRL_FLAG_NEXT_CTRL;
-    }
+    } while (v4lsetting.querycode != -1);
     std::sort(begin(_settings), end(_settings), [](const Setting &a, const Setting &b){ return a.id < b.id; });
     _settings.erase(std::unique(begin(_settings), end(_settings), [](const Setting &a, const Setting &b){ return a.id == b.id; }), end(_settings));
     return _settings;
@@ -271,6 +214,7 @@ void WebcamImager::setSetting(const Imager::Setting &setting)
     if (-1 == ioctl (d->v4l_fd, VIDIOC_S_CTRL, &control)) {
         qWarning() << "Error setting control " << setting.id << setting.name << " to " << setting.value << strerror(errno);
     }
+//     emit changed(d->setting(setting.id).setting);
 }
 
 void WebcamImager::startLive()
