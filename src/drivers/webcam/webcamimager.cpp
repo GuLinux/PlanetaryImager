@@ -26,17 +26,26 @@ WebcamImager::Private::Private(const QString &name, int index, const ImageHandle
         populate_rules();
 }
 
+
+QString fourcc2s(int32_t _4cc)
+{
+    char data[5] { _4cc & 0xff, _4cc >> 8 & 0xff, _4cc >> 0x10 & 0xff, _4cc >> 0x18 & 0xff, '\0' };
+    return {data};
+}
+
 WebcamImager::WebcamImager(const QString &name, int index, const ImageHandlerPtr &handler)
     : dptr(name, index, handler, this)
 {
-    d->read_v4l2_parameters();
     d->capture = make_shared<cv::VideoCapture> (d->index);
     if (!d->capture->isOpened()) {
         qDebug() << "error opening device";
     }
+    d->read_v4l2_parameters();
     qDebug() << "driver:" << d->driver << ", bus:" << d->bus << ", devicename:" << d->cameraname;
-    d->capture->set(CV_CAP_PROP_FRAME_WIDTH, d->resolutions.last().width);
-    d->capture->set(CV_CAP_PROP_FRAME_HEIGHT, d->resolutions.last().height);
+    if(!d->resolutions.empty()) {
+        d->capture->set(CV_CAP_PROP_FRAME_WIDTH, d->resolutions.last().width);
+        d->capture->set(CV_CAP_PROP_FRAME_HEIGHT, d->resolutions.last().height);
+    }
 }
 
 
@@ -64,6 +73,28 @@ QDebug operator << (QDebug dbg, const v4l2_queryctrl &q)
     return dbg.space();
 }
 
+QDebug operator<<(QDebug dbg, v4l2_fract frac) {
+    dbg.nospace() << frac.numerator << "/" << frac.denominator;
+    return dbg.space();
+};
+
+
+QDebug operator<<(QDebug dbg, const v4l2_frmivalenum &fps_s) {
+    dbg.nospace() << "v4l2_frmivalenum{ index=" << fps_s.index << ", " << fps_s.width << "x" << fps_s.height << ", 4cc=" << fourcc2s(fps_s.pixel_format);
+    if(fps_s.type == V4L2_FRMIVAL_TYPE_DISCRETE) {
+        dbg << "discrete: " << fps_s.discrete;
+    }
+    if(fps_s.type == V4L2_FRMIVAL_TYPE_STEPWISE) {
+        dbg << "stepwise: min=" << fps_s.stepwise.min << ", max=" << fps_s.stepwise.max << ", step=" << fps_s.stepwise.step;
+    }
+    if(fps_s.type == V4L2_FRMIVAL_TYPE_CONTINUOUS) {
+        dbg << "continuous" << fps_s.stepwise.min << ", max=" << fps_s.stepwise.max << ", step=" << fps_s.stepwise.step;
+    }
+    dbg << " }";
+    return dbg.space();
+}
+
+
 void WebcamImager::Private::read_v4l2_parameters()
 {
     auto dev_name = "/dev/video%1"_q % index;
@@ -72,32 +103,56 @@ void WebcamImager::Private::read_v4l2_parameters()
         qWarning() << "Cannot open '%1': %2, %3"_q % dev_name % errno % strerror(errno);
         return;
     }
-
-    enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    v4l2_fmtdesc fmt;
-    v4l2_frmsizeenum frmsize;
-    v4l2_frmivalenum frmival;
-
-    fmt.index = 0;
-    fmt.type = type;
-    while (::ioctl(v4l_fd, VIDIOC_ENUM_FMT, &fmt) >= 0) {
-        frmsize.pixel_format = fmt.pixelformat;
-        frmsize.index = 0;
-        while (ioctl(v4l_fd, VIDIOC_ENUM_FRAMESIZES, &frmsize) >= 0) {
-            Resolution resolution;
-            if (frmsize.type == V4L2_FRMSIZE_TYPE_DISCRETE) {
-                resolution = {frmsize.discrete.width , frmsize.discrete.height};
-            } else if (frmsize.type == V4L2_FRMSIZE_TYPE_STEPWISE) {
-                resolution = {frmsize.stepwise.max_width , frmsize.stepwise.max_height};
-            }
-            if (resolution && ! resolutions.contains(resolution))
-                resolutions.push_back(resolution);
-            frmsize.index++;
-        }
-        fmt.index++;
+    
+    v4l2_format format;
+    format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    if(-1 == ioctl(v4l_fd, VIDIOC_G_FMT , &format)) {
+        qWarning() << "Unable to query webcam format: " << strerror(errno);
+        return;
+    } 
+    
+    v4l2_fmtdesc formats;
+    QList<v4l2_fmtdesc> formats_list;
+    formats.index = 0;
+    formats.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    while(0 == ioctl(v4l_fd, VIDIOC_ENUM_FMT, &formats)) {
+        qDebug() << "found format: " << formats.index << (char*)formats.description;
+        formats_list.push_back(formats);
+        formats.index++;
     }
+
+    
+    
+    v4l2_frmsizeenum frmsize;
+    frmsize.pixel_format = format.fmt.pix.pixelformat;
+    frmsize.index = 0;
+    while (ioctl(v4l_fd, VIDIOC_ENUM_FRAMESIZES, &frmsize) >= 0) {
+        Resolution resolution;
+        if (frmsize.type == V4L2_FRMSIZE_TYPE_DISCRETE) {
+            resolution = {frmsize.discrete.width , frmsize.discrete.height};
+        } else if (frmsize.type == V4L2_FRMSIZE_TYPE_STEPWISE) {
+            resolution = {frmsize.stepwise.max_width , frmsize.stepwise.max_height};
+        }
+        if (resolution && ! resolutions.contains(resolution))
+            resolutions.push_back(resolution);
+        frmsize.index++;
+    }
+    
     qSort(resolutions);
     qDebug() << "available resolutions: " << resolutions;
+    
+    v4l2_frmivalenum fps_s;
+    fps_s.index = 0;
+    fps_s.width = resolutions.last().width;
+    fps_s.height = resolutions.last().height;
+    fps_s.pixel_format = format.fmt.pix.pixelformat;
+    qDebug() << "scanning for fps with pixel format " << fourcc2s(fps_s.pixel_format);
+    while (ioctl(v4l_fd, VIDIOC_ENUM_FRAMEINTERVALS, &fps_s) >= 0) {
+        qDebug() << "found fps: " << fps_s;
+        fps_s.index++;
+    }
+    qDebug() << "finished scanning fps: index=" << fps_s.index << strerror(errno);
+    
     v4l2_capability cap;
     if(-1 == ioctl(v4l_fd, VIDIOC_QUERYCAP, &cap)) {
         qWarning() << "Unable to query webcam capabilities: " << strerror(errno);
@@ -143,6 +198,8 @@ void WebcamImager::Private::read_v4l2_parameters()
         << (char) (format.fmt.pix.pixelformat >> 0x18 & 0xff);
         */
 }
+
+
 
 
 
