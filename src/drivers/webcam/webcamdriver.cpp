@@ -63,14 +63,13 @@ Driver::Cameras WebcamDriver::cameras() const
 #ifdef Q_OS_LINUX
   auto entries = QDir("/sys/class/video4linux").entryInfoList();
   for(auto entry: entries) {
-    QFile index_file(entry.absoluteFilePath() + "/" + "name");
     QFile name_file(entry.absoluteFilePath() + "/" + "name");
-    if(!index_file.exists() || ! name_file.exists() || ! name_file.open(QFile::ReadOnly) || ! index_file.open(QFile::ReadOnly))
+    if(! name_file.exists() || ! name_file.open(QFile::ReadOnly))
       continue;
     QString name{name_file.readAll()};
     name = name.trimmed();
-    int index = QString{index_file.readAll()}.toInt();
-    qDebug() << entry.baseName() << name << index;
+    int index = entry.baseName().remove("video").toInt();
+    qDebug() << entry.baseName() << name  << index;
     _cameras.push_back(make_shared<WebcamDeviceInfo>(index, name));
   }
 #endif
