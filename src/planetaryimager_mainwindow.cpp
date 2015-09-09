@@ -228,9 +228,16 @@ void PlanetaryImagerMainWindow::Private::rescan_devices()
 
 void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::CameraPtr& camera)
 {
+    auto chip_text = [=](QLabel *text_label, const QString &text, const QList<int> &values){
+        bool valid = all_of(begin(values), end(values), bind(greater<int>(), _1, 0));
+        text_label->setText(valid ? text : "-");
+    };
   future_run<ImagerPtr>([=]{ return camera->imager(ImageHandlerPtr{new ImageHandlers{displayImage, saveImages}}); }, [=](const ImagerPtr &imager){
-    if(!imager)
+    if(!imager) {
+      for(auto widget: QList<QLabel*>{ui->camera_chip_size, ui->camera_pixels_size, ui->camera_bpp, ui->camera_resolution})
+          chip_text(widget, "", {-1});
       return;
+    }
     cameraDisconnected();
     this->imager = imager;
     imager->startLive();
@@ -238,10 +245,14 @@ void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::CameraPtr& 
     connect(imager.get(), &Imager::disconnected, q, bind(&Private::cameraDisconnected, this), Qt::QueuedConnection);
     connect(imager.get(), &Imager::fps, statusbar_info_widget, &StatusBarInfoWidget::captureFPS, Qt::QueuedConnection);
     ui->camera_name->setText(imager->name());
-    ui->camera_chip_size->setText(QString("%1x%2").arg(imager->chip().width, 2).arg(imager->chip().height, 2));
-    ui->camera_bpp->setText("%1"_q % imager->chip().bpp);
-    ui->camera_pixels_size->setText(QString("%1x%2").arg(imager->chip().pixelwidth, 2).arg(imager->chip().pixelheight, 2));
-    ui->camera_resolution->setText(QString("%1x%2").arg(imager->chip().xres, 2).arg(imager->chip().yres, 2));
+    auto chip = imager->chip();
+    
+    chip_text(ui->camera_chip_size, QString("%1x%2").arg(chip.width, 2).arg(chip.height, 2), {chip.width, chip.height});
+    chip_text(ui->camera_pixels_size, QString("%1x%2").arg(chip.pixelwidth, 2).arg(chip.pixelheight, 2), {chip.pixelwidth, chip.pixelheight});
+    
+    chip_text(ui->camera_bpp, "%1"_q % chip.bpp, {chip.bpp});
+    chip_text(ui->camera_resolution, "%1x%2"_q % chip.xres % chip.yres, {chip.xres, chip.yres});
+    
     ui->settings_container->setWidget(cameraSettingsWidget = new CameraSettingsWidget(imager, settings));
     enableUIWidgets(true);
   });

@@ -75,6 +75,7 @@ public:
     QList<Resolution> resolutions;
     QFuture<void> future;
     int v4l_fd;
+    QString driver, bus, cameraname;
 private:
     WebcamImager *q;
 };
@@ -132,9 +133,9 @@ void WebcamImager::Private::read_v4l2_parameters()
     }
 
     enum v4l2_buf_type type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    struct v4l2_fmtdesc fmt;
-    struct v4l2_frmsizeenum frmsize;
-    struct v4l2_frmivalenum frmival;
+    v4l2_fmtdesc fmt;
+    v4l2_frmsizeenum frmsize;
+    v4l2_frmivalenum frmival;
 
     fmt.index = 0;
     fmt.type = type;
@@ -156,6 +157,14 @@ void WebcamImager::Private::read_v4l2_parameters()
     }
     qSort(resolutions);
     qDebug() << "available resolutions: " << resolutions;
+    v4l2_capability cap;
+    if(-1 == ioctl(v4l_fd, VIDIOC_QUERYCAP, &cap)) {
+        qWarning() << "Unable to query webcam capabilities: " << strerror(errno);
+        return;
+    }
+    driver = {(char*) cap.driver};
+    bus = {(char*) cap.bus_info};
+    cameraname = {(char*) cap.card};
 }
 
 
@@ -169,12 +178,16 @@ WebcamImager::~WebcamImager()
 
 Imager::Chip WebcamImager::chip() const
 {
-    return {};
+    Chip chip{};
+    memset(&chip, -1, sizeof(chip));
+    chip.xres = d->resolutions.last().width;
+    chip.yres = d->resolutions.last().height;
+    return chip;
 }
 
 QString WebcamImager::name() const
 {
-    return d->name;
+    return d->cameraname;
 }
 
 // http://www.linuxtv.org/downloads/legacy/video4linux/API/V4L2_API/spec-single/v4l2.html#control
