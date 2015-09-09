@@ -21,8 +21,14 @@ if(enable_simulator)
 endif(enable_simulator)
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux" AND NOT opencv_LINK_BUG)
-  message("v4l webcam input module enabled")
+  message("v4l-opencv webcam input module enabled")
   add_subdirectory(webcam)
 endif(${CMAKE_SYSTEM_NAME} STREQUAL "Linux" AND NOT opencv_LINK_BUG)
+
+#new v4l2 driver
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
+  message("v4l webcam input module enabled")
+  add_subdirectory(v4l2)
+endif(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 
 configure_file(available_drivers.h.in available_drivers.h)
