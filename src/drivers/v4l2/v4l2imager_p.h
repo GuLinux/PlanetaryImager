@@ -14,13 +14,16 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include "Qt/strings.h"
+#include "Qt/functional.h"
 
 class V4L2Imager::Private
 {
 public:
-    Private(V4L2Imager *q);
+    Private(const ImageHandlerPtr &handler, V4L2Imager *q);
+    ImageHandlerPtr handler;
     int v4l_fd;
     bool live = false;
+    GuLinux::Thread *live_thread = nullptr;
     
     v4l2_format query_format() const;
     QList<v4l2_frmsizeenum> resolutions() const;
