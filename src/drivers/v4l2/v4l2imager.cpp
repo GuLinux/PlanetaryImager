@@ -160,7 +160,7 @@ void V4L2Imager::startLive()
             v4l2_format format = d->query_format();
             format.fmt.pix.width = 640;
             format.fmt.pix.height= 480;
-            format.fmt.pix.pixelformat= V4L2_PIX_FMT_MJPEG;
+            format.fmt.pix.pixelformat= V4L2_PIX_FMT_YUYV;
             format.fmt.pix.field= V4L2_FIELD_NONE;
             
             
@@ -213,19 +213,25 @@ void V4L2Imager::startLive()
                     qDebug() << "error dequeuing buffer: " << strerror(errno);
                     continue;
                 }
-                cv::Mat inputArray(format.fmt.pix.height, format.fmt.pix.width, CV_8UC3, buffer_start);
-                d->handler->handle(cv::imdecode(inputArray, -1));
+                cv::Mat image{format.fmt.pix.height, format.fmt.pix.width, CV_8UC3};
+                if(format.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
+                    cv::InputArray inputArray{buffer_start,  bufferinfo.bytesused};
+                    image = cv::imdecode(inputArray, -1);
+                } else if(format.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
+                    cv::Mat source{format.fmt.pix.height, format.fmt.pix.width, CV_8UC2, buffer_start};
+                    cv::cvtColor(source, image, CV_YUV2BGR_YUY2);
+                } else {
+                    qCritical() << "Unsupported image format: " << FOURCC2QS(format.fmt.pix.pixelformat);
+                    return;
+                }
+                d->handler->handle(image);
+                ++fps;
                 bufferinfo.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
                 bufferinfo.memory = V4L2_MEMORY_MMAP;
                 if(Private::ioctl(d->v4l_fd, VIDIOC_QBUF, &bufferinfo) < 0){
                     qDebug() << "error queuing buffer: " << strerror(errno);
                     return;
                 }
-//                 cv::Mat frame(format.fmt.pix.height, format.fmt.pix.width, CV_8UC3);
-//                 int read_size = read(d->v4l_fd, frame.data, frame.elemSize());
-//                 qDebug() << "Read " << read_size << "bytes (max: " << frame.elemSize() << ")" << strerror(errno);
-
-                ++fps;
             }
             Private::ioctl(d->v4l_fd, VIDIOC_STREAMOFF, &type);
         }, 
