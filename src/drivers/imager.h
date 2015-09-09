@@ -12,7 +12,9 @@ public:
   struct Setting {
     int id;
     QString name;
-    double min, max, step, value;
+    double min, max, step, value, defaut_value;
+    enum Type { Number, String, Combo, Bool } type;
+    QStringList choices;
   };
   typedef QList<Setting> Settings;
 
