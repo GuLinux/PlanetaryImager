@@ -4,6 +4,7 @@
 #include <QLabel>
 #include "utils.h"
 #include <QSettings>
+#include <QLayout>
 
 class CameraSettingsWidget::Private
 {
@@ -29,6 +30,7 @@ public:
 CameraSettingWidget::CameraSettingWidget(const Imager::Setting& setting, Imager* imager, QSettings& settings, QWidget* parent): QWidget(parent)
 {
   auto layout = new QHBoxLayout;
+  layout->setSpacing(0);
   setLayout(layout);
   layout->addWidget(new QLabel(tr(qPrintable(setting.name))));
   QDoubleSpinBox *spinbox = new QDoubleSpinBox;
@@ -76,6 +78,7 @@ CameraSettingsWidget::CameraSettingsWidget(const ImagerPtr& imager, QSettings& s
     layout()->addWidget(new CameraSettingWidget{setting, imager.get(), settings});
   }
   settings.endGroup();
+  layout()->addItem(new QSpacerItem(0, 0, QSizePolicy::Minimum, QSizePolicy::Expanding));
 }
 
 #include "camerasettingswidget.moc"

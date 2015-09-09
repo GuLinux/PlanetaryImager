@@ -71,28 +71,25 @@ private:
 
 
 
-struct v4l2_queryctrl queryctrl;
-struct v4l2_querymenu querymenu;
-struct v4l2_control control;
-
-static void enumerate_menu(int fd)
-{
-    qDebug() << "  Menu items:";
-
-    memset(&querymenu, 0, sizeof(querymenu));
-    querymenu.id = queryctrl.id;
-
-    for (querymenu.index = queryctrl.minimum;
-            querymenu.index <= queryctrl.maximum;
-            querymenu.index++) {
-        if (0 == ioctl(fd, VIDIOC_QUERYMENU, &querymenu)) {
-            qDebug() << "    " << (char *) querymenu.name << ":" << querymenu.value;
-        } else {
-            qDebug() << "VIDIOC_QUERYMENU error:" << strerror(errno);
-            exit(EXIT_FAILURE);
-        }
-    }
-}
+// static void enumerate_menu(int fd)
+// {
+// struct v4l2_querymenu querymenu;
+//     qDebug() << "  Menu items:";
+// 
+//     memset(&querymenu, 0, sizeof(querymenu));
+//     querymenu.id = queryctrl.id;
+// 
+//     for (querymenu.index = queryctrl.minimum;
+//             querymenu.index <= queryctrl.maximum;
+//             querymenu.index++) {
+//         if (0 == ioctl(fd, VIDIOC_QUERYMENU, &querymenu)) {
+//             qDebug() << "    " << (char *) querymenu.name << ":" << querymenu.value;
+//         } else {
+//             qDebug() << "VIDIOC_QUERYMENU error:" << strerror(errno);
+//             exit(EXIT_FAILURE);
+//         }
+//     }
+// }
 
 
 WebcamImager::Private::Private(const QString &name, int index, const ImageHandlerPtr &handler, WebcamImager *q)
@@ -131,7 +128,7 @@ QDebug operator << (QDebug dbg, const v4l2_queryctrl &q)
         { V4L2_CTRL_TYPE_U32, "V4L2_CTRL_TYPE_U32" },
     };
     dbg.nospace() << "v4l2_queryctrl{";
-    dbg << "type=" << types[q.type] << ", name=" << (char *)(q.name) << ", default_value=" << q.default_value
+    dbg << "id=" << q.id << ", type=" << types[q.type] << ", name=" << (char *)(q.name) << ", default_value=" << q.default_value
         << ", min=" << q.minimum << ", max=" << q.maximum << ", step=" << q.step;
     dbg << "}";
     return dbg.space();
@@ -197,29 +194,70 @@ QString WebcamImager::name() const
 Imager::Settings WebcamImager::settings() const
 {
     Imager::Settings _settings;
+    auto ctrl2settings = [&](v4l2_queryctrl &ctrl){
+        if (ctrl.flags & V4L2_CTRL_FLAG_DISABLED)
+            return;
+
+        static QMap<int, Setting::Type> types {
+            {V4L2_CTRL_TYPE_INTEGER, Setting::Number},
+            {V4L2_CTRL_TYPE_BOOLEAN, Setting::Bool},
+            {V4L2_CTRL_TYPE_MENU, Setting::Combo},
+        };
+        if(types.count(ctrl.type) == 0)
+            return;
+        
+        v4l2_control control{ctrl.id};
+        if (-1 == ioctl(d->fd, VIDIOC_G_CTRL, &control)) {
+            qDebug() << "error on VIDIOC_G_CTRL" << strerror(errno);
+            return;
+        }
+        qDebug() << "Control " <<  ctrl << ", value: " << control.value;
+        auto setting = Imager::Setting{ctrl.id, reinterpret_cast<char*>(ctrl.name), ctrl.minimum, ctrl.maximum, ctrl.step, control.value, ctrl.default_value};
+        setting.type = types[ctrl.type];
+        if(ctrl.type == V4L2_CTRL_TYPE_MENU) {
+            v4l2_querymenu menu{ctrl.id};
+            for(menu.index = ctrl.minimum; menu.index <= ctrl.maximum; menu.index++) {
+                QString value;
+                if (0 == ioctl (d->fd, VIDIOC_QUERYMENU, &menu)) {
+                    qDebug() << "name: " << (char*) menu.name << ", value: " << menu.value << ", id=" << menu.id ;
+                    value = {(char*)menu.name};
+                }
+                setting.choices.push_back(value);
+            }
+        }
+        _settings.push_back(setting);
+    };
     for (int ctrlid = V4L2_CID_BASE; ctrlid < V4L2_CID_LASTP1; ctrlid++) {
         v4l2_queryctrl queryctrl{ctrlid};
-        v4l2_control control{ctrlid};
-// struct v4l2_querymenu querymenu;
         if (0 == ioctl(d->fd, VIDIOC_QUERYCTRL, &queryctrl)) {
-            if (queryctrl.flags & V4L2_CTRL_FLAG_DISABLED)
-                continue;
-            if (-1 == ioctl(d->fd, VIDIOC_G_CTRL, &control)) {
-                qDebug() << "error on VIDIOC_G_CTRL" << strerror(errno);
-            }
-            qDebug() << "Control " <<  queryctrl << ", value: " << control.value;
-
-//             if (queryctrl.type == V4L2_CTRL_TYPE_MENU)
-//                 enumerate_menu(fd);
-            _settings.push_back({ctrlid, reinterpret_cast<char*>(queryctrl.name), queryctrl.minimum, queryctrl.maximum, queryctrl.step, control.value});
+            ctrl2settings(queryctrl);
         } else {
             if (errno == EINVAL)
                 continue;
-
             qDebug() << "Error on VIDIOC_QUERYCTRL" <<  strerror(errno);
-            exit(EXIT_FAILURE);
         }
     }
+    
+    for (int ctrlid = V4L2_CID_PRIVATE_BASE;; ctrlid++) {
+        v4l2_queryctrl queryctrl{ctrlid};
+        if (0 == ioctl (d->fd, VIDIOC_QUERYCTRL, &queryctrl)) {
+            ctrl2settings(queryctrl);
+        } else {
+            if (errno == EINVAL)
+                break;
+            qDebug() << "Error on VIDIOC_QUERYCTRL" <<  strerror(errno);
+        }
+    }
+    
+    v4l2_queryctrl qextctrl;
+    qextctrl.id = V4L2_CTRL_FLAG_NEXT_CTRL;
+    while (0 == ioctl (d->fd, VIDIOC_QUERYCTRL, &qextctrl)) {
+        qDebug() << "extended control: " << qextctrl;
+        ctrl2settings(qextctrl);
+        qextctrl.id |= V4L2_CTRL_FLAG_NEXT_CTRL;
+    }
+    std::sort(begin(_settings), end(_settings), [](const Setting &a, const Setting &b){ return a.id < b.id; });
+    _settings.erase(std::unique(begin(_settings), end(_settings), [](const Setting &a, const Setting &b){ return a.id == b.id; }), end(_settings));
     return _settings;
 }
 
