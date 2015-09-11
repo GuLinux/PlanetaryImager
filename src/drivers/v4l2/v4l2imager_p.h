@@ -17,6 +17,10 @@
 #include "Qt/functional.h"
 #include <sys/mman.h>
 
+#define PIXEL_FORMAT_CONTROL_ID -10
+#define RESOLUTIONS_CONTROL_ID -9
+#define FPS_CONTROL_ID -8
+
 class V4L2Imager::Private
 {
 public:
@@ -26,8 +30,10 @@ public:
     bool live = false;
     GuLinux::Thread *live_thread = nullptr;
     
+    QList<v4l2_fmtdesc> formats() const;
     v4l2_format query_format() const;
-    QList<v4l2_frmsizeenum> resolutions() const;
+    QList<v4l2_frmsizeenum> resolutions(const v4l2_format &format) const;
+    QList<v4l2_frmivalenum> framerates(const v4l2_format &format) const;
     static int ioctl(int fh, int request, void *arg);
     
     struct V4lSetting {
@@ -39,12 +45,40 @@ public:
       operator bool() const { return querycode != -1 && valuecode != -1 && !disabled && !unknown_type; }
     };
     V4lSetting setting(int id);
+    void open_camera();
     QString driver, bus, cameraname;
+    QString dev_name;
 
 private:
     V4L2Imager *q;
 };
 
+QString FOURCC2QS(int32_t _4cc)
+{
+    auto get_byte = [=](int b) { return static_cast<char>( _4cc >> b & 0xff ); };
+    char data[5] { get_byte(0), get_byte(8), get_byte(0x10), get_byte(0x18), '\0' };
+    return {data};
+}
 
+QDebug operator<<(QDebug dbg, v4l2_fract frac) {
+    dbg.nospace() << frac.numerator << "/" << frac.denominator;
+    return dbg.space();
+};
+
+
+QDebug operator<<(QDebug dbg, const v4l2_frmivalenum &fps_s) {
+    dbg.nospace() << "v4l2_frmivalenum{ index=" << fps_s.index << ", " << fps_s.width << "x" << fps_s.height << ", 4cc=" << FOURCC2QS(fps_s.pixel_format);
+    if(fps_s.type == V4L2_FRMIVAL_TYPE_DISCRETE) {
+        dbg << "discrete: " << fps_s.discrete;
+    }
+    if(fps_s.type == V4L2_FRMIVAL_TYPE_STEPWISE) {
+        dbg << "stepwise: min=" << fps_s.stepwise.min << ", max=" << fps_s.stepwise.max << ", step=" << fps_s.stepwise.step;
+    }
+    if(fps_s.type == V4L2_FRMIVAL_TYPE_CONTINUOUS) {
+        dbg << "continuous" << fps_s.stepwise.min << ", max=" << fps_s.stepwise.max << ", step=" << fps_s.stepwise.step;
+    }
+    dbg << " }";
+    return dbg.space();
+}
 
 #endif
