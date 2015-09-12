@@ -265,7 +265,7 @@ V4LBuffer::V4LBuffer(int index, const shared_ptr<V4L2Device> &v4ldevice) : v4lde
   memset(&bufferinfo, 0, sizeof(v4l2_buffer));
   bufferinfo.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
   bufferinfo.memory = V4L2_MEMORY_MMAP;
-  bufferinfo.index = 0;
+  bufferinfo.index = index;
   
   v4ldevice->ioctl(VIDIOC_QUERYBUF, &bufferinfo, "allocating buffers");
 
@@ -276,14 +276,21 @@ V4LBuffer::V4LBuffer(int index, const shared_ptr<V4L2Device> &v4ldevice) : v4lde
   memset(memory, 0, bufferinfo.length);
 }
 
-void V4LBuffer::dequeue()
-{
-  v4ldevice->xioctl(VIDIOC_DQBUF, &bufferinfo, "dequeuing buffer");
-}
-
 void V4LBuffer::queue()
 {
-  v4ldevice->xioctl(VIDIOC_QBUF, &bufferinfo, "queuing buffer");
+  v4ldevice->ioctl(VIDIOC_QBUF, &bufferinfo, "queuing buffer");
+}
+
+std::shared_ptr< V4LBuffer > V4LBuffer::List::dequeue(const shared_ptr<V4L2Device> &device) const
+{
+    v4l2_buffer bufferinfo;
+    memset(&bufferinfo, 0, sizeof(bufferinfo));
+    bufferinfo.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    bufferinfo.memory = V4L2_MEMORY_MMAP;
+    device->ioctl(VIDIOC_DQBUF, &bufferinfo, "dequeuing buffer");
+    auto buffer = this->at(bufferinfo.index);
+    buffer->bufferinfo = bufferinfo;
+    return buffer;
 }
 
 
@@ -315,28 +322,21 @@ void V4L2Imager::startLive()
             bufrequest.count = 4;
             d->device->ioctl(VIDIOC_REQBUFS, &bufrequest, "requesting buffers");
             
-            vector<shared_ptr<V4LBuffer>> buffers;
-	    for(int i=0; i<bufrequest.count; i++)
+            V4LBuffer::List buffers;
+	    for(int i=0; i<bufrequest.count; i++) {
 	      buffers.push_back( make_shared<V4LBuffer>(i, d->device));
-            
-	    int buffer_index = 0;
-                     
-
-	    buffers[buffer_index]->queue();
-	    
-            int type = buffers[buffer_index]->bufferinfo.type;
+	      buffers[i]->queue();
+	    }
+                                 	    
+            int type = buffers[0]->bufferinfo.type;
             d->device->ioctl(VIDIOC_STREAMON, &type, "starting streaming");
 
             while (d->live) {
-	      auto current_index = buffer_index % bufrequest.count;
-	      auto next_index = (buffer_index+1) % bufrequest.count;
 		benchmark_start(dequeue_frame)
-		buffers[next_index]->queue();
-		buffers[current_index]->dequeue();
+		auto buffer = buffers.dequeue(d->device);
 		benchmark_end(dequeue_frame)
-		
 		benchmark_start(copy_data)
-                QByteArray buffer_data(buffers[current_index]->memory, buffers[current_index]->bufferinfo.bytesused);
+                QByteArray buffer_data(buffer->memory, buffer->bufferinfo.bytesused);
 		benchmark_end(copy_data)
 		benchmark_start(converting_image)
 		cv::Mat image{static_cast<int>(format.fmt.pix.height), static_cast<int>(format.fmt.pix.width), CV_8UC3};
@@ -354,7 +354,7 @@ void V4L2Imager::startLive()
 		benchmark_scope(handle_image)
 		d->handler->handle(image);
                 ++fps;
-		buffer_index++;
+		buffer->queue();
             }
             d->device->ioctl(VIDIOC_STREAMOFF, &type, "stopping live");
 	    qDebug() << "live stopped";

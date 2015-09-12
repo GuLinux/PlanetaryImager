@@ -25,14 +25,20 @@ class V4L2Device;
 
 
 struct V4LBuffer {
+  typedef std::shared_ptr<V4LBuffer> ptr;
     v4l2_buffer bufferinfo;
     char *memory;
     V4LBuffer(int index, const std::shared_ptr<V4L2Device> &v4ldevice);
     ~V4LBuffer();
     std::shared_ptr<V4L2Device> v4ldevice;
     void queue();
-    void dequeue();
+    class List : public QList<ptr> {
+    public:
+        std::shared_ptr< V4LBuffer > dequeue(const std::shared_ptr< V4L2Device >& device) const;
+    };
 };
+
+
 
 class V4L2Imager::Private
 {
