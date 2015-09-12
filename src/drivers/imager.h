@@ -10,7 +10,7 @@ class Imager : public QObject {
   Q_OBJECT
 public:
   struct Setting {
-    int id;
+    int64_t id;
     QString name;
     double min, max, step, value, defaut_value;
     enum Type { Number, String, Combo, Bool } type;

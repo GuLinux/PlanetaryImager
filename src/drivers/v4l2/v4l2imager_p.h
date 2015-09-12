@@ -21,12 +21,26 @@
 #define RESOLUTIONS_CONTROL_ID -9
 #define FPS_CONTROL_ID -8
 
+class V4L2Device;
+
+
+struct V4LBuffer {
+    v4l2_buffer bufferinfo;
+    char *memory;
+    V4LBuffer(int index, const std::shared_ptr<V4L2Device> &v4ldevice);
+    ~V4LBuffer();
+    std::shared_ptr<V4L2Device> v4ldevice;
+    void queue();
+    void dequeue();
+};
+
 class V4L2Imager::Private
 {
 public:
-    Private(const ImageHandlerPtr &handler, V4L2Imager *q);
+    Private(const ImageHandlerPtr &handler, const QString &device_path, V4L2Imager *q);
     ImageHandlerPtr handler;
-    int v4l_fd;
+    const QString device_path;
+    std::shared_ptr<V4L2Device> device;
     bool live = false;
     GuLinux::Thread *live_thread = nullptr;
     
@@ -34,7 +48,6 @@ public:
     v4l2_format query_format() const;
     QList<v4l2_frmsizeenum> resolutions(const v4l2_format &format) const;
     void adjust_framerate(const v4l2_format &format) const;
-    static int ioctl(int fh, int request, void *arg);
     
     struct V4lSetting {
       Imager::Setting setting;
@@ -44,7 +57,7 @@ public:
       bool unknown_type;
       operator bool() const { return querycode != -1 && valuecode != -1 && !disabled && !unknown_type; }
     };
-    V4lSetting setting(int id);
+    V4lSetting setting(uint32_t id);
     void open_camera();
     QString driver, bus, cameraname;
     QString dev_name;
@@ -61,8 +74,9 @@ public:
   ~V4L2Device();
   inline QString path() const { return _path; }
   inline operator bool() const { return fd != -1; }
-  void ioctl(int ctl, void *data, const QString &errorLabel) const;
-  int xioctl(int ctl, void *data, const QString &errorLabel) const;
+  int descriptor() const { return fd; }
+  void ioctl(int ctl, void *data, const QString &errorLabel = {}) const;
+  int xioctl(int ctl, void *data, const QString &errorLabel = {}) const;
   class exception : public std::exception {
   public:
      exception(const QString &label = {}) : label{label}, _error_code{errno} {}
