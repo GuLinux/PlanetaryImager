@@ -288,6 +288,17 @@ void Configuration::resetSobelAdvancedSettings()
     d->values_cache.clear();
 }
 
+void Configuration::setVideoCodec(const QString &codec)
+{
+    d->set<QString>("video_codec", codec);
+}
+
+QString Configuration::videoCodec() const
+{
+    return d->value<QString>("video_codec", "HFYU");
+}
+
+
 
 QString Configuration::savefile() const
 {

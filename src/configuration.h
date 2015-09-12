@@ -93,6 +93,9 @@ public:
     enum SaveFormat { SER, Video };
     void setSaveFormat(SaveFormat format);
     SaveFormat saveFormat() const;
+    
+    QString videoCodec() const;
+    void setVideoCodec(const QString &codec);
 private:
   D_PTR
 };
