@@ -45,42 +45,9 @@ public:
     ImageHandlerPtr handler;
     bool live = false;
     std::shared_ptr<cv::VideoCapture> capture;
-    void read_v4l2_parameters();
-    struct Resolution {
-        int width, height;
-        bool operator< (const Resolution &other) const {
-            return width * height < other.width * other.height;
-        };
-        bool operator== (const Resolution &other) const {
-            return width == other.width && height == other.height;
-        }
-        operator bool() const {
-            return width > 0 && height > 0;
-        }
-        operator QString() const {
-            return "%1x%2"_q % width % height;
-        }
-        friend QDebug operator<< (QDebug d, const WebcamImager::Private::Resolution &r) {
-            d.nospace() << "{" << r.operator QString() << "}";
-            return d.space();
-        }
-    };
-    struct V4lSetting {
-        Imager::Setting setting;
-        int querycode;
-        int valuecode;
-        bool disabled;
-        bool unknown_type;
-        operator bool() const { return querycode != -1 && valuecode != -1 && !disabled && !unknown_type; }
-    };
-    V4lSetting setting(int id);
-    QList<Resolution> resolutions;
+
+
     QFuture<void> future;
-    int v4l_fd;
-    QString driver, bus, cameraname;
-    typedef std::function<void(Setting &)> SettingRule;
-    QList<SettingRule> setting_rules;
-    void populate_rules();
 private:
     WebcamImager *q;
 };
