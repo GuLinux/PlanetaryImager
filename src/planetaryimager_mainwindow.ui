@@ -296,6 +296,7 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionEdges_Detection"/>
+   <addaction name="actionShow_settings"/>
   </widget>
   <action name="action_devices_rescan">
    <property name="text">
@@ -375,8 +376,14 @@
    </property>
   </action>
   <action name="actionShow_settings">
+   <property name="icon">
+    <iconset theme="configure"/>
+   </property>
    <property name="text">
     <string>&amp;Show settings</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+E</string>
    </property>
   </action>
   <action name="actionAbout">
