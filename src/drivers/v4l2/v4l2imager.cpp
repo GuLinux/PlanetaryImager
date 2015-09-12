@@ -53,7 +53,7 @@ V4L2Device::~V4L2Device()
     ::close(fd);
 }
 
-int V4L2Device::ioctl(int ctl, void* data, const QString& errorLabel)
+void V4L2Device::ioctl(int ctl, void* data, const QString& errorLabel) const
 {
     int r;
     do {
@@ -61,8 +61,21 @@ int V4L2Device::ioctl(int ctl, void* data, const QString& errorLabel)
     } while (-1 == r && EINTR == errno);
     if(r == -1)
       throw exception(errorLabel);
-    return r;
 }
+
+
+
+int V4L2Device::xioctl(int ctl, void* data, const QString& errorLabel) const
+{
+  try {
+    ioctl(ctl, data, errorLabel);
+    return 0;
+  } catch(V4L2Device::exception &e) {
+    qWarning() << e.what();
+    return e.error_code();
+  }
+}
+
 
 
 

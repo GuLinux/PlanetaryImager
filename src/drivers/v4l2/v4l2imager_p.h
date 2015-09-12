@@ -61,13 +61,16 @@ public:
   ~V4L2Device();
   inline QString path() const { return _path; }
   inline operator bool() const { return fd != -1; }
-  int ioctl(int ctl, void *data, const QString &errorLabel);
+  void ioctl(int ctl, void *data, const QString &errorLabel) const;
+  int xioctl(int ctl, void *data, const QString &errorLabel) const;
   class exception : public std::exception {
   public:
-     exception(const QString &label = {}) : label{label} {}
-     virtual const char* what() const noexcept { return ("%1 error: %2"_q % label % strerror(errno)).toLatin1(); }
+     exception(const QString &label = {}) : label{label}, _error_code{errno} {}
+     virtual const char* what() const noexcept { return ("%1 error: %2"_q % label % strerror(_error_code)).toLatin1(); }
+     int error_code() const { return _error_code; }
   private:
     const QString label;
+    int _error_code;
   };
 private:
   int fd = -1;
