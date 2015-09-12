@@ -267,30 +267,23 @@ V4LBuffer::V4LBuffer(int index, const shared_ptr<V4L2Device> &v4ldevice) : v4lde
   bufferinfo.memory = V4L2_MEMORY_MMAP;
   bufferinfo.index = 0;
   
-  if(v4ldevice->xioctl(VIDIOC_QUERYBUF, &bufferinfo, "allocating buffers") < 0){
-    return;
-  }
+  v4ldevice->ioctl(VIDIOC_QUERYBUF, &bufferinfo, "allocating buffers");
 
   memory = (char*) mmap(NULL, bufferinfo.length, PROT_READ | PROT_WRITE, MAP_SHARED, v4ldevice->descriptor(), bufferinfo.m.offset);
   if(memory == MAP_FAILED){
-    qWarning() << "error memmapping buffer: " << strerror(errno);
-    return;
+    throw V4L2Device::exception("mapping memory");
   }
   memset(memory, 0, bufferinfo.length);
 }
 
 void V4LBuffer::dequeue()
 {
-  if(v4ldevice->xioctl(VIDIOC_DQBUF, &bufferinfo, "dequeuing buffer") < 0){
-      return;
-  }
+  v4ldevice->xioctl(VIDIOC_DQBUF, &bufferinfo, "dequeuing buffer");
 }
 
 void V4LBuffer::queue()
 {
-  if(v4ldevice->xioctl(VIDIOC_QBUF, &bufferinfo, "queuing buffer") < 0){
-      return;
-  }
+  v4ldevice->xioctl(VIDIOC_QBUF, &bufferinfo, "queuing buffer");
 }
 
 
@@ -309,6 +302,7 @@ void V4L2Imager::startLive()
     d->live = true;
     Thread::Run<void>{
         [=]{
+	  try {
             fps_counter fps([ = ](double rate) {
                 emit this->fps(rate);
             }, fps_counter::Mode::Elapsed);
@@ -319,9 +313,7 @@ void V4L2Imager::startLive()
             bufrequest.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
             bufrequest.memory = V4L2_MEMORY_MMAP;
             bufrequest.count = 4;
-            if(d->device->xioctl(VIDIOC_REQBUFS, &bufrequest, "requesting buffers") < 0) {
-                return;
-            }
+            d->device->ioctl(VIDIOC_REQBUFS, &bufrequest, "requesting buffers");
             
             vector<shared_ptr<V4LBuffer>> buffers;
 	    for(int i=0; i<bufrequest.count; i++)
@@ -333,9 +325,8 @@ void V4L2Imager::startLive()
 	    buffers[buffer_index]->queue();
 	    
             int type = buffers[buffer_index]->bufferinfo.type;
-            if(d->device->xioctl(VIDIOC_STREAMON, &type, "starting streaming") < 0){
-                return;
-            }
+            d->device->ioctl(VIDIOC_STREAMON, &type, "starting streaming");
+
             while (d->live) {
 	      auto current_index = buffer_index % bufrequest.count;
 	      auto next_index = (buffer_index+1) % bufrequest.count;
@@ -365,11 +356,11 @@ void V4L2Imager::startLive()
                 ++fps;
 		buffer_index++;
             }
-            if(d->device->xioctl(VIDIOC_STREAMOFF, &type, "stopping live") != 0) {
-	      qWarning() << "error stopping live: " << strerror(errno);
-	      return;
-	    }
+            d->device->ioctl(VIDIOC_STREAMOFF, &type, "stopping live");
 	    qDebug() << "live stopped";
+	  } catch(V4L2Device::exception &e) {
+	    qWarning() << e;
+	  }
         }, 
         []{}, 
         [=](Thread *thread) { d->live_thread = thread; d->live = true; }
