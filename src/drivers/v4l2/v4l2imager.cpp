@@ -212,6 +212,43 @@ void V4L2Imager::setSetting(const Setting &setting)
   }
 }
 
+struct V4LBuffer {
+    v4l2_buffer bufferinfo;
+    char *memory;
+    V4LBuffer(int index, int fd);
+    ~V4LBuffer();
+};
+
+V4LBuffer::V4LBuffer(int index, int fd)
+{
+  memset(&bufferinfo, 0, sizeof(v4l2_buffer));
+  bufferinfo.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+  bufferinfo.memory = V4L2_MEMORY_MMAP;
+  bufferinfo.index = 0;
+  
+  if(ioctl(fd, VIDIOC_QUERYBUF, &bufferinfo) < 0){
+    qDebug() << "error allocating buffers: " << strerror(errno);
+    return;
+  }
+
+  memory = (char*) mmap(NULL, bufferinfo.length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, bufferinfo.m.offset);
+  if(memory == MAP_FAILED){
+    qDebug() << "error memmapping buffer: " << strerror(errno);
+    return;
+  }
+  memset(memory, 0, bufferinfo.length);
+}
+
+V4LBuffer::~V4LBuffer()
+{
+  if(-1 == munmap(memory, bufferinfo.length)) {
+    qWarning() << "error unmapping memory: " << strerror(errno);
+    return;
+  }
+  qDebug() << "memory map deleted";
+}
+
+
 void V4L2Imager::startLive()
 {
     d->live = true;
@@ -232,82 +269,57 @@ void V4L2Imager::startLive()
                 return;
             }
             
-            v4l2_buffer bufferinfo;
-            memset(&bufferinfo, 0, sizeof(bufferinfo));
-            
-            bufferinfo.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-            bufferinfo.memory = V4L2_MEMORY_MMAP;
-            bufferinfo.index = 0;
-            
-            if(Private::ioctl(d->v4l_fd, VIDIOC_QUERYBUF, &bufferinfo) < 0){
-                qDebug() << "error allocating buffers: " << strerror(errno);
-                return;
-            }
-            
-            char* buffer_start = (char*) mmap(NULL, bufferinfo.length, PROT_READ | PROT_WRITE, MAP_SHARED, d->v4l_fd, bufferinfo.m.offset);
-            
-            if(buffer_start == MAP_FAILED){
-                qDebug() << "error memmapping buffer: " << strerror(errno);
-                return;
-            }
-            memset(buffer_start, 0, bufferinfo.length);
-            if(Private::ioctl(d->v4l_fd, VIDIOC_QBUF, &bufferinfo) < 0){
+            V4LBuffer v4lbuffer(0, d->v4l_fd);
+           
+                     
+
+            if(Private::ioctl(d->v4l_fd, VIDIOC_QBUF, &v4lbuffer.bufferinfo) < 0){
                 qDebug() << "error queuing buffer: " << strerror(errno);
                 return;
             }
-            int type = bufferinfo.type;
+            int type = v4lbuffer.bufferinfo.type;
             if(Private::ioctl(d->v4l_fd, VIDIOC_STREAMON, &type) < 0){
                 qDebug() << "error starting streaming: " << strerror(errno);
                 return;
             }
             while (d->live) {
 		benchmark_start(dequeue_frame)
-                if(Private::ioctl(d->v4l_fd, VIDIOC_DQBUF, &bufferinfo) < 0){
+                if(Private::ioctl(d->v4l_fd, VIDIOC_DQBUF, &v4lbuffer.bufferinfo) < 0){
                     qDebug() << "error dequeuing buffer: " << strerror(errno);
                     continue;
                 }
 		benchmark_end(dequeue_frame)
 		benchmark_start(copy_data)
-                QByteArray buffer_data(buffer_start, bufferinfo.bytesused);
+                QByteArray buffer_data(v4lbuffer.memory, v4lbuffer.bufferinfo.bytesused);
 		benchmark_end(copy_data)
-		Thread::Run<void>{
-		  [=]() mutable{
-		    cv::Mat image{format.fmt.pix.height, format.fmt.pix.width, CV_8UC3};
-		    if(format.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG) {
-			cv::InputArray inputArray{buffer_data.data(),  buffer_data.size()};
-			image = cv::imdecode(inputArray, -1);
-		    } else if(format.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
-			cv::Mat source{format.fmt.pix.height, format.fmt.pix.width, CV_8UC2, buffer_data.data()};
-			cv::cvtColor(source, image, CV_YUV2RGB_YVYU);
-		    } else {
-			qCritical() << "Unsupported image format: " << FOURCC2QS(format.fmt.pix.pixelformat);
-			return;
-		    }
-		    d->handler->handle(image);
-		    
-		  }
-		};
+		benchmark_start(converting_image)
+		cv::Mat image{format.fmt.pix.height, format.fmt.pix.width, CV_8UC3};
+		if(format.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG) {
+		    cv::InputArray inputArray{buffer_data.data(),  buffer_data.size()};
+		    image = cv::imdecode(inputArray, -1);
+		} else if(format.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
+		    cv::Mat source{format.fmt.pix.height, format.fmt.pix.width, CV_8UC2, buffer_data.data()};
+		    cv::cvtColor(source, image, CV_YUV2RGB_YVYU);
+		} else {
+		    qCritical() << "Unsupported image format: " << FOURCC2QS(format.fmt.pix.pixelformat);
+		    return;
+		}
+		benchmark_end(converting_image)
+		benchmark_scope(handle_image)
+		d->handler->handle(image);
                 ++fps;
 		benchmark_start(queue_buffer)
-                bufferinfo.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-                bufferinfo.memory = V4L2_MEMORY_MMAP;
-                if(Private::ioctl(d->v4l_fd, VIDIOC_QBUF, &bufferinfo) < 0){
+                if(Private::ioctl(d->v4l_fd, VIDIOC_QBUF, &v4lbuffer.bufferinfo) < 0){
                     qDebug() << "error queuing buffer: " << strerror(errno);
                     return;
                 }
 		benchmark_end(queue_buffer)
             }
-            Private::ioctl(d->v4l_fd, VIDIOC_DQBUF, &bufferinfo);
             if(Private::ioctl(d->v4l_fd, VIDIOC_STREAMOFF, &type) != 0) {
 	      qWarning() << "error stopping live: " << strerror(errno);
 	      return;
 	    }
 	    qDebug() << "live stopped";
-	    if(-1 == munmap(buffer_start, bufferinfo.length)) {
-	      qWarning() << "error unmapping memory: " << strerror(errno);
-	      return;
-	    }
-	    qDebug() << "memory map deleted";
         }, 
         []{}, 
         [=](Thread *thread) { d->live_thread = thread; d->live = true; }
