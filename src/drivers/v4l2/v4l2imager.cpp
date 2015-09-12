@@ -52,6 +52,11 @@ V4L2Device::~V4L2Device()
     ::close(fd);
 }
 
+QDebug operator<<(QDebug dbg, const V4L2Device::exception &e) {
+  dbg.nospace().noquote() << QString{e.what()};
+  return dbg.space().maybeQuote();
+}
+
 template<typename T>
 void V4L2Device::ioctl(uint64_t ctl, T* data, const QString& errorLabel) const
 {
@@ -60,7 +65,7 @@ void V4L2Device::ioctl(uint64_t ctl, T* data, const QString& errorLabel) const
         r = ::ioctl(fd, ctl, data);
     } while (-1 == r && EINTR == errno);
     if(r == -1)
-      throw V4L2Device::exception(errorLabel.isEmpty() ? "on ioctl %1"_q % ctl : errorLabel);
+      throw V4L2Device::exception(errorLabel.isEmpty() ? "ioctl %1"_q % ctl : errorLabel);
 }
 
 
@@ -71,7 +76,7 @@ int V4L2Device::xioctl(uint64_t ctl, T* data, const QString& errorLabel) const
     this->ioctl(ctl, data, errorLabel);
     return 0;
   } catch(V4L2Device::exception &e) {
-    qWarning() << QString{e.what()};
+    qWarning() << e;
     return -1;
   }
 }
@@ -81,7 +86,7 @@ int V4L2Device::xioctl(uint64_t ctl, T* data, const QString& errorLabel) const
 const char* V4L2Device::exception::what() const noexcept
 {
   stringstream s;
-  s << label.toStdString() << ": " << strerror(_error_code);
+  s << "V4LDevice::exception at " << label.toStdString() << ": " << strerror(_error_code);
   return s.str().c_str();
 }
 
