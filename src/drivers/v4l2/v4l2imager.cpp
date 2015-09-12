@@ -32,6 +32,25 @@ V4L2Imager::V4L2Imager(const QString &name, int index, const ImageHandlerPtr &ha
 {
   d->populate_rules();
   d->open_camera();
+  auto settings = this->settings();
+  auto formats = find_if(begin(settings), end(settings), [](const Setting &s) { return s.id == PIXEL_FORMAT_CONTROL_ID; });
+  if(formats != end(settings)) {
+      auto mjpeg = find_if(begin((*formats).choices), end((*formats).choices), [](const Setting::Choice &c) { return c.label == "MJPG"; });
+      if(mjpeg != end((*formats).choices)) {
+          (*formats).value = (*mjpeg).value;
+          setSetting(*formats);
+      };
+  }
+  settings = this->settings();
+  auto resolutions = find_if(begin(settings), end(settings), [](const Setting &s) { return s.id == RESOLUTIONS_CONTROL_ID; });
+  if(resolutions != end(settings)) {
+      auto v4l_resolutions = d->resolutions(d->query_format());
+      auto max_resolution = max_element(begin(v4l_resolutions), end(v4l_resolutions), [](const v4l2_frmsizeenum &a, const v4l2_frmsizeenum &b){
+          return a.discrete.width * a.discrete.height < b.discrete.width * b.discrete.height;
+    });
+    (*resolutions).value = (*max_resolution).index;
+    setSetting(*resolutions);
+  }
   
   d->adjust_framerate(d->query_format());
 }
