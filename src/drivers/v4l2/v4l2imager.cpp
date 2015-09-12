@@ -332,19 +332,22 @@ void V4L2Imager::startLive()
             d->device->ioctl(VIDIOC_STREAMON, &type, "starting streaming");
 
             while (d->live) {
+                benchmark_start(dequeue_buffer);
 		auto buffer = buffers.dequeue(d->device);
-                QByteArray buffer_data(buffer->memory, buffer->bufferinfo.bytesused);
+                benchmark_end(dequeue_buffer);
+                benchmark_start(decode_image);
 		cv::Mat image{static_cast<int>(format.fmt.pix.height), static_cast<int>(format.fmt.pix.width), CV_8UC3};
 		if(format.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG) {
-		    cv::InputArray inputArray{buffer_data.data(),  buffer_data.size()};
+		    cv::InputArray inputArray{buffer->memory,  buffer->bufferinfo.bytesused};
 		    image = cv::imdecode(inputArray, -1);
 		} else if(format.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
-		    cv::Mat source{static_cast<int>(format.fmt.pix.height), static_cast<int>(format.fmt.pix.width), CV_8UC2, buffer_data.data()};
+		    cv::Mat source{static_cast<int>(format.fmt.pix.height), static_cast<int>(format.fmt.pix.width), CV_8UC2, buffer->memory };
 		    cv::cvtColor(source, image, CV_YUV2RGB_YVYU);
 		} else {
 		    qCritical() << "Unsupported image format: " << FOURCC2QS(format.fmt.pix.pixelformat);
 		    return;
 		}
+                benchmark_end(decode_image);
 		d->handler->handle(image);
                 ++fps;
 		buffer->queue();
