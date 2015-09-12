@@ -42,7 +42,7 @@ V4L2Device::V4L2Device(const QString& path) : _path{path}
 {
     fd = ::open(path.toLatin1(), O_RDWR, O_NONBLOCK, 0);
     if (-1 == fd) {
-      throw exception("opening device '%1'"_q % path);
+      throw V4L2Device::exception("opening device '%1'"_q % path);
     }
 }
 
@@ -52,27 +52,37 @@ V4L2Device::~V4L2Device()
     ::close(fd);
 }
 
-void V4L2Device::ioctl(int ctl, void* data, const QString& errorLabel) const
+template<typename T>
+void V4L2Device::ioctl(uint64_t ctl, T* data, const QString& errorLabel) const
 {
     int r;
     do {
         r = ::ioctl(fd, ctl, data);
     } while (-1 == r && EINTR == errno);
     if(r == -1)
-      throw exception(errorLabel.isEmpty() ? "on ioctl %1"_q % ctl : errorLabel);
+      throw V4L2Device::exception(errorLabel.isEmpty() ? "on ioctl %1"_q % ctl : errorLabel);
+}
+
+
+template<typename T>
+int V4L2Device::xioctl(uint64_t ctl, T* data, const QString& errorLabel) const
+{
+  try {
+    this->ioctl(ctl, data, errorLabel);
+    return 0;
+  } catch(V4L2Device::exception &e) {
+    qWarning() << QString{e.what()};
+    return -1;
+  }
 }
 
 
 
-int V4L2Device::xioctl(int ctl, void* data, const QString& errorLabel) const
+const char* V4L2Device::exception::what() const noexcept
 {
-  try {
-    ioctl(ctl, data, errorLabel);
-    return 0;
-  } catch(V4L2Device::exception &e) {
-    qWarning() << e.what();
-    return e.error_code();
-  }
+  stringstream s;
+  s << label.toStdString() << ": " << strerror(_error_code);
+  return s.str().c_str();
 }
 
 

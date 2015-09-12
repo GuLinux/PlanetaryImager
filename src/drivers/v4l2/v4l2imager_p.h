@@ -75,12 +75,12 @@ public:
   inline QString path() const { return _path; }
   inline operator bool() const { return fd != -1; }
   int descriptor() const { return fd; }
-  void ioctl(int ctl, void *data, const QString &errorLabel = {}) const;
-  int xioctl(int ctl, void *data, const QString &errorLabel = {}) const;
+  template<typename T> void ioctl(uint64_t ctl, T *data, const QString &errorLabel = {}) const;
+  template<typename T> int xioctl(uint64_t ctl, T *data, const QString &errorLabel = {}) const;
   class exception : public std::exception {
   public:
      exception(const QString &label = {}) : label{label}, _error_code{errno} {}
-     virtual const char* what() const noexcept { return ("%1 error: %2"_q % label % strerror(_error_code)).toLatin1(); }
+     virtual const char* what() const noexcept;
      int error_code() const { return _error_code; }
   private:
     const QString label;
@@ -90,6 +90,7 @@ private:
   int fd = -1;
   const QString _path;
 };
+
 
 
 inline QString FOURCC2QS(int32_t _4cc)
