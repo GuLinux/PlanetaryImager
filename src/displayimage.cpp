@@ -30,6 +30,7 @@
 #include "utils.h"
 #include <opencv2/opencv.hpp>
 #include "opencv_utils.h"
+#include "c++/stlutils.h"
 
 using namespace std;
 
@@ -100,10 +101,10 @@ void DisplayImage::create_qimages()
     cv::cvtColor(imageData, *cv_image, imageData.channels() == 1 ? CV_GRAY2RGB : CV_BGR2RGB);
     if(d->detectEdges) {
       if(d->configuration.edgeAlgorithm() == Configuration::Sobel) {
-        benchmark edge_b{"sobel edge detection"};
+	benchmark_scope(sobel)
 	d->sobel(*cv_image, d->configuration.sobelBlurSize(), d->configuration.sobelKernel(), d->configuration.sobelScale(), d->configuration.sobelDelta());
       } else if(d->configuration.edgeAlgorithm() == Configuration::Canny) {
-        benchmark edge_b{"canny edge detection"};
+	benchmark_scope(canny)
 	d->canny(*cv_image, d->configuration.cannyLowThreshold(), d->configuration.cannyThresholdRatio(), d->configuration.cannyKernelSize(), d->configuration.cannyBlurSize());
       }
     }
@@ -114,7 +115,7 @@ void DisplayImage::create_qimages()
     }
     d->imageRect = image.rect();
     if(d->detectEdges && d->configuration.edgeAlgorithm() == Configuration::SobelDeprecated) {
-        benchmark edge_b{"deprecated sobel edge detection"};
+      benchmark_scope(sobel_deprecated)
         emit gotImage(d->edgeDetection(image));
     }
     else

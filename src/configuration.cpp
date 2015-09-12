@@ -22,6 +22,8 @@
 #include "utils.h"
 #include <QMetaType>
 #include "Qt/strings.h"
+#include <QDir>
+#include <QDateTime>
 
 class Configuration::Private {
 public:
