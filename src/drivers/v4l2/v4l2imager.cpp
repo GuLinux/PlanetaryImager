@@ -18,6 +18,8 @@
  */
 
 #include "v4l2imager_p.h"
+#include "c++/stlutils.h"
+#include "utils.h"
 using namespace std;
 using namespace GuLinux;
 
@@ -29,7 +31,10 @@ V4L2Imager::V4L2Imager(const QString &name, int index, const ImageHandlerPtr &ha
     : dptr(handler, this)
 {
     d-> dev_name = "/dev/video%1"_q % index;
+    d->populate_rules();
   d->open_camera();
+  
+  d->adjust_framerate(d->query_format());
 }
 
 void V4L2Imager::Private::open_camera() {
@@ -109,7 +114,6 @@ Imager::Settings V4L2Imager::settings() const
 	resolutions_setting.value = resolution.index;
     }
     _settings.push_back(resolutions_setting);
-    auto framerates = d->framerates(current_format);
     
     std::sort(begin(_settings), end(_settings), [](const Setting &a, const Setting &b){ return a.id < b.id; });
     _settings.erase(std::unique(begin(_settings), end(_settings), [](const Setting &a, const Setting &b){ return a.id == b.id; }), end(_settings));
@@ -155,9 +159,9 @@ V4L2Imager::Private::V4lSetting V4L2Imager::Private::setting(int id)
             setting.setting.choices.push_back({value, menu.index});
         }
     }
-//     qDebug() << "setting: " << setting.setting << "(exposure: " << V4L2_CID_EXPOSURE_ABSOLUTE << ")";
-//     for(auto rule: setting_rules)
-//         rule(setting.setting);
+    qDebug() << "setting: " << setting.setting << "(exposure: " << V4L2_CID_EXPOSURE_ABSOLUTE << ")";
+    for(auto rule: setting_rules)
+        rule(setting.setting);
     return setting;
 }
 
@@ -169,6 +173,7 @@ void V4L2Imager::setSetting(const Setting &setting)
     ::close(d->v4l_fd);
     d->open_camera();
     on_restart();
+    d->adjust_framerate(d->query_format());
     if(live_was_started)
       startLive();
   };
@@ -256,29 +261,41 @@ void V4L2Imager::startLive()
                 return;
             }
             while (d->live) {
+		benchmark_start(dequeue_frame)
                 if(Private::ioctl(d->v4l_fd, VIDIOC_DQBUF, &bufferinfo) < 0){
                     qDebug() << "error dequeuing buffer: " << strerror(errno);
                     continue;
                 }
-                cv::Mat image{format.fmt.pix.height, format.fmt.pix.width, CV_8UC3};
-                if(format.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG) {
-                    cv::InputArray inputArray{buffer_start,  bufferinfo.bytesused};
-                    image = cv::imdecode(inputArray, -1);
-                } else if(format.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
-                    cv::Mat source{format.fmt.pix.height, format.fmt.pix.width, CV_8UC2, buffer_start};
-                    cv::cvtColor(source, image, CV_YUV2RGB_YVYU);
-                } else {
-                    qCritical() << "Unsupported image format: " << FOURCC2QS(format.fmt.pix.pixelformat);
-                    return;
-                }
-                d->handler->handle(image);
+		benchmark_end(dequeue_frame)
+		benchmark_start(copy_data)
+                QByteArray buffer_data(buffer_start, bufferinfo.bytesused);
+		benchmark_end(copy_data)
+		Thread::Run<void>{
+		  [=]() mutable{
+		    cv::Mat image{format.fmt.pix.height, format.fmt.pix.width, CV_8UC3};
+		    if(format.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG) {
+			cv::InputArray inputArray{buffer_data.data(),  buffer_data.size()};
+			image = cv::imdecode(inputArray, -1);
+		    } else if(format.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
+			cv::Mat source{format.fmt.pix.height, format.fmt.pix.width, CV_8UC2, buffer_data.data()};
+			cv::cvtColor(source, image, CV_YUV2RGB_YVYU);
+		    } else {
+			qCritical() << "Unsupported image format: " << FOURCC2QS(format.fmt.pix.pixelformat);
+			return;
+		    }
+		    d->handler->handle(image);
+		    
+		  }
+		};
                 ++fps;
+		benchmark_start(queue_buffer)
                 bufferinfo.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
                 bufferinfo.memory = V4L2_MEMORY_MMAP;
                 if(Private::ioctl(d->v4l_fd, VIDIOC_QBUF, &bufferinfo) < 0){
                     qDebug() << "error queuing buffer: " << strerror(errno);
                     return;
                 }
+		benchmark_end(queue_buffer)
             }
             Private::ioctl(d->v4l_fd, VIDIOC_DQBUF, &bufferinfo);
             if(Private::ioctl(d->v4l_fd, VIDIOC_STREAMOFF, &type) != 0) {
@@ -359,7 +376,7 @@ QList< v4l2_fmtdesc > V4L2Imager::Private::formats() const
     return formats_list;
 }
 
-QList< v4l2_frmivalenum > V4L2Imager::Private::framerates(const v4l2_format& format) const
+void V4L2Imager::Private::adjust_framerate(const v4l2_format& format) const
 {
     v4l2_frmivalenum fps_s;
     QList<v4l2_frmivalenum> rates;
@@ -373,7 +390,21 @@ QList< v4l2_frmivalenum > V4L2Imager::Private::framerates(const v4l2_format& for
 	rates.push_back(fps_s);
         fps_s.index++;
     }
-    return rates;
+    auto ratio = [=](const v4l2_frmivalenum &a) { return static_cast<double>(a.discrete.numerator)/static_cast<double>(a.discrete.denominator); };
+    sort(begin(rates), end(rates), [&](const v4l2_frmivalenum &a, const v4l2_frmivalenum &b){ return ratio(a) < ratio(b);} );
+    v4l2_streamparm streamparam;
+    streamparam.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    if(0 != Private::ioctl(v4l_fd, VIDIOC_G_PARM, &streamparam)) {
+      qWarning() << "Unable to get stream parameters" << strerror(errno);
+      return;
+    }
+    qDebug() << "current frame rate: " << streamparam.parm.capture.timeperframe;
+    streamparam.parm.capture.timeperframe = rates[0].discrete;
+    if(0 != Private::ioctl(v4l_fd, VIDIOC_S_PARM, &streamparam)) {
+      qWarning() << "Unable to set stream parameters" << strerror(errno);
+      return;
+    }
+    qDebug() << "current frame rate: " << streamparam.parm.capture.timeperframe;
 }
 
 

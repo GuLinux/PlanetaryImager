@@ -47,6 +47,7 @@
 #include "Qt/strings.h"
 #include <Qt/functional.h>
 
+using namespace GuLinux;
 using namespace std;
 using namespace std::placeholders;
 
@@ -216,7 +217,7 @@ void PlanetaryImagerMainWindow::Private::init_devices_watcher()
 void PlanetaryImagerMainWindow::Private::rescan_devices()
 {
   ui->menu_device_load->clear();
-  future_run<Driver::Cameras>([=]{ return driver->cameras(); }, [=]( const Driver::Cameras &cameras){
+  Thread::Run<Driver::Cameras>([=]{ return driver->cameras(); }, [=]( const Driver::Cameras &cameras){
     for(auto device: cameras) {
       auto message = tr("Found %1 devices").arg(cameras.size());
       qDebug() << message;
@@ -233,7 +234,8 @@ void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::CameraPtr& 
         bool valid = all_of(begin(values), end(values), bind(greater<int>(), _1, 0));
         text_label->setText(valid ? text : "-");
     };
-  future_run<ImagerPtr>([=]{ return camera->imager(ImageHandlerPtr{new ImageHandlers{displayImage, saveImages}}); }, [=](const ImagerPtr &imager){
+    
+  Thread::Run<ImagerPtr>([=]{ return camera->imager(ImageHandlerPtr{new ImageHandlers{displayImage, saveImages}}); }, [=](const ImagerPtr &imager){
     if(!imager) {
       for(auto widget: QList<QLabel*>{ui->camera_chip_size, ui->camera_pixels_size, ui->camera_bpp, ui->camera_resolution})
           chip_text(widget, "", {-1});

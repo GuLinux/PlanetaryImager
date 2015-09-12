@@ -33,7 +33,7 @@ public:
     QList<v4l2_fmtdesc> formats() const;
     v4l2_format query_format() const;
     QList<v4l2_frmsizeenum> resolutions(const v4l2_format &format) const;
-    QList<v4l2_frmivalenum> framerates(const v4l2_format &format) const;
+    void adjust_framerate(const v4l2_format &format) const;
     static int ioctl(int fh, int request, void *arg);
     
     struct V4lSetting {
@@ -48,25 +48,27 @@ public:
     void open_camera();
     QString driver, bus, cameraname;
     QString dev_name;
-
+    typedef std::function<void(Setting &)> SettingRule;
+    QList<SettingRule> setting_rules;
+    void populate_rules();
 private:
     V4L2Imager *q;
 };
 
-QString FOURCC2QS(int32_t _4cc)
+inline QString FOURCC2QS(int32_t _4cc)
 {
     auto get_byte = [=](int b) { return static_cast<char>( _4cc >> b & 0xff ); };
     char data[5] { get_byte(0), get_byte(8), get_byte(0x10), get_byte(0x18), '\0' };
     return {data};
 }
 
-QDebug operator<<(QDebug dbg, v4l2_fract frac) {
+inline QDebug operator<<(QDebug dbg, v4l2_fract frac) {
     dbg.nospace() << frac.numerator << "/" << frac.denominator;
     return dbg.space();
 };
 
 
-QDebug operator<<(QDebug dbg, const v4l2_frmivalenum &fps_s) {
+inline QDebug operator<<(QDebug dbg, const v4l2_frmivalenum &fps_s) {
     dbg.nospace() << "v4l2_frmivalenum{ index=" << fps_s.index << ", " << fps_s.width << "x" << fps_s.height << ", 4cc=" << FOURCC2QS(fps_s.pixel_format);
     if(fps_s.type == V4L2_FRMIVAL_TYPE_DISCRETE) {
         dbg << "discrete: " << fps_s.discrete;
