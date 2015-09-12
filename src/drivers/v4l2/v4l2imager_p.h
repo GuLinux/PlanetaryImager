@@ -55,6 +55,26 @@ private:
     V4L2Imager *q;
 };
 
+class V4L2Device {
+public:
+  V4L2Device(const QString &path);
+  ~V4L2Device();
+  inline QString path() const { return _path; }
+  inline operator bool() const { return fd != -1; }
+  int ioctl(int ctl, void *data, const QString &errorLabel);
+  class exception : public std::exception {
+  public:
+     exception(const QString &label = {}) : label{label} {}
+     virtual const char* what() const noexcept { return ("%1 error: %2"_q % label % strerror(errno)).toLatin1(); }
+  private:
+    const QString label;
+  };
+private:
+  int fd = -1;
+  const QString _path;
+};
+
+
 inline QString FOURCC2QS(int32_t _4cc)
 {
     auto get_byte = [=](int b) { return static_cast<char>( _4cc >> b & 0xff ); };

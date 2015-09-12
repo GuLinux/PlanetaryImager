@@ -37,6 +37,35 @@ V4L2Imager::V4L2Imager(const QString &name, int index, const ImageHandlerPtr &ha
   d->adjust_framerate(d->query_format());
 }
 
+
+
+V4L2Device::V4L2Device(const QString& path) : _path{path}
+{
+    fd = ::open(path.toLatin1(), O_RDWR, O_NONBLOCK, 0);
+    if (-1 == fd) {
+      throw exception("opening device '%1'"_q % path);
+    }
+}
+
+V4L2Device::~V4L2Device()
+{
+  if(-1 != fd)
+    ::close(fd);
+}
+
+int V4L2Device::ioctl(int ctl, void* data, const QString& errorLabel)
+{
+    int r;
+    do {
+        r = ::ioctl(fd, ctl, data);
+    } while (-1 == r && EINTR == errno);
+    if(r == -1)
+      throw exception(errorLabel);
+    return r;
+}
+
+
+
 void V4L2Imager::Private::open_camera() {
     v4l_fd = ::open(dev_name.toLatin1(), O_RDWR, O_NONBLOCK, 0);
     if (-1 == v4l_fd) {
@@ -215,29 +244,49 @@ void V4L2Imager::setSetting(const Setting &setting)
 struct V4LBuffer {
     v4l2_buffer bufferinfo;
     char *memory;
-    V4LBuffer(int index, int fd);
+    V4LBuffer(int index, int v4ldevice);
     ~V4LBuffer();
+    int v4ldevice;
+    void queue();
+    void dequeue();
 };
 
-V4LBuffer::V4LBuffer(int index, int fd)
+V4LBuffer::V4LBuffer(int index, int v4ldevice) : v4ldevice {v4ldevice}
 {
   memset(&bufferinfo, 0, sizeof(v4l2_buffer));
   bufferinfo.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
   bufferinfo.memory = V4L2_MEMORY_MMAP;
   bufferinfo.index = 0;
   
-  if(ioctl(fd, VIDIOC_QUERYBUF, &bufferinfo) < 0){
+  if(ioctl(v4ldevice, VIDIOC_QUERYBUF, &bufferinfo) < 0){
     qDebug() << "error allocating buffers: " << strerror(errno);
     return;
   }
 
-  memory = (char*) mmap(NULL, bufferinfo.length, PROT_READ | PROT_WRITE, MAP_SHARED, fd, bufferinfo.m.offset);
+  memory = (char*) mmap(NULL, bufferinfo.length, PROT_READ | PROT_WRITE, MAP_SHARED, v4ldevice, bufferinfo.m.offset);
   if(memory == MAP_FAILED){
     qDebug() << "error memmapping buffer: " << strerror(errno);
     return;
   }
   memset(memory, 0, bufferinfo.length);
 }
+
+void V4LBuffer::dequeue()
+{
+  if(::ioctl(v4ldevice, VIDIOC_DQBUF, &bufferinfo) < 0){
+      qDebug() << "error dequeuing buffer: " << strerror(errno);
+      return;
+  }
+}
+
+void V4LBuffer::queue()
+{
+  if(::ioctl(v4ldevice, VIDIOC_QBUF, &bufferinfo) < 0){
+      qDebug() << "error queuing buffer: " << strerror(errno);
+      return;
+  }
+}
+
 
 V4LBuffer::~V4LBuffer()
 {
@@ -263,34 +312,36 @@ void V4L2Imager::startLive()
             v4l2_requestbuffers bufrequest;
             bufrequest.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
             bufrequest.memory = V4L2_MEMORY_MMAP;
-            bufrequest.count = 1;
+            bufrequest.count = 4;
             if(Private::ioctl(d->v4l_fd, VIDIOC_REQBUFS, &bufrequest) < 0) {
                 qDebug() << "error requesting buffers: " << strerror(errno);
                 return;
             }
             
-            V4LBuffer v4lbuffer(0, d->v4l_fd);
-           
+            vector<shared_ptr<V4LBuffer>> buffers;
+	    for(int i=0; i<bufrequest.count; i++)
+	      buffers.push_back( make_shared<V4LBuffer>(i, d->v4l_fd));
+            
+	    int buffer_index = 0;
                      
 
-            if(Private::ioctl(d->v4l_fd, VIDIOC_QBUF, &v4lbuffer.bufferinfo) < 0){
-                qDebug() << "error queuing buffer: " << strerror(errno);
-                return;
-            }
-            int type = v4lbuffer.bufferinfo.type;
+	    buffers[buffer_index]->queue();
+	    
+            int type = buffers[buffer_index]->bufferinfo.type;
             if(Private::ioctl(d->v4l_fd, VIDIOC_STREAMON, &type) < 0){
                 qDebug() << "error starting streaming: " << strerror(errno);
                 return;
             }
             while (d->live) {
+	      auto current_index = buffer_index % bufrequest.count;
+	      auto next_index = (buffer_index+1) % bufrequest.count;
 		benchmark_start(dequeue_frame)
-                if(Private::ioctl(d->v4l_fd, VIDIOC_DQBUF, &v4lbuffer.bufferinfo) < 0){
-                    qDebug() << "error dequeuing buffer: " << strerror(errno);
-                    continue;
-                }
+		buffers[next_index]->queue();
+		buffers[current_index]->dequeue();
 		benchmark_end(dequeue_frame)
+		
 		benchmark_start(copy_data)
-                QByteArray buffer_data(v4lbuffer.memory, v4lbuffer.bufferinfo.bytesused);
+                QByteArray buffer_data(buffers[current_index]->memory, buffers[current_index]->bufferinfo.bytesused);
 		benchmark_end(copy_data)
 		benchmark_start(converting_image)
 		cv::Mat image{format.fmt.pix.height, format.fmt.pix.width, CV_8UC3};
@@ -308,12 +359,7 @@ void V4L2Imager::startLive()
 		benchmark_scope(handle_image)
 		d->handler->handle(image);
                 ++fps;
-		benchmark_start(queue_buffer)
-                if(Private::ioctl(d->v4l_fd, VIDIOC_QBUF, &v4lbuffer.bufferinfo) < 0){
-                    qDebug() << "error queuing buffer: " << strerror(errno);
-                    return;
-                }
-		benchmark_end(queue_buffer)
+		buffer_index++;
             }
             if(Private::ioctl(d->v4l_fd, VIDIOC_STREAMOFF, &type) != 0) {
 	      qWarning() << "error stopping live: " << strerror(errno);
