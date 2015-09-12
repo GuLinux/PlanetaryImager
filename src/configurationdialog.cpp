@@ -126,4 +126,19 @@ ConfigurationDialog::ConfigurationDialog(Configuration& configuration, QWidget* 
     connect(d->ui->observer, &QLineEdit::textChanged, bind(&Configuration::setObserver, &configuration, _1));
     connect(d->ui->telescope, &QLineEdit::textChanged, bind(&Configuration::setTelescope, &configuration, _1));
     d->ui->memory_limit->setValue(configuration.maxMemoryUsage());
+    for(auto codec: QList<QPair<QString,QString>>{
+        {"X264", tr("Good compression and quality")},
+        {"MJPG", "Motion JPEG, good compression"},
+        {"HFYU", "Huffman Lossless Codec"},
+        {"ZLIB", "Lossless Codec"},
+        {"LZO1", "Lossless Codec"},
+        {"ASLC", "Alparysoft Lossless Codec"},
+        {"FFV1", "FFMPEG Lossless Codec"},
+        {"DIVX", "Old, deprecated"},
+        {"XVID", "Old, deprecated"},
+    }) {
+        d->ui->video_codec->addItem("%1 (%2)"_q % codec.first % codec.second, codec.first);
+    }
+    d->ui->video_codec->setCurrentIndex(d->ui->video_codec->findData(d->configuration.videoCodec()));
+    connect(d->ui->video_codec, F_PTR(QComboBox, currentIndexChanged, int), [=](int index){ d->configuration.setVideoCodec(d->ui->video_codec->itemData(index).toString()); });
 }
