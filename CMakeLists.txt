@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.6)
+cmake_minimum_required(VERSION 2.8.11)
 enable_testing()
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} GuLinux-Commons/cmake)
 include_directories(GuLinux-Commons GuLinux-Commons/c++)
