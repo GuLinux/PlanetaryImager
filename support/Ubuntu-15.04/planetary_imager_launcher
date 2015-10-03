@@ -1,3 +1,0 @@
-#!/bin/bash
-LD_LIBRARY_PATH="/opt/qt-5.5/lib/" planetary_imager
-
