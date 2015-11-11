@@ -179,7 +179,12 @@ void QHYCCDImager::Private::load_settings()
       continue;
     }
     if(setting.id == CONTROL_GAIN)
-      setting.step /= 10;
+      setting.step /= 10.;
+    if(setting.id == CONTROL_TRANSFERBIT ) {
+      qDebug() << "Changing transferbit setting for " << q->name() << id;
+      setting.type = Setting::Combo;
+      setting.choices = {{"8", 8}, {"12", 12}};
+    }
     load(setting);
 //     setting.value = GetQHYCCDParam(handle, control.second);
     qDebug() << setting;
