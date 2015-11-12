@@ -11,6 +11,8 @@ set(CMAKE_AUTORCC ON)
 find_package(Qt5Widgets REQUIRED )
 include_directories(${Qt5Widgets_INCLUDE_DIRS})
 
+add_definitions(-DSRC_DIR="${CMAKE_SOURCE_DIR}")
+
 find_package(Boost REQUIRED)
 find_package( OpenCV 2.3 REQUIRED )
 
