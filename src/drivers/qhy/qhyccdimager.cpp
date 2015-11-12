@@ -183,7 +183,9 @@ void QHYCCDImager::Private::load_settings()
     if(setting.id == CONTROL_TRANSFERBIT ) {
       qDebug() << "Changing transferbit setting for " << q->name() << id;
       setting.type = Setting::Combo;
-      setting.choices = {{"8", 8}, {"12", 12}};
+      setting.choices = {{"8", 8}, {"16", 16}};
+      setting.min = 8;
+      setting.max = 16;
     }
     load(setting);
 //     setting.value = GetQHYCCDParam(handle, control.second);
@@ -207,6 +209,7 @@ void QHYCCDImager::setSetting(const QHYCCDImager::Setting& setting)
   }
   Setting &setting_ref = *find_if(begin(d->settings), end(d->settings), [setting](const Setting &s) { return s.id == setting.id; });
   d->load(setting_ref);
+  qDebug() << "setting" << setting.name << "updated to value" << setting_ref.value;
   emit changed(setting_ref);
 }
 
@@ -250,6 +253,9 @@ void ImagingWorker::start_live()
       qWarning() << "Error capturing live frame: " << result;
 //       QThread::msleep(1);
     } else {
+      if(bpp != 8) {
+	qDebug() << "w=" << w << ", h=" << h << ", bpp=" << bpp << ", channels=" << channels;
+      }
       int type = bpp==8 ? CV_8UC1 : CV_16UC1;
       if(channels == 3)
         type = bpp==8 ? CV_8UC3 : CV_16UC3;

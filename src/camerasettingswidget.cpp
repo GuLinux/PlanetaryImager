@@ -101,6 +101,8 @@ MenuSettingWidget::MenuSettingWidget(QWidget* parent): SettingWidget(parent)
 
 void MenuSettingWidget::update(const Imager::Setting& setting)
 {
+  if(edit->currentData().toDouble() == setting.value)
+    return;
   edit->clear();
   for(auto item: setting.choices) {
     edit->addItem(item.label, item.value);
@@ -142,6 +144,7 @@ CameraSettingWidget::CameraSettingWidget(const Imager::Setting& setting, Imager*
     connect(imager, &Imager::changed, [=,&settings](const Imager::Setting &changed_setting){
       if(changed_setting.id != setting.id)
 	return;
+      qDebug() << "setting changed:" << changed_setting.id << changed_setting.name << "=" << changed_setting.value;
       settingWidget->update(changed_setting);
       settings.beginGroup(imager->name());
       qDebug() << "setting " << changed_setting.name << " to " << changed_setting.value;
