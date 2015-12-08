@@ -38,6 +38,9 @@ set(MINOR_VERSION 3)
 set(PATCH_VERSION 0)
 
 add_subdirectory(GuLinux-Commons/Qt)
+
+execute_process(COMMAND "sed -i 's/“//g CMakeLists.txt" WORKING_DIRECTORY QHYCCD_Linux/)
+execute_process(COMMAND "sed -i 's/”//g CMakeLists.txt" WORKING_DIRECTORY QHYCCD_Linux/)
 add_subdirectory(QHYCCD_Linux)
 include_directories(QHYCCD_Linux ${LIBUSB_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 add_subdirectory(src)

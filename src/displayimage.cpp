@@ -95,6 +95,9 @@ void DisplayImage::create_qimages()
       QThread::msleep(1);
       continue;
     }
+    if(imageData.depth() != CV_8U && imageData.depth() != CV_8S) {
+      imageData.convertTo(imageData, CV_8U, 0.00390625); // TODO: handle color images
+    }
     ++d->capture_fps;
 //     cv::Mat origin{imageData->height(), imageData->width(), imageData->channels() == 1 ? CV_8UC1 : CV_8UC3, imageData->data()};
     auto cv_image = new cv::Mat;

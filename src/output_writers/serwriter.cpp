@@ -87,7 +87,8 @@ void SERWriter::handle ( const cv::Mat& imageData )
 {
   if(! d->header->imageWidth) {
     d->header->colorId = imageData.channels() == 1 ? SER_Header::MONO : SER_Header::RGB;
-    d->header->pixelDepth = 8; // TODO imageData->bpp();
+    d->header->pixelDepth = (imageData.depth() == CV_8U || imageData.depth() == CV_8S) ? 8 : 16; // TODO imageData->bpp();
+    qDebug() << "SER PixelDepth set to " << d->header->pixelDepth << "bpp";
     d->header->imageWidth = imageData.cols;
     d->header->imageHeight = imageData.rows;
   }
