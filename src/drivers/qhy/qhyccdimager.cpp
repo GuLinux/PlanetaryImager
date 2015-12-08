@@ -30,6 +30,7 @@
 #include "image_data.h"
 #include <fps_counter.h>
 #include "Qt/strings.h"
+#include <boost/lockfree/spsc_queue.hpp>
 
 
 using namespace std;
@@ -43,7 +44,9 @@ public:
 public slots:
   void start_live();
   void stop();
+  void queue(std::function<void()> f);
 private:
+  boost::lockfree::spsc_queue<std::function<void()>> jobs_queue;
   qhyccd_handle *handle;
   bool enabled = true;
   QHYCCDImager *imager;
@@ -202,15 +205,22 @@ void QHYCCDImager::Private::load ( QHYCCDImager::Setting& setting )
 
 void QHYCCDImager::setSetting(const QHYCCDImager::Setting& setting)
 {
-  auto result = SetQHYCCDParam(d->handle, static_cast<CONTROL_ID>(setting.id), setting.value);
-  if(result != QHYCCD_SUCCESS) {
-    qCritical() << "error setting" << setting.name << ":" << QHYDriver::error_name(result) << "(" << result << ")";
-    return;
-  }
-  Setting &setting_ref = *find_if(begin(d->settings), end(d->settings), [setting](const Setting &s) { return s.id == setting.id; });
-  d->load(setting_ref);
-  qDebug() << "setting" << setting.name << "updated to value" << setting_ref.value;
-  emit changed(setting_ref);
+  d->worker->queue([=]{
+    auto result = SetQHYCCDParam(d->handle, static_cast<CONTROL_ID>(setting.id), setting.value);
+    if(result != QHYCCD_SUCCESS) {
+      qCritical() << "error setting" << setting.name << ":" << QHYDriver::error_name(result) << "(" << result << ")";
+      return;
+    }
+    Setting &setting_ref = *find_if(begin(d->settings), end(d->settings), [setting](const Setting &s) { return s.id == setting.id; });
+    d->load(setting_ref);
+    qDebug() << "setting" << setting.name << "updated to value" << setting_ref.value;
+    emit changed(setting_ref);
+  });
+}
+
+void ImagingWorker::queue(std::function< void()> f)
+{
+  jobs_queue.push(f);
 }
 
 void QHYCCDImager::startLive()
@@ -223,13 +233,15 @@ void QHYCCDImager::startLive()
   qDebug() << "Live started correctly";
 }
 
-ImagingWorker::ImagingWorker(qhyccd_handle* handle, QHYCCDImager* imager, const ImageHandlerPtr imageHandler, QObject* parent): QObject(parent), handle(handle), imager{imager}, imageHandler{imageHandler}
+ImagingWorker::ImagingWorker(qhyccd_handle* handle, QHYCCDImager* imager, const ImageHandlerPtr imageHandler, QObject* parent)
+  : QObject(parent), handle(handle), imager{imager}, imageHandler{imageHandler}, jobs_queue(10)
 {
 }
 
 void ImagingWorker::start_live()
 {
   auto size = GetQHYCCDMemLength(handle);
+  qDebug() << "size: " << static_cast<double>(size)/1024. << "kb, required for 8bit: " << (1280.*960.)/1024 << "kb, for 16bit: " << (1280.*960.*2.)/1024. << "kb";
   auto result =  SetQHYCCDStreamMode(handle,1);
   if(result != QHYCCD_SUCCESS) {
     qCritical() << "Unable to set live mode stream";
@@ -248,14 +260,14 @@ void ImagingWorker::start_live()
   auto buffer_real_size = [&] { return w*h*channels*(bpp<=8?1:2); };
   auto is_zero = [](uint8_t v) { return v==0; };
   while(enabled){
+    std::function<void()> f;
+    while(jobs_queue.pop(f))
+      f();
     result = GetQHYCCDLiveFrame(handle,&w,&h,&bpp,&channels,buffer);
     if(result != QHYCCD_SUCCESS || all_of(buffer, &buffer[buffer_real_size()], is_zero )) {
       qWarning() << "Error capturing live frame: " << result;
 //       QThread::msleep(1);
     } else {
-      if(bpp != 8) {
-	qDebug() << "w=" << w << ", h=" << h << ", bpp=" << bpp << ", channels=" << channels;
-      }
       int type = bpp==8 ? CV_8UC1 : CV_16UC1;
       if(channels == 3)
         type = bpp==8 ? CV_8UC3 : CV_16UC3;
