@@ -81,6 +81,7 @@ public:
   void enableUIWidgets(bool cameraConnected);
     void init_devices_watcher();
   ZoomableImage *image;
+  shared_ptr< QCPBars > histogram_plot;
   void got_histogram(const cv::Mat &histogram);
 private:
   PlanetaryImagerMainWindow *q;
@@ -192,7 +193,8 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
       d->displayImage->detectEdges(detect);
     });
     d->init_devices_watcher();
-    d->ui->histogram_plot->addGraph();
+    d->histogram_plot = make_shared<QCPBars>(d->ui->histogram_plot->xAxis, d->ui->histogram_plot->yAxis);
+    d->ui->histogram_plot->addPlottable(d->histogram_plot.get());
 }
 
 #include <iostream>
@@ -271,17 +273,16 @@ void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::CameraPtr& 
 
 void PlanetaryImagerMainWindow::Private::got_histogram(const cv::Mat& histogram)
 {
-  ui->histogram_plot->graph(0)->clearData();
+//   ui->histogram_plot->graph(0)->clearData();
   QVector<double> x(histogram.rows);
   QVector<double> y(histogram.rows);
   std::iota(x.begin(), x.end(), 0);
   vector<float> out;
   histogram.copyTo(out);
   transform(begin(out), end(out), begin(y), [](uint8_t i) { return static_cast<double>(i); });
-  ui->histogram_plot->graph(0)->addData(x, y);
-  ui->histogram_plot->xAxis->setRange(x[0], x.last());
-  ui->histogram_plot->yAxis->setRange(*min_element(y.begin(), y.end()), *max_element(y.begin(), y.end()));
-  
+  histogram_plot->clearData();
+  histogram_plot->setData(x, y);
+  histogram_plot->rescaleAxes();
   ui->histogram_plot->replot();
 } 
 
