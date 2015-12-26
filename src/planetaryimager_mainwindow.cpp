@@ -41,6 +41,7 @@
 #include <QMessageBox>
 #include "displayimage.h"
 #include "recordingpanel.h"
+#include "histogram.h"
 #include "Qt/zoomableimage.h"
 #include <QGridLayout>
 #include <QToolBar>
@@ -52,6 +53,7 @@ using namespace std;
 using namespace std::placeholders;
 
 
+Q_DECLARE_METATYPE(cv::Mat)
 
 class PlanetaryImagerMainWindow::Private {
 public:
@@ -68,15 +70,18 @@ public:
   shared_ptr<DisplayImage> displayImage;
   QThread displayImageThread;
   shared_ptr<SaveImages> saveImages;
+  shared_ptr<Histogram> histogram;
   CameraSettingsWidget* cameraSettingsWidget = nullptr;
   ConfigurationDialog *configurationDialog;
-    RecordingPanel* recording_panel;
+    
+  RecordingPanel* recording_panel;
   
   void connectCamera(const Driver::CameraPtr &camera);
   void cameraDisconnected();
   void enableUIWidgets(bool cameraConnected);
     void init_devices_watcher();
   ZoomableImage *image;
+  void got_histogram(const cv::Mat &histogram);
 private:
   PlanetaryImagerMainWindow *q;
 };
@@ -106,6 +111,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     d->configurationDialog = new ConfigurationDialog(d->configuration, this);
     d->displayImage = make_shared<DisplayImage>(d->configuration);
     d->saveImages = make_shared<SaveImages>(d->configuration);
+    d->histogram = make_shared<Histogram>();
     d->ui->statusbar->addPermanentWidget(d->statusbar_info_widget = new StatusBarInfoWidget());
 
     d->ui->image->setLayout(new QGridLayout);
@@ -163,6 +169,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     
     d->rescan_devices();
     connect(d->displayImage.get(), &DisplayImage::gotImage, this, bind(&ZoomableImage::setImage, d->image, _1), Qt::QueuedConnection);
+    connect(d->histogram.get(), &Histogram::histogram, this, bind(&Private::got_histogram, d.get(), _1), Qt::QueuedConnection);
 
     
     connect(d->displayImage.get(), &DisplayImage::displayFPS, d->statusbar_info_widget, &StatusBarInfoWidget::displayFPS, Qt::QueuedConnection);
@@ -185,6 +192,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
       d->displayImage->detectEdges(detect);
     });
     d->init_devices_watcher();
+    d->ui->histogram_plot->addGraph();
 }
 
 #include <iostream>
@@ -235,7 +243,7 @@ void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::CameraPtr& 
         text_label->setText(valid ? text : "-");
     };
     
-  Thread::Run<ImagerPtr>([=]{ return camera->imager(ImageHandlerPtr{new ImageHandlers{displayImage, saveImages}}); }, [=](const ImagerPtr &imager){
+  Thread::Run<ImagerPtr>([=]{ return camera->imager(ImageHandlerPtr{new ImageHandlers{displayImage, saveImages, histogram}}); }, [=](const ImagerPtr &imager){
     if(!imager) {
       for(auto widget: QList<QLabel*>{ui->camera_chip_size, ui->camera_pixels_size, ui->camera_bpp, ui->camera_resolution})
           chip_text(widget, "", {-1});
@@ -260,6 +268,22 @@ void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::CameraPtr& 
     enableUIWidgets(true);
   });
 }
+
+void PlanetaryImagerMainWindow::Private::got_histogram(const cv::Mat& histogram)
+{
+  ui->histogram_plot->graph(0)->clearData();
+  QVector<double> x(histogram.rows);
+  QVector<double> y(histogram.rows);
+  std::iota(x.begin(), x.end(), 0);
+  vector<float> out;
+  histogram.copyTo(out);
+  transform(begin(out), end(out), begin(y), [](uint8_t i) { return static_cast<double>(i); });
+  ui->histogram_plot->graph(0)->addData(x, y);
+  ui->histogram_plot->xAxis->setRange(x[0], x.last());
+  ui->histogram_plot->yAxis->setRange(*min_element(y.begin(), y.end()), *max_element(y.begin(), y.end()));
+  
+  ui->histogram_plot->replot();
+} 
 
 
 void PlanetaryImagerMainWindow::Private::cameraDisconnected()

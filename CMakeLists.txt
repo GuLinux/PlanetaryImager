@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 2.8.11)
 enable_testing()
-set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} GuLinux-Commons/cmake)
+set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/GuLinux-Commons/cmake)
 include_directories(GuLinux-Commons GuLinux-Commons/c++)
 project(PlanetaryImager)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -std=c++11")
@@ -9,12 +9,15 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 find_package(Qt5Widgets REQUIRED )
-include_directories(${Qt5Widgets_INCLUDE_DIRS})
+find_package(Qt5PrintSupport REQUIRED)
+
+include_directories(${Qt5Widgets_INCLUDE_DIRS} ${Qt5PrintSupport_INCLUDE_DIRS})
 
 add_definitions(-DSRC_DIR="${CMAKE_SOURCE_DIR}")
 
 find_package(Boost REQUIRED)
-find_package( OpenCV 2.3 REQUIRED )
+find_package(OpenCV 2.3 REQUIRED )
+find_package(QCustomPlot REQUIRED)
 
 option(enable_qhy "Enable QHY Driver (default: ON)" ON) # TODO move again in drivers/CMakeLists.txt
 option(enable_simulator "Enable fake driver simulator (default: OFF)" OFF)

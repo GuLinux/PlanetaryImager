@@ -26,7 +26,7 @@
      <x>0</x>
      <y>0</y>
      <width>997</width>
-     <height>27</height>
+     <height>29</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuDevice">
@@ -264,8 +264,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>250</width>
-          <height>110</height>
+          <width>260</width>
+          <height>90</height>
          </rect>
         </property>
        </widget>
@@ -297,6 +297,24 @@
    </attribute>
    <addaction name="actionEdges_Detection"/>
    <addaction name="actionShow_settings"/>
+  </widget>
+  <widget class="QDockWidget" name="histogram">
+   <property name="floating">
+    <bool>false</bool>
+   </property>
+   <property name="windowTitle">
+    <string>Histogra&amp;m</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_4">
+    <layout class="QGridLayout" name="gridLayout_4">
+     <item row="0" column="0">
+      <widget class="QCustomPlot" name="histogram_plot" native="true"/>
+     </item>
+    </layout>
+   </widget>
   </widget>
   <action name="action_devices_rescan">
    <property name="text">
@@ -377,7 +395,8 @@
   </action>
   <action name="actionShow_settings">
    <property name="icon">
-    <iconset theme="configure"/>
+    <iconset theme="configure">
+     <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
     <string>&amp;Show settings</string>
@@ -412,6 +431,14 @@
    </property>
   </action>
  </widget>
+ <customwidgets>
+  <customwidget>
+   <class>QCustomPlot</class>
+   <extends>QWidget</extends>
+   <header location="global">qcustomplot.h</header>
+   <container>1</container>
+  </customwidget>
+ </customwidgets>
  <resources>
   <include location="resources/resources.qrc"/>
  </resources>
