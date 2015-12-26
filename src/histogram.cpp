@@ -61,6 +61,7 @@ void Histogram::handle(const cv::Mat& imageData)
   const float* histRange = { range };
   const int channels = imageData.channels();
   cv::calcHist( &gray, 1, 0, cv::Mat(), hist, 1, &histSize, &histRange, true, false);
+//   cv::normalize(hist, hist, 0., 256, cv::NORM_MINMAX);
   emit histogram(hist);
   d->last.restart();
 }
