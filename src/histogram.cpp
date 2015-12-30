@@ -46,6 +46,7 @@ Histogram::Histogram(QObject* parent) : QObject(parent), dptr(this)
 
 void Histogram::handle(const cv::Mat& imageData)
 {
+#ifndef CV_LINK_BUG
   if(d->last.elapsed() < 1000)
     return;
   cv::Mat hist;
@@ -64,6 +65,7 @@ void Histogram::handle(const cv::Mat& imageData)
 //   cv::normalize(hist, hist, 0., 256, cv::NORM_MINMAX);
   emit histogram(hist);
   d->last.restart();
+#endif
 }
 
 #include "histogram.moc"
