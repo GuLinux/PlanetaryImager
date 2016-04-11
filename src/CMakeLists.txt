@@ -2,7 +2,7 @@ execute_process(COMMAND ${CMAKE_SOURCE_DIR}/scripts/qhy_errors_to_map ${CMAKE_SO
 execute_process(COMMAND ${CMAKE_SOURCE_DIR}/scripts/qhy_devices_to_map ${CMAKE_SOURCE_DIR}/QHYCCD_Linux/qhyccdcamdef.h OUTPUT_VARIABLE qhy_devices_codes)
 configure_file(version.h.in version.h)
 
-set(QHYImager_SRCS 
+set(QHYImager_SRCS
   main.cpp 
   planetaryimager_mainwindow.cpp 
   planetaryimager_mainwindow.ui 
@@ -12,6 +12,7 @@ set(QHYImager_SRCS
   resources/resources.qrc
   fps_counter.cpp
   camerasettingswidget.cpp
+  camerasettingswidget.ui
   configurationdialog.cpp
   configurationdialog.ui
   configuration.cpp
