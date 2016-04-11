@@ -40,22 +40,45 @@ using namespace std::placeholders;
 
 struct RecordingInformation {
   RecordingInformation(Configuration &configuration, const ImagerPtr &imager);
+  ~RecordingInformation();
+  void set_base_filename(const QString &filename);
   void set_ended(int total_frames, int width, int height);
   QVariantMap properties;
   typedef shared_ptr<RecordingInformation> ptr;
+  QString filename;
 };
 
 RecordingInformation::RecordingInformation(Configuration& configuration, const ImagerPtr& imager)
 {
-  properties["started"] = QDateTime::currentDateTime();
+  properties["started"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+  properties["camera"] = imager->name();
+  properties["observer"] = configuration.observer();
+  properties["telescope"] = configuration.telescope();
+  for(auto setting: imager->settings()) {
+  }
 }
 
 void RecordingInformation::set_ended(int total_frames, int width, int height)
 {
-  properties["ended"] = QDateTime::currentDateTime();
+  properties["ended"] = QDateTime::currentDateTime().toString(Qt::ISODate);
   properties["total_frames"] = total_frames;
   properties["width"] = width;
   properties["height"] = height;
+}
+
+void RecordingInformation::set_base_filename(const QString& filename)
+{
+  this->filename = filename + ".info";
+}
+
+RecordingInformation::~RecordingInformation()
+{
+  QFile file(filename);
+  if(filename.isEmpty() || ! file.open(QIODevice::WriteOnly))
+    return;
+  auto json = QJsonDocument::fromVariant(properties);
+  file.write(json.toJson(QJsonDocument::Indented));
+  file.close();
 }
 
 
@@ -146,25 +169,35 @@ void WriterThreadWorker::run()
 {
   {
     auto fileWriter = fileWriterFactory();
+    if(recording_information)
+      recording_information->set_base_filename(fileWriter->filename());
     fps_counter savefps{[=](double fps){ emit saveImages->saveFPS(fps);}, fps_counter::Elapsed};
     fps_counter meanfps{[=](double fps){ emit saveImages->meanFPS(fps);}, fps_counter::Elapsed, 1000, true};
     uint64_t frames = 0;
     emit saveImages->recording(fileWriter->filename());
+    int width = -1, height = -1;
     while(is_recording && frames < max_frames) {
       cv::Mat frame;
       if(framesQueue && framesQueue->pop(frame)) {
-	  fileWriter->handle(frame);
+	fileWriter->handle(frame);
 	++savefps;
 	++meanfps;
 	emit saveImages->savedFrames(++frames);
+	if(width == -1 || height == -1) {
+	  width = frame.cols;
+	  height = frame.rows;
+	}
       } else {
 	QThread::msleep(1);
       }
     }
     is_recording = false;
+    if(recording_information)
+      recording_information->set_ended(frames, width, height);
   }
   qDebug() << "closing thread";
   emit saveImages->finished();
+  recording_information.reset();
   QThread::currentThread()->quit();
   qDebug() << "finished worker";
 }
