@@ -38,6 +38,28 @@
 using namespace std;
 using namespace std::placeholders;
 
+struct RecordingInformation {
+  RecordingInformation(Configuration &configuration, const ImagerPtr &imager);
+  void set_ended(int total_frames, int width, int height);
+  QVariantMap properties;
+  typedef shared_ptr<RecordingInformation> ptr;
+};
+
+RecordingInformation::RecordingInformation(Configuration& configuration, const ImagerPtr& imager)
+{
+  properties["started"] = QDateTime::currentDateTime();
+}
+
+void RecordingInformation::set_ended(int total_frames, int width, int height)
+{
+  properties["ended"] = QDateTime::currentDateTime();
+  properties["total_frames"] = total_frames;
+  properties["width"] = width;
+  properties["height"] = height;
+}
+
+
+
 class WriterThreadWorker;
 class SaveImages::Private {
 public:
@@ -77,23 +99,25 @@ FileWriter::Factory SaveImages::Private::writerFactory()
 class WriterThreadWorker : public QObject {
   Q_OBJECT
 public:
-  explicit WriterThreadWorker ( const function< FileWriter::Ptr() >& fileWriterFactory, uint64_t max_frames, long long int max_memory, bool& is_recording, SaveImages *saveImages, QObject* parent = 0 );
+  typedef function< FileWriter::Ptr() > FileWriterFactory;
+  explicit WriterThreadWorker ( const FileWriterFactory& fileWriterFactory, uint64_t max_frames, long long int max_memory, bool& is_recording, SaveImages *saveImages, const RecordingInformation::ptr &recording_information, QObject* parent = 0 );
   virtual ~WriterThreadWorker();
 public slots:
   virtual void handle(const cv::Mat& imageData);
   void run();
 private:
-  function<FileWriter::Ptr()> fileWriterFactory;
+  FileWriterFactory fileWriterFactory;
   shared_ptr<boost::lockfree::spsc_queue<cv::Mat>> framesQueue;
   uint64_t max_frames;
   long long max_memory;
   bool &is_recording;
   uint64_t dropped_frames = 0;
   SaveImages *saveImages;
+  RecordingInformation::ptr recording_information;
 };
 
-WriterThreadWorker::WriterThreadWorker ( const function<FileWriter::Ptr()>& fileWriterFactory, uint64_t max_frames, long long int max_memory, bool& is_recording, SaveImages* saveImages, QObject* parent )
-  : QObject(parent), fileWriterFactory(fileWriterFactory), max_frames(max_frames), max_memory{max_memory}, is_recording{is_recording}, saveImages{saveImages}
+WriterThreadWorker::WriterThreadWorker ( const WriterThreadWorker::FileWriterFactory& fileWriterFactory, uint64_t max_frames, long long int max_memory, bool& is_recording, SaveImages* saveImages, const RecordingInformation::ptr& recording_information, QObject* parent )
+  : QObject(parent), fileWriterFactory(fileWriterFactory), max_frames(max_frames), max_memory{max_memory}, is_recording{is_recording}, saveImages{saveImages}, recording_information{recording_information}
 {
 }
 
@@ -153,16 +177,17 @@ void SaveImages::handle(const cv::Mat& imageData)
   QtConcurrent::run(bind(&WriterThreadWorker::handle, d->worker, imageData));
 }
 
-void SaveImages::startRecording(const QString &deviceName)
+void SaveImages::startRecording(const ImagerPtr &imager)
 {
   auto writerFactory = d->writerFactory();
   if(writerFactory) {
-    d->worker = new WriterThreadWorker(bind(writerFactory, 
-					    deviceName, 
-					    std::ref<Configuration>(d->configuration)),
+    RecordingInformation::ptr recording_information;
+    if(d->configuration.save_info_file())
+      recording_information = make_shared<RecordingInformation>(d->configuration, imager);
+    d->worker = new WriterThreadWorker(bind(writerFactory, imager->name(), std::ref<Configuration>(d->configuration)),
 				       d->configuration.recordingFramesLimit() == 0 ? std::numeric_limits<long long>().max() : d->configuration.recordingFramesLimit(), 
 				       d->configuration.maxMemoryUsage(), 
-				       d->is_recording, this);
+				       d->is_recording, this, recording_information);
 
     connect(&d->recordingThread, &QThread::finished, bind(&SaveImages::finished, this));
     d->worker->moveToThread(&d->recordingThread);

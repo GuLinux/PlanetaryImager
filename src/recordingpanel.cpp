@@ -52,6 +52,7 @@ RecordingPanel::RecordingPanel(Configuration& configuration, QWidget* parent) : 
   d->ui->videoOutputType->setDisabled(true);
 #endif
   recording(false);
+  d->ui->save_info_file->setChecked(configuration.save_info_file());
   d->ui->saveDirectory->setText(configuration.saveDirectory());
   d->ui->saveFramesLimit->setCurrentText(configuration.recordingFramesLimit() == 0 ? tr("Infinite") : QString::number(configuration.recordingFramesLimit()));
   d->ui->filePrefix->setText(configuration.saveFilePrefix());
@@ -72,6 +73,7 @@ RecordingPanel::RecordingPanel(Configuration& configuration, QWidget* parent) : 
   connect(d->ui->fileSuffix, &QLineEdit::textChanged, [&configuration](const QString &suffix){
     configuration.setSaveFileSuffix(suffix);
   });
+  connect(d->ui->save_info_file, &QCheckBox::toggled, [&configuration](bool checked) { configuration.set_save_info_file(checked); });
   connect(d->ui->saveFramesLimit, &QComboBox::currentTextChanged, [&configuration](const QString &text){
     bool ok = false;
     auto frameLimit = text.toLongLong(&ok);
