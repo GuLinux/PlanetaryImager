@@ -82,7 +82,7 @@ public:
     void init_devices_watcher();
   ZoomableImage *image;
   shared_ptr< QCPBars > histogram_plot;
-  void got_histogram(const std::vector<uint32_t> &histogram);
+  void got_histogram(const vector< uint32_t >& histogram);
   QQueue<Imager::Setting> settings_to_save_queue;
 private:
   PlanetaryImagerMainWindow *q;
