@@ -55,17 +55,15 @@ void Histogram::handle(const cv::Mat& imageData)
 {
   if(d->last.elapsed() < 1000)
     return;
-  cv::Mat gray;
-  typedef function<cv::Mat(const cv::Mat &)> tr_img;
-  if(imageData.channels() == 3) {
-    cv::cvtColor(imageData, gray, CV_BGR2GRAY);
-  } else {
-    gray = imageData;
-  }
-  
-  CImg<uint32_t> image(imageData.cols, imageData.rows);
-  image.assign(gray);
-  image.histogram(d->bins_size);
+
+  CImg<uint32_t> image(imageData);
+  map<int, uint32_t> depths {
+    {CV_8U, numeric_limits<uint8_t>::max()},
+    {CV_8S, numeric_limits<int8_t>::max()},
+    {CV_16U, numeric_limits<uint16_t>::max()},
+    {CV_16S, numeric_limits<int16_t>::max()},
+  };
+  image.histogram(d->bins_size, 0, depths[imageData.depth()]);
   vector<uint32_t> hist(image.size());
   move(image.begin(), image.end(), hist.begin());
   
