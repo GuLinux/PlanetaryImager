@@ -20,12 +20,19 @@
 #include "histogram.h"
 #include <functional>
 #include <opencv2/opencv.hpp>
+
+#define cimg_display 0
+#define cimg_plugin "CImg/plugins/cvMat.h"
+#include <CImg.h>
+using namespace cimg_library;
+
 using namespace std;
 
 class Histogram::Private {
 public:
   Private(Histogram *q);
   QElapsedTimer last;
+  size_t bins_size;
 private:
   Histogram *q;
 };
@@ -46,10 +53,8 @@ Histogram::Histogram(QObject* parent) : QObject(parent), dptr(this)
 
 void Histogram::handle(const cv::Mat& imageData)
 {
-#ifndef CV_LINK_BUG
   if(d->last.elapsed() < 1000)
     return;
-  cv::Mat hist;
   cv::Mat gray;
   typedef function<cv::Mat(const cv::Mat &)> tr_img;
   if(imageData.channels() == 3) {
@@ -57,15 +62,21 @@ void Histogram::handle(const cv::Mat& imageData)
   } else {
     gray = imageData;
   }
-  int histSize = 256;
-  float range[] = { 0, imageData.depth() == CV_8U ? 256 : 256*256 } ;
-  const float* histRange = { range };
-  const int channels = imageData.channels();
-  cv::calcHist( &gray, 1, 0, cv::Mat(), hist, 1, &histSize, &histRange, true, false);
-//   cv::normalize(hist, hist, 0., 256, cv::NORM_MINMAX);
+  
+  CImg<uint32_t> image(imageData.cols, imageData.rows);
+  image.assign(gray);
+  image.histogram(d->bins_size);
+  vector<uint32_t> hist(image.size());
+  move(image.begin(), image.end(), hist.begin());
+  
   emit histogram(hist);
   d->last.restart();
-#endif
+}
+
+
+void Histogram::set_bins(size_t bins_size)
+{
+  d->bins_size = bins_size;
 }
 
 #include "histogram.moc"

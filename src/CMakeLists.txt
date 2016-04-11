@@ -42,7 +42,8 @@ if(NOT opencv_LINK_BUG)
   set(cv_libs ${OpenCV_LIBS})
 endif(NOT opencv_LINK_BUG)
   
-target_link_libraries(planetary_imager GuLinux_Qt_Commons Qt5::Widgets ${Boost_LIBRARIES} ${planetary_imager_DEPS} ${cv_libs} ${QCustomPlot_LIBRARIES})
+#todo: remove pthread
+target_link_libraries(planetary_imager GuLinux_Qt_Commons Qt5::Widgets pthread ${Boost_LIBRARIES} ${planetary_imager_DEPS} ${cv_libs} ${QCustomPlot_LIBRARIES})
 install(TARGETS planetary_imager RUNTIME DESTINATION bin)
 
 
