@@ -46,11 +46,13 @@ struct RecordingInformation {
   QVariantMap properties;
   typedef shared_ptr<RecordingInformation> ptr;
   QString filename;
+  QDateTime started;
 };
 
 RecordingInformation::RecordingInformation(Configuration& configuration, const ImagerPtr& imager)
 {
-  properties["started"] = QDateTime::currentDateTime().toString(Qt::ISODate);
+  started = QDateTime::currentDateTime();
+  properties["started"] = started.toString(Qt::ISODate);
   properties["camera"] = imager->name();
   properties["observer"] = configuration.observer();
   properties["telescope"] = configuration.telescope();
@@ -73,10 +75,13 @@ RecordingInformation::RecordingInformation(Configuration& configuration, const I
 
 void RecordingInformation::set_ended(int total_frames, int width, int height)
 {
-  properties["ended"] = QDateTime::currentDateTime().toString(Qt::ISODate);
-  properties["total_frames"] = total_frames;
+  auto ended =QDateTime::currentDateTime();
+  auto elapsed = started.secsTo(ended);
+  properties["ended"] = ended.toString(Qt::ISODate);
+  properties["total-frames"] = total_frames;
   properties["width"] = width;
   properties["height"] = height;
+  properties["mean-fps"] = static_cast<double>(total_frames) / static_cast<double>(elapsed);
 }
 
 void RecordingInformation::set_base_filename(const QString& filename)
