@@ -26,7 +26,7 @@
      <x>0</x>
      <y>0</y>
      <width>997</width>
-     <height>29</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuDevice">
@@ -50,6 +50,7 @@
     <addaction name="actionChip_Info"/>
     <addaction name="actionCamera_Settings"/>
     <addaction name="actionRecording"/>
+    <addaction name="actionHistogram"/>
     <addaction name="actionHide_all"/>
     <addaction name="actionShow_all"/>
    </widget>
@@ -264,8 +265,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>260</width>
-          <height>90</height>
+          <width>262</width>
+          <height>79</height>
          </rect>
         </property>
        </widget>
@@ -310,7 +311,24 @@
    </attribute>
    <widget class="QWidget" name="dockWidgetContents_4">
     <layout class="QGridLayout" name="gridLayout_4">
-     <item row="0" column="0">
+     <item row="1" column="1">
+      <widget class="QSpinBox" name="histogram_bins">
+       <property name="minimum">
+        <number>10</number>
+       </property>
+       <property name="maximum">
+        <number>256</number>
+       </property>
+      </widget>
+     </item>
+     <item row="1" column="0">
+      <widget class="QLabel" name="histogram_bins_label">
+       <property name="text">
+        <string>Bins</string>
+       </property>
+      </widget>
+     </item>
+     <item row="2" column="0" colspan="2">
       <widget class="QCustomPlot" name="histogram_plot" native="true"/>
      </item>
     </layout>
@@ -428,6 +446,14 @@
    </property>
    <property name="text">
     <string>&amp;Edges Detection</string>
+   </property>
+  </action>
+  <action name="actionHistogram">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Histogram</string>
    </property>
   </action>
  </widget>

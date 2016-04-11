@@ -82,7 +82,7 @@ public:
     void init_devices_watcher();
   ZoomableImage *image;
   shared_ptr< QCPBars > histogram_plot;
-  void got_histogram(const cv::Mat &histogram);
+  void got_histogram(const std::vector<uint32_t> &histogram);
   QQueue<Imager::Setting> settings_to_save_queue;
 private:
   PlanetaryImagerMainWindow *q;
@@ -114,6 +114,15 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     d->displayImage = make_shared<DisplayImage>(d->configuration);
     d->saveImages = make_shared<SaveImages>(d->configuration);
     d->histogram = make_shared<Histogram>();
+    d->ui->histogram_bins->setValue(d->settings.value("histogram-bins", 50).toInt());
+    
+    auto update_bins = [&]{
+      auto value = d->ui->histogram_bins->value();
+      d->histogram->set_bins(value);
+      d->settings.setValue("histogram-bins", value);
+    };
+    update_bins();
+    connect(d->ui->histogram_bins, F_PTR(QSpinBox, valueChanged, int), update_bins);
     d->ui->statusbar->addPermanentWidget(d->statusbar_info_widget = new StatusBarInfoWidget());
 
     d->ui->image->setLayout(new QGridLayout);
@@ -166,6 +175,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     setupDockWidget(d->ui->actionChip_Info, d->ui->chipInfoWidget);
     setupDockWidget(d->ui->actionCamera_Settings, d->ui->camera_settings);
     setupDockWidget(d->ui->actionRecording, d->ui->recording);
+    setupDockWidget(d->ui->actionHistogram, d->ui->histogram);
     connect(d->ui->actionHide_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::hide, _1) ); });
     connect(d->ui->actionShow_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::show, _1) ); });
     
@@ -286,15 +296,14 @@ void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::CameraPtr& 
   });
 }
 
-void PlanetaryImagerMainWindow::Private::got_histogram(const cv::Mat& histogram)
+void PlanetaryImagerMainWindow::Private::got_histogram(const vector<uint32_t>& histogram)
 {
 //   ui->histogram_plot->graph(0)->clearData();
-  QVector<double> x(histogram.rows);
-  QVector<double> y(histogram.rows);
+  QVector<double> x(histogram.size());
+  QVector<double> y(histogram.size());
   std::iota(x.begin(), x.end(), 0);
-  vector<float> out;
-  histogram.copyTo(out);
-  transform(begin(out), end(out), begin(y), [](uint8_t i) { return static_cast<double>(i); });
+
+  transform(histogram.begin(), histogram.end(), y.begin(), [](uint32_t i) { return static_cast<double>(i); });
   histogram_plot->clearData();
   histogram_plot->setData(x, y);
   histogram_plot->rescaleAxes();
