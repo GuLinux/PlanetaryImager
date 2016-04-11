@@ -83,6 +83,7 @@ public:
   ZoomableImage *image;
   shared_ptr< QCPBars > histogram_plot;
   void got_histogram(const cv::Mat &histogram);
+  QQueue<Imager::Setting> settings_to_save_queue;
 private:
   PlanetaryImagerMainWindow *q;
 };
@@ -268,6 +269,20 @@ void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::CameraPtr& 
     
     ui->settings_container->setWidget(cameraSettingsWidget = new CameraSettingsWidget(imager, settings));
     enableUIWidgets(true);
+    
+    connect(imager.get(), &Imager::changed, q, [this](const Imager::Setting &changed_setting){
+      settings_to_save_queue.enqueue(changed_setting);
+    }, Qt::QueuedConnection);
+    connect(imager.get(), &Imager::fps, q, [this, imager]{
+      while(!settings_to_save_queue.isEmpty()) {
+	auto setting = settings_to_save_queue.dequeue();
+	qDebug() << "Settings changed, camera still alive: " << setting;
+	settings.beginGroup(imager->name());
+	qDebug() << "setting " << setting.name << " to " << setting.value;
+	settings.setValue(setting.name,  setting.value);
+	settings.endGroup();
+      }
+    }, Qt::QueuedConnection);
   });
 }
 

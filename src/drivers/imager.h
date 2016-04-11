@@ -45,4 +45,5 @@ QDebug operator<<(QDebug dbg, const Imager::Chip &chip);
 QDebug operator<<(QDebug dbg, const Imager::Setting &setting);
 QDebug operator<<(QDebug dbg, const Imager::Setting::Choice &choice);
 
+Q_DECLARE_METATYPE(Imager::Setting)
 #endif
