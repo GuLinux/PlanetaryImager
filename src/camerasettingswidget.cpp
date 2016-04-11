@@ -152,15 +152,12 @@ CameraSettingWidget::CameraSettingWidget(const Imager::Setting& setting, Imager*
     connect(settingWidget, &SettingWidget::valueChanged, [=](double v) {
       new_value = v;
     });
+    // TODO: move from here
     connect(imager, &Imager::changed, [=,&settings](const Imager::Setting &changed_setting){
       if(changed_setting.id != setting.id)
 	return;
       qDebug() << "setting changed:" << changed_setting.id << changed_setting.name << "=" << changed_setting.value;
       settingWidget->update(changed_setting);
-      settings.beginGroup(imager->name());
-      qDebug() << "setting " << changed_setting.name << " to " << changed_setting.value;
-      settings.setValue(changed_setting.name,  changed_setting.value);
-      settings.endGroup();
     });
 }
 

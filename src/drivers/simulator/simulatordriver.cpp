@@ -97,6 +97,7 @@ void SimulatorImager::setSetting(const Imager::Setting& setting)
 {
   QMutexLocker lock_settings(&settingsMutex);
   _settings[setting.name] = setting;
+  emit changed(setting);
 }
 
 Imager::Settings SimulatorImager::settings() const
