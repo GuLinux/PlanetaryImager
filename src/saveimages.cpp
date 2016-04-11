@@ -54,8 +54,11 @@ RecordingInformation::RecordingInformation(Configuration& configuration, const I
   properties["camera"] = imager->name();
   properties["observer"] = configuration.observer();
   properties["telescope"] = configuration.telescope();
+  QVariantMap camera_settings;
   for(auto setting: imager->settings()) {
+    camera_settings[setting.name] = setting.value;;
   }
+  properties["camera-settings"] = camera_settings;
 }
 
 void RecordingInformation::set_ended(int total_frames, int width, int height)
