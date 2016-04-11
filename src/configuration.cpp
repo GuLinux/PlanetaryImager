@@ -299,6 +299,17 @@ QString Configuration::videoCodec() const
 }
 
 
+bool Configuration::save_info_file() const
+{
+  return d->value<bool>("save_info_file", true);
+}
+
+void Configuration::set_save_info_file(bool save)
+{
+  d->set<bool>("save_info_file",save);
+}
+
+
 
 QString Configuration::savefile() const
 {

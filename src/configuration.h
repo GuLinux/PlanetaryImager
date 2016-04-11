@@ -96,6 +96,9 @@ public:
     
     QString videoCodec() const;
     void setVideoCodec(const QString &codec);
+    
+    bool save_info_file() const;
+    void set_save_info_file(bool save);
 private:
   D_PTR
 };

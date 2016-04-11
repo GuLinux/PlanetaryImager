@@ -21,6 +21,7 @@
 #define SAVEIMAGE_H
 
 #include "imagehandler.h"
+#include "drivers/imager.h"
 #include <QObject>
 #include "dptr.h"
 
@@ -33,7 +34,7 @@ public:
     ~SaveImages();
     virtual void handle(const cv::Mat& imageData);
 public slots:
-  void startRecording(const QString &deviceName);
+  void startRecording(const ImagerPtr &imager);
   void endRecording();
 private:
   D_PTR
