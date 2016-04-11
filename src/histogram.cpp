@@ -57,13 +57,7 @@ void Histogram::handle(const cv::Mat& imageData)
     return;
 
   CImg<uint32_t> image(imageData);
-  map<int, uint32_t> depths {
-    {CV_8U, numeric_limits<uint8_t>::max()},
-    {CV_8S, numeric_limits<int8_t>::max()},
-    {CV_16U, numeric_limits<uint16_t>::max()},
-    {CV_16S, numeric_limits<int16_t>::max()},
-  };
-  image.histogram(d->bins_size, 0, depths[imageData.depth()]);
+  image.histogram(d->bins_size);
   vector<uint32_t> hist(image.size());
   move(image.begin(), image.end(), hist.begin());
   
