@@ -22,7 +22,7 @@
 #include <opencv2/opencv.hpp>
 
 #define cimg_display 0
-#define cimg_plugin "CImg/plugins/cvMat.h"
+#define cimg_plugin "plugins/cvMat.h"
 #include <CImg.h>
 using namespace cimg_library;
 
