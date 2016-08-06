@@ -31,7 +31,7 @@ V4L2Driver();
 virtual Driver::Cameras cameras() const;
 
 private:
-    D_PTR
+    DPTR
 };
 
 #endif // V4L2_CAM_DRIVER_H

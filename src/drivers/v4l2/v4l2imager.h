@@ -37,7 +37,7 @@ public slots:
   virtual void startLive();
   virtual void stopLive();
 private:
-    D_PTR
+    DPTR
 };
 
 #endif // V4L2IMAGER_H

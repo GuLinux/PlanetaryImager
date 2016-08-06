@@ -35,7 +35,7 @@ public:
     PlanetaryImagerMainWindow(QWidget* parent = 0, Qt::WindowFlags flags = 0);
 
 private:
-  D_PTR
+  DPTR
 };
 
 #endif // QHYMAINWINDOW_H

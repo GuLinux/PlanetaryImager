@@ -17,7 +17,7 @@ public:
     error(const QString &label, int code);
   };
 private:
-  D_PTR
+  DPTR
 };
 
 #endif // QHYDRIVER_H

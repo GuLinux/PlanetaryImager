@@ -36,7 +36,7 @@ virtual void setSetting(const Setting& setting);
 virtual void startLive();
 virtual void stopLive();
 private:
-    D_PTR
+    DPTR
 };
 
 #endif // WEBCAMIMAGER_H

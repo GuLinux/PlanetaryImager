@@ -35,7 +35,7 @@ public:
 signals:
   void histogram(const std::vector<uint32_t> &);
 private:
-  D_PTR
+  DPTR
 };
 
 #endif // HISTOGRAM_H

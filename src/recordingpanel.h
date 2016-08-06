@@ -40,7 +40,7 @@ signals:
   void start();
   void stop();
 private:
-  D_PTR;
+  DPTR;
 };
 
 #endif // RECORDINGPANEL_H

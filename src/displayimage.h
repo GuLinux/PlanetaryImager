@@ -42,7 +42,7 @@ public slots:
   void detectEdges(bool detect);
   void quit();
 private:
-  D_PTR
+  DPTR
 };
 
 #endif // DISPLAYIMAGE_H

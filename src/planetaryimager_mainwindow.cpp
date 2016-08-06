@@ -55,8 +55,9 @@ using namespace std::placeholders;
 
 Q_DECLARE_METATYPE(cv::Mat)
 
-class PlanetaryImagerMainWindow::Private {
-public:
+DPTR_IMPL(PlanetaryImagerMainWindow) {
+  PlanetaryImagerMainWindow *q;
+  
   Private(PlanetaryImagerMainWindow *q);
   shared_ptr<Ui::PlanetaryImagerMainWindow> ui;
   DriverPtr driver = make_shared<SupportedDrivers>();
@@ -84,8 +85,6 @@ public:
   shared_ptr< QCPBars > histogram_plot;
   void got_histogram(const vector< uint32_t >& histogram);
   QQueue<Imager::Setting> settings_to_save_queue;
-private:
-  PlanetaryImagerMainWindow *q;
 };
 
 PlanetaryImagerMainWindow::Private::Private(PlanetaryImagerMainWindow* q) : ui{make_shared<Ui::PlanetaryImagerMainWindow>()}, settings{"GuLinux", qApp->applicationName()}, configuration{settings}, q{q}
@@ -260,6 +259,8 @@ void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::CameraPtr& 
     if(!imager) {
       for(auto widget: QList<QLabel*>{ui->camera_chip_size, ui->camera_pixels_size, ui->camera_bpp, ui->camera_resolution})
           chip_text(widget, "", {-1});
+      qDeleteAll(ui->chipInfo->findChildren<QWidget*>("", Qt::FindDirectChildrenOnly));
+
       return;
     }
     cameraDisconnected();
@@ -276,7 +277,11 @@ void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::CameraPtr& 
     
     chip_text(ui->camera_bpp, "%1"_q % chip.bpp, {chip.bpp});
     chip_text(ui->camera_resolution, "%1x%2"_q % chip.xres % chip.yres, {chip.xres, chip.yres});
-    
+    ui->chipInfo->setLayout(new QVBoxLayout);
+    for(auto property: chip.properties) {
+      qDebug() << "Property name: " << property.name << " = " << property.value;
+      ui->chipInfo->layout()->addWidget(new QLabel("%1: %2"_q % property.name % property.value, ui->chipInfo));
+    }
     ui->settings_container->setWidget(cameraSettingsWidget = new CameraSettingsWidget(imager, settings));
     enableUIWidgets(true);
     
@@ -320,6 +325,8 @@ void PlanetaryImagerMainWindow::Private::cameraDisconnected()
   ui->camera_bpp->clear();
   ui->camera_pixels_size->clear();
   ui->camera_resolution->clear();
+  qDeleteAll(ui->chipInfo->findChildren<QWidget*>("", Qt::FindDirectChildrenOnly));
+
   delete cameraSettingsWidget;
   cameraSettingsWidget = 0;
   image->setImage({});

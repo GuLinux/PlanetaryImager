@@ -42,7 +42,7 @@ public slots:
   virtual void startLive();
   virtual void stopLive();
 private:
-  D_PTR
+  DPTR
 };
 
 typedef std::shared_ptr<QHYCCDImager> QHYCCDImagerPtr;

@@ -28,18 +28,11 @@ using namespace cimg_library;
 
 using namespace std;
 
-class Histogram::Private {
-public:
-  Private(Histogram *q);
+DPTR_IMPL(Histogram) {
+  Histogram *q;
   QElapsedTimer last;
   size_t bins_size;
-private:
-  Histogram *q;
 };
-
-Histogram::Private::Private(Histogram* q) : q{q}
-{
-}
 
 
 Histogram::~Histogram()
