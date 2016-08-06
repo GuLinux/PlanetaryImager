@@ -27,6 +27,11 @@ public:
   struct Chip {
     double width, height, pixelwidth, pixelheight;
     int xres, yres, bpp;
+    struct Property {
+      QString name;
+      QString value;
+    };
+    QList<Property> properties;
   };
   virtual QString name() const = 0;
   virtual Chip chip() const = 0;

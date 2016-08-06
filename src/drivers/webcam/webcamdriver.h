@@ -31,7 +31,7 @@ WebcamDriver();
 virtual Driver::Cameras cameras() const;
 
 private:
-    D_PTR
+    DPTR
 };
 
 #endif // WEBCAMDRIVER_H

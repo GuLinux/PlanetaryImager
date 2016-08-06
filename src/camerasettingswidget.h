@@ -13,7 +13,7 @@ public:
 CameraSettingsWidget(const ImagerPtr &imager, QSettings &settings, QWidget* parent = 0);
 
 private:
-    D_PTR
+    DPTR
 };
 
 #endif // CAMERASETTINGSWIDGET_H

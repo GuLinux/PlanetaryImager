@@ -37,7 +37,7 @@ public slots:
   void startRecording(const ImagerPtr &imager);
   void endRecording();
 private:
-  D_PTR
+  DPTR
 signals:
   void saveFPS(double fps);
   void meanFPS(double fps);

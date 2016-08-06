@@ -15,7 +15,7 @@ public:
   fps_counter &operator++();
 
 private:
-    D_PTR
+    DPTR
 };
 
 #endif // FPS_COUNTER_H

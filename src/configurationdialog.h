@@ -36,7 +36,7 @@ public:
     ConfigurationDialog(Configuration &configuration, QWidget* parent = 0);
 
 private:
-  D_PTR
+  DPTR
 };
 
 #endif // CONFIGURATIONDIALOG_H

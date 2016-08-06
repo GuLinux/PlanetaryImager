@@ -26,7 +26,7 @@
      <x>0</x>
      <y>0</y>
      <width>997</width>
-     <height>25</height>
+     <height>29</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuDevice">
@@ -224,7 +224,7 @@
        </property>
       </widget>
      </item>
-     <item row="5" column="1" colspan="2">
+     <item row="6" column="1" colspan="2">
       <spacer name="verticalSpacer">
        <property name="orientation">
         <enum>Qt::Vertical</enum>
@@ -236,6 +236,9 @@
         </size>
        </property>
       </spacer>
+     </item>
+     <item row="5" column="0" colspan="3">
+      <widget class="QWidget" name="chipInfo" native="true"/>
      </item>
     </layout>
    </widget>
@@ -265,8 +268,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>262</width>
-          <height>79</height>
+          <width>260</width>
+          <height>72</height>
          </rect>
         </property>
        </widget>
@@ -453,7 +456,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Histogram</string>
+    <string>H&amp;istogram</string>
    </property>
   </action>
  </widget>

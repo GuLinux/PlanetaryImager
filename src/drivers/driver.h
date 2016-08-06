@@ -25,7 +25,7 @@ public:
   ~SupportedDrivers();
   virtual Cameras cameras() const;
 private:
-  D_PTR;
+  DPTR;
 };
 
 #endif

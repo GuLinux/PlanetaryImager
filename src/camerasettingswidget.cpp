@@ -104,8 +104,8 @@ MenuSettingWidget::MenuSettingWidget(QWidget* parent): SettingWidget(parent)
 
 void MenuSettingWidget::update(const Imager::Setting& setting)
 {
-  if(edit->currentData().toDouble() == setting.value)
-    return;
+//   if(edit->currentData().toDouble() == setting.value)
+//     return;
   edit->clear();
   for(auto item: setting.choices) {
     edit->addItem(item.label, item.value);

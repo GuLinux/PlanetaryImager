@@ -35,7 +35,7 @@ public slots:
   void captureFPS(double fps);
   void displayFPS(double fps);
 private:
-  D_PTR
+  DPTR
 };
 
 #endif // STATUSBARINFOWIDGET_H

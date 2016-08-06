@@ -32,7 +32,7 @@ public:
  virtual void handle(const cv::Mat& imageData);
 
 private:
-   D_PTR
+   DPTR
 };
 
 #endif // SERWRITER_H

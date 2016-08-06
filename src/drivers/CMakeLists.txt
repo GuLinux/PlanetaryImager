@@ -33,4 +33,5 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
   add_subdirectory(v4l2)
 endif(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 
+add_subdirectory(zwo_asi)
 configure_file(available_drivers.h.in available_drivers.h)
