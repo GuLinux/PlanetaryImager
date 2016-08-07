@@ -30,6 +30,7 @@ using namespace GuLinux;
 
 namespace {
 const int64_t ImageTypeSettingId = 10000;
+const int64_t BinSettingId = 10001;
 class ImagingWorker : public QObject {
 #ifndef IN_IDE_PARSER
     Q_OBJECT
@@ -117,6 +118,11 @@ void ZWO_ASI_Imager::setSetting(const Setting& setting)
         QMetaObject::invokeMethod(d->worker, "setFormat", Q_ARG(ASI_IMG_TYPE, static_cast<ASI_IMG_TYPE>(setting.value) ) );
         return;
     }
+    if(setting.id == BinSettingId) {
+      d->worker->stop = true;
+      QMetaObject::invokeMethod(d->worker, "setBin", Q_ARG(int, static_cast<int>(setting.value) ) );
+      return;
+    }
 
     ASISetControlValue(d->info.CameraID, static_cast<ASI_CONTROL_TYPE>(setting.id), setting.value, ASI_FALSE);
     emit changed(d->setting(static_cast<ASI_CONTROL_TYPE>(setting.id)));
@@ -169,7 +175,15 @@ Imager::Settings ZWO_ASI_Imager::settings() const
     }
     imageFormat.max = i-1;
     settings.push_back(imageFormat);
-    qDebug() << imageFormat;
+    
+    Imager::Setting bin {BinSettingId, "Bin", 0, 0, 1, 1, 1, Setting::Combo};
+    i = 0;
+    while(d->info.SupportedBins[i] != 0) {
+      auto bin_value = d->info.SupportedBins[i++];
+      bin.choices.push_back( {"%1x%1"_q % bin_value, bin_value } );
+    }
+    bin.max = i-1;
+    settings.push_back(bin);
     return settings;
 }
 
@@ -221,6 +235,7 @@ ImagingWorker::~ImagingWorker()
 
 void ImagingWorker::start_live()
 {
+    qDebug() << "Starting imaging: imageFormat=" << imageFormat << ", roi: " << roi << ", bin: " << bin;
     int result = ASISetROIFormat(info.CameraID, roi.width(), roi.height(), bin, imageFormat);
     if(result != ASI_SUCCESS)
         throw runtime_error(stringbuilder() << "Error setting format: " << result );
@@ -239,7 +254,7 @@ void ImagingWorker::start_live()
     while(!stop) {
         result = ASIGetVideoData(info.CameraID, buffer.data(), buffer.size(), 100000);
         if(result == ASI_SUCCESS) {
-            cv::Mat image( {info.MaxWidth, info.MaxHeight}, getCVImageType(), buffer.data());
+            cv::Mat image( {roi.width(), roi.height()}, getCVImageType(), buffer.data());
             cv::Mat copy;
             image.copyTo(copy);
             imageHandler->handle(copy);
@@ -292,7 +307,7 @@ void ImagingWorker::setBin(int bin)
 {
     RestartShooting r(this);
     this->bin = bin;
-    this->roi = {0, 0, info.MaxWidth / bin, info.MaxWidth / bin};
+    this->roi = {0, 0, info.MaxWidth / bin, info.MaxHeight / bin};
 }
 
 void ImagingWorker::setFormat(ASI_IMG_TYPE format)
