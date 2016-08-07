@@ -75,9 +75,10 @@ Driver::Cameras SimulatorDriver::cameras() const
 
 SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{handler}, _settings{
     {"exposure", {1, "exposure", 0, 100, 1, 50}},
-    {"movement",    {3, "movement", 0, 5, 1, 1}},
-    {"seeing",    {4, "seeing", 0, 5, 1, 1}},
+    {"movement", {3, "movement", 0, 5, 1, 1}},
+    {"seeing",   {4, "seeing", 0, 5, 1, 1}},
     {"delay",    {5, "delay", 0, 100, 1, 1}},
+    {"bin",	 {6, "bin", 0, 3, 1, 1, 1, Setting::Combo, { {"1x1", 1}, {"2x2", 2}, {"3x3", 3}, {"4x4", 4} } }}, 
   }
 {
 }
@@ -154,6 +155,9 @@ void SimulatorImager::startLive()
             depth = 16;
         if(result.depth() > CV_16S)
             depth = 32;
+	auto scale = _settings["bin"].value;
+	if(scale > 1)
+	  cv::resize(result, result, {result.cols/scale, result.rows/scale});
         ++fps;
         imageHandler->handle(result);
         QThread::msleep(delay.value);
