@@ -256,7 +256,7 @@ void ImagingWorker::start_live()
   fps_counter _fps([=](double rate){ emit imager->fps(rate); }, fps_counter::Elapsed);
   uint8_t buffer[size];
   qDebug() << "capturing thread started, image size: " << size;
-  int w, h, bpp, channels;
+  uint32_t w, h, bpp, channels;
   auto buffer_real_size = [&] { return w*h*channels*(bpp<=8?1:2); };
   auto is_zero = [](uint8_t v) { return v==0; };
   while(enabled){
@@ -271,7 +271,7 @@ void ImagingWorker::start_live()
       int type = bpp==8 ? CV_8UC1 : CV_16UC1;
       if(channels == 3)
         type = bpp==8 ? CV_8UC3 : CV_16UC3;
-      cv::Mat image({w, h}, type, buffer);
+      cv::Mat image({static_cast<int>(w), static_cast<int>(h)}, type, buffer);
       ++_fps;
       cv::Mat copy;
       image.copyTo(copy);

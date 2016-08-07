@@ -68,7 +68,7 @@ Driver::Cameras QHYDriver::cameras() const
 {
   Cameras cameras;
   int scan_result= ScanQHYCCD();
-  if(scan_result == QHYCCD_ERROR_NO_DEVICE) {
+  if(scan_result == 0 /* was QHYCCD_ERROR_NO_DEVICE */) {
     return cameras;
   }
   if(scan_result < QHYCCD_SUCCESS) {
