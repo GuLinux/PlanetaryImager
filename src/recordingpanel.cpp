@@ -48,9 +48,6 @@ RecordingPanel::RecordingPanel(Configuration& configuration, QWidget* parent) : 
 {
   d->ui.reset(new Ui::RecordingPanel);
   d->ui->setupUi(this);
-#ifdef CV_LINK_BUG
-  d->ui->videoOutputType->setDisabled(true);
-#endif
   recording(false);
   d->ui->save_info_file->setChecked(configuration.save_info_file());
   d->ui->saveDirectory->setText(configuration.saveDirectory());

@@ -19,15 +19,6 @@ find_package(Boost REQUIRED)
 find_package(OpenCV REQUIRED )
 find_package(QCustomPlot REQUIRED)
 
-option(enable_qhy "Enable QHY Driver (default: ON)" OFF) # TODO move again in drivers/CMakeLists.txt
-option(enable_simulator "Enable fake driver simulator (default: OFF)" ON)
-if(enable_qhy)
-  set(opencv_LINK_BUG On)
-  set(enable_simulator Off)
-  add_definitions(-DCV_LINK_BUG)
-endif(enable_qhy)
-message("workaround for cv link in libqhy: ${opencv_LINK_BUG}")
-
 include_directories(${OpenCV_INCLUDE_DIRS})
 include(FindPkgConfig)
 pkg_check_modules(LIBUSB libusb-1.0 REQUIRED)
@@ -42,10 +33,7 @@ set(PATCH_VERSION 0)
 
 add_subdirectory(GuLinux-Commons/Qt)
 
-execute_process(COMMAND "sed -i 's/“//g CMakeLists.txt" WORKING_DIRECTORY QHYCCD_Linux/)
-execute_process(COMMAND "sed -i 's/”//g CMakeLists.txt" WORKING_DIRECTORY QHYCCD_Linux/)
-add_subdirectory(QHYCCD_Linux)
-include_directories(QHYCCD_Linux ${LIBUSB_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
+include_directories(${LIBUSB_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 add_subdirectory(src)
 add_subdirectory(tests)
 add_subdirectory(files)

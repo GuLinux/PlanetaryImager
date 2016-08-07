@@ -1,5 +1,3 @@
-execute_process(COMMAND ${CMAKE_SOURCE_DIR}/scripts/qhy_errors_to_map ${CMAKE_SOURCE_DIR}/QHYCCD_Linux/qhyccderr.h OUTPUT_VARIABLE qhy_error_codes)
-execute_process(COMMAND ${CMAKE_SOURCE_DIR}/scripts/qhy_devices_to_map ${CMAKE_SOURCE_DIR}/QHYCCD_Linux/qhyccdcamdef.h OUTPUT_VARIABLE qhy_devices_codes)
 configure_file(version.h.in version.h)
 
 set(QHYImager_SRCS
@@ -42,8 +40,7 @@ if(NOT opencv_LINK_BUG)
   set(cv_libs ${OpenCV_LIBS})
 endif(NOT opencv_LINK_BUG)
   
-#todo: remove pthread
-target_link_libraries(planetary_imager GuLinux_Qt_Commons Qt5::Widgets pthread ${Boost_LIBRARIES} ${planetary_imager_DEPS} ${cv_libs} ${QCustomPlot_LIBRARIES})
+target_link_libraries(planetary_imager GuLinux_Qt_Commons Qt5::Widgets ${Boost_LIBRARIES} ${planetary_imager_DEPS} ${cv_libs} ${QCustomPlot_LIBRARIES} pthread)
 install(TARGETS planetary_imager RUNTIME DESTINATION bin)
 
 

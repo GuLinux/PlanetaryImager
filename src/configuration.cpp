@@ -143,9 +143,6 @@ void Configuration::setSaveDirectory(const QString& directory)
 
 Configuration::SaveFormat Configuration::saveFormat() const
 {
-#ifdef CV_LINK_BUG
-    return SER;
-#endif
   return static_cast<SaveFormat>(d->value<int>("save_format", SER));
 }
 
@@ -176,11 +173,7 @@ void Configuration::setTelescope(const QString& telescope)
 
 Configuration::EdgeAlgorithm Configuration::edgeAlgorithm() const
 {
-#ifdef CV_LINK_BUG
-  return SobelDeprecated;
-#else
   return static_cast<EdgeAlgorithm>(d->value<int>("edge_algorithm", Canny));
-#endif
 }
 
 void Configuration::setEdgeAlgorithm(Configuration::EdgeAlgorithm algorithm)

@@ -26,7 +26,7 @@ public:
     virtual Settings settings() const = 0;  
   struct Chip {
     double width, height, pixelwidth, pixelheight;
-    int xres, yres, bpp;
+    uint32_t xres, yres, bpp;
     struct Property {
       QString name;
       QString value;

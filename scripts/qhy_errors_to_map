@@ -1,3 +1,3 @@
 #!/bin/bash
-grep QHYCCD_ERROR "$1" | awk '{ print "{ " $2 ", \"" $2 "\" },"}'
+grep QHYCCD_ERROR "$1" | awk '{ print "#ifdef " $2 "\n{ " $2 ", \"" $2 "\" },\n#endif"}'
 

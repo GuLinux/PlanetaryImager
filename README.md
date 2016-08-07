@@ -5,7 +5,7 @@ Qt capture software for astronomy, mainly planetary shooting
 
 Supported Cameras
 -----------------
-~~Currently this application supports only QHY based cameras, mainly QHY5IIm-L (mine).~~
+Currently this application supports only QHY based cameras, mainly QHY5IIm-L (the one I had until a few months ago).
 It also has support for V4L compliant cameras, and initial support for ZWO ASI cameras.
 
 Requirements
