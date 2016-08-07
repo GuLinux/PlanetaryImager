@@ -198,10 +198,10 @@ void ImagingWorker::start_live()
   while(!stop) {
     result = ASIGetVideoData(info.CameraID, buffer.data(), buffer.size(), 100000);
     if(result == ASI_SUCCESS) {
-//     cv::Mat image({info.MaxWidth, info.MaxHeight}, CV_8UC1, buffer.data());
-//     cv::Mat copy;
-//     image.copyTo(copy);
-//     imageHandler->handle(copy);
+    cv::Mat image({info.MaxWidth, info.MaxHeight}, CV_8UC1, buffer.data());
+    cv::Mat copy;
+    image.copyTo(copy);
+    imageHandler->handle(copy);
       ++_fps;
     } else {
       qDebug() << "Capture error: " << result;
