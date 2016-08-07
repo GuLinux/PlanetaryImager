@@ -307,7 +307,7 @@ void ImagingWorker::setBin(int bin)
 {
     RestartShooting r(this);
     this->bin = bin;
-    this->roi = {0, 0, info.MaxWidth / bin, info.MaxHeight / bin};
+    this->roi = {0, 0, (info.MaxWidth / bin/ 4) *4, (info.MaxHeight / bin / 2) * 2};
 }
 
 void ImagingWorker::setFormat(ASI_IMG_TYPE format)
