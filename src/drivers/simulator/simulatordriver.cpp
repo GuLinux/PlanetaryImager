@@ -54,6 +54,10 @@ public:
     int rand(int a, int b);
     QMap<QString, Imager::Setting> _settings;
     QMutex settingsMutex;
+    virtual bool supportsROI() { return false; }
+public slots:
+    virtual void setROI(const QRect &) {}
+    virtual void clearROI() {}
 private:
   ImageHandlerPtr imageHandler;
     bool started = false;

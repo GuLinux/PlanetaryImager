@@ -45,6 +45,8 @@ public slots:
     void setFormat(ASI_IMG_TYPE format);
     void setBin(int bin);
     void setROI(const QRect &roi);
+    QRect maxROI() const;
+    QRect supportedROI(const QRect &rawROI) const;
 private:
     ASI_CAMERA_INFO info;
     ImageHandlerPtr imageHandler;
@@ -236,6 +238,7 @@ ImagingWorker::~ImagingWorker()
 void ImagingWorker::start_live()
 {
     qDebug() << "Starting imaging: imageFormat=" << imageFormat << ", roi: " << roi << ", bin: " << bin;
+    QRect roi = supportedROI(this->roi);
     int result = ASISetROIFormat(info.CameraID, roi.width(), roi.height(), bin, imageFormat);
     if(result != ASI_SUCCESS)
         throw runtime_error(stringbuilder() << "Error setting format: " << result );
@@ -307,7 +310,7 @@ void ImagingWorker::setBin(int bin)
 {
     RestartShooting r(this);
     this->bin = bin;
-    this->roi = {0, 0, (info.MaxWidth / bin/ 4) *4, (info.MaxHeight / bin / 2) * 2};
+    this->roi = maxROI();
 }
 
 void ImagingWorker::setFormat(ASI_IMG_TYPE format)
@@ -322,6 +325,32 @@ void ImagingWorker::setROI(const QRect& roi)
     this->roi = roi;
 }
 
+bool ZWO_ASI_Imager::supportsROI()
+{
+  return true; // TODO: detection?
+}
+
+void ZWO_ASI_Imager::clearROI()
+{
+    d->worker->stop = true;
+    QMetaObject::invokeMethod(d->worker, "setROI", Q_ARG(QRect, d->worker->maxROI() ) );
+}
+
+void ZWO_ASI_Imager::setROI(const QRect& roi)
+{
+    d->worker->stop = true;
+    QMetaObject::invokeMethod(d->worker, "setROI", Q_ARG(QRect, roi) );
+}
+
+QRect ImagingWorker::maxROI() const
+{
+  return {0, 0, info.MaxWidth / bin, info.MaxHeight / bin};
+}
+
+QRect ImagingWorker::supportedROI(const QRect& rawROI) const
+{
+  return {rawROI.x(), rawROI.y(), (rawROI.width() / 4) * 4, (rawROI.height()/4) * 4 };
+}
 
 
 #include "zwo_asi_imager.moc"

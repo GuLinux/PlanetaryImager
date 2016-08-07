@@ -301,6 +301,9 @@
    </attribute>
    <addaction name="actionEdges_Detection"/>
    <addaction name="actionShow_settings"/>
+   <addaction name="separator"/>
+   <addaction name="actionSelect_ROI"/>
+   <addaction name="actionClear_ROI"/>
   </widget>
   <widget class="QDockWidget" name="histogram">
    <property name="floating">
@@ -457,6 +460,22 @@
    </property>
    <property name="text">
     <string>H&amp;istogram</string>
+   </property>
+  </action>
+  <action name="actionSelect_ROI">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Select ROI</string>
+   </property>
+  </action>
+  <action name="actionClear_ROI">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Clear ROI</string>
    </property>
   </action>
  </widget>

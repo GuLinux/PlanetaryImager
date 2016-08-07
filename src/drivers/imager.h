@@ -35,7 +35,10 @@ public:
   };
   virtual QString name() const = 0;
   virtual Chip chip() const = 0;
+  virtual bool supportsROI() = 0;
 public slots:
+  virtual void setROI(const QRect &) = 0;
+  virtual void clearROI() = 0;
   virtual void setSetting(const Setting &setting) = 0;
   virtual void startLive() = 0;
   virtual void stopLive() = 0;

@@ -209,6 +209,12 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     d->init_devices_watcher();
     d->histogram_plot = make_shared<QCPBars>(d->ui->histogram_plot->xAxis, d->ui->histogram_plot->yAxis);
     d->ui->histogram_plot->addPlottable(d->histogram_plot.get());
+    connect(d->ui->actionClear_ROI, &QAction::triggered, [&] { d->imager->clearROI(); });
+    connect(d->ui->actionSelect_ROI, &QAction::triggered, [&] { d->image->startSelectionMode(); });
+    connect(d->image, &ZoomableImage::selectedROI, [&](const QRectF &rect) {  // TODO: safety check if we add more selection modes other than ROI
+      d->imager->setROI(rect.toRect());
+      d->image->clearROI();
+    });
 }
 
 #include <iostream>
@@ -288,7 +294,8 @@ void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::CameraPtr& 
     }
     ui->settings_container->setWidget(cameraSettingsWidget = new CameraSettingsWidget(imager, settings));
     enableUIWidgets(true);
-    
+    ui->actionSelect_ROI->setEnabled(imager->supportsROI());
+    ui->actionClear_ROI->setEnabled(imager->supportsROI());
     connect(imager.get(), &Imager::changed, q, [this](const Imager::Setting &changed_setting){
       settings_to_save_queue.enqueue(changed_setting);
     }, Qt::QueuedConnection);
@@ -324,6 +331,8 @@ void PlanetaryImagerMainWindow::Private::cameraDisconnected()
 {
   qDebug() << "camera disconnected";
   enableUIWidgets(false);
+    ui->actionSelect_ROI->setEnabled(false);
+  ui->actionClear_ROI->setEnabled(false);
   ui->camera_name->clear();
   ui->camera_chip_size->clear();
   ui->camera_bpp->clear();
