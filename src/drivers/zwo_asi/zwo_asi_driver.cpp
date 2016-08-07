@@ -47,6 +47,11 @@ ImagerPtr ZWO_ASI_Camera::imager(const ImageHandlerPtr& imageHandler) const
 
 ZWO_ASI_Driver::ZWO_ASI_Driver() : dptr(this)
 {
+  static bool metatypes_registered = false;
+  if(!metatypes_registered) {
+    metatypes_registered = true;
+    qRegisterMetaType<ASI_IMG_TYPE>("ASI_IMG_TYPE");
+  }
 }
 
 ZWO_ASI_Driver::~ZWO_ASI_Driver()
