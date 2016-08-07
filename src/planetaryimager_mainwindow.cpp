@@ -87,7 +87,11 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   QQueue<Imager::Setting> settings_to_save_queue;
 };
 
-PlanetaryImagerMainWindow::Private::Private(PlanetaryImagerMainWindow* q) : ui{make_shared<Ui::PlanetaryImagerMainWindow>()}, settings{"GuLinux", qApp->applicationName()}, configuration{settings}, q{q}
+PlanetaryImagerMainWindow::Private::Private(PlanetaryImagerMainWindow* q) 
+  : ui{make_shared<Ui::PlanetaryImagerMainWindow>()},
+  settings{"GuLinux", qApp->applicationName()}, 
+  configuration{settings}, 
+  q{q}
 {
 }
 
