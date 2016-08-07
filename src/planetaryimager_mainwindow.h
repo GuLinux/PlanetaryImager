@@ -29,7 +29,7 @@ class PlanetaryImagerMainWindow;
 
 class PlanetaryImagerMainWindow : public QMainWindow
 {
-    Q_OBJECT
+//     Q_OBJECT
 public:
     ~PlanetaryImagerMainWindow();
     PlanetaryImagerMainWindow(QWidget* parent = 0, Qt::WindowFlags flags = 0);

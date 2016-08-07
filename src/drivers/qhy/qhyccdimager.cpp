@@ -295,6 +295,21 @@ void QHYCCDImager::stopLive()
   d->worker->stop();
 }
 
+bool QHYCCDImager::supportsROI()
+{
+  return false; // TODO
+}
+
+void QHYCCDImager::setROI(const QRect&)
+{
+
+}
+
+void QHYCCDImager::clearROI()
+{
+
+}
+
 
 #include "qhyccdimager.moc"
 
