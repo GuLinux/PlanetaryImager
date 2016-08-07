@@ -5,13 +5,14 @@ Qt capture software for astronomy, mainly planetary shooting
 
 Supported Cameras
 -----------------
-Currently this application supports only QHY based cameras, mainly QHY5IIm-L (mine).
+~~Currently this application supports only QHY based cameras, mainly QHY5IIm-L (mine).~~
+It also has support for V4L compliant cameras, and initial support for ZWO ASI cameras.
 
 Requirements
 ------------
  * Qt version >= 5.4
  * A recent boost library version (tested with 1.55 and above).
-
+ * c++14 compliant compiler (tested with gcc >= 5)
 
 Source download
 ---------------
