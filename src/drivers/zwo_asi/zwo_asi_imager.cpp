@@ -23,6 +23,7 @@
 #include <QThread>
 #include <fps_counter.h>
 #include <QRect>
+#include <atomic>
 #include "Qt/strings.h"
 using namespace std;
 using namespace GuLinux;
