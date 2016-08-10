@@ -39,7 +39,7 @@ using namespace std;
 using namespace std::placeholders;
 
 struct RecordingInformation {
-  RecordingInformation(Configuration &configuration, const ImagerPtr &imager);
+  RecordingInformation(Configuration &configuration, Imager *imager);
   ~RecordingInformation();
   void set_base_filename(const QString &filename);
   void set_ended(int total_frames, int width, int height);
@@ -49,7 +49,7 @@ struct RecordingInformation {
   QDateTime started;
 };
 
-RecordingInformation::RecordingInformation(Configuration& configuration, const ImagerPtr& imager)
+RecordingInformation::RecordingInformation(Configuration& configuration, Imager *imager)
 {
   started = QDateTime::currentDateTime();
   properties["started"] = started.toString(Qt::ISODate);
@@ -228,7 +228,7 @@ void SaveImages::handle(const cv::Mat& imageData)
   QtConcurrent::run(bind(&WriterThreadWorker::handle, d->worker, imageData));
 }
 
-void SaveImages::startRecording(const ImagerPtr &imager)
+void SaveImages::startRecording(Imager *imager)
 {
   auto writerFactory = d->writerFactory();
   if(writerFactory) {

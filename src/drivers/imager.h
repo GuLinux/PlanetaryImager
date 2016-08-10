@@ -9,6 +9,7 @@
 class Imager : public QObject {
   Q_OBJECT
 public:
+  Imager() : QObject(nullptr) {}
   struct Setting {
     int64_t id;
     QString name;
