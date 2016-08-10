@@ -1,2 +1,0 @@
-#!/bin/bash
-sed -i "s/.0.1.7./0.1.7/g" QHYCCD_Linux/CMakeLists.txt
