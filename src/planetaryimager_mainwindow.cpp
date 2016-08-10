@@ -198,7 +198,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
       LOG_F_SCOPE 
       d->imager->stopLive();
       d->imager->deleteLater();
-      d->cameraDisconnected();
+      QTimer::singleShot(500, bind(&Private::cameraDisconnected, d.get()));
     });
 
     d->enableUIWidgets(false);
