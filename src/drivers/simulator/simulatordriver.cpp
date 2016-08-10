@@ -56,7 +56,6 @@ public:
   ImagerThreadWorker(const ImagerThreadWorker::Worker::ptr& worker, Imager* imager, const ImageHandlerPtr& imageHandler);
   ~ImagerThreadWorker();
   void stop();
-public slots:
   void start();
 private:
   Worker::ptr worker;
@@ -65,6 +64,9 @@ private:
   LogScope log_current_class;
   fps_counter fps;
   atomic_bool running;  
+  QThread thread;
+private slots:
+  void thread_started();
 };
 
 ImagerThreadWorker::ImagerThreadWorker(const ImagerThreadWorker::Worker::ptr& worker, Imager* imager, const ImageHandlerPtr& imageHandler)
@@ -76,15 +78,18 @@ ImagerThreadWorker::ImagerThreadWorker(const ImagerThreadWorker::Worker::ptr& wo
   fps{[=](double rate){ emit imager->fps(rate);}, fps_counter::Mode::Elapsed},
   running{false}
 {
+  connect(&thread, &QThread::started, this, &ImagerThreadWorker::thread_started);
+  moveToThread(&thread);
 }
 
 
 ImagerThreadWorker::~ImagerThreadWorker()
 {
+  stop();
 }
 
 
-void ImagerThreadWorker::start()
+void ImagerThreadWorker::thread_started()
 {
   running = true;
   worker->start();
@@ -97,6 +102,13 @@ void ImagerThreadWorker::start()
 void ImagerThreadWorker::stop()
 {
   running = false;
+  thread.quit();
+  thread.wait();
+}
+
+void ImagerThreadWorker::start()
+{
+  thread.start();
 }
 
 
@@ -132,8 +144,6 @@ public slots:
     virtual void clearROI() {}
 private:
   ImageHandlerPtr imageHandler;
-    bool started = false;
-  QThread imaging_thread;
   ImagerThreadWorker::ptr image_thread_worker;
 };
 
@@ -266,19 +276,12 @@ void SimulatorImager::startLive()
   LOG_F_SCOPE
   auto worker = make_shared<Worker>(this);
   image_thread_worker = make_shared<ImagerThreadWorker>(worker, this, imageHandler);
-  connect(&imaging_thread, &QThread::started, image_thread_worker.get(), &ImagerThreadWorker::start);
-  image_thread_worker->moveToThread(&imaging_thread);
-  imaging_thread.start();
+  image_thread_worker->start();
 }
 
 void SimulatorImager::stopLive()
 {
   LOG_F_SCOPE
-  if(!image_thread_worker)
-    return;
-  image_thread_worker->stop();
-  imaging_thread.quit();
-  imaging_thread.wait();
   image_thread_worker.reset();
 }
 
