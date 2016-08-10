@@ -61,7 +61,7 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   Private(PlanetaryImagerMainWindow *q);
   shared_ptr<Ui::PlanetaryImagerMainWindow> ui;
   DriverPtr driver = make_shared<SupportedDrivers>();
-  ImagerPtr imager;
+  Imager *imager = nullptr;
   void rescan_devices();
   QSettings settings;
   Configuration configuration;
@@ -82,7 +82,7 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   void enableUIWidgets(bool cameraConnected);
     void init_devices_watcher();
   ZoomableImage *image;
-  shared_ptr< QCPBars > histogram_plot;
+  QCPBars *histogram_plot;
   void got_histogram(const vector< uint32_t >& histogram);
   QQueue<Imager::Setting> settings_to_save_queue;
 };
@@ -98,8 +98,10 @@ PlanetaryImagerMainWindow::Private::Private(PlanetaryImagerMainWindow* q)
 
 PlanetaryImagerMainWindow::~PlanetaryImagerMainWindow()
 {
-  if(d->imager)
-    d->imager->stopLive();
+  LOG_F_SCOPE
+  d->ui->histogram_plot->clearItems();
+  d->ui->histogram_plot->clearGraphs();
+  d->ui.reset();
 }
 
 void PlanetaryImagerMainWindow::Private::saveState()
@@ -192,8 +194,12 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     connect(d->saveImages.get(), &SaveImages::meanFPS, d->recording_panel, &RecordingPanel::meanFPS, Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::savedFrames, d->recording_panel, &RecordingPanel::saved, Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::droppedFrames, d->recording_panel, &RecordingPanel::dropped, Qt::QueuedConnection);
-    connect(d->ui->actionDisconnect, &QAction::triggered, [=]{ d->imager.reset();});
-
+    connect(d->ui->actionDisconnect, &QAction::triggered, [=]{ 
+      LOG_F_SCOPE 
+      d->imager->stopLive();
+      d->imager->deleteLater();
+      d->cameraDisconnected();
+    });
 
     d->enableUIWidgets(false);
 
@@ -201,14 +207,21 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     connect(&d->displayImageThread, &QThread::started, bind(&DisplayImage::create_qimages, d->displayImage));
     d->displayImageThread.start();
 
-    connect(qApp, &QApplication::aboutToQuit, this, [=]{ d->imager.reset(); }, Qt::QueuedConnection);
-    connect(qApp, &QApplication::aboutToQuit, this, bind(&DisplayImage::quit, d->displayImage), Qt::QueuedConnection);
+    connect(qApp, &QApplication::aboutToQuit, this, [=]{
+      if(d->imager)
+        d->imager->stopLive();
+    }, Qt::QueuedConnection);
+    connect(qApp, &QApplication::aboutToQuit, this, [&] {
+      d->displayImage->quit();
+      d->displayImageThread.quit();
+      d->displayImageThread.wait();
+    });
     connect(d->ui->actionEdges_Detection, &QAction::toggled, [=](bool detect){
       d->displayImage->detectEdges(detect);
     });
     d->init_devices_watcher();
-    d->histogram_plot = make_shared<QCPBars>(d->ui->histogram_plot->xAxis, d->ui->histogram_plot->yAxis);
-    d->ui->histogram_plot->addPlottable(d->histogram_plot.get());
+    d->histogram_plot = new QCPBars(d->ui->histogram_plot->xAxis, d->ui->histogram_plot->yAxis);
+    d->ui->histogram_plot->addPlottable(d->histogram_plot);
     connect(d->ui->actionClear_ROI, &QAction::triggered, [&] { d->imager->clearROI(); });
     connect(d->ui->actionSelect_ROI, &QAction::triggered, [&] { d->image->startSelectionMode(); });
     connect(d->image, &ZoomableImage::selectedROI, [&](const QRectF &rect) {  // TODO: safety check if we add more selection modes other than ROI
@@ -274,7 +287,7 @@ void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::CameraPtr& 
       return;
     }
     cameraDisconnected();
-    this->imager = imager;
+    this->imager = imager.get();
     imager->startLive();
     statusbar_info_widget->deviceConnected(imager->name());
     connect(imager.get(), &Imager::disconnected, q, bind(&Private::cameraDisconnected, this), Qt::QueuedConnection);
@@ -329,6 +342,7 @@ void PlanetaryImagerMainWindow::Private::got_histogram(const vector<uint32_t>& h
 
 void PlanetaryImagerMainWindow::Private::cameraDisconnected()
 {
+  imager = nullptr;
   qDebug() << "camera disconnected";
   enableUIWidgets(false);
     ui->actionSelect_ROI->setEnabled(false);

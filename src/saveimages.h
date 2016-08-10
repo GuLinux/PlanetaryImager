@@ -34,7 +34,7 @@ public:
     ~SaveImages();
     virtual void handle(const cv::Mat& imageData);
 public slots:
-  void startRecording(const ImagerPtr &imager);
+  void startRecording(Imager *imager);
   void endRecording();
 private:
   DPTR

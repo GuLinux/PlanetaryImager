@@ -31,6 +31,7 @@
 #include "fps_counter.h"
 #include "utils.h"
 #include "Qt/functional.h"
+#include <atomic>
 
 using namespace GuLinux;
 using namespace std;
@@ -41,10 +42,69 @@ public:
   virtual QString name() const { return "Simulator Camera"; }
 };
 
+class ImagerThreadWorker : public QObject {
+  Q_OBJECT
+public:
+  typedef std::shared_ptr<ImagerThreadWorker> ptr;
+  class Worker {
+  public:
+    virtual void start() = 0;
+    virtual bool shoot(const ImageHandlerPtr &imageHandler) = 0;
+    virtual void stop() = 0;
+    typedef std::shared_ptr<Worker> ptr;
+  };
+  ImagerThreadWorker(const ImagerThreadWorker::Worker::ptr& worker, Imager* imager, const ImageHandlerPtr& imageHandler);
+  ~ImagerThreadWorker();
+  void stop();
+public slots:
+  void start();
+private:
+  Worker::ptr worker;
+  Imager *imager;
+  ImageHandlerPtr imageHandler;
+  LogScope log_current_class;
+  fps_counter fps;
+  atomic_bool running;  
+};
+
+ImagerThreadWorker::ImagerThreadWorker(const ImagerThreadWorker::Worker::ptr& worker, Imager* imager, const ImageHandlerPtr& imageHandler)
+  : QObject(nullptr),
+  worker{worker},
+  imager{imager},
+  imageHandler{imageHandler},
+  LOG_C_SCOPE,
+  fps{[=](double rate){ emit imager->fps(rate);}, fps_counter::Mode::Elapsed},
+  running{false}
+{
+}
+
+
+ImagerThreadWorker::~ImagerThreadWorker()
+{
+}
+
+
+void ImagerThreadWorker::start()
+{
+  running = true;
+  worker->start();
+  while(running) {
+    if(worker->shoot(imageHandler))
+      ++fps;
+  }
+  worker->stop();
+}
+void ImagerThreadWorker::stop()
+{
+  running = false;
+}
+
+
 class SimulatorImager : public Imager {
+  Q_OBJECT
 public:
     SimulatorImager(const ImageHandlerPtr &handler);
-    virtual ~SimulatorImager() { stopLive(); }
+    virtual ~SimulatorImager();
     virtual Chip chip() const;
     virtual QString name() const;
     virtual void setSetting(const Setting& setting);
@@ -55,13 +115,26 @@ public:
     QMap<QString, Imager::Setting> _settings;
     QMutex settingsMutex;
     virtual bool supportsROI() { return false; }
+    
+    class Worker : public ImagerThreadWorker::Worker {
+    public:
+      Worker(SimulatorImager *imager);
+      bool shoot(const ImageHandlerPtr& imageHandler);
+      virtual void start();
+      virtual void stop();
+    private:
+      cv::Mat image;
+      SimulatorImager *imager;
+    };
+    friend class Worker;
 public slots:
     virtual void setROI(const QRect &) {}
     virtual void clearROI() {}
 private:
   ImageHandlerPtr imageHandler;
     bool started = false;
-  QThread *imaging_thread = nullptr;
+  QThread imaging_thread;
+  ImagerThreadWorker::ptr image_thread_worker;
 };
 
 ImagerPtr SimulatorCamera::imager ( const ImageHandlerPtr& imageHandler ) const
@@ -69,10 +142,18 @@ ImagerPtr SimulatorCamera::imager ( const ImageHandlerPtr& imageHandler ) const
   return make_shared<SimulatorImager>(imageHandler);
 }
 
+SimulatorImager::~SimulatorImager()
+{
+  LOG_F_SCOPE
+  dumpObjectInfo();
+  stopLive();
+  emit disconnected();
+}
+
+
 
 Driver::Cameras SimulatorDriver::cameras() const
 {
-  qDebug() << __PRETTY_FUNCTION__;
   static shared_ptr<SimulatorCamera> simulatorCamera = make_shared<SimulatorCamera>();
   return {simulatorCamera};
 }
@@ -116,68 +197,89 @@ int SimulatorImager::rand(int a, int b)
    return qrand() % ((b + 1) - a) + a;
 }
 
+
+void SimulatorImager::Worker::start()
+{
+}
+
+void SimulatorImager::Worker::stop()
+{
+}
+
+SimulatorImager::Worker::Worker(SimulatorImager* imager) : imager{imager}
+{
+    QFile file(":/simulator/jupiter.png");
+    file.open(QIODevice::ReadOnly);
+    QByteArray file_data = file.readAll();
+    image = cv::imdecode(cv::InputArray{file_data.data(), file_data.size()}, CV_LOAD_IMAGE_COLOR);
+}
+
+
+bool SimulatorImager::Worker::shoot(const ImageHandlerPtr &imageHandler)
+{
+  auto rand = [](int a, int b) { return qrand() % ((b + 1) - a) + a; };
+  cv::Mat cropped, blurred, result;
+  int h = image.rows;
+  int w = image.cols;
+  Setting exposure, gamma, delay, seeing, movement;
+  {
+      QMutexLocker lock_settings(&imager->settingsMutex);
+      exposure = imager->_settings["exposure"];
+      gamma = imager->_settings["gamma"];
+      seeing = imager->_settings["seeing"];
+      movement = imager->_settings["movement"];
+      delay = imager->_settings["delay"];
+  }
+  int crop_factor = movement.value;
+  int pix_w = rand(0, crop_factor);
+  int pix_h = rand(0, crop_factor);
+
+  cv::Rect crop_rect(0, 0, w, h);
+  crop_rect -= cv::Size{crop_factor, crop_factor};
+  crop_rect += cv::Point{pix_w, pix_h};
+  cropped = image(crop_rect);
+  if(rand(0, seeing.max) > seeing.value) {
+      auto ker_size = rand(1, 7);
+      cv::blur(cropped, blurred, {ker_size, ker_size});
+  } else {
+      cropped.copyTo(blurred);
+  }
+      int exposure_offset = exposure.value * 2 - 100;
+      result = blurred + cv::Scalar{exposure_offset, exposure_offset, exposure_offset};
+  int depth = 8;
+  if(result.depth() > CV_8S)
+      depth = 16;
+  if(result.depth() > CV_16S)
+      depth = 32;
+  auto scale = imager->_settings["bin"].value;
+  if(scale > 1)
+    cv::resize(result, result, {result.cols/scale, result.rows/scale});
+  imageHandler->handle(result);
+  QThread::msleep(delay.value);
+  return true;
+}
+
+
+
 void SimulatorImager::startLive()
 {
-  started = true;
-  Thread::Run<void>{[=] {
-        QFile file(":/simulator/jupiter.png");
-        file.open(QIODevice::ReadOnly);
-        QByteArray file_data = file.readAll();
-        const cv::Mat image = cv::imdecode(cv::InputArray{file_data.data(), file_data.size()}, CV_LOAD_IMAGE_COLOR);
-        fps_counter fps([=](double rate){ emit this->fps(rate);}, fps_counter::Mode::Elapsed);
-        while(started) {
-        cv::Mat cropped, blurred, result;
-        int h = image.rows;
-        int w = image.cols;
-        Setting exposure, gamma, delay, seeing, movement;
-        {
-            QMutexLocker lock_settings(&settingsMutex);
-            exposure = _settings["exposure"];
-            gamma = _settings["gamma"];
-            seeing = _settings["seeing"];
-            movement = _settings["movement"];
-            delay = _settings["delay"];
-        }
-        int crop_factor = movement.value;
-        int pix_w = rand(0, crop_factor);
-        int pix_h = rand(0, crop_factor);
-
-        cv::Rect crop_rect(0, 0, w, h);
-        crop_rect -= cv::Size{crop_factor, crop_factor};
-        crop_rect += cv::Point{pix_w, pix_h};
-        cropped = image(crop_rect);
-        if(rand(0, seeing.max) > seeing.value) {
-            auto ker_size = rand(1, 7);
-            cv::blur(cropped, blurred, {ker_size, ker_size});
-        } else {
-            cropped.copyTo(blurred);
-        }
-            int exposure_offset = exposure.value * 2 - 100;
-            result = blurred + cv::Scalar{exposure_offset, exposure_offset, exposure_offset};
-        int depth = 8;
-        if(result.depth() > CV_8S)
-            depth = 16;
-        if(result.depth() > CV_16S)
-            depth = 32;
-	auto scale = _settings["bin"].value;
-	if(scale > 1)
-	  cv::resize(result, result, {result.cols/scale, result.rows/scale});
-        ++fps;
-        imageHandler->handle(result);
-        QThread::msleep(delay.value);
-        }
-        qDebug() << "Testing image: capture finished";
-    }, []{}, [&](Thread *t){ imaging_thread = t; }
-  };
+  LOG_F_SCOPE
+  auto worker = make_shared<Worker>(this);
+  image_thread_worker = make_shared<ImagerThreadWorker>(worker, this, imageHandler);
+  connect(&imaging_thread, &QThread::started, image_thread_worker.get(), &ImagerThreadWorker::start);
+  image_thread_worker->moveToThread(&imaging_thread);
+  imaging_thread.start();
 }
 
 void SimulatorImager::stopLive()
 {
-  if(imaging_thread) {
-    this->started = false;
-    imaging_thread->wait();
-    imaging_thread = nullptr;
-  }
+  LOG_F_SCOPE
+  if(!image_thread_worker)
+    return;
+  image_thread_worker->stop();
+  imaging_thread.quit();
+  imaging_thread.wait();
+  image_thread_worker.reset();
 }
 
 SimulatorDriver::SimulatorDriver()
@@ -187,3 +289,4 @@ SimulatorDriver::SimulatorDriver()
 
 
 
+#include "simulatordriver.moc"

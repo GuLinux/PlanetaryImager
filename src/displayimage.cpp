@@ -31,35 +31,27 @@
 #include <opencv2/opencv.hpp>
 #include "opencv_utils.h"
 #include "c++/stlutils.h"
-
+#include <atomic>
 using namespace std;
 
-class DisplayImage::Private {
-public:
-  Private(Configuration &configuration, DisplayImage *q);
+DPTR_IMPL(DisplayImage) {
   Configuration &configuration;
-  fps_counter capture_fps;
+  unique_ptr<fps_counter> capture_fps;
+  DisplayImage *q;
+  
+  atomic_bool running;
   int milliseconds_limit = 0;
   QElapsedTimer elapsed;
   QRect imageRect;
-  bool running = true;
   boost::lockfree::spsc_queue<cv::Mat, boost::lockfree::capacity<5>> queue;
   bool detectEdges = false;
   QVector<QRgb> grayScale;
   QImage edgeDetection(QImage &source);
   void canny(cv::Mat& source, int lowThreshold = 1, int ratio = 3, int kernel_size = 3, int blurSize = 3);
   void sobel( cv::Mat& source, int blur_size = 3, int ker_size = 3, int scale = 1, int delta = 0 );
-private:
-  DisplayImage *q;
 };
 
 
-
-DisplayImage::Private::Private(Configuration& configuration, DisplayImage* q) : configuration{configuration}, capture_fps{[=](double fps){ emit q->displayFPS(fps);}}, q{q}
-{
-  for(int i=0; i<0xff; i++)
-    grayScale.push_back(qRgb(i, i, i));
-}
 
 
 DisplayImage::~DisplayImage()
@@ -68,9 +60,12 @@ DisplayImage::~DisplayImage()
 }
 
 DisplayImage::DisplayImage(Configuration& configuration, QObject* parent)
-  : QObject(parent), dptr(configuration, this)
+  : QObject(parent), dptr(configuration, make_unique<fps_counter>([=](double fps){ emit displayFPS(fps);}), this)
 {
+  d->running = true;
   setRecording(false);
+  for(int i=0; i<0xff; i++)
+    d->grayScale.push_back(qRgb(i, i, i));
 }
 void DisplayImage::setRecording(bool recording)
 {
@@ -98,7 +93,7 @@ void DisplayImage::create_qimages()
     if(imageData.depth() != CV_8U && imageData.depth() != CV_8S) {
       imageData.convertTo(imageData, CV_8U, 0.00390625); // TODO: handle color images
     }
-    ++d->capture_fps;
+    ++*d->capture_fps;
 //     cv::Mat origin{imageData->height(), imageData->width(), imageData->channels() == 1 ? CV_8UC1 : CV_8UC3, imageData->data()};
     auto cv_image = new cv::Mat;
     cv::cvtColor(imageData, *cv_image, imageData.channels() == 1 ? CV_GRAY2RGB : CV_BGR2RGB);
