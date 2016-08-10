@@ -16,6 +16,7 @@
 #include "Qt/strings.h"
 #include "Qt/functional.h"
 #include <sys/mman.h>
+#include "drivers/imagerthread.h"
 
 #define PIXEL_FORMAT_CONTROL_ID -10
 #define RESOLUTIONS_CONTROL_ID -9
@@ -40,16 +41,16 @@ struct V4LBuffer {
 
 
 
-class V4L2Imager::Private
+DPTR_IMPL(V4L2Imager)
 {
-public:
-    Private(const ImageHandlerPtr &handler, const QString &device_path, V4L2Imager *q);
+    class Worker;
     ImageHandlerPtr handler;
     const QString device_path;
-    std::shared_ptr<V4L2Device> device;
-    bool live = false;
-    GuLinux::Thread *live_thread = nullptr;
+    V4L2Imager *q;
     
+    std::shared_ptr<V4L2Device> device;
+    ImagerThread::ptr imager_thread;
+
     QList<v4l2_fmtdesc> formats() const;
     v4l2_format query_format() const;
     QList<v4l2_frmsizeenum> resolutions(const v4l2_format &format) const;
@@ -70,8 +71,18 @@ public:
     typedef std::function<void(Setting &)> SettingRule;
     QList<SettingRule> setting_rules;
     void populate_rules();
-private:
-    V4L2Imager *q;
+};
+
+class V4L2Imager::Private::Worker : public ImagerThread::Worker {
+public:
+  Worker(V4L2Imager::Private *d);
+  virtual bool shoot(const ImageHandlerPtr& imageHandler);
+  virtual void start();
+  virtual void stop();
+  V4L2Imager::Private *d;
+  V4LBuffer::List buffers;
+  v4l2_format format;
+  int bufferinfo_type;
 };
 
 class V4L2Device {
