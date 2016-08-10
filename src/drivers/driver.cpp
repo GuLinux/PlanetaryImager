@@ -1,7 +1,7 @@
 #include "driver.h"
 #include "qhy/qhydriver.h"
 #include "simulator/simulatordriver.h"
-#include "drivers/available_drivers.h"
+#include "available_drivers.h"
 
 using namespace std;
 

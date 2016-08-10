@@ -18,6 +18,7 @@
  */
 
 #include "simulatordriver.h"
+#include "drivers/imagerthread.h"
 #include <QDebug>
 #include <QThread>
 #include <QtConcurrent/QtConcurrent>
@@ -42,75 +43,6 @@ public:
   virtual QString name() const { return "Simulator Camera"; }
 };
 
-class ImagerThreadWorker : public QObject {
-  Q_OBJECT
-public:
-  typedef std::shared_ptr<ImagerThreadWorker> ptr;
-  class Worker {
-  public:
-    virtual void start() = 0;
-    virtual bool shoot(const ImageHandlerPtr &imageHandler) = 0;
-    virtual void stop() = 0;
-    typedef std::shared_ptr<Worker> ptr;
-  };
-  ImagerThreadWorker(const ImagerThreadWorker::Worker::ptr& worker, Imager* imager, const ImageHandlerPtr& imageHandler);
-  ~ImagerThreadWorker();
-  void stop();
-  void start();
-private:
-  Worker::ptr worker;
-  Imager *imager;
-  ImageHandlerPtr imageHandler;
-  LogScope log_current_class;
-  fps_counter fps;
-  atomic_bool running;  
-  QThread thread;
-private slots:
-  void thread_started();
-};
-
-ImagerThreadWorker::ImagerThreadWorker(const ImagerThreadWorker::Worker::ptr& worker, Imager* imager, const ImageHandlerPtr& imageHandler)
-  : QObject(nullptr),
-  worker{worker},
-  imager{imager},
-  imageHandler{imageHandler},
-  LOG_C_SCOPE,
-  fps{[=](double rate){ emit imager->fps(rate);}, fps_counter::Mode::Elapsed},
-  running{false}
-{
-  connect(&thread, &QThread::started, this, &ImagerThreadWorker::thread_started);
-  moveToThread(&thread);
-}
-
-
-ImagerThreadWorker::~ImagerThreadWorker()
-{
-  stop();
-}
-
-
-void ImagerThreadWorker::thread_started()
-{
-  running = true;
-  worker->start();
-  while(running) {
-    if(worker->shoot(imageHandler))
-      ++fps;
-  }
-  worker->stop();
-}
-void ImagerThreadWorker::stop()
-{
-  running = false;
-  thread.quit();
-  thread.wait();
-}
-
-void ImagerThreadWorker::start()
-{
-  thread.start();
-}
-
 
 class SimulatorImager : public Imager {
   Q_OBJECT
@@ -128,7 +60,7 @@ public:
     QMutex settingsMutex;
     virtual bool supportsROI() { return false; }
     
-    class Worker : public ImagerThreadWorker::Worker {
+    class Worker : public ImagerThread::Worker {
     public:
       Worker(SimulatorImager *imager);
       bool shoot(const ImageHandlerPtr& imageHandler);
@@ -144,7 +76,7 @@ public slots:
     virtual void clearROI() {}
 private:
   ImageHandlerPtr imageHandler;
-  ImagerThreadWorker::ptr image_thread_worker;
+  ImagerThread::ptr imager_thread;
 };
 
 ImagerPtr SimulatorCamera::imager ( const ImageHandlerPtr& imageHandler ) const
@@ -275,14 +207,14 @@ void SimulatorImager::startLive()
 {
   LOG_F_SCOPE
   auto worker = make_shared<Worker>(this);
-  image_thread_worker = make_shared<ImagerThreadWorker>(worker, this, imageHandler);
-  image_thread_worker->start();
+  imager_thread = make_shared<ImagerThread>(worker, this, imageHandler);
+  imager_thread->start();
 }
 
 void SimulatorImager::stopLive()
 {
   LOG_F_SCOPE
-  image_thread_worker.reset();
+  imager_thread.reset();
 }
 
 SimulatorDriver::SimulatorDriver()
