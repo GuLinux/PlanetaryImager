@@ -40,24 +40,24 @@ const int64_t BinSettingId = 10001;
 DPTR_IMPL(ZWO_ASI_Imager) {
     class Worker : public ImagerThread::Worker {
     public:
-      Worker(const QRect &roi, int bin, const ASI_CAMERA_INFO &info, ASI_IMG_TYPE format);
-      size_t calcBufferSize();
-      virtual bool shoot(const ImageHandlerPtr& imageHandler);
-      virtual void start();
-      virtual void stop();
-      int getCVImageType();
-      vector<uint8_t> buffer;
-      QRect roi;
-      int bin;
-      ASI_IMG_TYPE format;
-      ASI_CAMERA_INFO info;
+        Worker(const QRect &roi, int bin, const ASI_CAMERA_INFO &info, ASI_IMG_TYPE format);
+        size_t calcBufferSize();
+        virtual bool shoot(const ImageHandlerPtr& imageHandler);
+        virtual void start();
+        virtual void stop();
+        int getCVImageType();
+        vector<uint8_t> buffer;
+        QRect roi;
+        int bin;
+        ASI_IMG_TYPE format;
+        ASI_CAMERA_INFO info;
     };
     ASI_CAMERA_INFO info;
     ImageHandlerPtr imageHandler;
     ZWO_ASI_Imager *q;
 
     Chip chip;
-    
+
     Imager::Setting setting(ASI_CONTROL_TYPE settingId);
     ImagerThread::ptr imager_thread;
     shared_ptr<Worker> worker;
@@ -83,6 +83,7 @@ ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandlerPt
 
 ZWO_ASI_Imager::~ZWO_ASI_Imager()
 {
+    stopLive();
     ASICloseCamera(d->info.CameraID);
 }
 
@@ -100,13 +101,13 @@ void ZWO_ASI_Imager::setSetting(const Setting& setting)
 {
     qDebug() << __PRETTY_FUNCTION__;
     if(setting.id == ImageTypeSettingId) {
-      d->start_thread(d->worker->bin, d->worker->roi, static_cast<ASI_IMG_TYPE>(setting.value));
-      return;
+        d->start_thread(d->worker->bin, d->worker->roi, static_cast<ASI_IMG_TYPE>(setting.value));
+        return;
     }
     if(setting.id == BinSettingId) {
-      auto bin = static_cast<int>(setting.value);
-      d->start_thread(bin, d->maxROI(bin), d->worker->format);
-      return;
+        auto bin = static_cast<int>(setting.value);
+        d->start_thread(bin, d->maxROI(bin), d->worker->format);
+        return;
     }
 
     ASISetControlValue(d->info.CameraID, static_cast<ASI_CONTROL_TYPE>(setting.id), setting.value, ASI_FALSE);
@@ -115,11 +116,11 @@ void ZWO_ASI_Imager::setSetting(const Setting& setting)
 
 void ZWO_ASI_Imager::Private::start_thread(int bin, const QRect& roi, ASI_IMG_TYPE format)
 {
-  worker.reset();
-  imager_thread.reset();
-  worker = make_shared<Worker>(roi, bin, info, format);
-  imager_thread = make_shared<ImagerThread>(worker, q, imageHandler);
-  imager_thread->start();
+    worker.reset();
+    imager_thread.reset();
+    worker = make_shared<Worker>(roi, bin, info, format);
+    imager_thread = make_shared<ImagerThread>(worker, q, imageHandler);
+    imager_thread->start();
 }
 
 
@@ -169,12 +170,12 @@ Imager::Settings ZWO_ASI_Imager::settings() const
     }
     imageFormat.max = i-1;
     settings.push_back(imageFormat);
-    
+
     Imager::Setting bin {BinSettingId, "Bin", 0, 0, 1, 1, 1, Setting::Combo};
     i = 0;
     while(d->info.SupportedBins[i] != 0) {
-      auto bin_value = d->info.SupportedBins[i++];
-      bin.choices.push_back( {"%1x%1"_q % bin_value, bin_value } );
+        auto bin_value = d->info.SupportedBins[i++];
+        bin.choices.push_back( {"%1x%1"_q % bin_value, bin_value } );
     }
     bin.max = i-1;
     settings.push_back(bin);
@@ -204,12 +205,12 @@ void ZWO_ASI_Imager::startLive()
 
 void ZWO_ASI_Imager::stopLive()
 {
-  d->imager_thread.reset();
+    d->imager_thread.reset();
 }
 
 
-ZWO_ASI_Imager::Private::Worker::Worker(const QRect& requestedROI, int bin, const ASI_CAMERA_INFO& info, ASI_IMG_TYPE format) 
-  : format{format}, info{info}, bin{bin}, roi{requestedROI.x(), requestedROI.y(), (requestedROI.width() / 4) * 4, (requestedROI.height()/4) * 4 }
+ZWO_ASI_Imager::Private::Worker::Worker(const QRect& requestedROI, int bin, const ASI_CAMERA_INFO& info, ASI_IMG_TYPE format)
+    : format {format}, info {info}, bin {bin}, roi {requestedROI.x(), requestedROI.y(), (requestedROI.width() / 4) * 4, (requestedROI.height()/4) * 4 }
 {
     qDebug() << "Starting imaging: imageFormat=" << format << ", roi: " << roi << ", bin: " << bin;
     int result = ASISetROIFormat(info.CameraID, roi.width(), roi.height(), bin, format);
@@ -231,58 +232,58 @@ void ZWO_ASI_Imager::Private::Worker::start()
 
 bool ZWO_ASI_Imager::Private::Worker::shoot(const ImageHandlerPtr& imageHandler)
 {
-  int result = ASIGetVideoData(info.CameraID, buffer.data(), buffer.size(), 100000);
-  if(result == ASI_SUCCESS) {
-      cv::Mat image( {roi.width(), roi.height()}, getCVImageType(), buffer.data());
-      cv::Mat copy;
-      image.copyTo(copy);
-      imageHandler->handle(copy);
-      return true;
-  } else {
-      qDebug() << "Capture error: " << result;
-      return false;
-  }
+    int result = ASIGetVideoData(info.CameraID, buffer.data(), buffer.size(), 100000);
+    if(result == ASI_SUCCESS) {
+        cv::Mat image( {roi.width(), roi.height()}, getCVImageType(), buffer.data());
+        cv::Mat copy;
+        image.copyTo(copy);
+        imageHandler->handle(copy);
+        return true;
+    } else {
+        qDebug() << "Capture error: " << result;
+        return false;
+    }
 }
 
 void ZWO_ASI_Imager::Private::Worker::stop()
 {
-  ASIStopVideoCapture(info.CameraID);
-  qDebug() << "Imaging stopped.";
+    ASIStopVideoCapture(info.CameraID);
+    qDebug() << "Imaging stopped.";
 }
 
 size_t ZWO_ASI_Imager::Private::Worker::calcBufferSize()
 {
     auto base_size = roi.width() * roi.height();
     switch(format) {
-      case ASI_IMG_RAW8:
-	return base_size;
-      case ASI_IMG_RAW16:
-	return base_size * 2;
-      case ASI_IMG_RGB24:
-	return base_size * 3;
-      default:
-	throw runtime_error("Format not supported");
+    case ASI_IMG_RAW8:
+        return base_size;
+    case ASI_IMG_RAW16:
+        return base_size * 2;
+    case ASI_IMG_RGB24:
+        return base_size * 3;
+    default:
+        throw runtime_error("Format not supported");
     }
 }
 
 int ZWO_ASI_Imager::Private::Worker::getCVImageType()
 {
-  switch(format) {
+    switch(format) {
     case ASI_IMG_RAW8:
-      return CV_8UC1;
+        return CV_8UC1;
     case ASI_IMG_RAW16:
-      return CV_16UC1;
+        return CV_16UC1;
     case ASI_IMG_RGB24:
-      return CV_8UC3;
+        return CV_8UC3;
     default:
-      throw runtime_error("Format not supported");
-      
-  }
+        throw runtime_error("Format not supported");
+
+    }
 }
 
 bool ZWO_ASI_Imager::supportsROI()
 {
-  return true; // TODO: detection?
+    return true; // TODO: detection?
 }
 
 void ZWO_ASI_Imager::clearROI()
@@ -297,7 +298,7 @@ void ZWO_ASI_Imager::setROI(const QRect& roi)
 
 QRect ZWO_ASI_Imager::Private::maxROI(int bin) const
 {
-  return {0, 0, info.MaxWidth / bin, info.MaxHeight / bin};
+    return {0, 0, info.MaxWidth / bin, info.MaxHeight / bin};
 }
 
 
