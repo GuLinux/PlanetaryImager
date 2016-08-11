@@ -104,7 +104,8 @@ void ZWO_ASI_Imager::setSetting(const Setting& setting)
       return;
     }
     if(setting.id == BinSettingId) {
-      d->start_thread(static_cast<int>(setting.value), d->worker->roi, d->worker->format);
+      auto bin = static_cast<int>(setting.value);
+      d->start_thread(bin, d->maxROI(bin), d->worker->format);
       return;
     }
 
@@ -114,6 +115,8 @@ void ZWO_ASI_Imager::setSetting(const Setting& setting)
 
 void ZWO_ASI_Imager::Private::start_thread(int bin, const QRect& roi, ASI_IMG_TYPE format)
 {
+  worker.reset();
+  imager_thread.reset();
   worker = make_shared<Worker>(roi, bin, info, format);
   imager_thread = make_shared<ImagerThread>(worker, q, imageHandler);
   imager_thread->start();
@@ -205,11 +208,11 @@ void ZWO_ASI_Imager::stopLive()
 }
 
 
-ZWO_ASI_Imager::Private::Worker::Worker(const QRect& roi, int bin, const ASI_CAMERA_INFO& info, ASI_IMG_TYPE format) : format{format}, info{info}, bin{bin}
+ZWO_ASI_Imager::Private::Worker::Worker(const QRect& requestedROI, int bin, const ASI_CAMERA_INFO& info, ASI_IMG_TYPE format) 
+  : format{format}, info{info}, bin{bin}, roi{requestedROI.x(), requestedROI.y(), (requestedROI.width() / 4) * 4, (requestedROI.height()/4) * 4 }
 {
     qDebug() << "Starting imaging: imageFormat=" << format << ", roi: " << roi << ", bin: " << bin;
-    this->roi = {roi.x(), roi.y(), (roi.width() / 4) * 4, (roi.height()/4) * 4 };
-    int result = ASISetROIFormat(info.CameraID, this->roi.width(), this->roi.height(), bin, format);
+    int result = ASISetROIFormat(info.CameraID, roi.width(), roi.height(), bin, format);
     if(result != ASI_SUCCESS)
         throw runtime_error(stringbuilder() << "Error setting format: " << result );
     result = ASISetStartPos(info.CameraID, roi.x(), roi.y());
