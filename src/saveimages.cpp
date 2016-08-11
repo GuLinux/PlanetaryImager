@@ -86,7 +86,7 @@ void RecordingInformation::set_ended(int total_frames, int width, int height)
 
 void RecordingInformation::set_base_filename(const QString& filename)
 {
-  this->filename = filename + ".info";
+  this->filename = filename + ".txt";
 }
 
 RecordingInformation::~RecordingInformation()

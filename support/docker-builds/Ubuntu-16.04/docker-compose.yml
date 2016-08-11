@@ -1,0 +1,11 @@
+version: '2'
+services:
+    ubuntu-build:
+        build: .
+        image: planetaryimager-ubuntu:16.04
+        volumes:
+            - ../../../:/code
+            - ${DEST}:/dest
+        command: "bash -c \"cmake /code -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} ${CMAKE_EXTRA_OPTIONS} && make ${MAKE_OPTS} && make package && cp /build/PlanetaryImager-*-Linux.deb /dest/ \""
+
+

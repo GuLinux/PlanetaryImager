@@ -1,0 +1,26 @@
+#!/bin/bash
+
+compile-dir() {
+    echo "Compiling $@"
+}
+
+COMPILE_DIRS=""
+
+while [ -n "$1" ]; do
+    param="$1"
+    shift
+    case "$param" in
+        -a|--all)
+            COMPILE_DIRS="$( find -name docker-compose.yml -exec dirname {} \; )"
+            ;;
+        *)
+            [ -r "$param/docker-compose.yml" ] && COMPILE_DIRS="$COMPILE_DIRS $param"
+            ;;
+    esac
+done
+
+echo "Compile dirs: $COMPILE_DIRS"
+
+while read dir; do
+    compile-dir "$dir"
+done <<< "$COMPILE_DIRS"

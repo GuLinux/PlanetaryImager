@@ -1,9 +1,0 @@
-#!/bin/bash
-output_dir="${2-/tmp}"
-image_name="$1"
-if [[ -z "$image_name" ]]; then
-  echo "Usage: $0 image_name [output_directory]" >&2
-  exit 1
-fi
-project_dir="$( dirname "$( dirname "$( readlink -f "$0" )" )" )"
-docker run --rm  -it -v $project_dir:/PlanetaryImager:ro -v $output_dir:/PlanetaryImager-dist $image_name

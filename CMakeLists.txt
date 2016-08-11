@@ -29,7 +29,7 @@ if(cflags_fpic)
 endif(cflags_fpic)
 
 set(MAJOR_VERSION 0)
-set(MINOR_VERSION 3)
+set(MINOR_VERSION 4)
 set(PATCH_VERSION 0)
 
 add_subdirectory(GuLinux-Commons/Qt)
@@ -50,6 +50,8 @@ SET(CPACK_PACKAGE_VERSION_PATCH "${PATCH_VERSION}")
 SET(CPACK_PACKAGE_CONTACT "marco@gulinux.net")
 #SET(CPACK_STRIP_FILES "bin/planetary_imager")
 SET(CPACK_GENERATOR DEB)
-SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libusb (>= 1.0-0), libqt5gui5 (>= 5.4.0), libqt5network5 (>= 5.4.0), libqt5widgets5 (>= 5.4.0)")
+set(LIBOPENCV_UBUNTU_VERSION_STR "2.4v5" CACHE INTERNAL "")
+SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libusb (>= 1.0-0), libqt5gui5 (>= 5.4.0), libqt5network5 (>= 5.4.0), libqt5widgets5 (>= 5.4.0),
+    libopencv-imgproc${LIBOPENCV_UBUNTU_VERSION_STR},libopencv-core${LIBOPENCV_UBUNTU_VERSION_STR}, libopencv-highgui${LIBOPENCV_UBUNTU_VERSION_STR}")
 
 INCLUDE(CPack)
