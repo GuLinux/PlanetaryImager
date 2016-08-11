@@ -1,3 +1,12 @@
+## 0.4.0 2016-08-12
+ - Many stability fixes and improvements
+ - Added ZWO ASI Support
+ - Added ROI and bin (ZWO only)
+ - Save camera settings in txt file
+ - 16bit support
+ - Histogram
+ - Update QHY SDK, fixes many previous issues
+
 ## 0.3.0 2015-08-25
  - Removed Qt 5.5 dependency, now it compiles with Qt 5.4 too (found in much more distributions)
  - Edge detection for focus help
