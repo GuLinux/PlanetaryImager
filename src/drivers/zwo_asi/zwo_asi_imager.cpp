@@ -38,7 +38,64 @@ namespace {
 const int64_t ImageTypeSettingId = 10000;
 const int64_t BinSettingId = 10001;
 
+struct ASIControl {
+  typedef std::shared_ptr<ASIControl> ptr;
+  typedef std::vector<ptr> vector;
+  int index;
+  int camera_id;
+  ASIControl(int index, int camera_id);
+  ASI_CONTROL_CAPS caps;
+  long value;
+  bool is_auto;
+
+  Imager::Setting setting() const;
+  operator Imager::Setting() const;
+  ASIControl &reload();
+  ASIControl &set(long new_value, bool is_auto);
+};
 }
+
+ASIControl::ASIControl(int index, int camera_id) : index{index}, camera_id{camera_id}
+{
+  ASI_CHECK << ASIGetControlCaps(camera_id, index, &caps) << "Get control caps";
+}
+
+Imager::Setting ASIControl::setting() const
+{
+  return *this;
+}
+
+ASIControl &ASIControl::reload()
+{
+  ASI_BOOL is_auto;
+  ASI_CHECK << ASIGetControlValue(camera_id, caps.ControlType, &value, &is_auto)
+            << (stringbuilder() << "Get control value: " << caps.Name);
+  this->is_auto = static_cast<bool>(is_auto);
+  return *this;
+}
+
+ASIControl &ASIControl::set(long new_value, bool is_auto)
+{
+  ASI_CHECK << ASISetControlValue(camera_id, caps.ControlType, new_value, static_cast<ASI_BOOL>(is_auto))
+            << (stringbuilder() << "Set new control value: " << caps.Name << " to " << new_value << " (auto: " << is_auto << ")");
+  reload();
+  return *this;
+}
+
+ASIControl::operator Imager::Setting() const
+{
+  return {
+    static_cast<int64_t>(caps.ControlType),
+    caps.Description,
+    static_cast<double>(caps.MinValue),
+    static_cast<double>(caps.MaxValue),
+    1.0,
+    static_cast<double>(value),
+    static_cast<double>(caps.DefaultValue),
+  };
+}
+
+
 DPTR_IMPL(ZWO_ASI_Imager) {
     ASI_CAMERA_INFO info;
     ImageHandlerPtr imageHandler;
@@ -46,8 +103,7 @@ DPTR_IMPL(ZWO_ASI_Imager) {
 
     Chip chip;
 
-    Imager::Setting setting(int settingId);
-    Imager::Settings settings;
+    ASIControl::vector controls;
     
     ImagerThread::ptr imager_thread;
     shared_ptr<ASIImagingWorker> worker;
@@ -89,23 +145,22 @@ void ZWO_ASI_Imager::setSetting(const Setting& setting)
     qDebug() << __PRETTY_FUNCTION__;
     if(setting.id == ImageTypeSettingId) {
         d->start_thread(d->worker->bin(), d->worker->roi(), static_cast<ASI_IMG_TYPE>(setting.value));
+        emit changed(setting);
         return;
     }
     if(setting.id == BinSettingId) {
         auto bin = static_cast<int>(setting.value);
         d->start_thread(bin, d->maxROI(bin), d->worker->format());
+        emit changed(setting);
         return;
     }
     
-    size_t index = find_if(d->settings.begin(), d->settings.end(), [&](const Setting &s) { return s.id == setting.id; } ) - d->settings.begin();
-    qDebug() << "Changing setting " << index << ": " << d->settings[index];
-    int result = ASISetControlValue(d->info.CameraID, static_cast<ASI_CONTROL_TYPE>(setting.id), static_cast<long>(setting.value), ASI_FALSE);
-    //if(result =! ASI_SUCCESS)
-    //  throw runtime_error(stringbuilder() << "Error setting caps" << setting.id << " to " << setting.value << ": " << result);
-    
-    d->settings[index] = d->setting(index);
-    qDebug() << "Changed setting " << index << ": " << d->settings[index];
-    emit changed(d->settings[index]);
+    auto control = *find_if(d->controls.begin(), d->controls.end(),
+                           [&](const ASIControl::ptr &c){ return c->caps.ControlType == static_cast<ASI_CONTROL_TYPE>(setting.id); });
+    qDebug() << "Changing setting " << control->setting();
+    control->set(static_cast<long>(setting.value), false);
+    qDebug() << "Changed setting " << control->setting();
+    emit changed(*control);
 }
 
 void ZWO_ASI_Imager::Private::start_thread(int bin, const QRect& roi, ASI_IMG_TYPE format)
@@ -121,17 +176,17 @@ void ZWO_ASI_Imager::Private::start_thread(int bin, const QRect& roi, ASI_IMG_TY
 Imager::Settings ZWO_ASI_Imager::settings() const
 {
     qDebug() << __PRETTY_FUNCTION__;
-    int settings_number;
-    int result = ASIGetNumOfControls(d->info.CameraID, &settings_number);
-    if(result != ASI_SUCCESS)
-      throw runtime_error(stringbuilder() << "Error retrieving settings number: " << result);
+    Settings settings;
 
-    d->settings.clear();
+    int settings_number;
+    ASI_CHECK << ASIGetNumOfControls(d->info.CameraID, &settings_number) << "Get controls";
+    d->controls = ASIControl::vector(settings_number);
+
     for(int setting_index = 0; setting_index < settings_number; setting_index++) {
-        auto setting = d->setting(setting_index);
-        if(setting != Imager::Setting {} )
-            d->settings.push_back(setting);
+      d->controls[setting_index] = make_shared<ASIControl>(setting_index, d->info.CameraID);
+      settings.push_back(*d->controls[setting_index]);
     }
+
     static map<ASI_IMG_TYPE, QString> format_names {
         {ASI_IMG_RAW8, "Raw 8bit"},
         {ASI_IMG_RGB24, "RGB24"},
@@ -147,32 +202,18 @@ Imager::Settings ZWO_ASI_Imager::settings() const
         ++i;
     }
     imageFormat.max = i-1;
-    d->settings.push_back(imageFormat);
 
-    Imager::Setting bin {BinSettingId, "Bin", 0, 0, 1, 1, 1, Setting::Combo};
+    settings.push_back(imageFormat);
+
+    Imager::Setting bin {BinSettingId, "Bin", 0., 0., 1., static_cast<double>(d->worker->bin()), 1., Setting::Combo};
     i = 0;
     while(d->info.SupportedBins[i] != 0) {
         auto bin_value = d->info.SupportedBins[i++];
         bin.choices.push_back( {"%1x%1"_q % static_cast<double>(bin_value), static_cast<double>(bin_value) } );
     }
     bin.max = i-1;
-    d->settings.push_back(bin);
-    return d->settings;
-}
-
-Imager::Setting ZWO_ASI_Imager::Private::setting(int settingIndex)
-{
-    ASI_CONTROL_CAPS caps;
-    int result = ASIGetControlCaps(info.CameraID, settingIndex, &caps);
-    if(result != ASI_SUCCESS) {
-        qDebug() << "error retrieving setting " << settingIndex << ": " << result;
-        return {};
-    }
-    long value;
-    ASI_BOOL isAuto;
-    ASIGetControlValue(info.CameraID, caps.ControlType, &value, &isAuto);
-    return {static_cast<int64_t>(caps.ControlType), caps.Description, static_cast<double>(caps.MinValue), static_cast<double>(caps.MaxValue), 1.,
-          static_cast<double>(value), static_cast<double>(caps.DefaultValue), Imager::Setting::Number};
+    settings.push_back(bin);
+    return settings;
 }
 
 void ZWO_ASI_Imager::startLive()
@@ -210,3 +251,4 @@ QRect ZWO_ASI_Imager::Private::maxROI(int bin) const
 
 
 #include "zwo_asi_imager.moc"
+
