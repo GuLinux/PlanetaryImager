@@ -11,7 +11,6 @@ QDebug operator<<(QDebug dbg, const Imager::Setting& setting)
 {
   static QMap<Imager::Setting::Type, QString> types_map {
     {Imager::Setting::Number, "Number"},
-    {Imager::Setting::String, "String"},
     {Imager::Setting::Combo, "Combo"},
     {Imager::Setting::Bool, "Bool"},
   };
