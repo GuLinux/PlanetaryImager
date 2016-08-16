@@ -9,8 +9,6 @@ set(QHYImager_SRCS
   saveimages.cpp 
   resources/resources.qrc
   fps_counter.cpp
-  camerasettingswidget.cpp
-  camerasettingswidget.ui
   configurationdialog.cpp
   configurationdialog.ui
   configuration.cpp
@@ -47,6 +45,7 @@ target_link_libraries(planetary_imager
     ${cv_libs}
     ${QCustomPlot_LIBRARIES}
     Qt5::Widgets
+    planetaryimager-widgets
     drivers # needs to be added twice for cyclic dependency
     pthread
 )
