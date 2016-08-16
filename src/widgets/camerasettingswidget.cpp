@@ -8,6 +8,7 @@
 #include <QLayout>
 #include <QCheckBox>
 #include <QComboBox>
+#include "controls/settingwidget.h"
 #include "ui_camerasettingswidget.h"
 using namespace std;
 
@@ -24,20 +25,6 @@ CameraSettingsWidget::Private::Private ( CameraSettingsWidget* q ) : ui{new Ui::
 {
 }
 
-
-class SettingWidget : public QWidget {
-  Q_OBJECT
-public:
-  SettingWidget(QWidget* parent = 0) : QWidget(parent) {
-    setLayout(new QVBoxLayout);
-    layout()->setMargin(0);
-    layout()->setSpacing(0);
-  }
-public slots:
-  virtual void update(const Imager::Setting &setting) = 0;
-signals:
-  void valueChanged(double value);
-};
 
 class NumberSettingWidget : public SettingWidget {
   Q_OBJECT

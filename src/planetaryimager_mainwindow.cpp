@@ -33,7 +33,7 @@
 #include <QDateTime>
 #include <QtConcurrent/QtConcurrent>
 #include "fps_counter.h"
-#include "camerasettingswidget.h"
+#include "widgets/camerasettingswidget.h"
 #include "configurationdialog.h"
 #include "configuration.h"
 #include <QThread>
