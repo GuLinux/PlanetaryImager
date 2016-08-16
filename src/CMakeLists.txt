@@ -4,8 +4,6 @@ set(QHYImager_SRCS
   main.cpp 
   planetaryimager_mainwindow.cpp 
   planetaryimager_mainwindow.ui 
-  statusbarinfowidget.cpp 
-  statusbarinfowidget.ui 
   saveimages.cpp 
   resources/resources.qrc
   fps_counter.cpp
@@ -13,9 +11,6 @@ set(QHYImager_SRCS
   configurationdialog.ui
   configuration.cpp
   displayimage.cpp
-  histogram.cpp
-  recordingpanel.cpp
-  recordingpanel.ui
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
