@@ -27,6 +27,8 @@
 #include <atomic>
 #include "Qt/strings.h"
 #include "utils.h"
+#include "zwoexception.h"
+
 using namespace std;
 using namespace GuLinux;
 
@@ -35,6 +37,8 @@ namespace {
 const int64_t ImageTypeSettingId = 10000;
 const int64_t BinSettingId = 10001;
 }
+
+
 
 
 DPTR_IMPL(ZWO_ASI_Imager) {
@@ -77,10 +81,7 @@ ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandlerPt
     d->chip.width = info.MaxWidth * info.PixelSize / 1000;
     d->chip.properties.push_back( {"Camera Speed", info.IsUSB3Camera ? "USB3" : "USB2"});
     d->chip.properties.push_back( {"Host Speed", info.IsUSB3Host ? "USB3" : "USB2"});
-    int result = ASIOpenCamera(info.CameraID);
-    if(result != ASI_SUCCESS) {
-        throw runtime_error(stringbuilder() << "Error opening camera: " << result );
-    }
+    ASI_CHECK << ASIOpenCamera(info.CameraID);
 }
 
 ZWO_ASI_Imager::~ZWO_ASI_Imager()
