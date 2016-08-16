@@ -88,12 +88,12 @@ void ZWO_ASI_Imager::setSetting(const Setting& setting)
 {
     qDebug() << __PRETTY_FUNCTION__;
     if(setting.id == ImageTypeSettingId) {
-        d->start_thread(d->worker->bin, d->worker->roi, static_cast<ASI_IMG_TYPE>(setting.value));
+        d->start_thread(d->worker->bin(), d->worker->roi(), static_cast<ASI_IMG_TYPE>(setting.value));
         return;
     }
     if(setting.id == BinSettingId) {
         auto bin = static_cast<int>(setting.value);
-        d->start_thread(bin, d->maxROI(bin), d->worker->format);
+        d->start_thread(bin, d->maxROI(bin), d->worker->format());
         return;
     }
     
@@ -138,7 +138,7 @@ Imager::Settings ZWO_ASI_Imager::settings() const
         {ASI_IMG_RAW16, "RAW 16bit"},
         {ASI_IMG_Y8, "Y8"},
     };
-    Imager::Setting imageFormat {ImageTypeSettingId, "Image Format", 0., 0., 1., static_cast<double>(d->worker->format), 0., Setting::Combo};
+    Imager::Setting imageFormat {ImageTypeSettingId, "Image Format", 0., 0., 1., static_cast<double>(d->worker->format()), 0., Setting::Combo};
     int i = 0;
     while(d->info.SupportedVideoFormat[i] != ASI_IMG_END && i < 8) {
         auto format = d->info.SupportedVideoFormat[i];
@@ -195,12 +195,12 @@ bool ZWO_ASI_Imager::supportsROI()
 
 void ZWO_ASI_Imager::clearROI()
 {
-    d->start_thread(d->worker->bin, d->maxROI(d->worker->bin), d->worker->format);
+    d->start_thread(d->worker->bin(), d->maxROI(d->worker->bin()), d->worker->format());
 }
 
 void ZWO_ASI_Imager::setROI(const QRect& roi)
 {
-    d->start_thread(d->worker->bin, roi, d->worker->format);
+    d->start_thread(d->worker->bin(), roi, d->worker->format());
 }
 
 QRect ZWO_ASI_Imager::Private::maxROI(int bin) const

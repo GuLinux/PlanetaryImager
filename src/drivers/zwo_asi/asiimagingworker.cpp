@@ -21,28 +21,42 @@
 #include "zwoexception.h"
 using namespace std;
 
+DPTR_IMPL(ASIImagingWorker) {
+  ASI_IMG_TYPE format;
+  ASI_CAMERA_INFO info;
+  int bin;
+  QRect roi;
 
+  std::vector<uint8_t> buffer;
+  size_t calcBufferSize();
+  int getCVImageType();
+};
 
 ASIImagingWorker::ASIImagingWorker(const QRect& requestedROI, int bin, const ASI_CAMERA_INFO& info, ASI_IMG_TYPE format)
-    : format {format}, info {info}, bin {bin}, roi {requestedROI.x(), requestedROI.y(), (requestedROI.width() / 4) * 4, (requestedROI.height()/4) * 4 }
+    : dptr(format, info, bin, QRect{requestedROI.x(), requestedROI.y(), (requestedROI.width() / 4) * 4, (requestedROI.height()/4) * 4 })
 {
-    qDebug() << "Starting imaging: imageFormat=" << format << ", roi: " << roi << ", bin: " << bin;
-    ASI_CHECK << ASISetROIFormat(info.CameraID, roi.width(), roi.height(), bin, format) << "Set format";
-    ASI_CHECK << ASISetStartPos(info.CameraID, roi.x(), roi.y()) << "Set ROI position";
-    ASI_CHECK << ASIStartVideoCapture(info.CameraID) << "Start video capture";
-    buffer.resize(calcBufferSize());
-    qDebug() << "Imaging started: imageFormat=" << format << ", roi: " << roi << ", bin: " << bin;
+    qDebug() << "Starting imaging: imageFormat=" << d->format << ", d->roi: " << d->roi << ", bin: " << d->bin;
+    ASI_CHECK << ASISetROIFormat(d->info.CameraID, d->roi.width(), d->roi.height(), d->bin, d->format) << "Set d->format";
+    ASI_CHECK << ASISetStartPos(d->info.CameraID, d->roi.x(), d->roi.y()) << "Set ROI position";
+    ASI_CHECK << ASIStartVideoCapture(d->info.CameraID) << "Start video capture";
+    d->buffer.resize(d->calcBufferSize());
+    qDebug() << "Imaging started: imageFormat=" << d->format << ", roi: " << d->roi << ", bin: " << d->bin;
+}
+
+ASIImagingWorker::~ASIImagingWorker()
+{
 }
 
 void ASIImagingWorker::start()
 {
 }
 
+
 bool ASIImagingWorker::shoot(const ImageHandlerPtr& imageHandler)
 {
   try {
-    ASI_CHECK << ASIGetVideoData(info.CameraID, buffer.data(), buffer.size(), 100000) << "Capture frame";
-        cv::Mat image( {roi.width(), roi.height()}, getCVImageType(), buffer.data());
+    ASI_CHECK << ASIGetVideoData(d->info.CameraID, d->buffer.data(), d->buffer.size(), 100000) << "Capture frame";
+        cv::Mat image( {d->roi.width(), d->roi.height()}, d->getCVImageType(), d->buffer.data());
         cv::Mat copy;
         image.copyTo(copy);
         imageHandler->handle(copy);
@@ -56,11 +70,11 @@ bool ASIImagingWorker::shoot(const ImageHandlerPtr& imageHandler)
 
 void ASIImagingWorker::stop()
 {
-    ASI_CHECK << ASIStopVideoCapture(info.CameraID) << "Stop capture";
+    ASI_CHECK << ASIStopVideoCapture(d->info.CameraID) << "Stop capture";
     qDebug() << "Imaging stopped.";
 }
 
-size_t ASIImagingWorker::calcBufferSize()
+size_t ASIImagingWorker::Private::calcBufferSize()
 {
     auto base_size = roi.width() * roi.height();
     switch(format) {
@@ -75,7 +89,7 @@ size_t ASIImagingWorker::calcBufferSize()
     }
 }
 
-int ASIImagingWorker::getCVImageType()
+int ASIImagingWorker::Private::getCVImageType()
 {
     switch(format) {
     case ASI_IMG_RAW8:
@@ -89,4 +103,20 @@ int ASIImagingWorker::getCVImageType()
 
     }
 }
+
+QRect ASIImagingWorker::roi() const
+{
+  return d->roi;
+}
+
+ASI_IMG_TYPE ASIImagingWorker::format() const
+{
+  return d->format;
+}
+
+int ASIImagingWorker::bin() const
+{
+  return d->bin;
+}
+
 
