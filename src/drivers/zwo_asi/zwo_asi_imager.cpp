@@ -58,7 +58,9 @@ DPTR_IMPL(ZWO_ASI_Imager) {
 
     Chip chip;
 
-    Imager::Setting setting(ASI_CONTROL_TYPE settingId);
+    Imager::Setting setting(int settingId);
+    Imager::Settings settings;
+    
     ImagerThread::ptr imager_thread;
     shared_ptr<Worker> worker;
     QRect maxROI(int bin) const;
@@ -109,9 +111,16 @@ void ZWO_ASI_Imager::setSetting(const Setting& setting)
         d->start_thread(bin, d->maxROI(bin), d->worker->format);
         return;
     }
-
-    ASISetControlValue(d->info.CameraID, static_cast<ASI_CONTROL_TYPE>(setting.id), setting.value, ASI_FALSE);
-    emit changed(d->setting(static_cast<ASI_CONTROL_TYPE>(setting.id)));
+    
+    size_t index = find_if(d->settings.begin(), d->settings.end(), [&](const Setting &s) { return s.id == setting.id; } ) - d->settings.begin();
+    qDebug() << "Changing setting " << index << ": " << d->settings[index];
+    int result = ASISetControlValue(d->info.CameraID, static_cast<ASI_CONTROL_TYPE>(setting.id), static_cast<long>(setting.value), ASI_FALSE);
+    //if(result =! ASI_SUCCESS)
+    //  throw runtime_error(stringbuilder() << "Error setting caps" << setting.id << " to " << setting.value << ": " << result);
+    
+    d->settings[index] = d->setting(index);
+    qDebug() << "Changed setting " << index << ": " << d->settings[index];
+    emit changed(d->settings[index]);
 }
 
 void ZWO_ASI_Imager::Private::start_thread(int bin, const QRect& roi, ASI_IMG_TYPE format)
@@ -127,32 +136,16 @@ void ZWO_ASI_Imager::Private::start_thread(int bin, const QRect& roi, ASI_IMG_TY
 Imager::Settings ZWO_ASI_Imager::settings() const
 {
     qDebug() << __PRETTY_FUNCTION__;
-    list<ASI_CONTROL_TYPE> settings_enum {
-        ASI_GAIN,
-        ASI_EXPOSURE,
-        ASI_GAMMA,
-        ASI_WB_R,
-        ASI_WB_B,
-        ASI_BRIGHTNESS,
-        ASI_BANDWIDTHOVERLOAD,
-        ASI_OVERCLOCK,
-        ASI_TEMPERATURE,// return 10*temperature
-        ASI_FLIP,
-        ASI_AUTO_MAX_GAIN,
-        ASI_AUTO_MAX_EXP,
-        ASI_AUTO_MAX_BRIGHTNESS,
-        ASI_HARDWARE_BIN,
-        ASI_HIGH_SPEED_MODE,
-        ASI_COOLER_POWER_PERC,
-        ASI_TARGET_TEMP,// not need *10
-        ASI_COOLER_ON,
-        ASI_MONO_BIN//lead to less grid at software bin mode for color camera
-    };
-    Imager::Settings settings;
-    for(auto v: settings_enum) {
-        auto setting = d->setting(v);
+    int settings_number;
+    int result = ASIGetNumOfControls(d->info.CameraID, &settings_number);
+    if(result != ASI_SUCCESS)
+      throw runtime_error(stringbuilder() << "Error retrieving settings number: " << result);
+
+    d->settings.clear();
+    for(int setting_index = 0; setting_index < settings_number; setting_index++) {
+        auto setting = d->setting(setting_index);
         if(setting != Imager::Setting {} )
-            settings.push_back(setting);
+            d->settings.push_back(setting);
     }
     static map<ASI_IMG_TYPE, QString> format_names {
         {ASI_IMG_RAW8, "Raw 8bit"},
@@ -169,7 +162,7 @@ Imager::Settings ZWO_ASI_Imager::settings() const
         ++i;
     }
     imageFormat.max = i-1;
-    settings.push_back(imageFormat);
+    d->settings.push_back(imageFormat);
 
     Imager::Setting bin {BinSettingId, "Bin", 0, 0, 1, 1, 1, Setting::Combo};
     i = 0;
@@ -178,21 +171,21 @@ Imager::Settings ZWO_ASI_Imager::settings() const
         bin.choices.push_back( {"%1x%1"_q % bin_value, bin_value } );
     }
     bin.max = i-1;
-    settings.push_back(bin);
-    return settings;
+    d->settings.push_back(bin);
+    return d->settings;
 }
 
-Imager::Setting ZWO_ASI_Imager::Private::setting(ASI_CONTROL_TYPE settingId)
+Imager::Setting ZWO_ASI_Imager::Private::setting(int settingIndex)
 {
     ASI_CONTROL_CAPS caps;
-    int result = ASIGetControlCaps(info.CameraID, settingId, &caps);
+    int result = ASIGetControlCaps(info.CameraID, settingIndex, &caps);
     if(result != ASI_SUCCESS) {
-        qDebug() << "error retrieving setting " << settingId << ": " << result;
+        qDebug() << "error retrieving setting " << settingIndex << ": " << result;
         return {};
     }
     long value;
     ASI_BOOL isAuto;
-    ASIGetControlValue(info.CameraID, settingId, &value, &isAuto);
+    ASIGetControlValue(info.CameraID, caps.ControlType, &value, &isAuto);
     return {caps.ControlType, caps.Description, caps.MinValue, caps.MaxValue, 1, value, caps.DefaultValue, Imager::Setting::Number};
 }
 
