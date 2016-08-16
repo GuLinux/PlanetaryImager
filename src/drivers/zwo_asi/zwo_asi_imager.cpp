@@ -21,16 +21,19 @@
 #include "drivers/imagerthread.h"
 #include <stringbuilder.h>
 #include <QObject>
+#include <set>
 #include <QThread>
 #include <fps_counter.h>
 #include <QRect>
 #include <atomic>
+#include <ratio>
 #include "Qt/strings.h"
 #include "utils.h"
 #include "zwoexception.h"
 #include "asiimagingworker.h"
 
 using namespace std;
+using namespace std::chrono_literals;
 using namespace GuLinux;
 
 
@@ -51,7 +54,7 @@ struct ASIControl {
   Imager::Setting setting() const;
   operator Imager::Setting() const;
   ASIControl &reload();
-  ASIControl &set(long new_value, bool is_auto);
+  ASIControl &set(double new_value, bool is_auto);
 };
 }
 
@@ -74,9 +77,12 @@ ASIControl &ASIControl::reload()
   return *this;
 }
 
-ASIControl &ASIControl::set(long new_value, bool is_auto)
+ASIControl &ASIControl::set(double new_value, bool is_auto)
 {
-  ASI_CHECK << ASISetControlValue(camera_id, caps.ControlType, new_value, static_cast<ASI_BOOL>(is_auto))
+  long new_value_l = static_cast<long>(new_value);
+  if(caps.ControlType == ASI_TEMPERATURE)
+    new_value_l = static_cast<long>(new_value * 10.);
+  ASI_CHECK << ASISetControlValue(camera_id, caps.ControlType, new_value_l, static_cast<ASI_BOOL>(is_auto))
             << (stringbuilder() << "Set new control value: " << caps.Name << " to " << new_value << " (auto: " << is_auto << ")");
   reload();
   return *this;
@@ -84,7 +90,7 @@ ASIControl &ASIControl::set(long new_value, bool is_auto)
 
 ASIControl::operator Imager::Setting() const
 {
-  return {
+  Imager::Setting setting = {
     static_cast<int64_t>(caps.ControlType),
     caps.Description,
     static_cast<double>(caps.MinValue),
@@ -93,6 +99,24 @@ ASIControl::operator Imager::Setting() const
     static_cast<double>(value),
     static_cast<double>(caps.DefaultValue),
   };
+  setting.decimals = 0;
+
+  static std::set<ASI_CONTROL_TYPE> boolean_caps {ASI_HIGH_SPEED_MODE, ASI_HARDWARE_BIN};
+  if(boolean_caps.count(caps.ControlType))
+    setting.type = Imager::Setting::Bool;
+
+  if(caps.ControlType == ASI_EXPOSURE) {
+    setting.is_duration = true;
+    setting.duration_unit = 1us;
+  }
+  if(caps.ControlType == ASI_TEMPERATURE) {
+    setting.decimals = 1;
+    setting.value /= 10.;
+  }
+  setting.readonly = !caps.IsWritable;
+  setting.value_auto = caps.IsAutoSupported && is_auto;
+  setting.supports_auto = caps.IsAutoSupported;
+  return setting;
 }
 
 
@@ -138,29 +162,6 @@ Imager::Chip ZWO_ASI_Imager::chip() const
 QString ZWO_ASI_Imager::name() const
 {
     return d->info.Name;
-}
-
-void ZWO_ASI_Imager::setSetting(const Setting& setting)
-{
-    qDebug() << __PRETTY_FUNCTION__;
-    if(setting.id == ImageTypeSettingId) {
-        d->start_thread(d->worker->bin(), d->worker->roi(), static_cast<ASI_IMG_TYPE>(setting.value));
-        emit changed(setting);
-        return;
-    }
-    if(setting.id == BinSettingId) {
-        auto bin = static_cast<int>(setting.value);
-        d->start_thread(bin, d->maxROI(bin), d->worker->format());
-        emit changed(setting);
-        return;
-    }
-    
-    auto control = *find_if(d->controls.begin(), d->controls.end(),
-                           [&](const ASIControl::ptr &c){ return c->caps.ControlType == static_cast<ASI_CONTROL_TYPE>(setting.id); });
-    qDebug() << "Changing setting " << control->setting();
-    control->set(static_cast<long>(setting.value), false);
-    qDebug() << "Changed setting " << control->setting();
-    emit changed(*control);
 }
 
 void ZWO_ASI_Imager::Private::start_thread(int bin, const QRect& roi, ASI_IMG_TYPE format)
@@ -214,6 +215,30 @@ Imager::Settings ZWO_ASI_Imager::settings() const
     bin.max = i-1;
     settings.push_back(bin);
     return settings;
+}
+
+
+void ZWO_ASI_Imager::setSetting(const Setting& setting)
+{
+    qDebug() << __PRETTY_FUNCTION__;
+    if(setting.id == ImageTypeSettingId) {
+        d->start_thread(d->worker->bin(), d->worker->roi(), static_cast<ASI_IMG_TYPE>(setting.value));
+        emit changed(setting);
+        return;
+    }
+    if(setting.id == BinSettingId) {
+        auto bin = static_cast<int>(setting.value);
+        d->start_thread(bin, d->maxROI(bin), d->worker->format());
+        emit changed(setting);
+        return;
+    }
+
+    auto control = *find_if(d->controls.begin(), d->controls.end(),
+                           [&](const ASIControl::ptr &c){ return c->caps.ControlType == static_cast<ASI_CONTROL_TYPE>(setting.id); });
+    qDebug() << "Changing setting " << control->setting();
+    control->set(setting, false);
+    qDebug() << "Changed setting " << control->setting();
+    emit changed(*control);
 }
 
 void ZWO_ASI_Imager::startLive()

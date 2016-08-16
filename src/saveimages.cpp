@@ -60,7 +60,11 @@ RecordingInformation::RecordingInformation(Configuration& configuration, Imager 
   for(auto setting: imager->settings()) {
     QVariantMap setting_value;
     setting_value["value"] = setting.value;
-    static QMap<Imager::Setting::Type, QString> types { {Imager::Setting::Number, "number"}, {Imager::Setting::String, "string"}, {Imager::Setting::Combo, "combo"}, {Imager::Setting::Bool, "bool"}};
+    static QMap<Imager::Setting::Type, QString> types {
+      {Imager::Setting::Number, "number"},
+      {Imager::Setting::Combo, "combo"},
+      {Imager::Setting::Bool, "bool"}
+    };
     setting_value["type"] = types[setting.type];
     if(setting.type == Imager::Setting::Combo) {
       QVariantMap choices;

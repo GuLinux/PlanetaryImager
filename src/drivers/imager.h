@@ -21,6 +21,7 @@
 #define PL_IMG_IMAGER_H
 
 #include <memory>
+#include <chrono>
 #include <QObject>
 #include <QDebug>
 #include "imagehandler.h"
@@ -33,13 +34,19 @@ public:
     int64_t id;
     QString name;
     double min, max, step, value, defaut_value;
-    enum Type { Number, String, Combo, Bool } type;
+    enum Type { Number, Combo, Bool } type;
     struct Choice {
      QString label;
      double value;
     };
     QList<Choice> choices;
     operator bool() const;
+    int decimals = 2;
+    bool is_duration = false;
+    std::chrono::duration<double> duration_unit;
+    bool supports_auto = false;
+    bool value_auto = false;
+    bool readonly = false;
   };
   typedef QList<Setting> Settings;
 
