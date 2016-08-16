@@ -28,17 +28,17 @@
 
 class ASIImagingWorker : public ImagerThread::Worker {
 public:
-    ASIImagingWorker(const QRect &roi, int bin, const ASI_CAMERA_INFO &info, ASI_IMG_TYPE format);
-    size_t calcBufferSize();
-    virtual bool shoot(const ImageHandlerPtr& imageHandler);
-    virtual void start();
-    virtual void stop();
-    int getCVImageType();
-    std::vector<uint8_t> buffer;
-    QRect roi;
-    int bin;
-    ASI_IMG_TYPE format;
-    ASI_CAMERA_INFO info;
+  ASIImagingWorker(const QRect &roi, int bin, const ASI_CAMERA_INFO &info, ASI_IMG_TYPE format);
+  ~ASIImagingWorker();
+  virtual bool shoot(const ImageHandlerPtr& imageHandler);
+  virtual void start();
+  virtual void stop();
+
+  QRect roi() const;
+  ASI_IMG_TYPE format() const;
+  int bin() const;
+private:
+  DPTR
 };
 
 #endif // ASIIMAGINGWORKER_H
