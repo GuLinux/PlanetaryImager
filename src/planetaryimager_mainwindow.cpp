@@ -23,7 +23,7 @@
 #include "ui_planetaryimager_mainwindow.h"
 #include <functional>
 #include "utils.h"
-#include "statusbarinfowidget.h"
+#include "widgets/statusbarinfowidget.h"
 #include "saveimages.h"
 #include <QLabel>
 #include <QDoubleSpinBox>
@@ -40,8 +40,8 @@
 #include <QMutex>
 #include <QMessageBox>
 #include "displayimage.h"
-#include "recordingpanel.h"
-#include "histogram.h"
+#include "widgets/recordingpanel.h"
+#include "widgets/histogram.h"
 #include "Qt/zoomableimage.h"
 #include <QGridLayout>
 #include <QToolBar>
