@@ -81,13 +81,13 @@ ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandlerPt
     d->chip.width = info.MaxWidth * info.PixelSize / 1000;
     d->chip.properties.push_back( {"Camera Speed", info.IsUSB3Camera ? "USB3" : "USB2"});
     d->chip.properties.push_back( {"Host Speed", info.IsUSB3Host ? "USB3" : "USB2"});
-    ASI_CHECK << ASIOpenCamera(info.CameraID);
+    ASI_CHECK << ASIOpenCamera(info.CameraID) << "Open Camera";
 }
 
 ZWO_ASI_Imager::~ZWO_ASI_Imager()
 {
     stopLive();
-    ASICloseCamera(d->info.CameraID);
+    ASI_CHECK << ASICloseCamera(d->info.CameraID) << "Close Camera";
 }
 
 Imager::Chip ZWO_ASI_Imager::chip() const
@@ -207,15 +207,9 @@ ZWO_ASI_Imager::Private::Worker::Worker(const QRect& requestedROI, int bin, cons
     : format {format}, info {info}, bin {bin}, roi {requestedROI.x(), requestedROI.y(), (requestedROI.width() / 4) * 4, (requestedROI.height()/4) * 4 }
 {
     qDebug() << "Starting imaging: imageFormat=" << format << ", roi: " << roi << ", bin: " << bin;
-    int result = ASISetROIFormat(info.CameraID, roi.width(), roi.height(), bin, format);
-    if(result != ASI_SUCCESS)
-        throw runtime_error(stringbuilder() << "Error setting format: " << result );
-    result = ASISetStartPos(info.CameraID, roi.x(), roi.y());
-    if(result != ASI_SUCCESS)
-        throw runtime_error(stringbuilder() << "Error setting ROI position: " << result );
-    result = ASIStartVideoCapture(info.CameraID);
-    if(result != ASI_SUCCESS)
-        throw runtime_error(stringbuilder() << "Error starting capture: " << result );
+    ASI_CHECK << ASISetROIFormat(info.CameraID, roi.width(), roi.height(), bin, format) << "Set format";
+    ASI_CHECK << ASISetStartPos(info.CameraID, roi.x(), roi.y()) << "Set ROI position";
+    ASI_CHECK << ASIStartVideoCapture(info.CameraID) << "Start video capture";
     buffer.resize(calcBufferSize());
     qDebug() << "Imaging started: imageFormat=" << format << ", roi: " << roi << ", bin: " << bin;
 }
@@ -226,22 +220,23 @@ void ZWO_ASI_Imager::Private::Worker::start()
 
 bool ZWO_ASI_Imager::Private::Worker::shoot(const ImageHandlerPtr& imageHandler)
 {
-    int result = ASIGetVideoData(info.CameraID, buffer.data(), buffer.size(), 100000);
-    if(result == ASI_SUCCESS) {
+  try {
+    ASI_CHECK << ASIGetVideoData(info.CameraID, buffer.data(), buffer.size(), 100000) << "Capture frame";
         cv::Mat image( {roi.width(), roi.height()}, getCVImageType(), buffer.data());
         cv::Mat copy;
         image.copyTo(copy);
         imageHandler->handle(copy);
         return true;
-    } else {
-        qDebug() << "Capture error: " << result;
-        return false;
-    }
+  }
+   catch(ZWOException &e) {
+      qDebug() << QString::fromStdString(e.what());
+      return false;
+  }
 }
 
 void ZWO_ASI_Imager::Private::Worker::stop()
 {
-    ASIStopVideoCapture(info.CameraID);
+    ASI_CHECK << ASIStopVideoCapture(info.CameraID) << "Stop capture";
     qDebug() << "Imaging stopped.";
 }
 
