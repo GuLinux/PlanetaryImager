@@ -1,0 +1,13 @@
+project(ASITest)
+set (CMAKE_CXX_STANDARD 14)
+cmake_minimum_required(VERSION 3.1)
+set(ASI_SDK_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../ASI_linux_mac_SDK_V0.3.0727/ASI_linux_mac_SDK/" CACHE STRING "Path for ZWO ASI SDK")
+set(ASI_TARGET_PLATFORM "x64" CACHE STRING "Target platform (default: x64)")
+if(NOT EXISTS ${ASI_SDK_PATH}/include/ASICamera2.h)
+    message(FATAL_ERROR "No valid ASI SDK found in ${ASI_SDK_PATH}")
+endif(NOT EXISTS ${ASI_SDK_PATH}/include/ASICamera2.h)
+
+include_directories(${ASI_SDK_PATH}/include)
+aux_source_directory(. SRC_LIST)
+add_executable(${PROJECT_NAME} ${SRC_LIST})
+target_link_libraries(${PROJECT_NAME} ${ASI_SDK_PATH}/lib/${ASI_TARGET_PLATFORM}/libASICamera2.a usb-1.0 pthread)
