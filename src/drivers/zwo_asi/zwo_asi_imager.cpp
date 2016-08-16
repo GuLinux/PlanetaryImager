@@ -28,6 +28,7 @@
 #include "Qt/strings.h"
 #include "utils.h"
 #include "zwoexception.h"
+#include "asiimagingworker.h"
 
 using namespace std;
 using namespace GuLinux;
@@ -36,23 +37,6 @@ using namespace GuLinux;
 namespace {
 const int64_t ImageTypeSettingId = 10000;
 const int64_t BinSettingId = 10001;
-
-
-
-class ZWOImagerWorker : public ImagerThread::Worker {
-public:
-    ZWOImagerWorker(const QRect &roi, int bin, const ASI_CAMERA_INFO &info, ASI_IMG_TYPE format);
-    size_t calcBufferSize();
-    virtual bool shoot(const ImageHandlerPtr& imageHandler);
-    virtual void start();
-    virtual void stop();
-    int getCVImageType();
-    vector<uint8_t> buffer;
-    QRect roi;
-    int bin;
-    ASI_IMG_TYPE format;
-    ASI_CAMERA_INFO info;
-};
 
 }
 DPTR_IMPL(ZWO_ASI_Imager) {
@@ -66,7 +50,7 @@ DPTR_IMPL(ZWO_ASI_Imager) {
     Imager::Settings settings;
     
     ImagerThread::ptr imager_thread;
-    shared_ptr<ZWOImagerWorker> worker;
+    shared_ptr<ASIImagingWorker> worker;
     QRect maxROI(int bin) const;
     void start_thread(int bin, const QRect& roi, ASI_IMG_TYPE format);
 };
@@ -128,7 +112,7 @@ void ZWO_ASI_Imager::Private::start_thread(int bin, const QRect& roi, ASI_IMG_TY
 {
     worker.reset();
     imager_thread.reset();
-    worker = make_shared<ZWOImagerWorker>(roi, bin, info, format);
+    worker = make_shared<ASIImagingWorker>(roi, bin, info, format);
     imager_thread = make_shared<ImagerThread>(worker, q, imageHandler);
     imager_thread->start();
 }
@@ -203,73 +187,6 @@ void ZWO_ASI_Imager::stopLive()
     d->imager_thread.reset();
 }
 
-
-ZWOImagerWorker::ZWOImagerWorker(const QRect& requestedROI, int bin, const ASI_CAMERA_INFO& info, ASI_IMG_TYPE format)
-    : format {format}, info {info}, bin {bin}, roi {requestedROI.x(), requestedROI.y(), (requestedROI.width() / 4) * 4, (requestedROI.height()/4) * 4 }
-{
-    qDebug() << "Starting imaging: imageFormat=" << format << ", roi: " << roi << ", bin: " << bin;
-    ASI_CHECK << ASISetROIFormat(info.CameraID, roi.width(), roi.height(), bin, format) << "Set format";
-    ASI_CHECK << ASISetStartPos(info.CameraID, roi.x(), roi.y()) << "Set ROI position";
-    ASI_CHECK << ASIStartVideoCapture(info.CameraID) << "Start video capture";
-    buffer.resize(calcBufferSize());
-    qDebug() << "Imaging started: imageFormat=" << format << ", roi: " << roi << ", bin: " << bin;
-}
-
-void ZWOImagerWorker::start()
-{
-}
-
-bool ZWOImagerWorker::shoot(const ImageHandlerPtr& imageHandler)
-{
-  try {
-    ASI_CHECK << ASIGetVideoData(info.CameraID, buffer.data(), buffer.size(), 100000) << "Capture frame";
-        cv::Mat image( {roi.width(), roi.height()}, getCVImageType(), buffer.data());
-        cv::Mat copy;
-        image.copyTo(copy);
-        imageHandler->handle(copy);
-        return true;
-  }
-   catch(ZWOException &e) {
-      qDebug() << QString::fromStdString(e.what());
-      return false;
-  }
-}
-
-void ZWOImagerWorker::stop()
-{
-    ASI_CHECK << ASIStopVideoCapture(info.CameraID) << "Stop capture";
-    qDebug() << "Imaging stopped.";
-}
-
-size_t ZWOImagerWorker::calcBufferSize()
-{
-    auto base_size = roi.width() * roi.height();
-    switch(format) {
-    case ASI_IMG_RAW8:
-        return base_size;
-    case ASI_IMG_RAW16:
-        return base_size * 2;
-    case ASI_IMG_RGB24:
-        return base_size * 3;
-    default:
-        throw runtime_error("Format not supported");
-    }
-}
-
-int ZWOImagerWorker::getCVImageType()
-{
-    switch(format) {
-    case ASI_IMG_RAW8:
-        return CV_8UC1;
-    case ASI_IMG_RAW16:
-        return CV_16UC1;
-    case ASI_IMG_RGB24:
-        return CV_8UC3;
-    default:
-        throw runtime_error("Format not supported");
-
-    }
-}
 
 bool ZWO_ASI_Imager::supportsROI()
 {
