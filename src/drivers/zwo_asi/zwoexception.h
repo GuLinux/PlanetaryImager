@@ -17,23 +17,33 @@
  *
  */
 
-#ifndef ZWO_ASI_DRIVER_H
-#define ZWO_ASI_DRIVER_H
+#ifndef ZWOEXCEPTION_H
+#define ZWOEXCEPTION_H
 
-#include "drivers/driver.h"
+#include <stdexcept>
+#include "ASICamera2.h"
 #include "c++/dptr.h"
 
-
-class ZWO_ASI_Driver : public Driver
-{
+class ZWOException : public std::exception {
 public:
-    ZWO_ASI_Driver();
-    ~ZWO_ASI_Driver();
-    virtual Driver::Cameras cameras() const;
+  ZWOException(ASI_ERROR_CODE code, const std::string &where = {});
+  ZWOException(const ZWOException &other);
+  ASI_ERROR_CODE code() const;
+  virtual const char* what() const noexcept;
+  class Check;
 private:
   DPTR
 };
 
+class ZWOException::Check {
+public:
+  Check(const std::string &file, int line);
+  ~Check();
+  Check &operator<<(ASI_ERROR_CODE code);
+  Check &operator<<(const std::string &operation);
+private:
+  DPTR
+};
+#define ASI_CHECK ZWOException::Check(__FILE__, __LINE__)
 
-
-#endif // ZWO_ASI_DRIVER_H
+#endif // ZWOEXCEPTION_H

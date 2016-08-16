@@ -20,6 +20,7 @@
 #include "zwo_asi_driver.h"
 #include "ASICamera2.h"
 #include "zwo_asi_imager.h"
+#include "zwoexception.h"
 
 using namespace std;
 
@@ -37,7 +38,10 @@ namespace {
   private:
     const ASI_CAMERA_INFO info;
   };
+
 }
+
+
 
 ImagerPtr ZWO_ASI_Camera::imager(const ImageHandlerPtr& imageHandler) const
 {
@@ -66,7 +70,7 @@ Driver::Cameras ZWO_ASI_Driver::cameras() const
   int index=0;
   for(int index=0; index<ncams; index++) {
     ASI_CAMERA_INFO info;
-    ASIGetCameraProperty(&info, index++);
+    ASI_CHECK << ASIGetCameraProperty(&info, index++) << "Get Camera Property";
     cameras.push_back(make_shared<ZWO_ASI_Camera>(info));
   }
   return cameras;
