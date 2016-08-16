@@ -57,6 +57,7 @@ NumberSettingWidget::NumberSettingWidget(QWidget* parent): SettingWidget(parent)
 
 void NumberSettingWidget::update(const Imager::Setting& setting)
 {
+  edit->setDecimals(setting.decimals);
   edit->setMinimum(setting.min);
   edit->setMaximum(setting.max);
   edit->setSingleStep(setting.step != 0 ? setting.step : 0.1);
@@ -152,6 +153,9 @@ CameraSettingWidget::CameraSettingWidget(const Imager::Setting& setting, Imager*
     connect(settingWidget, &SettingWidget::valueChanged, [=](double v) {
       new_value = v;
     });
+
+    settingWidget->setEnabled(!setting.readonly); // TODO: add different behaviour depending on widget type
+    // TODO: handle value
     // TODO: move from here
     connect(imager, &Imager::changed, [=,&settings](const Imager::Setting &changed_setting){
       if(changed_setting.id != setting.id)
