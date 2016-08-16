@@ -36,26 +36,26 @@ using namespace GuLinux;
 namespace {
 const int64_t ImageTypeSettingId = 10000;
 const int64_t BinSettingId = 10001;
+
+
+
+class ZWOImagerWorker : public ImagerThread::Worker {
+public:
+    ZWOImagerWorker(const QRect &roi, int bin, const ASI_CAMERA_INFO &info, ASI_IMG_TYPE format);
+    size_t calcBufferSize();
+    virtual bool shoot(const ImageHandlerPtr& imageHandler);
+    virtual void start();
+    virtual void stop();
+    int getCVImageType();
+    vector<uint8_t> buffer;
+    QRect roi;
+    int bin;
+    ASI_IMG_TYPE format;
+    ASI_CAMERA_INFO info;
+};
+
 }
-
-
-
-
 DPTR_IMPL(ZWO_ASI_Imager) {
-    class Worker : public ImagerThread::Worker {
-    public:
-        Worker(const QRect &roi, int bin, const ASI_CAMERA_INFO &info, ASI_IMG_TYPE format);
-        size_t calcBufferSize();
-        virtual bool shoot(const ImageHandlerPtr& imageHandler);
-        virtual void start();
-        virtual void stop();
-        int getCVImageType();
-        vector<uint8_t> buffer;
-        QRect roi;
-        int bin;
-        ASI_IMG_TYPE format;
-        ASI_CAMERA_INFO info;
-    };
     ASI_CAMERA_INFO info;
     ImageHandlerPtr imageHandler;
     ZWO_ASI_Imager *q;
@@ -66,7 +66,7 @@ DPTR_IMPL(ZWO_ASI_Imager) {
     Imager::Settings settings;
     
     ImagerThread::ptr imager_thread;
-    shared_ptr<Worker> worker;
+    shared_ptr<ZWOImagerWorker> worker;
     QRect maxROI(int bin) const;
     void start_thread(int bin, const QRect& roi, ASI_IMG_TYPE format);
 };
@@ -128,7 +128,7 @@ void ZWO_ASI_Imager::Private::start_thread(int bin, const QRect& roi, ASI_IMG_TY
 {
     worker.reset();
     imager_thread.reset();
-    worker = make_shared<Worker>(roi, bin, info, format);
+    worker = make_shared<ZWOImagerWorker>(roi, bin, info, format);
     imager_thread = make_shared<ImagerThread>(worker, q, imageHandler);
     imager_thread->start();
 }
@@ -154,12 +154,12 @@ Imager::Settings ZWO_ASI_Imager::settings() const
         {ASI_IMG_RAW16, "RAW 16bit"},
         {ASI_IMG_Y8, "Y8"},
     };
-    Imager::Setting imageFormat {ImageTypeSettingId, "Image Format", 0, 0, 1, d->worker->format, 0, Setting::Combo};
+    Imager::Setting imageFormat {ImageTypeSettingId, "Image Format", 0., 0., 1., static_cast<double>(d->worker->format), 0., Setting::Combo};
     int i = 0;
     while(d->info.SupportedVideoFormat[i] != ASI_IMG_END && i < 8) {
         auto format = d->info.SupportedVideoFormat[i];
         qDebug() << "supported format: " << format << ": " << format_names[format];
-        imageFormat.choices.push_back( {format_names[format], format});
+        imageFormat.choices.push_back( {format_names[format], static_cast<double>(format)});
         ++i;
     }
     imageFormat.max = i-1;
@@ -169,7 +169,7 @@ Imager::Settings ZWO_ASI_Imager::settings() const
     i = 0;
     while(d->info.SupportedBins[i] != 0) {
         auto bin_value = d->info.SupportedBins[i++];
-        bin.choices.push_back( {"%1x%1"_q % bin_value, bin_value } );
+        bin.choices.push_back( {"%1x%1"_q % static_cast<double>(bin_value), static_cast<double>(bin_value) } );
     }
     bin.max = i-1;
     d->settings.push_back(bin);
@@ -187,7 +187,8 @@ Imager::Setting ZWO_ASI_Imager::Private::setting(int settingIndex)
     long value;
     ASI_BOOL isAuto;
     ASIGetControlValue(info.CameraID, caps.ControlType, &value, &isAuto);
-    return {caps.ControlType, caps.Description, caps.MinValue, caps.MaxValue, 1, value, caps.DefaultValue, Imager::Setting::Number};
+    return {static_cast<int64_t>(caps.ControlType), caps.Description, static_cast<double>(caps.MinValue), static_cast<double>(caps.MaxValue), 1.,
+          static_cast<double>(value), static_cast<double>(caps.DefaultValue), Imager::Setting::Number};
 }
 
 void ZWO_ASI_Imager::startLive()
@@ -203,7 +204,7 @@ void ZWO_ASI_Imager::stopLive()
 }
 
 
-ZWO_ASI_Imager::Private::Worker::Worker(const QRect& requestedROI, int bin, const ASI_CAMERA_INFO& info, ASI_IMG_TYPE format)
+ZWOImagerWorker::ZWOImagerWorker(const QRect& requestedROI, int bin, const ASI_CAMERA_INFO& info, ASI_IMG_TYPE format)
     : format {format}, info {info}, bin {bin}, roi {requestedROI.x(), requestedROI.y(), (requestedROI.width() / 4) * 4, (requestedROI.height()/4) * 4 }
 {
     qDebug() << "Starting imaging: imageFormat=" << format << ", roi: " << roi << ", bin: " << bin;
@@ -214,11 +215,11 @@ ZWO_ASI_Imager::Private::Worker::Worker(const QRect& requestedROI, int bin, cons
     qDebug() << "Imaging started: imageFormat=" << format << ", roi: " << roi << ", bin: " << bin;
 }
 
-void ZWO_ASI_Imager::Private::Worker::start()
+void ZWOImagerWorker::start()
 {
 }
 
-bool ZWO_ASI_Imager::Private::Worker::shoot(const ImageHandlerPtr& imageHandler)
+bool ZWOImagerWorker::shoot(const ImageHandlerPtr& imageHandler)
 {
   try {
     ASI_CHECK << ASIGetVideoData(info.CameraID, buffer.data(), buffer.size(), 100000) << "Capture frame";
@@ -234,13 +235,13 @@ bool ZWO_ASI_Imager::Private::Worker::shoot(const ImageHandlerPtr& imageHandler)
   }
 }
 
-void ZWO_ASI_Imager::Private::Worker::stop()
+void ZWOImagerWorker::stop()
 {
     ASI_CHECK << ASIStopVideoCapture(info.CameraID) << "Stop capture";
     qDebug() << "Imaging stopped.";
 }
 
-size_t ZWO_ASI_Imager::Private::Worker::calcBufferSize()
+size_t ZWOImagerWorker::calcBufferSize()
 {
     auto base_size = roi.width() * roi.height();
     switch(format) {
@@ -255,7 +256,7 @@ size_t ZWO_ASI_Imager::Private::Worker::calcBufferSize()
     }
 }
 
-int ZWO_ASI_Imager::Private::Worker::getCVImageType()
+int ZWOImagerWorker::getCVImageType()
 {
     switch(format) {
     case ASI_IMG_RAW8:
@@ -287,7 +288,7 @@ void ZWO_ASI_Imager::setROI(const QRect& roi)
 
 QRect ZWO_ASI_Imager::Private::maxROI(int bin) const
 {
-    return {0, 0, info.MaxWidth / bin, info.MaxHeight / bin};
+    return {0, 0, static_cast<int>(info.MaxWidth) / bin, static_cast<int>(info.MaxHeight) / bin};
 }
 
 
