@@ -85,12 +85,12 @@ CameraSettingWidget::CameraSettingWidget(const Imager::Setting& setting, Imager*
     settingWidget->setEnabled(!setting.readonly); // TODO: add different behaviour depending on widget type
     // TODO: handle value
     // TODO: move from here
-    connect(imager, &Imager::changed, [=,&settings](const Imager::Setting &changed_setting){
+    connect(imager, &Imager::changed, this, [=,&settings](const Imager::Setting &changed_setting){
       if(changed_setting.id != setting.id)
-	return;
+        return;
       qDebug() << "setting changed:" << changed_setting.id << changed_setting.name << "=" << changed_setting.value;
       settingWidget->update(changed_setting);
-    });
+    }, Qt::QueuedConnection);
 }
 
 void CameraSettingWidget::apply()
