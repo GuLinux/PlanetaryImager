@@ -17,10 +17,10 @@
  */
 
 #include "settingwidget.h"
-#include <QVBoxLayout>
+#include <QBoxLayout>
 
 SettingWidget::SettingWidget(QWidget *parent) : QWidget(parent) {
-    setLayout(new QVBoxLayout);
+    setLayout(new QHBoxLayout);
     layout()->setMargin(0);
     layout()->setSpacing(0);
   }

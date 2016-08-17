@@ -17,22 +17,59 @@
  *
  */
 #include "durationsettingwidget.h"
+#include <QDoubleSpinBox>
+#include <QComboBox>
+using namespace std;
+using namespace std::chrono_literals;
 
 struct DurationSettingWidget::Private {
-
+  QDoubleSpinBox *edit;
+  QComboBox *unit_combo;
+  DurationSettingWidget *q;
+  void valueChanged();
+  void updateWidgets();
+  typedef chrono::duration<double> seconds;
+  seconds min, max, step, device_unit, value;
 };
 
-DurationSettingWidget::DurationSettingWidget(QWidget *parent) : SettingWidget(parent), dptr()
+DurationSettingWidget::DurationSettingWidget(QWidget *parent) : SettingWidget(parent), dptr(new QDoubleSpinBox, new QComboBox, this)
 {
-
+  layout()->addWidget(d->edit);
+  layout()->addWidget(d->unit_combo);
+  connect(d->edit, F_PTR(QDoubleSpinBox, valueChanged, double), this, bind(&Private::valueChanged, d.get() ));
+  connect(d->unit_combo, F_PTR(QComboBox, currentIndexChanged, int), this, bind(&Private::updateWidgets, d.get() ));
+  d->unit_combo->addItem("s", 1.);
+  d->unit_combo->addItem("ms", 0.001);
+  d->unit_combo->addItem("us", 0.000001);
 }
 
 DurationSettingWidget::~DurationSettingWidget()
 {
-
 }
 
 void DurationSettingWidget::update(const Imager::Setting &setting)
 {
+  d->edit->setDecimals(setting.decimals); // TODO: what to do with this?
+  d->device_unit = setting.duration_unit;
+  d->min = setting.min * d->device_unit;
+  d->max = setting.max * d->device_unit;
+  d->step = (setting.step != 0 ? setting.step : 0.1) * d->device_unit; // TODO: move this
+  d->value = setting.value * d->device_unit;
+  d->updateWidgets();
+}
 
+void DurationSettingWidget::Private::valueChanged()
+{
+  double unit = unit_combo->currentData().toDouble();
+  q->valueChanged( (edit->value() *unit ) / device_unit.count() );
+}
+
+void DurationSettingWidget::Private::updateWidgets()
+{
+  double unit = unit_combo->currentData().toDouble();
+  qDebug() << "min=" << min.count() << ", max=" << max.count() << ", step" << step.count() << ", value=" << value.count() << ", device_unit=" << device_unit.count() << ", combo unit: " << unit;
+  edit->setMinimum(min.count()/unit);
+  edit->setMaximum(max.count()/unit);
+  edit->setSingleStep(step.count()/unit);
+  edit->setValue(value.count()/unit);
 }
