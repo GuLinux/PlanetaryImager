@@ -84,6 +84,9 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   QCPBars *histogram_plot;
   void got_histogram(const vector< uint32_t >& histogram);
   QQueue<Imager::Control> settings_to_save_queue;
+  
+  QFutureWatcher<ImagerPtr> imager_future_watcher;
+  void onImagerInitialized(const ImagerPtr &imager);
 };
 
 PlanetaryImagerMainWindow::Private::Private(PlanetaryImagerMainWindow* q) 
@@ -227,6 +230,9 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
       d->imager->setROI(rect.toRect());
       d->image->clearROI();
     });
+    connect(&d->imager_future_watcher, &QFutureWatcher<ImagerPtr>::finished, this, [&]{
+      d->onImagerInitialized(d->imager_future_watcher.result());
+    });
 }
 
 #include <iostream>
@@ -272,12 +278,16 @@ void PlanetaryImagerMainWindow::Private::rescan_devices()
 
 void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::CameraPtr& camera)
 {
+  imager_future_watcher.setFuture(QtConcurrent::run([=]{ return camera->imager(ImageHandlerPtr{new ImageHandlers{displayImage, saveImages, histogram}}); }));
+}
+
+void PlanetaryImagerMainWindow::Private::onImagerInitialized(const ImagerPtr& imager)
+{
     auto chip_text = [=](QLabel *text_label, const QString &text, const QList<int> &values){
         bool valid = all_of(begin(values), end(values), bind(greater<int>(), _1, 0));
         text_label->setText(valid ? text : "-");
     };
-    
-  Thread::Run<ImagerPtr>([=]{ return camera->imager(ImageHandlerPtr{new ImageHandlers{displayImage, saveImages, histogram}}); }, [=](const ImagerPtr &imager){
+  
     if(!imager) {
       for(auto widget: QList<QLabel*>{ui->camera_chip_size, ui->camera_pixels_size, ui->camera_bpp, ui->camera_resolution})
           chip_text(widget, "", {-1});
@@ -313,16 +323,16 @@ void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::CameraPtr& 
     }, Qt::QueuedConnection);
     connect(imager.get(), &Imager::fps, q, [this, imager]{
       while(!settings_to_save_queue.isEmpty()) {
-	auto setting = settings_to_save_queue.dequeue();
-	qDebug() << "Settings changed, camera still alive: " << setting;
-	settings.beginGroup(imager->name());
-	qDebug() << "setting " << setting.name << " to " << setting.value;
-	settings.setValue(setting.name,  setting.value);
-	settings.endGroup();
+        auto setting = settings_to_save_queue.dequeue();
+        qDebug() << "Settings changed, camera still alive: " << setting;
+        settings.beginGroup(imager->name());
+        qDebug() << "setting " << setting.name << " to " << setting.value;
+        settings.setValue(setting.name,  setting.value);
+        settings.endGroup();
       }
     }, Qt::QueuedConnection);
-  });
 }
+
 
 void PlanetaryImagerMainWindow::Private::got_histogram(const vector<uint32_t>& histogram)
 {
