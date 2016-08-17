@@ -119,7 +119,7 @@ SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{
   _settings["temperature"].readonly = true;
   _settings["delay"].is_duration = true;
   _settings["delay"].duration_unit = 1ms;
-  _settings["delay"].supports_auto = true;
+  _settings["seeing"].supports_auto = true;
   
   refresh_temperature.moveToThread(qApp->thread());
   connect(&refresh_temperature, &QTimer::timeout, qApp, [&]{
