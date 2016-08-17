@@ -33,6 +33,9 @@
 #include "Qt/functional.h"
 #include <atomic>
 
+
+#define _Pragma(...)
+
 using namespace GuLinux;
 using namespace std;
 using namespace std::chrono_literals;
@@ -58,7 +61,7 @@ public:
     int rand(int a, int b);
     QMap<QString, Imager::Setting> _settings;
     QMutex settingsMutex;
-    virtual bool supportsROI() { return false; }
+    virtual bool supportsROI() { return true; }
     
     class Worker : public ImagerThread::Worker {
     public:
@@ -66,17 +69,20 @@ public:
       bool shoot(const ImageHandlerPtr& imageHandler);
       virtual void start();
       virtual void stop();
+      void setROI(const QRect &roi);
     private:
       cv::Mat image;
       SimulatorImager *imager;
+      QRect roi;
     };
     friend class Worker;
 public slots:
-    virtual void setROI(const QRect &) {}
-    virtual void clearROI() {}
+    virtual void setROI(const QRect &);
+    virtual void clearROI();
 private:
   ImageHandlerPtr imageHandler;
   ImagerThread::ptr imager_thread;
+  shared_ptr<Worker> worker;
 };
 
 ImagerPtr SimulatorCamera::imager ( const ImageHandlerPtr& imageHandler ) const
@@ -189,6 +195,9 @@ bool SimulatorImager::Worker::shoot(const ImageHandlerPtr &imageHandler)
   crop_rect -= cv::Size{crop_factor, crop_factor};
   crop_rect += cv::Point{pix_w, pix_h};
   cropped = image(crop_rect);
+  if(roi.isValid()) {
+    cropped = cropped(cv::Rect{roi.x(), roi.y(), roi.width(), roi.height()});
+  }
   if(rand(0, seeing.max) > (seeing.value_auto ? 3 : seeing.value) ) {
       auto ker_size = rand(1, 7);
       cv::blur(cropped, blurred, {ker_size, ker_size});
@@ -210,12 +219,27 @@ bool SimulatorImager::Worker::shoot(const ImageHandlerPtr &imageHandler)
   return true;
 }
 
+void SimulatorImager::clearROI()
+{
+  worker->setROI({});
+}
+
+void SimulatorImager::setROI(const QRect &roi)
+{
+  worker->setROI(roi);
+}
+
+void SimulatorImager::Worker::setROI(const QRect& roi)
+{
+  this->roi = roi;
+}
+
 
 
 void SimulatorImager::startLive()
 {
   LOG_F_SCOPE
-  auto worker = make_shared<Worker>(this);
+  worker = make_shared<Worker>(this);
   imager_thread = make_shared<ImagerThread>(worker, this, imageHandler);
   imager_thread->start();
 }
