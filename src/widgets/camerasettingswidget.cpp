@@ -51,18 +51,21 @@ public:
   void apply();
   void restore();
 private:
+  struct Value {
+    bool num;
+    bool is_auto;
+  };
+
   Imager::Setting setting;
   Imager *imager;
-  double new_value;
-  double old_value;
-  void set_value(double value);
+  Value new_value;
+  Value old_value;
+  void set_value(Value value);
   SettingWidget *settingWidget;
-signals:
-  void value_changed(double);
 };
 
 CameraSettingWidget::CameraSettingWidget(const Imager::Setting& setting, Imager* imager, QSettings& settings, QWidget* parent)
-  : QWidget(parent), setting{setting}, imager{imager}, new_value{setting.value}, old_value{setting.value}
+  : QWidget(parent), setting{setting}, imager{imager}, new_value{setting.value, setting.value_auto}, old_value{setting.value, setting.value_auto}
 {
   auto layout = new QHBoxLayout;
   layout->setSpacing(0);
@@ -77,9 +80,16 @@ CameraSettingWidget::CameraSettingWidget(const Imager::Setting& setting, Imager*
       settingWidget = new BooleanSettingWidget;
     
     settingWidget->update(setting);
-    layout->addWidget(settingWidget);
+    layout->addWidget(settingWidget, 1);
+    QCheckBox *auto_value = new QCheckBox("auto");
+    auto_value->setVisible(setting.supports_auto);
+    auto_value->setChecked(setting.value_auto);
+    layout->addWidget(auto_value);
     connect(settingWidget, &SettingWidget::valueChanged, [=](double v) {
-      new_value = v;
+      new_value = {v, new_value.is_auto };
+    });
+    connect(auto_value, &QCheckBox::toggled, this, [this](bool checked) {
+      new_value = {new_value.num, checked};
     });
 
     settingWidget->setEnabled(!setting.readonly); // TODO: add different behaviour depending on widget type
@@ -103,13 +113,14 @@ void CameraSettingWidget::restore()
   set_value(old_value);
 }
 
-void CameraSettingWidget::set_value(double value)
+void CameraSettingWidget::set_value(Value value)
 {
-  if(value == setting.value)
+  if(value.num == setting.value && value.is_auto == setting.value_auto)
     return;
-  qDebug() << value;
-  old_value = setting.value;
-  setting.value = value;
+  qDebug() << value.num;
+  old_value = {setting.value, setting.value_auto};
+  setting.value = value.num;
+  setting.value_auto = value.is_auto;
   imager->setSetting(setting);
   settingWidget->update(setting);
 }
