@@ -31,6 +31,8 @@
 #include "utils.h"
 #include "zwoexception.h"
 #include "asiimagingworker.h"
+#include <QTimer>
+#include "asicontrol.h"
 
 using namespace std;
 using namespace std::chrono_literals;
@@ -40,84 +42,8 @@ using namespace GuLinux;
 namespace {
 const int64_t ImageTypeSettingId = 10000;
 const int64_t BinSettingId = 10001;
-
-struct ASIControl {
-  typedef std::shared_ptr<ASIControl> ptr;
-  typedef std::vector<ptr> vector;
-  int index;
-  int camera_id;
-  ASIControl(int index, int camera_id);
-  ASI_CONTROL_CAPS caps;
-  long value;
-  bool is_auto;
-
-  Imager::Setting setting() const;
-  operator Imager::Setting() const;
-  ASIControl &reload();
-  ASIControl &set(double new_value, bool is_auto);
-};
 }
 
-ASIControl::ASIControl(int index, int camera_id) : index{index}, camera_id{camera_id}
-{
-  ASI_CHECK << ASIGetControlCaps(camera_id, index, &caps) << "Get control caps";
-}
-
-Imager::Setting ASIControl::setting() const
-{
-  return *this;
-}
-
-ASIControl &ASIControl::reload()
-{
-  ASI_BOOL is_auto;
-  ASI_CHECK << ASIGetControlValue(camera_id, caps.ControlType, &value, &is_auto)
-            << (stringbuilder() << "Get control value: " << caps.Name);
-  this->is_auto = static_cast<bool>(is_auto);
-  return *this;
-}
-
-ASIControl &ASIControl::set(double new_value, bool is_auto)
-{
-  long new_value_l = static_cast<long>(new_value);
-  if(caps.ControlType == ASI_TEMPERATURE)
-    new_value_l = static_cast<long>(new_value * 10.);
-  ASI_CHECK << ASISetControlValue(camera_id, caps.ControlType, new_value_l, static_cast<ASI_BOOL>(is_auto))
-            << (stringbuilder() << "Set new control value: " << caps.Name << " to " << new_value << " (auto: " << is_auto << ")");
-  reload();
-  return *this;
-}
-
-ASIControl::operator Imager::Setting() const
-{
-  Imager::Setting setting = {
-    static_cast<int64_t>(caps.ControlType),
-    caps.Description,
-    static_cast<double>(caps.MinValue),
-    static_cast<double>(caps.MaxValue),
-    1.0,
-    static_cast<double>(value),
-    static_cast<double>(caps.DefaultValue),
-  };
-  setting.decimals = 0;
-
-  static std::set<ASI_CONTROL_TYPE> boolean_caps {ASI_HIGH_SPEED_MODE, ASI_HARDWARE_BIN};
-  if(boolean_caps.count(caps.ControlType))
-    setting.type = Imager::Setting::Bool;
-
-  if(caps.ControlType == ASI_EXPOSURE) {
-    setting.is_duration = true;
-    setting.duration_unit = 1us;
-  }
-  if(caps.ControlType == ASI_TEMPERATURE) {
-    setting.decimals = 1;
-    setting.value /= 10.;
-  }
-  setting.readonly = !caps.IsWritable;
-  setting.value_auto = caps.IsAutoSupported && is_auto;
-  setting.supports_auto = caps.IsAutoSupported;
-  return setting;
-}
 
 
 DPTR_IMPL(ZWO_ASI_Imager) {
