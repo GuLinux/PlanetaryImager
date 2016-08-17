@@ -30,6 +30,7 @@ struct DurationControlWidget::Private {
   void updateWidgets();
   typedef chrono::duration<double> seconds;
   seconds min, max, step, device_unit, value;
+  int decimals;
 };
 
 DurationControlWidget::DurationControlWidget(QWidget *parent) : ControlWidget(parent), dptr(new QDoubleSpinBox, new QComboBox, this)
@@ -47,14 +48,15 @@ DurationControlWidget::~DurationControlWidget()
 {
 }
 
-void DurationControlWidget::update(const Imager::Control &setting)
+void DurationControlWidget::update(const Imager::Control &control)
 {
-  d->edit->setDecimals(setting.decimals); // TODO: what to do with this?
-  d->device_unit = setting.duration_unit;
-  d->min = setting.min * d->device_unit;
-  d->max = setting.max * d->device_unit;
-  d->step = (setting.step != 0 ? setting.step : 0.1) * d->device_unit; // TODO: move this
-  d->value = setting.value * d->device_unit;
+  d->decimals = control.decimals;
+  d->device_unit = control.duration_unit;
+  
+  d->min = control.min * d->device_unit;
+  d->max = control.max * d->device_unit;
+  d->step = (control.step != 0 ? control.step : 0.1) * d->device_unit; // TODO: move this
+  d->value = control.value * d->device_unit;
   d->updateWidgets();
 }
 
@@ -67,6 +69,12 @@ void DurationControlWidget::Private::valueChanged()
 void DurationControlWidget::Private::updateWidgets()
 {
   double unit = unit_combo->currentData().toDouble();
+
+  int decimals = this->decimals;
+  for(double display_value = value.count() / unit * pow(10, decimals) ; value.count() > 0 && display_value < 1.; display_value*=10.) {
+    decimals++;
+  }
+  edit->setDecimals(decimals);
   qDebug() << "min=" << min.count() << ", max=" << max.count() << ", step" << step.count() << ", value=" << value.count() << ", device_unit=" << device_unit.count() << ", combo unit: " << unit;
   edit->setMinimum(min.count()/unit);
   edit->setMaximum(max.count()/unit);
