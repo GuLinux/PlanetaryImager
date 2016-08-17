@@ -29,12 +29,12 @@ public:
     ~V4L2Imager();
     virtual Imager::Chip chip() const;
     virtual QString name() const;
-    virtual Imager::Settings settings() const;
+    virtual Imager::Controls controls() const;
     virtual bool supportsROI() {
         return false;
     }
 public slots:
-    virtual void setSetting(const Setting &setting);
+    virtual void setControl(const Control &setting);
     virtual void startLive();
     virtual void stopLive();
     virtual void setROI(const QRect &) {}

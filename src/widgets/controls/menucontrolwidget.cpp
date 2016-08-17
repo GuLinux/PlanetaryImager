@@ -31,7 +31,7 @@ MenuControlWidget::~MenuControlWidget()
 {
 }
 
-void MenuControlWidget::update(const Imager::Setting& setting)
+void MenuControlWidget::update(const Imager::Control& setting)
 {
 //   if(d->edit->currentData().toDouble() == setting.value)
 //     return;

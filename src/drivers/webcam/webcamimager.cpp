@@ -57,14 +57,14 @@ QString WebcamImager::name() const
 }
 
 
-Imager::Settings WebcamImager::settings() const
+Imager::Controls WebcamImager::controls() const
 {
-    Imager::Settings _settings;
+    Imager::Controls _settings;
 
     return _settings;
 }
 
-void WebcamImager::setSetting(const Imager::Setting &setting)
+void WebcamImager::setSetting(const Imager::Control &setting)
 {
 }
 

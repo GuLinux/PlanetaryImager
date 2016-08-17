@@ -83,7 +83,7 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   ZoomableImage *image;
   QCPBars *histogram_plot;
   void got_histogram(const vector< uint32_t >& histogram);
-  QQueue<Imager::Setting> settings_to_save_queue;
+  QQueue<Imager::Control> settings_to_save_queue;
 };
 
 PlanetaryImagerMainWindow::Private::Private(PlanetaryImagerMainWindow* q) 
@@ -308,7 +308,7 @@ void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::CameraPtr& 
     enableUIWidgets(true);
     ui->actionSelect_ROI->setEnabled(imager->supportsROI());
     ui->actionClear_ROI->setEnabled(imager->supportsROI());
-    connect(imager.get(), &Imager::changed, q, [this](const Imager::Setting &changed_setting){
+    connect(imager.get(), &Imager::changed, q, [this](const Imager::Control &changed_setting){
       settings_to_save_queue.enqueue(changed_setting);
     }, Qt::QueuedConnection);
     connect(imager.get(), &Imager::fps, q, [this, imager]{

@@ -30,7 +30,7 @@ ASIControl::ASIControl(int index, int camera_id) : index{index}, camera_id{camer
   reload();
 }
 
-Imager::Setting ASIControl::setting() const
+Imager::Control ASIControl::control() const
 {
   return *this;
 }
@@ -57,9 +57,9 @@ ASIControl &ASIControl::set(double new_value, bool is_auto)
   return *this;
 }
 
-ASIControl::operator Imager::Setting() const
+ASIControl::operator Imager::Control() const
 {
-  Imager::Setting setting = {
+  Imager::Control control = {
     static_cast<int64_t>(caps.ControlType),
     caps.Description,
     static_cast<double>(caps.MinValue),
@@ -68,23 +68,23 @@ ASIControl::operator Imager::Setting() const
     static_cast<double>(value),
     static_cast<double>(caps.DefaultValue),
   };
-  setting.decimals = 0;
+  control.decimals = 0;
 
   static std::set<ASI_CONTROL_TYPE> boolean_caps {ASI_HIGH_SPEED_MODE, ASI_HARDWARE_BIN};
   if(boolean_caps.count(caps.ControlType))
-    setting.type = Imager::Setting::Bool;
+    control.type = Imager::Control::Bool;
 
   if(caps.ControlType == ASI_EXPOSURE) {
-    setting.is_duration = true;
-    setting.duration_unit = 1us;
+    control.is_duration = true;
+    control.duration_unit = 1us;
   }
   if(caps.ControlType == ASI_TEMPERATURE) {
     qDebug() << "Converting temperature from " << value;
-    setting.decimals = 1;
-    setting.value = static_cast<double>(value) / 10.;
+    control.decimals = 1;
+    control.value = static_cast<double>(value) / 10.;
   }
-  setting.readonly = !caps.IsWritable;
-  setting.value_auto = caps.IsAutoSupported && is_auto;
-  setting.supports_auto = caps.IsAutoSupported;
-  return setting;
+  control.readonly = !caps.IsWritable;
+  control.value_auto = caps.IsAutoSupported && is_auto;
+  control.supports_auto = caps.IsAutoSupported;
+  return control;
 }

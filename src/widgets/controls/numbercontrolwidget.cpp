@@ -31,7 +31,7 @@ NumberControlWidget::~NumberControlWidget()
 {
 }
 
-void NumberControlWidget::update(const Imager::Setting& setting)
+void NumberControlWidget::update(const Imager::Control& setting)
 {
   d->edit->setDecimals(setting.decimals);
   d->edit->setMinimum(setting.min);

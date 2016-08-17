@@ -60,11 +60,11 @@ public:
   QString id;
   ImageHandlerPtr imageHandler;
   Chip chip;
-  Settings settings;
+  Controls settings;
   void load_settings();
   QThread imaging_thread;
   ImagingWorker *worker;
-  void load(Setting &setting);
+  void load(Control &setting);
 private:
   QHYCCDImager *q;
 };
@@ -124,7 +124,7 @@ QString QHYCCDImager::name() const
   return d->name;
 }
 
-QList< QHYCCDImager::Setting > QHYCCDImager::settings() const
+QList< QHYCCDImager::Control > QHYCCDImager::controls() const
 {
   return d->settings;
 }
@@ -174,7 +174,7 @@ void QHYCCDImager::Private::load_settings()
 //       qDebug() << "control " << control.first << "not supported, skipping";
 //       continue;
 //     }
-    Setting setting{control.second, control.first};
+    Control setting{control.second, control.first};
     result = GetQHYCCDParamMinMaxStep(handle, control.second, &setting.min, &setting.max, &setting.step);
     if(result != QHYCCD_SUCCESS) {
       qCritical() << "error retrieving control " << control.first << ":" << QHYDriver::error_name(result) << "(" << result << ")";
@@ -184,7 +184,7 @@ void QHYCCDImager::Private::load_settings()
       setting.step /= 10.;
     if(setting.id == CONTROL_TRANSFERBIT ) {
       qDebug() << "Changing transferbit setting for " << q->name() << id;
-      setting.type = Setting::Combo;
+      setting.type = Control::Combo;
       setting.choices = {{"8", 8}, {"16", 16}};
       setting.min = 8;
       setting.max = 16;
@@ -196,13 +196,13 @@ void QHYCCDImager::Private::load_settings()
   }
 }
 
-void QHYCCDImager::Private::load ( QHYCCDImager::Setting& setting )
+void QHYCCDImager::Private::load ( QHYCCDImager::Control& setting )
 {
   setting.value = GetQHYCCDParam(handle, static_cast<CONTROL_ID>(setting.id));
 }
 
 
-void QHYCCDImager::setSetting(const QHYCCDImager::Setting& setting)
+void QHYCCDImager::setControl(const QHYCCDImager::Control& setting)
 {
   d->worker->queue([=]{
     auto result = SetQHYCCDParam(d->handle, static_cast<CONTROL_ID>(setting.id), setting.value);
@@ -210,7 +210,7 @@ void QHYCCDImager::setSetting(const QHYCCDImager::Setting& setting)
       qCritical() << "error setting" << setting.name << ":" << QHYDriver::error_name(result) << "(" << result << ")";
       return;
     }
-    Setting &setting_ref = *find_if(begin(d->settings), end(d->settings), [setting](const Setting &s) { return s.id == setting.id; });
+    Control &setting_ref = *find_if(begin(d->settings), end(d->settings), [setting](const Control &s) { return s.id == setting.id; });
     d->load(setting_ref);
     qDebug() << "setting" << setting.name << "updated to value" << setting_ref.value;
     emit changed(setting_ref);

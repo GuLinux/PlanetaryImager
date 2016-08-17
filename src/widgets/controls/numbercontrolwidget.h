@@ -27,7 +27,7 @@ public:
   NumberControlWidget(QWidget* parent = 0);
   ~NumberControlWidget();
 public slots:
-  virtual void update(const Imager::Setting &setting);
+  virtual void update(const Imager::Control &setting);
 private:
   DPTR
 };

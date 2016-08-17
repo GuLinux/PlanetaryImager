@@ -74,7 +74,7 @@ DPTR_IMPL(V4L2Imager)
     void adjust_framerate(const v4l2_format &format) const;
     
     struct V4lSetting {
-      Imager::Setting setting;
+      Imager::Control setting;
       int querycode;
       int valuecode;
       bool disabled;
@@ -85,7 +85,7 @@ DPTR_IMPL(V4L2Imager)
     void open_camera();
     QString driver, bus, cameraname;
     QString dev_name;
-    typedef std::function<void(Setting &)> SettingRule;
+    typedef std::function<void(Control &)> SettingRule;
     QList<SettingRule> setting_rules;
     void populate_rules();
 };
