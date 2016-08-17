@@ -37,6 +37,8 @@ DurationControlWidget::DurationControlWidget(QWidget *parent) : ControlWidget(pa
 {
   layout()->addWidget(d->edit);
   layout()->addWidget(d->unit_combo);
+  d->unit_combo->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::MinimumExpanding);
+  d->edit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::MinimumExpanding);
   connect(d->edit, F_PTR(QDoubleSpinBox, valueChanged, double), this, bind(&Private::valueChanged, d.get() ));
   connect(d->unit_combo, F_PTR(QComboBox, currentIndexChanged, int), this, bind(&Private::updateWidgets, d.get() ));
   d->unit_combo->addItem("s", 1.);
