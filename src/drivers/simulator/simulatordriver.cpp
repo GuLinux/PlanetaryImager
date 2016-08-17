@@ -114,17 +114,18 @@ SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{
     {"temperature", {7, "temperature", 0, 300, 0.1, 30, 0} },
   }
 {
+  qDebug() << "Creating simulator imager: current owning thread: " << thread() << ", qApp thread: " << qApp->thread();
   _settings["temperature"].decimals = 1;
   _settings["temperature"].readonly = true;
   _settings["delay"].is_duration = true;
   _settings["delay"].duration_unit = 1ms;
   _settings["delay"].supports_auto = true;
-  connect(&refresh_temperature, &QTimer::timeout, this, [&]{
+  
+  refresh_temperature.moveToThread(qApp->thread());
+  connect(&refresh_temperature, &QTimer::timeout, qApp, [&]{
     _settings["temperature"].value = SimulatorImager::rand(_settings["temperature"].min, _settings["temperature"].max);
-    qDebug() << "Temperature timer trigger";
     emit changed(_settings["temperature"]);
   });
-  refresh_temperature.start(2000);
 }
 
 
@@ -244,6 +245,8 @@ void SimulatorImager::Worker::setROI(const QRect& roi)
 void SimulatorImager::startLive()
 {
   LOG_F_SCOPE
+  qDebug() << "Creating simulator imager: current owning thread: " << thread() << ", qApp thread: " << qApp->thread() << ", timer thread: " << refresh_temperature.thread() << ", current thread: " << QThread::currentThread();
+  refresh_temperature.start(2000);
   worker = make_shared<Worker>(this);
   imager_thread = make_shared<ImagerThread>(worker, this, imageHandler);
   imager_thread->start();
