@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>CameraSettingsWidget</class>
- <widget class="QWidget" name="CameraSettingsWidget">
+ <class>CameraControlsWidget</class>
+ <widget class="QWidget" name="CameraControlsWidget">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -42,7 +42,7 @@
     </spacer>
    </item>
    <item row="0" column="0" colspan="6">
-    <widget class="QWidget" name="settings_box" native="true">
+    <widget class="QWidget" name="controls_box" native="true">
      <layout class="QVBoxLayout" name="verticalLayout">
       <property name="spacing">
        <number>2</number>

@@ -32,7 +32,7 @@
 #include <QDateTime>
 #include <QtConcurrent/QtConcurrent>
 #include "fps_counter.h"
-#include "widgets/camerasettingswidget.h"
+#include "widgets/cameracontrolswidget.h"
 #include "configurationdialog.h"
 #include "configuration.h"
 #include <QThread>
@@ -71,7 +71,7 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   QThread displayImageThread;
   shared_ptr<SaveImages> saveImages;
   shared_ptr<Histogram> histogram;
-  CameraSettingsWidget* cameraSettingsWidget = nullptr;
+  CameraControlsWidget* cameraSettingsWidget = nullptr;
   ConfigurationDialog *configurationDialog;
     
   RecordingPanel* recording_panel;
@@ -304,7 +304,7 @@ void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::CameraPtr& 
       qDebug() << "Property name: " << property.name << " = " << property.value;
       ui->chipInfo->layout()->addWidget(new QLabel("%1: %2"_q % property.name % property.value, ui->chipInfo));
     }
-    ui->settings_container->setWidget(cameraSettingsWidget = new CameraSettingsWidget(imager, settings));
+    ui->settings_container->setWidget(cameraSettingsWidget = new CameraControlsWidget(imager, settings));
     enableUIWidgets(true);
     ui->actionSelect_ROI->setEnabled(imager->supportsROI());
     ui->actionClear_ROI->setEnabled(imager->supportsROI());

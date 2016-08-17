@@ -16,23 +16,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#include "durationsettingwidget.h"
+#include "durationcontrolwidget.h"
 #include <QDoubleSpinBox>
 #include <QComboBox>
 using namespace std;
 using namespace std::chrono_literals;
 
-struct DurationSettingWidget::Private {
+struct DurationControlWidget::Private {
   QDoubleSpinBox *edit;
   QComboBox *unit_combo;
-  DurationSettingWidget *q;
+  DurationControlWidget *q;
   void valueChanged();
   void updateWidgets();
   typedef chrono::duration<double> seconds;
   seconds min, max, step, device_unit, value;
 };
 
-DurationSettingWidget::DurationSettingWidget(QWidget *parent) : SettingWidget(parent), dptr(new QDoubleSpinBox, new QComboBox, this)
+DurationControlWidget::DurationControlWidget(QWidget *parent) : ControlWidget(parent), dptr(new QDoubleSpinBox, new QComboBox, this)
 {
   layout()->addWidget(d->edit);
   layout()->addWidget(d->unit_combo);
@@ -43,11 +43,11 @@ DurationSettingWidget::DurationSettingWidget(QWidget *parent) : SettingWidget(pa
   d->unit_combo->addItem("us", 0.000001);
 }
 
-DurationSettingWidget::~DurationSettingWidget()
+DurationControlWidget::~DurationControlWidget()
 {
 }
 
-void DurationSettingWidget::update(const Imager::Setting &setting)
+void DurationControlWidget::update(const Imager::Setting &setting)
 {
   d->edit->setDecimals(setting.decimals); // TODO: what to do with this?
   d->device_unit = setting.duration_unit;
@@ -58,13 +58,13 @@ void DurationSettingWidget::update(const Imager::Setting &setting)
   d->updateWidgets();
 }
 
-void DurationSettingWidget::Private::valueChanged()
+void DurationControlWidget::Private::valueChanged()
 {
   double unit = unit_combo->currentData().toDouble();
   q->valueChanged( (edit->value() *unit ) / device_unit.count() );
 }
 
-void DurationSettingWidget::Private::updateWidgets()
+void DurationControlWidget::Private::updateWidgets()
 {
   double unit = unit_combo->currentData().toDouble();
   qDebug() << "min=" << min.count() << ", max=" << max.count() << ", step" << step.count() << ", value=" << value.count() << ", device_unit=" << device_unit.count() << ", combo unit: " << unit;

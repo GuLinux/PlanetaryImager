@@ -17,9 +17,9 @@
  */
 #ifndef CONTROLS_H
 #define CONTROLS_H
-#include "numbersettingwidget.h"
-#include "menusettingwidget.h"
-#include "booleansettingwidget.h"
-#include "durationsettingwidget.h"
+#include "numbercontrolwidget.h"
+#include "menucontrolwidget.h"
+#include "boolcontrolwidget.h"
+#include "durationcontrolwidget.h"
 
 #endif // CONTROLS_H

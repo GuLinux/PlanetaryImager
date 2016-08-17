@@ -15,22 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef CAMERASETTINGSWIDGET_H
-#define CAMERASETTINGSWIDGET_H
+#ifndef NUMBERSETTINGWIDGET_H
+#define NUMBERSETTINGWIDGET_H
 
-#include <QWidget>
-#include "dptr.h"
-#include "drivers/imager.h"
+#include "controlwidget.h"
+#include <QDoubleSpinBox>
 
-class QSettings;
-class CameraSettingsWidget : public QWidget
-{
+class NumberControlWidget : public ControlWidget {
+  Q_OBJECT
 public:
-~CameraSettingsWidget();
-CameraSettingsWidget(const ImagerPtr &imager, QSettings &settings, QWidget* parent = 0);
-
+  NumberControlWidget(QWidget* parent = 0);
+  ~NumberControlWidget();
+public slots:
+  virtual void update(const Imager::Setting &setting);
 private:
-    DPTR
+  DPTR
 };
 
-#endif // CAMERASETTINGSWIDGET_H
+#endif // NUMBERSETTINGWIDGET_H

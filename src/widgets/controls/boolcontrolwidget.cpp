@@ -15,21 +15,25 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef NUMBERSETTINGWIDGET_H
-#define NUMBERSETTINGWIDGET_H
+#include "boolcontrolwidget.h"
+#include <QCheckBox>
 
-#include "settingwidget.h"
-#include <QDoubleSpinBox>
-
-class NumberSettingWidget : public SettingWidget {
-  Q_OBJECT
-public:
-  NumberSettingWidget(QWidget* parent = 0);
-  ~NumberSettingWidget();
-public slots:
-  virtual void update(const Imager::Setting &setting);
-private:
-  DPTR
+struct BoolControlWidget::Private {
+  QCheckBox *edit;
 };
 
-#endif // NUMBERSETTINGWIDGET_H
+BoolControlWidget::BoolControlWidget(QWidget* parent): ControlWidget(parent), dptr()
+{
+  layout()->addWidget(d->edit = new QCheckBox);
+  connect(d->edit, &QCheckBox::toggled, [=](bool checked) { emit valueChanged(checked ? 1 : 0); });
+}
+
+BoolControlWidget::~BoolControlWidget()
+{
+
+}
+
+void BoolControlWidget::update(const Imager::Setting& setting)
+{
+  d->edit->setChecked(setting.value == 1);
+}
