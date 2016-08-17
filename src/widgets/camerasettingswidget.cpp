@@ -72,8 +72,12 @@ CameraSettingWidget::CameraSettingWidget(const Imager::Setting& setting, Imager*
   setLayout(layout);
   layout->addWidget(new QLabel(tr(qPrintable(setting.name))));
 
-    if(setting.type == Imager::Setting::Number)
-      settingWidget = new NumberSettingWidget;
+    if(setting.type == Imager::Setting::Number) {
+      if(setting.is_duration)
+        settingWidget = new DurationSettingWidget;
+      else
+        settingWidget = new NumberSettingWidget;
+    }
     else if(setting.type == Imager::Setting::Combo)
       settingWidget = new MenuSettingWidget;
     else if(setting.type == Imager::Setting::Bool)

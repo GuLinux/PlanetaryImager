@@ -104,16 +104,16 @@ SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{
     {"exposure", {1, "exposure", 0, 100, 1, 50}},
     {"movement", {3, "movement", 0, 5, 1, 1}},
     {"seeing",   {4, "seeing", 0, 5, 1, 1}},
-    {"delay",    {5, "delay", 0, 100, 1, 1}},
+    {"delay",    {5, "delay", 2, 1000, 1, 1}},
     {"bin",	 {6, "bin", 0, 3, 1, 1, 1, Setting::Combo, { {"1x1", 1}, {"2x2", 2}, {"3x3", 3}, {"4x4", 4} } }}, 
     {"temperature", {7, "temperature", 0, 300, 0.1, 30, 0} },
   }
 {
   _settings["temperature"].decimals = 1;
   _settings["temperature"].readonly = true;
-  _settings["exposure"].is_duration = true;
-  _settings["exposure"].duration_unit = 1ms;
-  _settings["seeing"].supports_auto = true;
+  _settings["delay"].is_duration = true;
+  _settings["delay"].duration_unit = 1ms;
+  _settings["delay"].supports_auto = true;
 }
 
 

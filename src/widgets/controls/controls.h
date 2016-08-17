@@ -20,5 +20,6 @@
 #include "numbersettingwidget.h"
 #include "menusettingwidget.h"
 #include "booleansettingwidget.h"
+#include "durationsettingwidget.h"
 
 #endif // CONTROLS_H
