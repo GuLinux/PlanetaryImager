@@ -15,22 +15,15 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#include "booleansettingwidget.h"
 
-#ifndef SETTINGWIDGET_H
-#define SETTINGWIDGET_H
-#include <QWidget>
-#include "drivers/imager.h"
-#include "Qt/functional.h"
-#include <QLayout>
+BooleanSettingWidget::BooleanSettingWidget(QWidget* parent): SettingWidget(parent)
+{
+  layout()->addWidget(edit = new QCheckBox);
+  connect(edit, &QCheckBox::toggled, [=](bool checked) { emit valueChanged(checked ? 1 : 0); });
+}
 
-class SettingWidget : public QWidget {
-  Q_OBJECT
-public:
-  SettingWidget(QWidget* parent = 0);
-public slots:
-  virtual void update(const Imager::Setting &setting) = 0;
-signals:
-  void valueChanged(double value);
-};
-
-#endif // SETTINGWIDGET_H
+void BooleanSettingWidget::update(const Imager::Setting& setting)
+{
+  edit->setChecked(setting.value == 1);
+}

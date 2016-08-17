@@ -15,22 +15,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#ifndef CONTROLS_H
+#define CONTROLS_H
+#include "numbersettingwidget.h"
+#include "menusettingwidget.h"
+#include "booleansettingwidget.h"
 
-#ifndef SETTINGWIDGET_H
-#define SETTINGWIDGET_H
-#include <QWidget>
-#include "drivers/imager.h"
-#include "Qt/functional.h"
-#include <QLayout>
-
-class SettingWidget : public QWidget {
-  Q_OBJECT
-public:
-  SettingWidget(QWidget* parent = 0);
-public slots:
-  virtual void update(const Imager::Setting &setting) = 0;
-signals:
-  void valueChanged(double value);
-};
-
-#endif // SETTINGWIDGET_H
+#endif // CONTROLS_H

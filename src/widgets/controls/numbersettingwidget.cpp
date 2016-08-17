@@ -15,22 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#include "numbersettingwidget.h"
 
-#ifndef SETTINGWIDGET_H
-#define SETTINGWIDGET_H
-#include <QWidget>
-#include "drivers/imager.h"
-#include "Qt/functional.h"
-#include <QLayout>
+NumberSettingWidget::NumberSettingWidget(QWidget* parent): SettingWidget(parent)
+{
+  layout()->addWidget(edit = new QDoubleSpinBox);
+  connect(edit, F_PTR(QDoubleSpinBox, valueChanged, double), this, &SettingWidget::valueChanged);
+}
 
-class SettingWidget : public QWidget {
-  Q_OBJECT
-public:
-  SettingWidget(QWidget* parent = 0);
-public slots:
-  virtual void update(const Imager::Setting &setting) = 0;
-signals:
-  void valueChanged(double value);
-};
-
-#endif // SETTINGWIDGET_H
+void NumberSettingWidget::update(const Imager::Setting& setting)
+{
+  edit->setDecimals(setting.decimals);
+  edit->setMinimum(setting.min);
+  edit->setMaximum(setting.max);
+  edit->setSingleStep(setting.step != 0 ? setting.step : 0.1);
+  edit->setValue(setting.value);
+}
