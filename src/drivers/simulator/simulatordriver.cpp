@@ -34,8 +34,6 @@
 #include <atomic>
 
 
-#define _Pragma(...)
-
 using namespace GuLinux;
 using namespace std;
 using namespace std::chrono_literals;
