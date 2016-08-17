@@ -32,6 +32,7 @@
 #include "asiimagingworker.h"
 #include <QTimer>
 #include "asicontrol.h"
+#include <QCoreApplication>
 
 using namespace std;
 using namespace std::chrono_literals;
@@ -45,7 +46,7 @@ const int64_t BinSettingId = 10001;
 
 
 
-DPTR_IMPL(ZWO_ASI_Imager) {
+struct ZWO_ASI_Imager::Private {
     ASI_CAMERA_INFO info;
     ImageHandlerPtr imageHandler;
     ZWO_ASI_Imager *q;
@@ -53,12 +54,25 @@ DPTR_IMPL(ZWO_ASI_Imager) {
     Chip chip;
 
     ASIControl::vector controls;
+    QTimer *refresh_settings_timer;
     
     ImagerThread::ptr imager_thread;
     shared_ptr<ASIImagingWorker> worker;
     QRect maxROI(int bin) const;
     void start_thread(int bin, const QRect& roi, ASI_IMG_TYPE format);
+    void refresh_settings();
 };
+
+void ZWO_ASI_Imager::Private::refresh_settings() {
+  qDebug() << "Refreshing ASI_TEMPERATURE if found..";
+  for(auto control: controls) {
+    if(control->caps.ControlType == ASI_TEMPERATURE) {
+      qDebug() << "Temperature ctl found";
+      emit q->changed(control->reload());
+    }
+  }
+}
+
 
 ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandlerPtr &imageHandler) : dptr(info, imageHandler, this)
 {
@@ -71,6 +85,9 @@ ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandlerPt
     d->chip.properties.push_back( {"Camera Speed", info.IsUSB3Camera ? "USB3" : "USB2"});
     d->chip.properties.push_back( {"Host Speed", info.IsUSB3Host ? "USB3" : "USB2"});
     ASI_CHECK << ASIOpenCamera(info.CameraID) << "Open Camera";
+    d->refresh_settings_timer = new QTimer{this};
+    connect(d->refresh_settings_timer, &QTimer::timeout, qApp, bind(&Private::refresh_settings, d.get() )), Qt::QueuedConnection;
+    d->refresh_settings_timer->start(200);
 }
 
 ZWO_ASI_Imager::~ZWO_ASI_Imager()
@@ -110,7 +127,7 @@ Imager::Settings ZWO_ASI_Imager::settings() const
 
     for(int setting_index = 0; setting_index < settings_number; setting_index++) {
       d->controls[setting_index] = make_shared<ASIControl>(setting_index, d->info.CameraID);
-      settings.push_back(*d->controls[setting_index]);
+      settings.push_back(d->controls[setting_index]->setting());
     }
 
     static map<ASI_IMG_TYPE, QString> format_names {
