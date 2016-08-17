@@ -15,12 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#ifndef BOOLEANSETTINGWIDGET_H
+#define BOOLEANSETTINGWIDGET_H
 
-#include "settingwidget.h"
-#include <QBoxLayout>
+#include "controlwidget.h"
 
-SettingWidget::SettingWidget(QWidget *parent) : QWidget(parent) {
-    setLayout(new QHBoxLayout);
-    layout()->setMargin(0);
-    layout()->setSpacing(0);
-  }
+class BoolControlWidget : public ControlWidget {
+  Q_OBJECT
+public:
+    BoolControlWidget(QWidget* parent = 0);
+    ~BoolControlWidget();
+public slots:
+  virtual void update(const Imager::Setting &setting);
+private:
+  DPTR
+};
+#endif // BOOLEANSETTINGWIDGET_H

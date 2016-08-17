@@ -1,6 +1,5 @@
 /*
- * <one line to give the program's name and a brief idea of what it does.>
- * Copyright (C) 2016  <copyright holder> <email>
+ * Copyright (C) 2016  Marco Gulino <marco@gulinux.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,20 +15,22 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef DURATIONSETTINGWIDGET_H
-#define DURATIONSETTINGWIDGET_H
+#ifndef CAMERASETTINGSWIDGET_H
+#define CAMERASETTINGSWIDGET_H
 
-#include "settingwidget.h"
+#include <QWidget>
+#include "dptr.h"
+#include "drivers/imager.h"
 
-class DurationSettingWidget : public SettingWidget {
-  Q_OBJECT
+class QSettings;
+class CameraControlsWidget : public QWidget
+{
 public:
-    DurationSettingWidget(QWidget* parent = 0);
-    ~DurationSettingWidget();
-public slots:
-  virtual void update(const Imager::Setting &setting);
+~CameraControlsWidget();
+CameraControlsWidget(const ImagerPtr &imager, QSettings &settings, QWidget* parent = 0);
+
 private:
-  DPTR
+    DPTR
 };
 
-#endif // DURATIONSETTINGWIDGET_H
+#endif // CAMERASETTINGSWIDGET_H

@@ -15,21 +15,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef MENUSETTINGWIDGET_H
-#define MENUSETTINGWIDGET_H
-#include "settingwidget.h"
-#include <QComboBox>
-class MenuSettingWidget : public SettingWidget {
-  Q_OBJECT
-public:
-  MenuSettingWidget(QWidget* parent = 0);
-  ~MenuSettingWidget();
-public slots:
-  virtual void update(const Imager::Setting &setting);
-private:
-    DPTR
+#include "numbercontrolwidget.h"
+
+struct NumberControlWidget::Private {
+  QDoubleSpinBox *edit;
 };
 
+NumberControlWidget::NumberControlWidget(QWidget* parent): ControlWidget(parent), dptr()
+{
+  layout()->addWidget(d->edit = new QDoubleSpinBox);
+  connect(d->edit, F_PTR(QDoubleSpinBox, valueChanged, double), this, &ControlWidget::valueChanged);
+}
 
+NumberControlWidget::~NumberControlWidget()
+{
+}
 
-#endif // MENUSETTINGWIDGET_H
+void NumberControlWidget::update(const Imager::Setting& setting)
+{
+  d->edit->setDecimals(setting.decimals);
+  d->edit->setMinimum(setting.min);
+  d->edit->setMaximum(setting.max);
+  d->edit->setSingleStep(setting.step != 0 ? setting.step : 0.1);
+  d->edit->setValue(setting.value);
+}

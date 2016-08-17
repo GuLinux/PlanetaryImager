@@ -15,27 +15,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#include "numbersettingwidget.h"
+#include "menucontrolwidget.h"
 
-struct NumberSettingWidget::Private {
-  QDoubleSpinBox *edit;
+struct MenuControlWidget::Private {
+  QComboBox *edit;
 };
 
-NumberSettingWidget::NumberSettingWidget(QWidget* parent): SettingWidget(parent), dptr()
+MenuControlWidget::MenuControlWidget(QWidget* parent): ControlWidget(parent), dptr()
 {
-  layout()->addWidget(d->edit = new QDoubleSpinBox);
-  connect(d->edit, F_PTR(QDoubleSpinBox, valueChanged, double), this, &SettingWidget::valueChanged);
+  layout()->addWidget(d->edit = new QComboBox);
+  connect(d->edit, F_PTR(QComboBox, currentIndexChanged, int), [=](int index) { emit valueChanged(d->edit->itemData(index).toDouble()); });
 }
 
-NumberSettingWidget::~NumberSettingWidget()
+MenuControlWidget::~MenuControlWidget()
 {
 }
 
-void NumberSettingWidget::update(const Imager::Setting& setting)
+void MenuControlWidget::update(const Imager::Setting& setting)
 {
-  d->edit->setDecimals(setting.decimals);
-  d->edit->setMinimum(setting.min);
-  d->edit->setMaximum(setting.max);
-  d->edit->setSingleStep(setting.step != 0 ? setting.step : 0.1);
-  d->edit->setValue(setting.value);
+//   if(d->edit->currentData().toDouble() == setting.value)
+//     return;
+  d->edit->clear();
+  for(auto item: setting.choices) {
+    d->edit->addItem(item.label, item.value);
+  }
+  d->edit->setCurrentIndex(d->edit->findData(setting.value));
 }
+

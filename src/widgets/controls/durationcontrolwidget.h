@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2016  Marco Gulino <marco@gulinux.net>
+ * <one line to give the program's name and a brief idea of what it does.>
+ * Copyright (C) 2016  <copyright holder> <email>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,25 +16,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#include "booleansettingwidget.h"
-#include <QCheckBox>
+#ifndef DURATIONSETTINGWIDGET_H
+#define DURATIONSETTINGWIDGET_H
 
-struct BooleanSettingWidget::Private {
-  QCheckBox *edit;
+#include "controlwidget.h"
+
+class DurationControlWidget : public ControlWidget {
+  Q_OBJECT
+public:
+    DurationControlWidget(QWidget* parent = 0);
+    ~DurationControlWidget();
+public slots:
+  virtual void update(const Imager::Setting &setting);
+private:
+  DPTR
 };
 
-BooleanSettingWidget::BooleanSettingWidget(QWidget* parent): SettingWidget(parent), dptr()
-{
-  layout()->addWidget(d->edit = new QCheckBox);
-  connect(d->edit, &QCheckBox::toggled, [=](bool checked) { emit valueChanged(checked ? 1 : 0); });
-}
-
-BooleanSettingWidget::~BooleanSettingWidget()
-{
-
-}
-
-void BooleanSettingWidget::update(const Imager::Setting& setting)
-{
-  d->edit->setChecked(setting.value == 1);
-}
+#endif // DURATIONSETTINGWIDGET_H

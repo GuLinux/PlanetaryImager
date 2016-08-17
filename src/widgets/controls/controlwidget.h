@@ -15,18 +15,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef BOOLEANSETTINGWIDGET_H
-#define BOOLEANSETTINGWIDGET_H
 
-#include "settingwidget.h"
-class BooleanSettingWidget : public SettingWidget {
+#ifndef SETTINGWIDGET_H
+#define SETTINGWIDGET_H
+#include <QWidget>
+#include "drivers/imager.h"
+#include "Qt/functional.h"
+#include <QLayout>
+#include "c++/dptr.h"
+
+class ControlWidget : public QWidget {
   Q_OBJECT
 public:
-    BooleanSettingWidget(QWidget* parent = 0);
-    ~BooleanSettingWidget();
+  ControlWidget(QWidget* parent = 0);
 public slots:
-  virtual void update(const Imager::Setting &setting);
-private:
-  DPTR
+  virtual void update(const Imager::Setting &setting) = 0;
+signals:
+  void valueChanged(double value);
 };
-#endif // BOOLEANSETTINGWIDGET_H
+
+#endif // SETTINGWIDGET_H
