@@ -47,7 +47,7 @@ DurationControlWidget::~DurationControlWidget()
 {
 }
 
-void DurationControlWidget::update(const Imager::Setting &setting)
+void DurationControlWidget::update(const Imager::Control &setting)
 {
   d->edit->setDecimals(setting.decimals); // TODO: what to do with this?
   d->device_unit = setting.duration_unit;

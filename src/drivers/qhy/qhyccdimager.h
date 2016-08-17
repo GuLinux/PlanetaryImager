@@ -34,10 +34,10 @@ public:
     virtual QString name() const;
     virtual Chip chip() const;
 
-    virtual Settings settings() const;  
+    virtual Controls controls() const;  
     virtual bool supportsROI();
 public slots:
-  virtual void setSetting(const Setting &setting);
+  virtual void setControl(const Control &setting);
   virtual void startLive();
   virtual void stopLive();
     virtual void setROI(const QRect &);

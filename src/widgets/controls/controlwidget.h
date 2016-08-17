@@ -29,7 +29,7 @@ class ControlWidget : public QWidget {
 public:
   ControlWidget(QWidget* parent = 0);
 public slots:
-  virtual void update(const Imager::Setting &setting) = 0;
+  virtual void update(const Imager::Control &setting) = 0;
 signals:
   void valueChanged(double value);
 };

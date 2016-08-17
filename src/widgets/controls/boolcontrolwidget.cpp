@@ -33,7 +33,7 @@ BoolControlWidget::~BoolControlWidget()
 
 }
 
-void BoolControlWidget::update(const Imager::Setting& setting)
+void BoolControlWidget::update(const Imager::Control& setting)
 {
   d->edit->setChecked(setting.value == 1);
 }

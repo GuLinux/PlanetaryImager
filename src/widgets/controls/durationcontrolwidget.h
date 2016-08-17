@@ -27,7 +27,7 @@ public:
     DurationControlWidget(QWidget* parent = 0);
     ~DurationControlWidget();
 public slots:
-  virtual void update(const Imager::Setting &setting);
+  virtual void update(const Imager::Control &setting);
 private:
   DPTR
 };

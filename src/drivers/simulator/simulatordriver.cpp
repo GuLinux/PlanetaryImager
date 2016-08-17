@@ -52,12 +52,12 @@ public:
     virtual ~SimulatorImager();
     virtual Chip chip() const;
     virtual QString name() const;
-    virtual void setSetting(const Setting& setting);
-    virtual Settings settings() const;
+    virtual void setControl(const Control& setting);
+    virtual Controls controls() const;
     virtual void startLive();
     virtual void stopLive();
     int rand(int a, int b);
-    QMap<QString, Imager::Setting> _settings;
+    QMap<QString, Imager::Control> _settings;
     QMutex settingsMutex;
     virtual bool supportsROI() { return true; }
     
@@ -109,7 +109,7 @@ SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{
     {"movement", {3, "movement", 0, 5, 1, 1}},
     {"seeing",   {4, "seeing", 0, 5, 1, 1}},
     {"delay",    {5, "delay", 2, 1000, 1, 1}},
-    {"bin",	 {6, "bin", 0, 3, 1, 1, 1, Setting::Combo, { {"1x1", 1}, {"2x2", 2}, {"3x3", 3}, {"4x4", 4} } }}, 
+    {"bin",	 {6, "bin", 0, 3, 1, 1, 1, Control::Combo, { {"1x1", 1}, {"2x2", 2}, {"3x3", 3}, {"4x4", 4} } }}, 
     {"temperature", {7, "temperature", 0, 300, 0.1, 30, 0} },
   }
 {
@@ -131,7 +131,7 @@ QString SimulatorImager::name() const
   return "Simulator Imager";
 }
 
-void SimulatorImager::setSetting(const Imager::Setting& setting)
+void SimulatorImager::setControl(const Imager::Control& setting)
 {
   QMutexLocker lock_settings(&settingsMutex);
   qDebug() << "Received setting: \n" << setting << "\n saved setting: \n" << _settings[setting.name];
@@ -139,10 +139,10 @@ void SimulatorImager::setSetting(const Imager::Setting& setting)
   emit changed(setting);
 }
 
-Imager::Settings SimulatorImager::settings() const
+Imager::Controls SimulatorImager::controls() const
 {
   auto valid_settings = _settings.values();
-  valid_settings.erase(remove_if(valid_settings.begin(), valid_settings.end(), [](const Setting &s){ return s.name.isEmpty(); }), valid_settings.end());
+  valid_settings.erase(remove_if(valid_settings.begin(), valid_settings.end(), [](const Control &s){ return s.name.isEmpty(); }), valid_settings.end());
   return valid_settings;
 }
 
@@ -176,7 +176,7 @@ bool SimulatorImager::Worker::shoot(const ImageHandlerPtr &imageHandler)
   cv::Mat cropped, blurred, result;
   int h = image.rows;
   int w = image.cols;
-  Setting exposure, gamma, delay, seeing, movement;
+  Control exposure, gamma, delay, seeing, movement;
   {
       QMutexLocker lock_settings(&imager->settingsMutex);
       exposure = imager->_settings["exposure"];
