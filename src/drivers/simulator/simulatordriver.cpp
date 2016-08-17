@@ -56,7 +56,7 @@ public:
     virtual Controls controls() const;
     virtual void startLive();
     virtual void stopLive();
-    int rand(int a, int b);
+    static int rand(int a, int b);
     QMap<QString, Imager::Control> _settings;
     QMutex settingsMutex;
     virtual bool supportsROI() { return true; }
@@ -74,6 +74,7 @@ public:
       QRect roi;
     };
     friend class Worker;
+    QTimer refresh_temperature;
 public slots:
     virtual void setROI(const QRect &);
     virtual void clearROI();
@@ -118,6 +119,12 @@ SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{
   _settings["delay"].is_duration = true;
   _settings["delay"].duration_unit = 1ms;
   _settings["delay"].supports_auto = true;
+  connect(&refresh_temperature, &QTimer::timeout, this, [&]{
+    _settings["temperature"].value = SimulatorImager::rand(_settings["temperature"].min, _settings["temperature"].max);
+    qDebug() << "Temperature timer trigger";
+    emit changed(_settings["temperature"]);
+  });
+  refresh_temperature.start(2000);
 }
 
 
