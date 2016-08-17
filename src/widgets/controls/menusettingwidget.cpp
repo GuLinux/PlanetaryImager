@@ -17,21 +17,28 @@
  */
 #include "menusettingwidget.h"
 
+struct MenuSettingWidget::Private {
+  QComboBox *edit;
+};
 
-MenuSettingWidget::MenuSettingWidget(QWidget* parent): SettingWidget(parent)
+MenuSettingWidget::MenuSettingWidget(QWidget* parent): SettingWidget(parent), dptr()
 {
-  layout()->addWidget(edit = new QComboBox);
-  connect(edit, F_PTR(QComboBox, currentIndexChanged, int), [=](int index) { emit valueChanged(edit->itemData(index).toDouble()); });
+  layout()->addWidget(d->edit = new QComboBox);
+  connect(d->edit, F_PTR(QComboBox, currentIndexChanged, int), [=](int index) { emit valueChanged(d->edit->itemData(index).toDouble()); });
+}
+
+MenuSettingWidget::~MenuSettingWidget()
+{
 }
 
 void MenuSettingWidget::update(const Imager::Setting& setting)
 {
-//   if(edit->currentData().toDouble() == setting.value)
+//   if(d->edit->currentData().toDouble() == setting.value)
 //     return;
-  edit->clear();
+  d->edit->clear();
   for(auto item: setting.choices) {
-    edit->addItem(item.label, item.value);
+    d->edit->addItem(item.label, item.value);
   }
-  edit->setCurrentIndex(edit->findData(setting.value));
+  d->edit->setCurrentIndex(d->edit->findData(setting.value));
 }
 

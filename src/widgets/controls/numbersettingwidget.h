@@ -24,11 +24,12 @@
 class NumberSettingWidget : public SettingWidget {
   Q_OBJECT
 public:
-    NumberSettingWidget(QWidget* parent = 0);
+  NumberSettingWidget(QWidget* parent = 0);
+  ~NumberSettingWidget();
 public slots:
   virtual void update(const Imager::Setting &setting);
 private:
-  QDoubleSpinBox *edit;
+  DPTR
 };
 
 #endif // NUMBERSETTINGWIDGET_H
