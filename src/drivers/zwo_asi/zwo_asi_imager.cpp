@@ -46,7 +46,7 @@ const int64_t BinControlID = 10001;
 
 
 
-struct ZWO_ASI_Imager::Private {
+DPTR_IMPL(ZWO_ASI_Imager) {
     ASI_CAMERA_INFO info;
     ImageHandlerPtr imageHandler;
     ZWO_ASI_Imager *q;
@@ -54,7 +54,7 @@ struct ZWO_ASI_Imager::Private {
     Chip chip;
 
     ASIControl::vector controls;
-    QTimer *refresh_controls_timer;
+    QTimer refresh_controls_timer;
     
     ImagerThread::ptr imager_thread;
     shared_ptr<ASIImagingWorker> worker;
@@ -85,9 +85,8 @@ ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandlerPt
     d->chip.properties.push_back( {"Camera Speed", info.IsUSB3Camera ? "USB3" : "USB2"});
     d->chip.properties.push_back( {"Host Speed", info.IsUSB3Host ? "USB3" : "USB2"});
     ASI_CHECK << ASIOpenCamera(info.CameraID) << "Open Camera";
-    d->refresh_controls_timer = new QTimer{this};
-    connect(d->refresh_controls_timer, &QTimer::timeout, qApp, bind(&Private::refresh_controls, d.get() )), Qt::QueuedConnection;
-    d->refresh_controls_timer->start(200);
+    d->refresh_controls_timer.moveToThread(qApp->thread());
+    connect(&d->refresh_controls_timer, &QTimer::timeout, qApp, bind(&Private::refresh_controls, d.get() ));
 }
 
 ZWO_ASI_Imager::~ZWO_ASI_Imager()
@@ -185,6 +184,7 @@ void ZWO_ASI_Imager::setControl(const Control& control)
 
 void ZWO_ASI_Imager::startLive()
 {
+    d->refresh_controls_timer.start(2000);
     LOG_F_SCOPE
     d->start_thread(1, d->maxROI(1), d->info.SupportedVideoFormat[0]);
     qDebug() << "Live started correctly";
