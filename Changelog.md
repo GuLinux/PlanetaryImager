@@ -1,3 +1,8 @@
+## 0.5.0 2016-08-xx
+ - Fix ASI controls issue
+ - Fix UI settings value refresh
+ - Support more control properties, such as readonly, auto
+
 ## 0.4.0 2016-08-12
  - Many stability fixes and improvements
  - Added ZWO ASI Support

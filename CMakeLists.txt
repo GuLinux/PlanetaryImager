@@ -29,7 +29,7 @@ if(cflags_fpic)
 endif(cflags_fpic)
 
 set(MAJOR_VERSION 0)
-set(MINOR_VERSION 4)
+set(MINOR_VERSION 5)
 set(PATCH_VERSION 0)
 
 add_subdirectory(GuLinux-Commons/Qt)
