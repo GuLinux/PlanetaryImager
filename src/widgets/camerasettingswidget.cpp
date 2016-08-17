@@ -25,7 +25,7 @@
 #include <QLayout>
 #include <QCheckBox>
 #include <QComboBox>
-#include "controls/settingwidget.h"
+#include "controls/controls.h"
 #include "ui_camerasettingswidget.h"
 using namespace std;
 
@@ -40,82 +40,6 @@ private:
 
 CameraSettingsWidget::Private::Private ( CameraSettingsWidget* q ) : ui{new Ui::CameraSettingsWidget}, q ( q )
 {
-}
-
-
-class NumberSettingWidget : public SettingWidget {
-  Q_OBJECT
-public:
-    NumberSettingWidget(QWidget* parent = 0);
-public slots:
-  virtual void update(const Imager::Setting &setting);
-private:
-  QDoubleSpinBox *edit;
-};
-
-NumberSettingWidget::NumberSettingWidget(QWidget* parent): SettingWidget(parent)
-{
-  layout()->addWidget(edit = new QDoubleSpinBox);
-  connect(edit, F_PTR(QDoubleSpinBox, valueChanged, double), this, &SettingWidget::valueChanged);
-}
-
-void NumberSettingWidget::update(const Imager::Setting& setting)
-{
-  edit->setDecimals(setting.decimals);
-  edit->setMinimum(setting.min);
-  edit->setMaximum(setting.max);
-  edit->setSingleStep(setting.step != 0 ? setting.step : 0.1);
-  edit->setValue(setting.value);
-}
-
-class BooleanSettingWidget : public SettingWidget {
-  Q_OBJECT
-public:
-    BooleanSettingWidget(QWidget* parent = 0);
-public slots:
-  virtual void update(const Imager::Setting &setting);
-private:
-  QCheckBox *edit;
-};
-
-BooleanSettingWidget::BooleanSettingWidget(QWidget* parent): SettingWidget(parent)
-{
-  layout()->addWidget(edit = new QCheckBox);
-  connect(edit, &QCheckBox::toggled, [=](bool checked) { emit valueChanged(checked ? 1 : 0); });
-}
-
-void BooleanSettingWidget::update(const Imager::Setting& setting)
-{
-  edit->setChecked(setting.value == 1);
-}
-
-class MenuSettingWidget : public SettingWidget {
-  Q_OBJECT
-public:
-    MenuSettingWidget(QWidget* parent = 0);
-public slots:
-  virtual void update(const Imager::Setting &setting);
-private:
-  QComboBox *edit;
-};
-
-
-
-MenuSettingWidget::MenuSettingWidget(QWidget* parent): SettingWidget(parent)
-{
-  layout()->addWidget(edit = new QComboBox);
-  connect(edit, F_PTR(QComboBox, currentIndexChanged, int), [=](int index) { emit valueChanged(edit->itemData(index).toDouble()); });
-}
-
-void MenuSettingWidget::update(const Imager::Setting& setting)
-{
-//   if(edit->currentData().toDouble() == setting.value)
-//     return;
-  edit->clear();
-  for(auto item: setting.choices) {
-    edit->addItem(item.label, item.value);
-  }
-  edit->setCurrentIndex(edit->findData(setting.value));
 }
 
 

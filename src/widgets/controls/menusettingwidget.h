@@ -15,22 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-
-#ifndef SETTINGWIDGET_H
-#define SETTINGWIDGET_H
-#include <QWidget>
-#include "drivers/imager.h"
-#include "Qt/functional.h"
-#include <QLayout>
-
-class SettingWidget : public QWidget {
+#ifndef MENUSETTINGWIDGET_H
+#define MENUSETTINGWIDGET_H
+#include "settingwidget.h"
+#include <QComboBox>
+class MenuSettingWidget : public SettingWidget {
   Q_OBJECT
 public:
-  SettingWidget(QWidget* parent = 0);
+    MenuSettingWidget(QWidget* parent = 0);
 public slots:
-  virtual void update(const Imager::Setting &setting) = 0;
-signals:
-  void valueChanged(double value);
+  virtual void update(const Imager::Setting &setting);
+private:
+  QComboBox *edit;
 };
 
-#endif // SETTINGWIDGET_H
+
+
+#endif // MENUSETTINGWIDGET_H
