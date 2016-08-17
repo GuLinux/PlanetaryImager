@@ -57,6 +57,14 @@ void DurationControlWidget::update(const Imager::Control &control)
   d->max = control.max * d->device_unit;
   d->step = (control.step != 0 ? control.step : 0.1) * d->device_unit; // TODO: move this
   d->value = control.value * d->device_unit;
+   
+  int unit_index = 0;
+  double display_value = d->value.count();
+  
+  while(display_value < 1. && ++unit_index < d->unit_combo->count() ) {
+    display_value = d->value.count() / d->unit_combo->itemData(unit_index).toDouble();
+  }
+  d->unit_combo->setCurrentIndex(min(unit_index, d->unit_combo->count()-1));
   d->updateWidgets();
 }
 
@@ -75,7 +83,6 @@ void DurationControlWidget::Private::updateWidgets()
     decimals++;
   }
   edit->setDecimals(decimals);
-  qDebug() << "min=" << min.count() << ", max=" << max.count() << ", step" << step.count() << ", value=" << value.count() << ", device_unit=" << device_unit.count() << ", combo unit: " << unit;
   edit->setMinimum(min.count()/unit);
   edit->setMaximum(max.count()/unit);
   edit->setSingleStep(step.count()/unit);

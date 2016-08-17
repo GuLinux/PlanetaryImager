@@ -109,7 +109,7 @@ SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{
     {"exposure", {1, "exposure", 0, 100, 1, 50}},
     {"movement", {3, "movement", 0, 5, 1, 1}},
     {"seeing",   {4, "seeing", 0, 5, 1, 1}},
-    {"delay",    {5, "delay", 2, 1000, 1, 1}},
+    {"delay",    {5, "delay", 0.1, 1000, 0.1, 30}},
     {"bin",	 {6, "bin", 0, 3, 1, 1, 1, Control::Combo, { {"1x1", 1}, {"2x2", 2}, {"3x3", 3}, {"4x4", 4} } }}, 
     {"temperature", {7, "temperature", 0, 300, 0.1, 30, 0} },
   }
