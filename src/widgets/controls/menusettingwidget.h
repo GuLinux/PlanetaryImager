@@ -22,11 +22,12 @@
 class MenuSettingWidget : public SettingWidget {
   Q_OBJECT
 public:
-    MenuSettingWidget(QWidget* parent = 0);
+  MenuSettingWidget(QWidget* parent = 0);
+  ~MenuSettingWidget();
 public slots:
   virtual void update(const Imager::Setting &setting);
 private:
-  QComboBox *edit;
+    DPTR
 };
 
 

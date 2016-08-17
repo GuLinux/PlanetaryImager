@@ -10,4 +10,5 @@ add_library(planetaryimager-widgets STATIC
     controls/booleansettingwidget.cpp
     controls/numbersettingwidget.cpp
     controls/menusettingwidget.cpp
+    controls/durationsettingwidget.cpp
 )

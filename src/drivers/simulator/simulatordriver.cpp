@@ -35,6 +35,7 @@
 
 using namespace GuLinux;
 using namespace std;
+using namespace std::chrono_literals;
 
 class SimulatorCamera : public Driver::Camera {
 public:
@@ -105,8 +106,14 @@ SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{
     {"seeing",   {4, "seeing", 0, 5, 1, 1}},
     {"delay",    {5, "delay", 0, 100, 1, 1}},
     {"bin",	 {6, "bin", 0, 3, 1, 1, 1, Setting::Combo, { {"1x1", 1}, {"2x2", 2}, {"3x3", 3}, {"4x4", 4} } }}, 
+    {"temperature", {7, "temperature", 0, 300, 0.1, 30, 0} },
   }
 {
+  _settings["temperature"].decimals = 1;
+  _settings["temperature"].readonly = true;
+  _settings["exposure"].is_duration = true;
+  _settings["exposure"].duration_unit = 1ms;
+  _settings["seeing"].supports_auto = true;
 }
 
 
@@ -123,13 +130,16 @@ QString SimulatorImager::name() const
 void SimulatorImager::setSetting(const Imager::Setting& setting)
 {
   QMutexLocker lock_settings(&settingsMutex);
+  qDebug() << "Received setting: \n" << setting << "\n saved setting: \n" << _settings[setting.name];
   _settings[setting.name] = setting;
   emit changed(setting);
 }
 
 Imager::Settings SimulatorImager::settings() const
 {
-  return _settings.values();
+  auto valid_settings = _settings.values();
+  valid_settings.erase(remove_if(valid_settings.begin(), valid_settings.end(), [](const Setting &s){ return s.name.isEmpty(); }), valid_settings.end());
+  return valid_settings;
 }
 
 
@@ -179,7 +189,7 @@ bool SimulatorImager::Worker::shoot(const ImageHandlerPtr &imageHandler)
   crop_rect -= cv::Size{crop_factor, crop_factor};
   crop_rect += cv::Point{pix_w, pix_h};
   cropped = image(crop_rect);
-  if(rand(0, seeing.max) > seeing.value) {
+  if(rand(0, seeing.max) > (seeing.value_auto ? 3 : seeing.value) ) {
       auto ker_size = rand(1, 7);
       cv::blur(cropped, blurred, {ker_size, ker_size});
   } else {

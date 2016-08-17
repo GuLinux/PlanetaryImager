@@ -17,17 +17,25 @@
  */
 #include "numbersettingwidget.h"
 
-NumberSettingWidget::NumberSettingWidget(QWidget* parent): SettingWidget(parent)
+struct NumberSettingWidget::Private {
+  QDoubleSpinBox *edit;
+};
+
+NumberSettingWidget::NumberSettingWidget(QWidget* parent): SettingWidget(parent), dptr()
 {
-  layout()->addWidget(edit = new QDoubleSpinBox);
-  connect(edit, F_PTR(QDoubleSpinBox, valueChanged, double), this, &SettingWidget::valueChanged);
+  layout()->addWidget(d->edit = new QDoubleSpinBox);
+  connect(d->edit, F_PTR(QDoubleSpinBox, valueChanged, double), this, &SettingWidget::valueChanged);
+}
+
+NumberSettingWidget::~NumberSettingWidget()
+{
 }
 
 void NumberSettingWidget::update(const Imager::Setting& setting)
 {
-  edit->setDecimals(setting.decimals);
-  edit->setMinimum(setting.min);
-  edit->setMaximum(setting.max);
-  edit->setSingleStep(setting.step != 0 ? setting.step : 0.1);
-  edit->setValue(setting.value);
+  d->edit->setDecimals(setting.decimals);
+  d->edit->setMinimum(setting.min);
+  d->edit->setMaximum(setting.max);
+  d->edit->setSingleStep(setting.step != 0 ? setting.step : 0.1);
+  d->edit->setValue(setting.value);
 }

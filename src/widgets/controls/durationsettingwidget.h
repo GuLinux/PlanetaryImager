@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2016  Marco Gulino <marco@gulinux.net>
+ * <one line to give the program's name and a brief idea of what it does.>
+ * Copyright (C) 2016  <copyright holder> <email>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,18 +16,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef BOOLEANSETTINGWIDGET_H
-#define BOOLEANSETTINGWIDGET_H
+#ifndef DURATIONSETTINGWIDGET_H
+#define DURATIONSETTINGWIDGET_H
 
 #include "settingwidget.h"
-class BooleanSettingWidget : public SettingWidget {
+
+class DurationSettingWidget : public SettingWidget {
   Q_OBJECT
 public:
-    BooleanSettingWidget(QWidget* parent = 0);
-    ~BooleanSettingWidget();
+    DurationSettingWidget(QWidget* parent = 0);
+    ~DurationSettingWidget();
 public slots:
   virtual void update(const Imager::Setting &setting);
 private:
   DPTR
 };
-#endif // BOOLEANSETTINGWIDGET_H
+
+#endif // DURATIONSETTINGWIDGET_H

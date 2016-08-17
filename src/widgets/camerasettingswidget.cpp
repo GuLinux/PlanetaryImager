@@ -52,7 +52,7 @@ public:
   void restore();
 private:
   struct Value {
-    bool num;
+    double num;
     bool is_auto;
   };
 
@@ -90,9 +90,10 @@ CameraSettingWidget::CameraSettingWidget(const Imager::Setting& setting, Imager*
     });
     connect(auto_value, &QCheckBox::toggled, this, [this](bool checked) {
       new_value = {new_value.num, checked};
+      settingWidget->setEnabled(!checked);
     });
 
-    settingWidget->setEnabled(!setting.readonly); // TODO: add different behaviour depending on widget type
+    settingWidget->setEnabled(!setting.readonly && ! setting.value_auto); // TODO: add different behaviour depending on widget type
     // TODO: handle value
     // TODO: move from here
     connect(imager, &Imager::changed, this, [=,&settings](const Imager::Setting &changed_setting){

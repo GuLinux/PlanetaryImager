@@ -16,14 +16,24 @@
  *
  */
 #include "booleansettingwidget.h"
+#include <QCheckBox>
 
-BooleanSettingWidget::BooleanSettingWidget(QWidget* parent): SettingWidget(parent)
+struct BooleanSettingWidget::Private {
+  QCheckBox *edit;
+};
+
+BooleanSettingWidget::BooleanSettingWidget(QWidget* parent): SettingWidget(parent), dptr()
 {
-  layout()->addWidget(edit = new QCheckBox);
-  connect(edit, &QCheckBox::toggled, [=](bool checked) { emit valueChanged(checked ? 1 : 0); });
+  layout()->addWidget(d->edit = new QCheckBox);
+  connect(d->edit, &QCheckBox::toggled, [=](bool checked) { emit valueChanged(checked ? 1 : 0); });
+}
+
+BooleanSettingWidget::~BooleanSettingWidget()
+{
+
 }
 
 void BooleanSettingWidget::update(const Imager::Setting& setting)
 {
-  edit->setChecked(setting.value == 1);
+  d->edit->setChecked(setting.value == 1);
 }

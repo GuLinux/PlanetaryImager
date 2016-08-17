@@ -22,6 +22,7 @@
 #include "drivers/imager.h"
 #include "Qt/functional.h"
 #include <QLayout>
+#include "c++/dptr.h"
 
 class SettingWidget : public QWidget {
   Q_OBJECT
