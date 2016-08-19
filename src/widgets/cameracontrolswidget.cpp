@@ -169,6 +169,7 @@ CameraControlsWidget::CameraControlsWidget(const ImagerPtr& imager, QSettings& s
     grid->addWidget(control->autoValueWidget(), row++, 2);
   }
   grid->addItem(new QSpacerItem(0, 0, QSizePolicy::MinimumExpanding, QSizePolicy::Expanding), row, 0, 3);
+  grid->setRowStretch(row, 1);
   grid->setColumnStretch(1, 1);
   settings.endGroup();
 }
