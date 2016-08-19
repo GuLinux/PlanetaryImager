@@ -15,11 +15,12 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef CONTROLS_H
-#define CONTROLS_H
-#include "numbercontrolwidget.h"
-#include "menucontrolwidget.h"
-#include "boolcontrolwidget.h"
-#include "durationcontrolwidget.h"
 
-#endif // CONTROLS_H
+#include "controlwidget.h"
+#include <QBoxLayout>
+
+ControlWidget::ControlWidget(QWidget *parent) : QWidget(parent) {
+    setLayout(new QHBoxLayout);
+    layout()->setMargin(0);
+    layout()->setSpacing(0);
+  }

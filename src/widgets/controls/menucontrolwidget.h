@@ -15,15 +15,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#include "booleansettingwidget.h"
+#ifndef MENUSETTINGWIDGET_H
+#define MENUSETTINGWIDGET_H
+#include "controlwidget.h"
+#include <QComboBox>
+class MenuControlWidget : public ControlWidget {
+  Q_OBJECT
+public:
+  MenuControlWidget(QWidget* parent = 0);
+  ~MenuControlWidget();
+public slots:
+  virtual void update(const Imager::Control &setting);
+private:
+    DPTR
+};
 
-BooleanSettingWidget::BooleanSettingWidget(QWidget* parent): SettingWidget(parent)
-{
-  layout()->addWidget(edit = new QCheckBox);
-  connect(edit, &QCheckBox::toggled, [=](bool checked) { emit valueChanged(checked ? 1 : 0); });
-}
 
-void BooleanSettingWidget::update(const Imager::Setting& setting)
-{
-  edit->setChecked(setting.value == 1);
-}
+
+#endif // MENUSETTINGWIDGET_H

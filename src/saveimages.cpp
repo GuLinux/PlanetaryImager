@@ -56,16 +56,16 @@ RecordingInformation::RecordingInformation(Configuration& configuration, Imager 
   properties["observer"] = configuration.observer();
   properties["telescope"] = configuration.telescope();
   QVariantMap camera_settings;
-  for(auto setting: imager->settings()) {
+  for(auto setting: imager->controls()) {
     QVariantMap setting_value;
     setting_value["value"] = setting.value;
-    static QMap<Imager::Setting::Type, QString> types {
-      {Imager::Setting::Number, "number"},
-      {Imager::Setting::Combo, "combo"},
-      {Imager::Setting::Bool, "bool"}
+    static QMap<Imager::Control::Type, QString> types {
+      {Imager::Control::Number, "number"},
+      {Imager::Control::Combo, "combo"},
+      {Imager::Control::Bool, "bool"}
     };
     setting_value["type"] = types[setting.type];
-    if(setting.type == Imager::Setting::Combo) {
+    if(setting.type == Imager::Control::Combo) {
       QVariantMap choices;
       for(auto choice: setting.choices)
 	choices[choice.label] = choice.value;

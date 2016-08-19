@@ -40,13 +40,13 @@ using namespace GuLinux;
 
 
 namespace {
-const int64_t ImageTypeSettingId = 10000;
-const int64_t BinSettingId = 10001;
+const int64_t ImgTypeControlID = 10000;
+const int64_t BinControlID = 10001;
 }
 
 
 
-struct ZWO_ASI_Imager::Private {
+DPTR_IMPL(ZWO_ASI_Imager) {
     ASI_CAMERA_INFO info;
     ImageHandlerPtr imageHandler;
     ZWO_ASI_Imager *q;
@@ -54,16 +54,16 @@ struct ZWO_ASI_Imager::Private {
     Chip chip;
 
     ASIControl::vector controls;
-    QTimer *refresh_settings_timer;
+    QTimer refresh_controls_timer;
     
     ImagerThread::ptr imager_thread;
     shared_ptr<ASIImagingWorker> worker;
     QRect maxROI(int bin) const;
     void start_thread(int bin, const QRect& roi, ASI_IMG_TYPE format);
-    void refresh_settings();
+    void refresh_controls();
 };
 
-void ZWO_ASI_Imager::Private::refresh_settings() {
+void ZWO_ASI_Imager::Private::refresh_controls() {
   qDebug() << "Refreshing ASI_TEMPERATURE if found..";
   for(auto control: controls) {
     if(control->caps.ControlType == ASI_TEMPERATURE) {
@@ -85,9 +85,8 @@ ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandlerPt
     d->chip.properties.push_back( {"Camera Speed", info.IsUSB3Camera ? "USB3" : "USB2"});
     d->chip.properties.push_back( {"Host Speed", info.IsUSB3Host ? "USB3" : "USB2"});
     ASI_CHECK << ASIOpenCamera(info.CameraID) << "Open Camera";
-    d->refresh_settings_timer = new QTimer{this};
-    connect(d->refresh_settings_timer, &QTimer::timeout, qApp, bind(&Private::refresh_settings, d.get() )), Qt::QueuedConnection;
-    d->refresh_settings_timer->start(200);
+    d->refresh_controls_timer.moveToThread(qApp->thread());
+    connect(&d->refresh_controls_timer, &QTimer::timeout, qApp, bind(&Private::refresh_controls, d.get() ));
 }
 
 ZWO_ASI_Imager::~ZWO_ASI_Imager()
@@ -116,18 +115,18 @@ void ZWO_ASI_Imager::Private::start_thread(int bin, const QRect& roi, ASI_IMG_TY
 }
 
 
-Imager::Settings ZWO_ASI_Imager::settings() const
+Imager::Controls ZWO_ASI_Imager::controls() const
 {
     qDebug() << __PRETTY_FUNCTION__;
-    Settings settings;
+    Controls controls;
 
-    int settings_number;
-    ASI_CHECK << ASIGetNumOfControls(d->info.CameraID, &settings_number) << "Get controls";
-    d->controls = ASIControl::vector(settings_number);
+    int controls_number;
+    ASI_CHECK << ASIGetNumOfControls(d->info.CameraID, &controls_number) << "Get controls";
+    d->controls = ASIControl::vector(controls_number);
 
-    for(int setting_index = 0; setting_index < settings_number; setting_index++) {
-      d->controls[setting_index] = make_shared<ASIControl>(setting_index, d->info.CameraID);
-      settings.push_back(d->controls[setting_index]->setting());
+    for(int control_index = 0; control_index < controls_number; control_index++) {
+      d->controls[control_index] = make_shared<ASIControl>(control_index, d->info.CameraID);
+      controls.push_back(*d->controls[control_index]);
     }
 
     static map<ASI_IMG_TYPE, QString> format_names {
@@ -136,7 +135,7 @@ Imager::Settings ZWO_ASI_Imager::settings() const
         {ASI_IMG_RAW16, "RAW 16bit"},
         {ASI_IMG_Y8, "Y8"},
     };
-    Imager::Setting imageFormat {ImageTypeSettingId, "Image Format", 0., 0., 1., static_cast<double>(d->worker->format()), 0., Setting::Combo};
+    Imager::Control imageFormat {ImgTypeControlID, "Image Format", 0., 0., 1., static_cast<double>(d->worker->format()), 0., Control::Combo};
     int i = 0;
     while(d->info.SupportedVideoFormat[i] != ASI_IMG_END && i < 8) {
         auto format = d->info.SupportedVideoFormat[i];
@@ -146,45 +145,46 @@ Imager::Settings ZWO_ASI_Imager::settings() const
     }
     imageFormat.max = i-1;
 
-    settings.push_back(imageFormat);
+    controls.push_back(imageFormat);
 
-    Imager::Setting bin {BinSettingId, "Bin", 0., 0., 1., static_cast<double>(d->worker->bin()), 1., Setting::Combo};
+    Imager::Control bin {BinControlID, "Bin", 0., 0., 1., static_cast<double>(d->worker->bin()), 1., Control::Combo};
     i = 0;
     while(d->info.SupportedBins[i] != 0) {
         auto bin_value = d->info.SupportedBins[i++];
         bin.choices.push_back( {"%1x%1"_q % static_cast<double>(bin_value), static_cast<double>(bin_value) } );
     }
     bin.max = i-1;
-    settings.push_back(bin);
-    return settings;
+    controls.push_back(bin);
+    return controls;
 }
 
 
-void ZWO_ASI_Imager::setSetting(const Setting& setting)
+void ZWO_ASI_Imager::setControl(const Control& control)
 {
     qDebug() << __PRETTY_FUNCTION__;
-    if(setting.id == ImageTypeSettingId) {
-        d->start_thread(d->worker->bin(), d->worker->roi(), static_cast<ASI_IMG_TYPE>(setting.value));
-        emit changed(setting);
+    if(control.id == ImgTypeControlID) {
+        d->start_thread(d->worker->bin(), d->worker->roi(), static_cast<ASI_IMG_TYPE>(control.value));
+        emit changed(control);
         return;
     }
-    if(setting.id == BinSettingId) {
-        auto bin = static_cast<int>(setting.value);
+    if(control.id == BinControlID) {
+        auto bin = static_cast<int>(control.value);
         d->start_thread(bin, d->maxROI(bin), d->worker->format());
-        emit changed(setting);
+        emit changed(control);
         return;
     }
 
-    auto control = *find_if(d->controls.begin(), d->controls.end(),
-                           [&](const ASIControl::ptr &c){ return c->caps.ControlType == static_cast<ASI_CONTROL_TYPE>(setting.id); });
-    qDebug() << "Changing setting " << control->setting();
-    control->set(setting.value, false);
-    qDebug() << "Changed setting " << control->setting();
-    emit changed(*control);
+    auto camera_control = *find_if(d->controls.begin(), d->controls.end(),
+                           [&](const ASIControl::ptr &c){ return c->caps.ControlType == static_cast<ASI_CONTROL_TYPE>(control.id); });
+    qDebug() << "Changing control " << camera_control->control();
+    camera_control->set(control.value, control.value_auto);
+    qDebug() << "Changed control " << camera_control->control();
+    emit changed(*camera_control);
 }
 
 void ZWO_ASI_Imager::startLive()
 {
+    d->refresh_controls_timer.start(2000);
     LOG_F_SCOPE
     d->start_thread(1, d->maxROI(1), d->info.SupportedVideoFormat[0]);
     qDebug() << "Live started correctly";

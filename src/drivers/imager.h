@@ -29,7 +29,7 @@ class Imager : public QObject {
   Q_OBJECT
 public:
   Imager() : QObject(nullptr) {}
-  struct Setting {
+  struct Control {
     int64_t id;
     QString name;
     double min, max, step, value, defaut_value;
@@ -47,9 +47,9 @@ public:
     bool value_auto = false;
     bool readonly = false;
   };
-  typedef QList<Setting> Settings;
+  typedef QList<Control> Controls;
 
-  virtual Settings settings() const = 0;  
+  virtual Controls controls() const = 0;  
   struct Chip {
     double width, height, pixelwidth, pixelheight;
     uint32_t xres, yres, bpp;
@@ -65,19 +65,19 @@ public:
 public slots:
   virtual void setROI(const QRect &) = 0;
   virtual void clearROI() = 0;
-  virtual void setSetting(const Setting &setting) = 0;
+  virtual void setControl(const Control &control) = 0;
   virtual void startLive() = 0;
   virtual void stopLive() = 0;
 signals:
   void fps(double rate);
-  void changed(const Setting &setting);
+  void changed(const Control &control);
   void disconnected();
 };
 
 typedef std::shared_ptr<Imager> ImagerPtr;
 QDebug operator<<(QDebug dbg, const Imager::Chip &chip);
-QDebug operator<<(QDebug dbg, const Imager::Setting &setting);
-QDebug operator<<(QDebug dbg, const Imager::Setting::Choice &choice);
+QDebug operator<<(QDebug dbg, const Imager::Control &setting);
+QDebug operator<<(QDebug dbg, const Imager::Control::Choice &choice);
 
-Q_DECLARE_METATYPE(Imager::Setting)
+Q_DECLARE_METATYPE(Imager::Control)
 #endif

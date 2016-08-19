@@ -15,12 +15,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#include "menucontrolwidget.h"
 
-#include "settingwidget.h"
-#include <QVBoxLayout>
+struct MenuControlWidget::Private {
+  QComboBox *edit;
+};
 
-SettingWidget::SettingWidget(QWidget *parent) : QWidget(parent) {
-    setLayout(new QVBoxLayout);
-    layout()->setMargin(0);
-    layout()->setSpacing(0);
+MenuControlWidget::MenuControlWidget(QWidget* parent): ControlWidget(parent), dptr()
+{
+  layout()->addWidget(d->edit = new QComboBox);
+  connect(d->edit, F_PTR(QComboBox, currentIndexChanged, int), [=](int index) { emit valueChanged(d->edit->itemData(index).toDouble()); });
+}
+
+MenuControlWidget::~MenuControlWidget()
+{
+}
+
+void MenuControlWidget::update(const Imager::Control& setting)
+{
+//   if(d->edit->currentData().toDouble() == setting.value)
+//     return;
+  d->edit->clear();
+  for(auto item: setting.choices) {
+    d->edit->addItem(item.label, item.value);
   }
+  d->edit->setCurrentIndex(d->edit->findData(setting.value));
+}
+

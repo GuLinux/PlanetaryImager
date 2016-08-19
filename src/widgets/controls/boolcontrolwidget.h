@@ -15,23 +15,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#include "menusettingwidget.h"
+#ifndef BOOLEANSETTINGWIDGET_H
+#define BOOLEANSETTINGWIDGET_H
 
+#include "controlwidget.h"
 
-MenuSettingWidget::MenuSettingWidget(QWidget* parent): SettingWidget(parent)
-{
-  layout()->addWidget(edit = new QComboBox);
-  connect(edit, F_PTR(QComboBox, currentIndexChanged, int), [=](int index) { emit valueChanged(edit->itemData(index).toDouble()); });
-}
-
-void MenuSettingWidget::update(const Imager::Setting& setting)
-{
-//   if(edit->currentData().toDouble() == setting.value)
-//     return;
-  edit->clear();
-  for(auto item: setting.choices) {
-    edit->addItem(item.label, item.value);
-  }
-  edit->setCurrentIndex(edit->findData(setting.value));
-}
-
+class BoolControlWidget : public ControlWidget {
+  Q_OBJECT
+public:
+    BoolControlWidget(QWidget* parent = 0);
+    ~BoolControlWidget();
+public slots:
+  virtual void update(const Imager::Control &setting);
+private:
+  DPTR
+};
+#endif // BOOLEANSETTINGWIDGET_H

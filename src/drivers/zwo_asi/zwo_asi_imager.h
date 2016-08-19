@@ -30,10 +30,10 @@ public:
     ~ZWO_ASI_Imager();
     virtual Imager::Chip chip() const;
     virtual QString name() const;
-    virtual Imager::Settings settings() const;
+    virtual Imager::Controls controls() const;
     virtual bool supportsROI();
 public slots:
-    virtual void setSetting(const Setting &setting);
+    virtual void setControl(const Imager::Control& control);
     virtual void startLive();
     virtual void stopLive();
     virtual void setROI(const QRect &);
