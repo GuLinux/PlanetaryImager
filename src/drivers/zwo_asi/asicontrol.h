@@ -32,8 +32,8 @@ struct ASIControl {
   long value;
   bool is_auto;
 
-  Imager::Setting setting() const;
-  operator Imager::Setting() const;
+  Imager::Control control() const;
+  operator Imager::Control() const;
   ASIControl &reload();
   ASIControl &set(double new_value, bool is_auto);
 };

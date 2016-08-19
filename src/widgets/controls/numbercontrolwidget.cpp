@@ -15,18 +15,27 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef BOOLEANSETTINGWIDGET_H
-#define BOOLEANSETTINGWIDGET_H
+#include "numbercontrolwidget.h"
 
-#include <QCheckBox>
-#include "settingwidget.h"
-class BooleanSettingWidget : public SettingWidget {
-  Q_OBJECT
-public:
-    BooleanSettingWidget(QWidget* parent = 0);
-public slots:
-  virtual void update(const Imager::Setting &setting);
-private:
-  QCheckBox *edit;
+struct NumberControlWidget::Private {
+  QDoubleSpinBox *edit;
 };
-#endif // BOOLEANSETTINGWIDGET_H
+
+NumberControlWidget::NumberControlWidget(QWidget* parent): ControlWidget(parent), dptr()
+{
+  layout()->addWidget(d->edit = new QDoubleSpinBox);
+  connect(d->edit, F_PTR(QDoubleSpinBox, valueChanged, double), this, &ControlWidget::valueChanged);
+}
+
+NumberControlWidget::~NumberControlWidget()
+{
+}
+
+void NumberControlWidget::update(const Imager::Control& setting)
+{
+  d->edit->setDecimals(setting.decimals);
+  d->edit->setMinimum(setting.min);
+  d->edit->setMaximum(setting.max);
+  d->edit->setSingleStep(setting.step != 0 ? setting.step : 0.1);
+  d->edit->setValue(setting.value);
+}

@@ -30,7 +30,7 @@ WebcamImager(const QString &name, int index, const ImageHandlerPtr &handler);
 ~WebcamImager();
 virtual Imager::Chip chip() const;
 virtual QString name() const;
-virtual Imager::Settings settings() const;
+virtual Imager::Controls controls() const;
 virtual void setSetting(const Setting& setting);
 virtual void startLive();
 virtual void stopLive();

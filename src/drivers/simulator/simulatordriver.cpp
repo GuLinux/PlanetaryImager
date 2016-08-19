@@ -33,8 +33,10 @@
 #include "Qt/functional.h"
 #include <atomic>
 
+
 using namespace GuLinux;
 using namespace std;
+using namespace std::chrono_literals;
 
 class SimulatorCamera : public Driver::Camera {
 public:
@@ -50,14 +52,14 @@ public:
     virtual ~SimulatorImager();
     virtual Chip chip() const;
     virtual QString name() const;
-    virtual void setSetting(const Setting& setting);
-    virtual Settings settings() const;
+    virtual void setControl(const Control& setting);
+    virtual Controls controls() const;
     virtual void startLive();
     virtual void stopLive();
-    int rand(int a, int b);
-    QMap<QString, Imager::Setting> _settings;
+    static int rand(int a, int b);
+    QMap<QString, Imager::Control> _settings;
     QMutex settingsMutex;
-    virtual bool supportsROI() { return false; }
+    virtual bool supportsROI() { return true; }
     
     class Worker : public ImagerThread::Worker {
     public:
@@ -65,17 +67,21 @@ public:
       bool shoot(const ImageHandlerPtr& imageHandler);
       virtual void start();
       virtual void stop();
+      void setROI(const QRect &roi);
     private:
       cv::Mat image;
       SimulatorImager *imager;
+      QRect roi;
     };
     friend class Worker;
+    QTimer refresh_temperature;
 public slots:
-    virtual void setROI(const QRect &) {}
-    virtual void clearROI() {}
+    virtual void setROI(const QRect &);
+    virtual void clearROI();
 private:
   ImageHandlerPtr imageHandler;
   ImagerThread::ptr imager_thread;
+  shared_ptr<Worker> worker;
 };
 
 ImagerPtr SimulatorCamera::imager ( const ImageHandlerPtr& imageHandler ) const
@@ -103,10 +109,23 @@ SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{
     {"exposure", {1, "exposure", 0, 100, 1, 50}},
     {"movement", {3, "movement", 0, 5, 1, 1}},
     {"seeing",   {4, "seeing", 0, 5, 1, 1}},
-    {"delay",    {5, "delay", 0, 100, 1, 1}},
-    {"bin",	 {6, "bin", 0, 3, 1, 1, 1, Setting::Combo, { {"1x1", 1}, {"2x2", 2}, {"3x3", 3}, {"4x4", 4} } }}, 
+    {"delay",    {5, "delay", 0.1, 1000, 0.1, 30}},
+    {"bin",	 {6, "bin", 0, 3, 1, 1, 1, Control::Combo, { {"1x1", 1}, {"2x2", 2}, {"3x3", 3}, {"4x4", 4} } }}, 
+    {"temperature", {7, "temperature", 0, 300, 0.1, 30, 0} },
   }
 {
+  qDebug() << "Creating simulator imager: current owning thread: " << thread() << ", qApp thread: " << qApp->thread();
+  _settings["temperature"].decimals = 1;
+  _settings["temperature"].readonly = true;
+  _settings["delay"].is_duration = true;
+  _settings["delay"].duration_unit = 1ms;
+  _settings["seeing"].supports_auto = true;
+  
+  refresh_temperature.moveToThread(qApp->thread());
+  connect(&refresh_temperature, &QTimer::timeout, qApp, [&]{
+    _settings["temperature"].value = SimulatorImager::rand(_settings["temperature"].min, _settings["temperature"].max);
+    emit changed(_settings["temperature"]);
+  });
 }
 
 
@@ -120,16 +139,19 @@ QString SimulatorImager::name() const
   return "Simulator Imager";
 }
 
-void SimulatorImager::setSetting(const Imager::Setting& setting)
+void SimulatorImager::setControl(const Imager::Control& setting)
 {
   QMutexLocker lock_settings(&settingsMutex);
+  qDebug() << "Received setting: \n" << setting << "\n saved setting: \n" << _settings[setting.name];
   _settings[setting.name] = setting;
   emit changed(setting);
 }
 
-Imager::Settings SimulatorImager::settings() const
+Imager::Controls SimulatorImager::controls() const
 {
-  return _settings.values();
+  auto valid_settings = _settings.values();
+  valid_settings.erase(remove_if(valid_settings.begin(), valid_settings.end(), [](const Control &s){ return s.name.isEmpty(); }), valid_settings.end());
+  return valid_settings;
 }
 
 
@@ -162,7 +184,7 @@ bool SimulatorImager::Worker::shoot(const ImageHandlerPtr &imageHandler)
   cv::Mat cropped, blurred, result;
   int h = image.rows;
   int w = image.cols;
-  Setting exposure, gamma, delay, seeing, movement;
+  Control exposure, gamma, delay, seeing, movement;
   {
       QMutexLocker lock_settings(&imager->settingsMutex);
       exposure = imager->_settings["exposure"];
@@ -179,7 +201,10 @@ bool SimulatorImager::Worker::shoot(const ImageHandlerPtr &imageHandler)
   crop_rect -= cv::Size{crop_factor, crop_factor};
   crop_rect += cv::Point{pix_w, pix_h};
   cropped = image(crop_rect);
-  if(rand(0, seeing.max) > seeing.value) {
+  if(roi.isValid()) {
+    cropped = cropped(cv::Rect{roi.x(), roi.y(), roi.width(), roi.height()});
+  }
+  if(rand(0, seeing.max) > (seeing.value_auto ? 3 : seeing.value) ) {
       auto ker_size = rand(1, 7);
       cv::blur(cropped, blurred, {ker_size, ker_size});
   } else {
@@ -200,12 +225,29 @@ bool SimulatorImager::Worker::shoot(const ImageHandlerPtr &imageHandler)
   return true;
 }
 
+void SimulatorImager::clearROI()
+{
+  worker->setROI({});
+}
+
+void SimulatorImager::setROI(const QRect &roi)
+{
+  worker->setROI(roi);
+}
+
+void SimulatorImager::Worker::setROI(const QRect& roi)
+{
+  this->roi = roi;
+}
+
 
 
 void SimulatorImager::startLive()
 {
   LOG_F_SCOPE
-  auto worker = make_shared<Worker>(this);
+  qDebug() << "Creating simulator imager: current owning thread: " << thread() << ", qApp thread: " << qApp->thread() << ", timer thread: " << refresh_temperature.thread() << ", current thread: " << QThread::currentThread();
+  refresh_temperature.start(2000);
+  worker = make_shared<Worker>(this);
   imager_thread = make_shared<ImagerThread>(worker, this, imageHandler);
   imager_thread->start();
 }

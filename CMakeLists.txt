@@ -29,7 +29,7 @@ if(cflags_fpic)
 endif(cflags_fpic)
 
 set(MAJOR_VERSION 0)
-set(MINOR_VERSION 4)
+set(MINOR_VERSION 5)
 set(PATCH_VERSION 0)
 
 add_subdirectory(GuLinux-Commons/Qt)
@@ -39,6 +39,9 @@ add_subdirectory(src)
 add_subdirectory(tests)
 add_subdirectory(files)
 add_subdirectory(support)
+
+install(FILES README.md Changelog.md DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/PlanetaryImager)
+
 
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "GuLinux.net Planetary Imager for Linux")
 SET(CPACK_PACKAGE_VENDOR "GuLinux <marco@gulinux.net>")

@@ -15,20 +15,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef NUMBERSETTINGWIDGET_H
-#define NUMBERSETTINGWIDGET_H
 
-#include "settingwidget.h"
-#include <QDoubleSpinBox>
+#ifndef SETTINGWIDGET_H
+#define SETTINGWIDGET_H
+#include <QWidget>
+#include "drivers/imager.h"
+#include "Qt/functional.h"
+#include <QLayout>
+#include "c++/dptr.h"
 
-class NumberSettingWidget : public SettingWidget {
+class ControlWidget : public QWidget {
   Q_OBJECT
 public:
-    NumberSettingWidget(QWidget* parent = 0);
+  ControlWidget(QWidget* parent = 0);
 public slots:
-  virtual void update(const Imager::Setting &setting);
-private:
-  QDoubleSpinBox *edit;
+  virtual void update(const Imager::Control &setting) = 0;
+signals:
+  void valueChanged(double value);
 };
 
-#endif // NUMBERSETTINGWIDGET_H
+#endif // SETTINGWIDGET_H

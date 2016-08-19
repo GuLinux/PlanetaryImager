@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2016  Marco Gulino <marco@gulinux.net>
+ * <one line to give the program's name and a brief idea of what it does.>
+ * Copyright (C) 2016  <copyright holder> <email>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,19 +16,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#include "numbersettingwidget.h"
+#ifndef DURATIONSETTINGWIDGET_H
+#define DURATIONSETTINGWIDGET_H
 
-NumberSettingWidget::NumberSettingWidget(QWidget* parent): SettingWidget(parent)
-{
-  layout()->addWidget(edit = new QDoubleSpinBox);
-  connect(edit, F_PTR(QDoubleSpinBox, valueChanged, double), this, &SettingWidget::valueChanged);
-}
+#include "controlwidget.h"
 
-void NumberSettingWidget::update(const Imager::Setting& setting)
-{
-  edit->setDecimals(setting.decimals);
-  edit->setMinimum(setting.min);
-  edit->setMaximum(setting.max);
-  edit->setSingleStep(setting.step != 0 ? setting.step : 0.1);
-  edit->setValue(setting.value);
-}
+class DurationControlWidget : public ControlWidget {
+  Q_OBJECT
+public:
+    DurationControlWidget(QWidget* parent = 0);
+    ~DurationControlWidget();
+public slots:
+  virtual void update(const Imager::Control &setting);
+private:
+  DPTR
+};
+
+#endif // DURATIONSETTINGWIDGET_H

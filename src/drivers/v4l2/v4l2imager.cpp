@@ -27,24 +27,24 @@ V4L2Imager::V4L2Imager(const QString &name, int index, const ImageHandlerPtr &ha
 {
   d->populate_rules();
   d->open_camera();
-  auto settings = this->settings();
-  auto formats = find_if(begin(settings), end(settings), [](const Setting &s) { return s.id == PIXEL_FORMAT_CONTROL_ID; });
+  auto settings = this->controls();
+  auto formats = find_if(begin(settings), end(settings), [](const Control &s) { return s.id == PIXEL_FORMAT_CONTROL_ID; });
   if(formats != end(settings)) {
-      auto mjpeg = find_if(begin((*formats).choices), end((*formats).choices), [](const Setting::Choice &c) { return c.label == "MJPG"; });
+      auto mjpeg = find_if(begin((*formats).choices), end((*formats).choices), [](const Control::Choice &c) { return c.label == "MJPG"; });
       if(mjpeg != end((*formats).choices)) {
           (*formats).value = (*mjpeg).value;
-          setSetting(*formats);
+          setControl(*formats);
       };
   }
-  settings = this->settings();
-  auto resolutions = find_if(begin(settings), end(settings), [](const Setting &s) { return s.id == RESOLUTIONS_CONTROL_ID; });
+  settings = this->controls();
+  auto resolutions = find_if(begin(settings), end(settings), [](const Control &s) { return s.id == RESOLUTIONS_CONTROL_ID; });
   if(resolutions != end(settings)) {
       auto v4l_resolutions = d->resolutions(d->query_format());
       auto max_resolution = max_element(begin(v4l_resolutions), end(v4l_resolutions), [](const v4l2_frmsizeenum &a, const v4l2_frmsizeenum &b){
           return a.discrete.width * a.discrete.height < b.discrete.width * b.discrete.height;
     });
     (*resolutions).value = (*max_resolution).index;
-    setSetting(*resolutions);
+    setControl(*resolutions);
   }
   
   d->adjust_framerate(d->query_format());
@@ -134,9 +134,9 @@ QString V4L2Imager::name() const
 }
 
 
-Imager::Settings V4L2Imager::settings() const
+Imager::Controls V4L2Imager::controls() const
 {
-    Imager::Settings _settings;
+    Imager::Controls _settings;
 
     for (int ctrlid = V4L2_CID_BASE; ctrlid < V4L2_CID_LASTP1; ctrlid++) {
         auto v4lsetting = d->setting(ctrlid);
@@ -163,7 +163,7 @@ Imager::Settings V4L2Imager::settings() const
     
     auto current_format = d->query_format();
     auto formats = d->formats();
-    Setting formats_setting{PIXEL_FORMAT_CONTROL_ID, "Format", 0, formats.size()-1., 1, 0, 0, Setting::Combo};
+    Control formats_setting{PIXEL_FORMAT_CONTROL_ID, "Format", 0, formats.size()-1., 1, 0, 0, Control::Combo};
     for(auto format: formats) {
       formats_setting.choices.push_back({FOURCC2QS(format.pixelformat), static_cast<double>(format.index)});
       if(format.pixelformat == current_format.fmt.pix.pixelformat)
@@ -171,7 +171,7 @@ Imager::Settings V4L2Imager::settings() const
     }
     _settings.push_back(formats_setting);
     auto resolutions = d->resolutions(current_format);
-    Setting resolutions_setting{RESOLUTIONS_CONTROL_ID, "Resolution", 0, resolutions.size()-1., 1, 0, 0, Setting::Combo};
+    Control resolutions_setting{RESOLUTIONS_CONTROL_ID, "Resolution", 0, resolutions.size()-1., 1, 0, 0, Control::Combo};
     for(auto resolution: resolutions) {
       resolutions_setting.choices.push_back({"%1x%2"_q % resolution.discrete.width % resolution.discrete.height, static_cast<double>(resolution.index)});
       if(current_format.fmt.pix.width == resolution.discrete.width && current_format.fmt.pix.height == resolution.discrete.height)
@@ -179,8 +179,8 @@ Imager::Settings V4L2Imager::settings() const
     }
     _settings.push_back(resolutions_setting);
     
-    std::sort(begin(_settings), end(_settings), [](const Setting &a, const Setting &b){ return a.id < b.id; });
-    _settings.erase(std::unique(begin(_settings), end(_settings), [](const Setting &a, const Setting &b){ return a.id == b.id; }), end(_settings));
+    std::sort(begin(_settings), end(_settings), [](const Control &a, const Control &b){ return a.id < b.id; });
+    _settings.erase(std::unique(begin(_settings), end(_settings), [](const Control &a, const Control &b){ return a.id == b.id; }), end(_settings));
     return _settings;
 }
 
@@ -196,10 +196,10 @@ V4L2Imager::Private::V4lSetting V4L2Imager::Private::setting(uint32_t id)
     setting.disabled = (ctrl.flags & V4L2_CTRL_FLAG_DISABLED);
     if (setting.disabled)
         return setting;
-    static QMap<int, Setting::Type> types {
-        {V4L2_CTRL_TYPE_INTEGER, Setting::Number},
-        {V4L2_CTRL_TYPE_BOOLEAN, Setting::Bool},
-        {V4L2_CTRL_TYPE_MENU, Setting::Combo},
+    static QMap<int, Control::Type> types {
+        {V4L2_CTRL_TYPE_INTEGER, Control::Number},
+        {V4L2_CTRL_TYPE_BOOLEAN, Control::Bool},
+        {V4L2_CTRL_TYPE_MENU, Control::Combo},
     };
     setting.unknown_type = types.count(ctrl.type) == 0;
     if(setting.unknown_type)
@@ -210,7 +210,7 @@ V4L2Imager::Private::V4lSetting V4L2Imager::Private::setting(uint32_t id)
     if (-1 == setting.valuecode) {
         return setting;
     }
-    setting.setting = Imager::Setting{ctrl.id, reinterpret_cast<char*>(ctrl.name), static_cast<double>(ctrl.minimum), static_cast<double>(ctrl.maximum), 
+    setting.setting = Imager::Control{ctrl.id, reinterpret_cast<char*>(ctrl.name), static_cast<double>(ctrl.minimum), static_cast<double>(ctrl.maximum), 
       static_cast<double>(ctrl.step), static_cast<double>(control.value), static_cast<double>(ctrl.default_value)};
     setting.setting.type = types[ctrl.type];
     if(ctrl.type == V4L2_CTRL_TYPE_MENU) {
@@ -229,7 +229,7 @@ V4L2Imager::Private::V4lSetting V4L2Imager::Private::setting(uint32_t id)
     return setting;
 }
 
-void V4L2Imager::setSetting(const Setting &setting)
+void V4L2Imager::setControl(const Control &setting)
 {
   auto restart_camera = [=](function<void()> on_restart) {
     bool live_was_started = d->imager_thread.operator bool();
