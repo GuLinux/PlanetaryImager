@@ -39,7 +39,7 @@ public:
      double value;
     };
     QList<Choice> choices;
-    operator bool() const;
+    bool valid() const;
     int decimals = 2;
     bool is_duration = false;
     std::chrono::duration<double> duration_unit;

@@ -42,7 +42,7 @@ QDebug operator<<(QDebug dbg, const Imager::Setting::Choice &choice)
     return dbg.space();
 }
 
-Imager::Setting::operator bool() const
+bool Imager::Setting::valid() const
 {
     return ! name.isEmpty();
 }
