@@ -106,19 +106,18 @@ Driver::Cameras SimulatorDriver::cameras() const
 }
 
 SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{handler}, _settings{
-    {"exposure", {1, "exposure", 0, 100, 1, 50}},
-    {"movement", {3, "movement", 0, 5, 1, 1}},
-    {"seeing",   {4, "seeing", 0, 5, 1, 1}},
-    {"delay",    {5, "delay", 0.1, 1000, 0.1, 30}},
-    {"bin",	 {6, "bin", 0, 3, 1, 1, 1, Control::Combo, { {"1x1", 1}, {"2x2", 2}, {"3x3", 3}, {"4x4", 4} } }}, 
-    {"temperature", {7, "temperature", 0, 300, 0.1, 30, 0} },
+    {"exposure",    {1, "exposure", 0.1, 1000, 0.1, 19.5}},
+    {"movement", {2, "movement", 0, 5, 1, 1}},
+    {"seeing",   {3, "seeing", 0, 5, 1, 1}},
+    {"bin",	 {4, "bin", 0, 3, 1, 1, 1, Control::Combo, { {"1x1", 1}, {"2x2", 2}, {"3x3", 3}, {"4x4", 4} } }}, 
+    {"temperature", {5, "temperature", 0, 300, 0.1, 30, 0} },
   }
 {
   qDebug() << "Creating simulator imager: current owning thread: " << thread() << ", qApp thread: " << qApp->thread();
   _settings["temperature"].decimals = 1;
   _settings["temperature"].readonly = true;
-  _settings["delay"].is_duration = true;
-  _settings["delay"].duration_unit = 1ms;
+  _settings["exposure"].is_duration = true;
+  _settings["exposure"].duration_unit = 1ms;
   _settings["seeing"].supports_auto = true;
   
   refresh_temperature.moveToThread(qApp->thread());
@@ -149,9 +148,7 @@ void SimulatorImager::setControl(const Imager::Control& setting)
 
 Imager::Controls SimulatorImager::controls() const
 {
-  auto valid_settings = _settings.values();
-  valid_settings.erase(remove_if(valid_settings.begin(), valid_settings.end(), [](const Control &s){ return s.name.isEmpty(); }), valid_settings.end());
-  return valid_settings;
+  return _settings.values();
 }
 
 
@@ -184,14 +181,13 @@ bool SimulatorImager::Worker::shoot(const ImageHandlerPtr &imageHandler)
   cv::Mat cropped, blurred, result;
   int h = image.rows;
   int w = image.cols;
-  Control exposure, gamma, delay, seeing, movement;
+  Control exposure, seeing, movement, bin;
   {
       QMutexLocker lock_settings(&imager->settingsMutex);
       exposure = imager->_settings["exposure"];
-      gamma = imager->_settings["gamma"];
+      bin = imager->_settings["bin"];
       seeing = imager->_settings["seeing"];
       movement = imager->_settings["movement"];
-      delay = imager->_settings["delay"];
   }
   int crop_factor = movement.value;
   int pix_w = rand(0, crop_factor);
@@ -210,18 +206,25 @@ bool SimulatorImager::Worker::shoot(const ImageHandlerPtr &imageHandler)
   } else {
       cropped.copyTo(blurred);
   }
-      int exposure_offset = exposure.value * 2 - 100;
-      result = blurred + cv::Scalar{exposure_offset, exposure_offset, exposure_offset};
+  double exposure_percent = (exposure.value - exposure.min) / (exposure.max - exposure.min) * 100;
+  int exposure_offset = log(exposure_percent)*150 - 100;
+  static auto started = chrono::steady_clock::now();
+  auto now = chrono::steady_clock::now();
+  if( (now-started) >= 1s) {
+    qDebug() << "Exposure percent: " << exposure_percent << ", exposure offset: " << exposure_offset;
+    started = now;
+  }
+  result = blurred + cv::Scalar{exposure_offset, exposure_offset, exposure_offset};
   int depth = 8;
   if(result.depth() > CV_8S)
       depth = 16;
   if(result.depth() > CV_16S)
       depth = 32;
-  auto scale = imager->_settings["bin"].value;
+  auto scale = bin.value;
   if(scale > 1)
     cv::resize(result, result, {result.cols/scale, result.rows/scale});
   imageHandler->handle(result);
-  QThread::msleep(delay.value);
+  QThread::usleep(exposure.value * 1000);
   return true;
 }
 
