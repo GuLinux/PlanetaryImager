@@ -1,7 +1,14 @@
 # PlanetaryImager
 =================
 
-Qt capture software for astronomy, mainly planetary shooting 
+Qt capture software for astronomy, mainly planetary shooting.
+
+Useful Links
+------------
+
+ * [Project Homepage - Full description, screenshots](http://blog.gulinux.net/en/planetary-imager)
+ * [Releases and Downloads](https://github.com/GuLinux/PlanetaryImager/releases)
+ * [Report a bug](https://github.com/GuLinux/PlanetaryImager/issues)
 
 Supported Cameras
 -----------------
@@ -14,6 +21,7 @@ Requirements
  * A recent boost library version (tested with 1.55 and above).
  * c++14 compliant compiler (tested with gcc >= 5)
  * CImg (cimg-dev)
+ * OpenCV
  * QCustomPlot (libqcustomplot-dev)
  * boost (libboost-all-dev)
 
