@@ -1,4 +1,4 @@
-## 0.5.0 2016-08-xx
+## 0.5.0 2016-08-21
  - Fix ASI controls issue
  - Fix UI settings value refresh
  - Support more control properties, such as readonly, auto
