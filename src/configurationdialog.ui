@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>507</width>
-    <height>485</height>
+    <height>511</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -27,7 +27,7 @@
    <item row="1" column="0">
     <widget class="QTabWidget" name="configurationTab">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="saving">
       <attribute name="title">
@@ -184,13 +184,6 @@
         <widget class="QRadioButton" name="edge_sobel">
          <property name="text">
           <string>Sobe&amp;l</string>
-         </property>
-        </widget>
-       </item>
-       <item>
-        <widget class="QRadioButton" name="edge_sobel_deprecated">
-         <property name="text">
-          <string>Sobel &amp;QImageBlitz (deprecated, to be removed soon)</string>
          </property>
         </widget>
        </item>

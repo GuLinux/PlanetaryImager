@@ -58,16 +58,13 @@ ConfigurationDialog::ConfigurationDialog(Configuration& configuration, QWidget* 
     QButtonGroup *edgeAlgorithm = new QButtonGroup(this);
     edgeAlgorithm->addButton(d->ui->edge_canny);
     edgeAlgorithm->addButton(d->ui->edge_sobel);
-    edgeAlgorithm->addButton(d->ui->edge_sobel_deprecated);
     
     d->ui->edge_canny->setChecked(configuration.edgeAlgorithm() == Configuration::Canny);
     d->ui->edge_sobel->setChecked(configuration.edgeAlgorithm() == Configuration::Sobel);
-    d->ui->edge_sobel_deprecated->setChecked(configuration.edgeAlgorithm() == Configuration::SobelDeprecated);
     
     QMap<QAbstractButton*, Configuration::EdgeAlgorithm> edgeAlgorithmWidgets {
         {d->ui->edge_canny, Configuration::Canny},
         {d->ui->edge_sobel, Configuration::Sobel},
-        {d->ui->edge_sobel_deprecated, Configuration::SobelDeprecated}
     };
     connect(edgeAlgorithm, F_PTR(QButtonGroup, buttonToggled, QAbstractButton*, bool), [=]{
       d->configuration.setEdgeAlgorithm(edgeAlgorithmWidgets[edgeAlgorithm->checkedButton()]);
