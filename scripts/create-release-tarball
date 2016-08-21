@@ -1,0 +1,16 @@
+#!/bin/bash
+version="$1"
+outdir="${2:-$PWD}"
+tmpdir="/tmp/planetary-imager-release-creator-$RANDOM"
+mkdir -p "$tmpdir"
+cd "$tmpdir"
+git clone "https://github.com/GuLinux/PlanetaryImager.git" PlanetaryImager-$version
+cd PlanetaryImager-$version
+git checkout v$version
+git submodule init && git submodule update --recursive
+rm -rf .git 
+cd ..
+tar czf "$outdir/PlanetaryImager-$version.tar.gz" PlanetaryImager-$version
+cd $outdir
+rm -rf "$tmpdir"
+

@@ -1,3 +1,6 @@
+## 0.5.1 2016-08-xx
+ - Removed deprecated edge detection algorithm, using only OpenCV provided canny and sobel
+
 ## 0.5.0 2016-08-21
  - Fix ASI controls issue
  - Fix UI settings value refresh
