@@ -28,12 +28,14 @@
 #include <QtConcurrent/QtConcurrent>
 #include "image_data.h"
 #include <fps_counter.h>
+#include <chrono>
 #include "Qt/strings.h"
 #include <boost/lockfree/spsc_queue.hpp>
 
 
 using namespace std;
 using namespace std::placeholders;
+using namespace std::chrono_literals;
 
 
 class ImagingWorker : public QObject {
@@ -188,6 +190,10 @@ void QHYCCDImager::Private::load_settings()
       setting.choices = {{"8", 8}, {"16", 16}};
       setting.min = 8;
       setting.max = 16;
+    }
+    if(setting.id == CONTROL_EXPOSURE) {
+      setting.is_duration = true;
+      setting.duration_unit = 1us;
     }
     load(setting);
 //     setting.value = GetQHYCCDParam(handle, control.second);
