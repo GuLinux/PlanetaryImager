@@ -70,6 +70,7 @@ public slots:
   virtual void stopLive() = 0;
 signals:
   void fps(double rate);
+  void temperature(double celsius);
   void changed(const Control &control);
   void disconnected();
 };

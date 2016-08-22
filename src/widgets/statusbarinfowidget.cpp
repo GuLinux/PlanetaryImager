@@ -20,6 +20,7 @@
 #include "ui_statusbarinfowidget.h"
 #include <QDebug>
 #include <QTimer>
+#include "Qt/strings.h"
 
 using namespace std;
 
@@ -40,7 +41,7 @@ StatusBarInfoWidget::StatusBarInfoWidget(QWidget* parent, Qt::WindowFlags f) : Q
     d->ui->setupUi(this);
     captureFPS(0);
     displayFPS(0);
-    temperature(0);
+    temperature(0, true);
     connect(&d->clear_message_timer, &QTimer::timeout, this, &StatusBarInfoWidget::clearMessage);
     d->clear_message_timer.setSingleShot(true);
 }
@@ -57,10 +58,10 @@ void StatusBarInfoWidget::displayFPS(double fps)
   d->ui->display_fps->setText(QString::number(fps, 'f', 2));
 }
 
-void StatusBarInfoWidget::temperature(double celsius)
+void StatusBarInfoWidget::temperature(double celsius, bool hide)
 {
-  d->ui->temperature_frame->setHidden(celsius <= 0);
-  d->ui->temperature->setText(QString::number(celsius, 'f', 2));
+  d->ui->temperature_frame->setHidden(hide);
+  d->ui->temperature->setText("%1°"_q % QString::number(celsius, 'f', 2));
 }
 
 void StatusBarInfoWidget::showMessage(const QString& message, long int timeout_ms)

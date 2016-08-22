@@ -301,6 +301,7 @@ void PlanetaryImagerMainWindow::Private::onImagerInitialized(const ImagerPtr& im
     statusbar_info_widget->deviceConnected(imager->name());
     connect(imager.get(), &Imager::disconnected, q, bind(&Private::cameraDisconnected, this), Qt::QueuedConnection);
     connect(imager.get(), &Imager::fps, statusbar_info_widget, &StatusBarInfoWidget::captureFPS, Qt::QueuedConnection);
+    connect(imager.get(), &Imager::temperature, statusbar_info_widget, bind(&StatusBarInfoWidget::temperature, statusbar_info_widget, _1, false), Qt::QueuedConnection);
     ui->camera_name->setText(imager->name());
     auto chip = imager->chip();
     
