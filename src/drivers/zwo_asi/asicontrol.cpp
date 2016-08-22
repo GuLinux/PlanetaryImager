@@ -58,8 +58,9 @@ ASIControl &ASIControl::reload()
 ASIControl &ASIControl::set(double new_value, bool write_is_auto)
 {
   long new_value_l = static_cast<long>(new_value);
-  if(caps.ControlType == ASI_TEMPERATURE)
-    new_value_l = static_cast<long>(new_value * 10.);
+  if(write_is_auto) {
+    new_value_l = reload().value;
+  }
   qDebug() << "Setting control " << caps.ControlType << " to value " << new_value_l << ", auto=" << write_is_auto;
   ASI_CHECK << ASISetControlValue(camera_id, caps.ControlType, new_value_l, bool2asi(write_is_auto) )
             << (stringbuilder() << "Set new control value: " << caps.Name << " to " << new_value << " (auto: " << write_is_auto << ")");
