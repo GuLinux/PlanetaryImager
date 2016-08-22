@@ -130,7 +130,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     };
     update_bins();
     connect(d->ui->histogram_bins, F_PTR(QSpinBox, valueChanged, int), update_bins);
-    d->ui->statusbar->addPermanentWidget(d->statusbar_info_widget = new StatusBarInfoWidget());
+    d->ui->statusbar->addPermanentWidget(d->statusbar_info_widget = new StatusBarInfoWidget(), 1);
 
     d->ui->image->setLayout(new QGridLayout);
     d->ui->image->layout()->setMargin(0);
@@ -269,7 +269,7 @@ void PlanetaryImagerMainWindow::Private::rescan_devices()
     for(auto device: cameras) {
       auto message = tr("Found %1 devices").arg(cameras.size());
       qDebug() << message;
-      ui->statusbar->showMessage(message, 10000);
+      statusbar_info_widget->showMessage(message, 10'000);
       auto action = ui->menu_device_load->addAction(device->name());
       QObject::connect(action, &QAction::triggered, bind(&Private::connectCamera, this, device));
     }

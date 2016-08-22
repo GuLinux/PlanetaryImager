@@ -23,6 +23,7 @@
 #include "utils.h"
 #include "fps_counter.h"
 #include <atomic>
+#include <boost/lockfree/spsc_queue.hpp>
 
 using namespace std;
 
@@ -37,6 +38,7 @@ public:
   fps_counter fps;
   atomic_bool running;  
   QThread thread;
+  boost::lockfree::spsc_queue<Job> jobs_queue;
 private slots:
   void thread_started();
 };
@@ -47,7 +49,8 @@ ImagerThread::Private::Private(const ImagerThread::Worker::ptr& worker, Imager* 
   imageHandler{imageHandler},
   LOG_C_SCOPE,
   fps{[=](double rate){ emit imager->fps(rate);}, fps_counter::Mode::Elapsed},
-  running{false}
+  running{false},
+  jobs_queue{20}
 {
   connect(&thread, &QThread::started, this, &Private::thread_started);
   moveToThread(&thread);
@@ -81,10 +84,21 @@ void ImagerThread::Private::thread_started()
   running = true;
   worker->start();
   while(running) {
+    Job queued_job;
+    while(jobs_queue.pop(queued_job)) {
+      if(queued_job)
+        queued_job();
+    }
     if(worker->shoot(imageHandler))
       ++fps;
   }
   worker->stop();
 }
+
+void ImagerThread::push_job(const Job& job)
+{
+  d->jobs_queue.push(job);
+}
+
 
 #include "imagerthread.moc"

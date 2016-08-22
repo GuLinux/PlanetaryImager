@@ -33,6 +33,9 @@ public slots:
   void deviceDisconnected();
   void captureFPS(double fps);
   void displayFPS(double fps);
+  void temperature(double celsius);
+  void showMessage(const QString &message, long timeout_ms = 5000); // <=0 means forever
+  void clearMessage();
 private:
   DPTR
 };

@@ -19,23 +19,15 @@
 #include "statusbarinfowidget.h"
 #include "ui_statusbarinfowidget.h"
 #include <QDebug>
+#include <QTimer>
 
 using namespace std;
 
-class StatusBarInfoWidget::Private {
-public:
-  Private(StatusBarInfoWidget *q);
-  unique_ptr<Ui::StatusBarInfoWidget> ui;
-  
-private:
+DPTR_IMPL(StatusBarInfoWidget) {
   StatusBarInfoWidget *q;
+  unique_ptr<Ui::StatusBarInfoWidget> ui;
+  QTimer clear_message_timer;
 };
-
-StatusBarInfoWidget::Private::Private(StatusBarInfoWidget* q) : ui{new Ui::StatusBarInfoWidget}, q{q}
-{
-
-}
-
 
 StatusBarInfoWidget::~StatusBarInfoWidget()
 {
@@ -44,9 +36,13 @@ StatusBarInfoWidget::~StatusBarInfoWidget()
 
 StatusBarInfoWidget::StatusBarInfoWidget(QWidget* parent, Qt::WindowFlags f) : QWidget(parent, f), dptr(this)
 {
+    d->ui = make_unique<Ui::StatusBarInfoWidget>();
     d->ui->setupUi(this);
     captureFPS(0);
     displayFPS(0);
+    temperature(0);
+    connect(&d->clear_message_timer, &QTimer::timeout, this, &StatusBarInfoWidget::clearMessage);
+    d->clear_message_timer.setSingleShot(true);
 }
 
 void StatusBarInfoWidget::captureFPS(double fps)
@@ -60,6 +56,27 @@ void StatusBarInfoWidget::displayFPS(double fps)
   d->ui->display_fps_frame->setHidden(fps <= 0);
   d->ui->display_fps->setText(QString::number(fps, 'f', 2));
 }
+
+void StatusBarInfoWidget::temperature(double celsius)
+{
+  d->ui->temperature_frame->setHidden(celsius <= 0);
+  d->ui->temperature->setText(QString::number(celsius, 'f', 2));
+}
+
+void StatusBarInfoWidget::showMessage(const QString& message, long int timeout_ms)
+{
+  d->clear_message_timer.stop();
+  d->ui->message->setText(message);
+  if(timeout_ms > 0)
+    d->clear_message_timer.start(timeout_ms);
+}
+
+
+void StatusBarInfoWidget::clearMessage()
+{
+  d->ui->message->clear();
+}
+
 
 
 void StatusBarInfoWidget::deviceConnected(const QString& name)

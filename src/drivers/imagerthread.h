@@ -18,6 +18,7 @@
 
 #ifndef IMAGERTHREAD_H
 #define IMAGERTHREAD_H
+#include <functional>
 #include <imagehandler.h>
 #include "dptr.h"
 class Imager;
@@ -25,6 +26,7 @@ class ImagerThread
 {
   public:
   typedef std::shared_ptr<ImagerThread> ptr;
+  typedef std::function<void()> Job;
   class Worker {
   public:
     virtual void start() = 0;
@@ -36,6 +38,7 @@ class ImagerThread
   ~ImagerThread();
   void stop();
   void start();
+  void push_job(const Job &job);
 private:
   DPTR
 
