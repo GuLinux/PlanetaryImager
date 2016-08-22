@@ -24,6 +24,16 @@
 using namespace std;
 using namespace GuLinux;
 
+namespace {
+  ASI_BOOL bool2asi(bool value) {
+    return value ? ASI_TRUE : ASI_FALSE;
+  }
+  
+  bool asi2bool(ASI_BOOL asi_bool) {
+    return asi_bool == ASI_TRUE;
+  }
+}
+
 ASIControl::ASIControl(int index, int camera_id) : index{index}, camera_id{camera_id}
 {
   ASI_CHECK << ASIGetControlCaps(camera_id, index, &caps) << "Get control caps";
@@ -37,22 +47,22 @@ Imager::Control ASIControl::control() const
 
 ASIControl &ASIControl::reload()
 {
-  ASI_BOOL is_auto;
-  ASI_CHECK << ASIGetControlValue(camera_id, caps.ControlType, &value, &is_auto)
+  ASI_BOOL read_is_auto;
+  ASI_CHECK << ASIGetControlValue(camera_id, caps.ControlType, &value, &read_is_auto)
             << (stringbuilder() << "Get control value: " << caps.Name);
-  qDebug() << "Got raw control value for ControlType " << caps.ControlType << ", index " << index << ": value=" << value << ", is_auto=" << is_auto;
-  this->is_auto = static_cast<bool>(is_auto);
+  qDebug() << "Got raw control value for ControlType " << caps.ControlType << ", index " << index << ": value=" << value << ", is_auto=" << read_is_auto;
+  this->is_auto = asi2bool(read_is_auto);
   return *this;
 }
 
-ASIControl &ASIControl::set(double new_value, bool is_auto)
+ASIControl &ASIControl::set(double new_value, bool write_is_auto)
 {
   long new_value_l = static_cast<long>(new_value);
   if(caps.ControlType == ASI_TEMPERATURE)
     new_value_l = static_cast<long>(new_value * 10.);
-  qDebug() << "Setting control " << caps.ControlType << " to value " << new_value_l << ", auto=" << is_auto;
-  ASI_CHECK << ASISetControlValue(camera_id, caps.ControlType, new_value_l, static_cast<ASI_BOOL>(is_auto))
-            << (stringbuilder() << "Set new control value: " << caps.Name << " to " << new_value << " (auto: " << is_auto << ")");
+  qDebug() << "Setting control " << caps.ControlType << " to value " << new_value_l << ", auto=" << write_is_auto;
+  ASI_CHECK << ASISetControlValue(camera_id, caps.ControlType, new_value_l, bool2asi(write_is_auto) )
+            << (stringbuilder() << "Set new control value: " << caps.Name << " to " << new_value << " (auto: " << write_is_auto << ")");
   reload();
   return *this;
 }
