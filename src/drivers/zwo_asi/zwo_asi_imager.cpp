@@ -54,23 +54,22 @@ DPTR_IMPL(ZWO_ASI_Imager) {
     Chip chip;
 
     ASIControl::vector controls;
-    QTimer refresh_controls_timer;
+    QTimer reload_temperature_timer;
     
     ImagerThread::ptr imager_thread;
     shared_ptr<ASIImagingWorker> worker;
     QRect maxROI(int bin) const;
     void start_thread(int bin, const QRect& roi, ASI_IMG_TYPE format);
-    void refresh_controls();
+    void read_temperature();
 };
 
-void ZWO_ASI_Imager::Private::refresh_controls() {
+void ZWO_ASI_Imager::Private::read_temperature() {
   qDebug() << "Refreshing ASI_TEMPERATURE if found..";
-  for(auto control: controls) {
-    if(control->caps.ControlType == ASI_TEMPERATURE) {
-      qDebug() << "Temperature ctl found";
-      emit q->changed(control->reload());
-    }
-  }
+  auto temperature = find_if(controls.begin(), controls.end(), [](const ASIControl::ptr &control){ return control->caps.ControlType == ASI_TEMPERATURE; });
+  if(temperature != controls.end())
+    imager_thread->push_job([=]{
+      emit q->temperature((*temperature)->reload().value);
+    });
 }
 
 
@@ -85,8 +84,8 @@ ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandlerPt
     d->chip.properties.push_back( {"Camera Speed", info.IsUSB3Camera ? "USB3" : "USB2"});
     d->chip.properties.push_back( {"Host Speed", info.IsUSB3Host ? "USB3" : "USB2"});
     ASI_CHECK << ASIOpenCamera(info.CameraID) << "Open Camera";
-    d->refresh_controls_timer.moveToThread(qApp->thread());
-    connect(&d->refresh_controls_timer, &QTimer::timeout, qApp, bind(&Private::refresh_controls, d.get() ));
+    d->reload_temperature_timer.moveToThread(qApp->thread());
+    connect(&d->reload_temperature_timer, &QTimer::timeout, qApp, bind(&Private::read_temperature, d.get() ));
 }
 
 ZWO_ASI_Imager::~ZWO_ASI_Imager()
@@ -126,7 +125,8 @@ Imager::Controls ZWO_ASI_Imager::controls() const
 
     for(int control_index = 0; control_index < controls_number; control_index++) {
       d->controls[control_index] = make_shared<ASIControl>(control_index, d->info.CameraID);
-      controls.push_back(*d->controls[control_index]);
+      if(d->controls[control_index]->caps.ControlType != ASI_TEMPERATURE)
+        controls.push_back(*d->controls[control_index]);
     }
 
     static map<ASI_IMG_TYPE, QString> format_names {
@@ -184,7 +184,7 @@ void ZWO_ASI_Imager::setControl(const Control& control)
 
 void ZWO_ASI_Imager::startLive()
 {
-    d->refresh_controls_timer.start(2000);
+    d->reload_temperature_timer.start(5000);
     LOG_F_SCOPE
     d->start_thread(1, d->maxROI(1), d->info.SupportedVideoFormat[0]);
     qDebug() << "Live started correctly";
