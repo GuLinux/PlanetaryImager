@@ -24,6 +24,8 @@
 #include "fps_counter.h"
 #include <atomic>
 #include <boost/lockfree/spsc_queue.hpp>
+#include "stlutils.h"
+#include "Qt/benchmark.h"
 
 using namespace std;
 

@@ -18,6 +18,7 @@
 
 #include "v4l2imager_p.h"
 #include "c++/stlutils.h"
+#include "Qt/benchmark.h"
 #include "utils.h"
 using namespace std;
 using namespace GuLinux;
@@ -327,10 +328,10 @@ V4L2Imager::Private::Worker::Worker(V4L2Imager::Private* d) : d{d}
 bool V4L2Imager::Private::Worker::shoot(const ImageHandlerPtr& imageHandler)
 {
   try {
-    benchmark_start(dequeue_buffer);
+    QBENCH(dequeue_buffer)->every(100)->ms();
     auto buffer = buffers.dequeue(d->device);
-    benchmark_end(dequeue_buffer);
-    benchmark_start(decode_image);
+    BENCH_END(dequeue_buffer);
+    QBENCH(decode_image)->every(100)->ms();
     cv::Mat image{static_cast<int>(format.fmt.pix.height), static_cast<int>(format.fmt.pix.width), CV_8UC3};
     if(format.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG) {
         cv::InputArray inputArray{buffer->memory,  buffer->bufferinfo.bytesused};
@@ -342,7 +343,7 @@ bool V4L2Imager::Private::Worker::shoot(const ImageHandlerPtr& imageHandler)
         qCritical() << "Unsupported image format: " << FOURCC2QS(format.fmt.pix.pixelformat);
         return false; // TODO: throw exception?
     }
-    benchmark_end(decode_image);
+    BENCH_END(decode_image);
     d->handler->handle(image);
     buffer->queue();
     return true;

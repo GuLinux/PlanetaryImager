@@ -31,6 +31,7 @@
 #include "opencv_utils.h"
 #include "c++/stlutils.h"
 #include <atomic>
+#include "Qt/benchmark.h"
 using namespace std;
 
 DPTR_IMPL(DisplayImage) {
@@ -97,10 +98,10 @@ void DisplayImage::create_qimages()
     cv::cvtColor(imageData, *cv_image, imageData.channels() == 1 ? CV_GRAY2RGB : CV_BGR2RGB);
     if(d->detectEdges) {
       if(d->configuration.edgeAlgorithm() == Configuration::Sobel) {
-	benchmark_scope(sobel)
+	QBENCH(sobel)->every(200)->ms();
 	d->sobel(*cv_image, d->configuration.sobelBlurSize(), d->configuration.sobelKernel(), d->configuration.sobelScale(), d->configuration.sobelDelta());
       } else if(d->configuration.edgeAlgorithm() == Configuration::Canny) {
-	benchmark_scope(canny)
+	QBENCH(canny)->every(200)->ms();
 	d->canny(*cv_image, d->configuration.cannyLowThreshold(), d->configuration.cannyThresholdRatio(), d->configuration.cannyKernelSize(), d->configuration.cannyBlurSize());
       }
     }
