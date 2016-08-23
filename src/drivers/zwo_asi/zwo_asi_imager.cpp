@@ -54,6 +54,7 @@ DPTR_IMPL(ZWO_ASI_Imager) {
     Chip chip;
 
     ASIControl::vector controls;
+    ASIControl::ptr temperature_control;
     QTimer reload_temperature_timer;
     
     ImagerThread::ptr imager_thread;
@@ -65,10 +66,9 @@ DPTR_IMPL(ZWO_ASI_Imager) {
 
 void ZWO_ASI_Imager::Private::read_temperature() {
   qDebug() << "Refreshing ASI_TEMPERATURE if found..";
-  auto temperature = find_if(controls.begin(), controls.end(), [](const ASIControl::ptr &control){ return control->caps.ControlType == ASI_TEMPERATURE; });
-  if(temperature != controls.end())
+  if(temperature_control)
     imager_thread->push_job([=]{
-      emit q->temperature((*temperature)->reload().value);
+      emit q->temperature(temperature_control->reload().value);
     });
 }
 
@@ -124,9 +124,12 @@ Imager::Controls ZWO_ASI_Imager::controls() const
     d->controls = ASIControl::vector(controls_number);
 
     for(int control_index = 0; control_index < controls_number; control_index++) {
-      d->controls[control_index] = make_shared<ASIControl>(control_index, d->info.CameraID);
-      if(d->controls[control_index]->caps.ControlType != ASI_TEMPERATURE)
-        controls.push_back(*d->controls[control_index]);
+      auto control = make_shared<ASIControl>(control_index, d->info.CameraID);
+      d->controls[control_index] = control;
+      if(control->caps.ControlType == ASI_TEMPERATURE)
+        d->temperature_control = control;
+      else
+        controls.push_back(control->control());
     }
 
     static map<ASI_IMG_TYPE, QString> format_names {
