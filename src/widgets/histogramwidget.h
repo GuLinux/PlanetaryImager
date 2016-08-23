@@ -1,41 +1,38 @@
 /*
- * Copyright (C) 2016  Marco Gulino <marco@gulinux.net>
- *
+ * Copyright (C) 2016  <copyright holder> <email>
+ * 
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
  * the Free Software Foundation, either version 3 of the License, or
  * (at your option) any later version.
- *
+ * 
  * This program is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU General Public License for more details.
- *
+ * 
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
- *
+ * 
  */
 
-#ifndef HISTOGRAM_H
-#define HISTOGRAM_H
+#ifndef HISTOGRAMWIDGET_H
+#define HISTOGRAMWIDGET_H
 
-#include <QtCore>
-#include "imagehandler.h"
-#include "dptr.h"
+#include <QWidget>
+#include "c++/dptr.h"
+#include <histogram.h>
+#include "configuration.h"
 
-class Histogram : public QObject, public ImageHandler
+class HistogramWidget : public QWidget
 {
-  Q_OBJECT
+    Q_OBJECT
 public:
-  typedef std::shared_ptr<Histogram> ptr;
-  ~Histogram();
-  Histogram(QObject* parent = 0);
-  virtual void handle(const cv::Mat& imageData);
-  void set_bins(std::size_t bins_size);
-signals:
-  void histogram(const std::vector<uint32_t> &);
+~HistogramWidget();
+HistogramWidget(const Histogram::ptr &histogram, Configuration &configuration, QWidget* parent = 0);
+
 private:
-  DPTR
+    DPTR
 };
 
-#endif // HISTOGRAM_H
+#endif // HISTOGRAMWIDGET_H

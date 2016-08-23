@@ -36,12 +36,12 @@ endif(NOT opencv_LINK_BUG)
 target_link_libraries(planetary_imager
     GuLinux_Qt_Commons
     drivers
+    planetaryimager-widgets
     ${Boost_LIBRARIES}
     ${planetary_imager_DEPS}
     ${cv_libs}
     ${QCustomPlot_LIBRARIES}
     Qt5::Widgets
-    planetaryimager-widgets
     drivers # needs to be added twice for cyclic dependency
     pthread
 )

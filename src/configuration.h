@@ -101,6 +101,9 @@ public:
     
     bool widgets_setup_first_run() const;
     void set_widgets_setup_first_run();
+    
+    int histogram_bins() const;
+    void set_histogram_bins(int bins);
 private:
   DPTR
 };
