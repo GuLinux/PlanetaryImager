@@ -84,8 +84,8 @@ ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandlerPt
     d->chip.properties.push_back( {"Camera Speed", info.IsUSB3Camera ? "USB3" : "USB2"});
     d->chip.properties.push_back( {"Host Speed", info.IsUSB3Host ? "USB3" : "USB2"});
     ASI_CHECK << ASIOpenCamera(info.CameraID) << "Open Camera";
-    d->reload_temperature_timer.moveToThread(qApp->thread());
-    connect(&d->reload_temperature_timer, &QTimer::timeout, qApp, bind(&Private::read_temperature, d.get() ));
+    connect(&d->reload_temperature_timer, &QTimer::timeout, this, bind(&Private::read_temperature, d.get() ));
+    d->reload_temperature_timer.start(5000);
 }
 
 ZWO_ASI_Imager::~ZWO_ASI_Imager()
@@ -190,7 +190,6 @@ void ZWO_ASI_Imager::setControl(const Control& control)
 
 void ZWO_ASI_Imager::startLive()
 {
-    d->reload_temperature_timer.start(5000);
     LOG_F_SCOPE
     d->start_thread(1, d->maxROI(1), d->info.SupportedVideoFormat[0]);
     qDebug() << "Live started correctly";
