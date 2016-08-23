@@ -86,13 +86,13 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   QCPBars *histogram_plot;
   void got_histogram(const vector< uint32_t >& histogram);
   QQueue<Imager::Control> settings_to_save_queue;
-  void onImagerInitialized(const ImagerPtr &imager);
+  void onImagerInitialized(Imager *imager);
 };
 
 class CreateImagerWorker : public QObject {
   Q_OBJECT
 public:
-  typedef std::function<void(const ImagerPtr &)> Slot;
+  typedef std::function<void(Imager *)> Slot;
   static void create(const Driver::CameraPtr& camera, const ImageHandlerPtr& imageHandler, QThread* thread, QObject *context, Slot on_created);
 private slots:
   void exec();
@@ -101,7 +101,7 @@ private:
   Driver::CameraPtr camera;
   ImageHandlerPtr imageHandler;
 signals:
-  void imager(const ImagerPtr &imager);
+  void imager(Imager *imager);
 };
 
 CreateImagerWorker::CreateImagerWorker(const Driver::CameraPtr& camera, const ImageHandlerPtr &imageHandler)
@@ -320,7 +320,7 @@ void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::CameraPtr& 
   CreateImagerWorker::create(camera, ImageHandlerPtr{new ImageHandlers{displayImage, saveImages, histogram}}, &imagerThread, q, bind(&Private::onImagerInitialized, this, _1) );
 }
 
-void PlanetaryImagerMainWindow::Private::onImagerInitialized(const ImagerPtr& imager)
+void PlanetaryImagerMainWindow::Private::onImagerInitialized(Imager * imager)
 {  
     if(!imager) {
       return;

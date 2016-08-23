@@ -40,7 +40,7 @@ using namespace std::chrono_literals;
 
 class SimulatorCamera : public Driver::Camera {
 public:
-  virtual ImagerPtr imager ( const ImageHandlerPtr& imageHandler) const;
+  virtual Imager * imager ( const ImageHandlerPtr& imageHandler) const;
   virtual QString name() const { return "Simulator Camera"; }
 };
 
@@ -84,7 +84,7 @@ private:
   shared_ptr<Worker> worker;
 };
 
-ImagerPtr SimulatorCamera::imager ( const ImageHandlerPtr& imageHandler ) const
+Imager * SimulatorCamera::imager ( const ImageHandlerPtr& imageHandler ) const
 {
   return new SimulatorImager(imageHandler);
 }

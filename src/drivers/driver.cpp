@@ -36,11 +36,6 @@ SupportedDrivers::Private::Private(SupportedDrivers* q) : q{q}
 
 SupportedDrivers::SupportedDrivers() : dptr(this)
 {
-  static bool metatypes_registered = false;
-  if(!metatypes_registered) {
-    metatypes_registered = true;
-    qRegisterMetaType<ImagerPtr>("ImagerPtr");
-  }
 }
 
 SupportedDrivers::~SupportedDrivers()

@@ -46,7 +46,6 @@ private:
   DPTR
 };
 
-typedef std::shared_ptr<QHYCCDImager> QHYCCDImagerPtr;
 
 
 

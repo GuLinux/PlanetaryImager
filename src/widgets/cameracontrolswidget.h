@@ -27,7 +27,7 @@ class CameraControlsWidget : public QWidget
 {
 public:
 ~CameraControlsWidget();
-CameraControlsWidget(const ImagerPtr &imager, QSettings &settings, QWidget* parent = 0);
+CameraControlsWidget(Imager *imager, QSettings &settings, QWidget* parent = 0);
 
 private:
     DPTR

@@ -50,7 +50,7 @@ WebcamDriver::~WebcamDriver()
 class WebcamDeviceInfo : public Driver::Camera {
 public:
   WebcamDeviceInfo(int index, const QString &name) : _index {index}, _name{name} {}
-  virtual ImagerPtr imager ( const ImageHandlerPtr& imageHandler ) const { return make_shared<WebcamImager>(_name , _index, imageHandler); }
+  virtual Imager * imager ( const ImageHandlerPtr& imageHandler ) const { return make_shared<WebcamImager>(_name , _index, imageHandler); }
   virtual QString name() const { return _name; }
 private:
   int _index;
