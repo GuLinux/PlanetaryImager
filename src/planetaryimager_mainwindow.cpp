@@ -35,7 +35,6 @@
 #include "widgets/cameracontrolswidget.h"
 #include "configurationdialog.h"
 #include "configuration.h"
-#include <QThread>
 #include <QMutex>
 #include <QMessageBox>
 #include "displayimage.h"
@@ -70,6 +69,7 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   StatusBarInfoWidget *statusbar_info_widget;
   shared_ptr<DisplayImage> displayImage;
   QThread displayImageThread;
+  QThread imagerThread;
   shared_ptr<SaveImages> saveImages;
   shared_ptr<Histogram> histogram;
   CameraControlsWidget* cameraSettingsWidget = nullptr;
@@ -86,10 +86,45 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   QCPBars *histogram_plot;
   void got_histogram(const vector< uint32_t >& histogram);
   QQueue<Imager::Control> settings_to_save_queue;
-  
-  QFutureWatcher<ImagerPtr> imager_future_watcher;
   void onImagerInitialized(const ImagerPtr &imager);
 };
+
+class CreateImagerWorker : public QObject {
+  Q_OBJECT
+public:
+  typedef std::function<void(const ImagerPtr &)> Slot;
+  static void create(const Driver::CameraPtr& camera, const ImageHandlerPtr& imageHandler, QThread* thread, QObject *context, Slot on_created);
+private slots:
+  void exec();
+private:
+  explicit CreateImagerWorker(const Driver::CameraPtr& camera, const ImageHandlerPtr& imageHandler);
+  Driver::CameraPtr camera;
+  ImageHandlerPtr imageHandler;
+signals:
+  void imager(const ImagerPtr &imager);
+};
+
+CreateImagerWorker::CreateImagerWorker(const Driver::CameraPtr& camera, const ImageHandlerPtr &imageHandler)
+  : QObject(nullptr), camera{camera}, imageHandler{imageHandler}
+{
+}
+
+void CreateImagerWorker::create(const Driver::CameraPtr& camera, const ImageHandlerPtr& imageHandler, QThread* thread, QObject *context, Slot on_created)
+{
+  auto create_imager = new CreateImagerWorker(camera, imageHandler);
+  create_imager->moveToThread(thread);
+  connect(create_imager, &CreateImagerWorker::imager, context, on_created, Qt::QueuedConnection);
+  QMetaObject::invokeMethod(create_imager, "exec", Qt::QueuedConnection);
+}
+
+void CreateImagerWorker::exec()
+{
+  auto imager = camera->imager(imageHandler);
+  if(imager)
+    emit this->imager(imager);
+  deleteLater();
+}
+
 
 PlanetaryImagerMainWindow::Private::Private(PlanetaryImagerMainWindow* q) 
   : ui{make_shared<Ui::PlanetaryImagerMainWindow>()},
@@ -204,11 +239,8 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     connect(d->saveImages.get(), &SaveImages::meanFPS, d->recording_panel, &RecordingPanel::meanFPS, Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::savedFrames, d->recording_panel, &RecordingPanel::saved, Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::droppedFrames, d->recording_panel, &RecordingPanel::dropped, Qt::QueuedConnection);
-    connect(d->ui->actionDisconnect, &QAction::triggered, [=]{ 
-      LOG_F_SCOPE 
-      d->imager->stopLive();
-      d->imager->deleteLater();
-      QTimer::singleShot(500, bind(&Private::cameraDisconnected, d.get()));
+    connect(d->ui->actionDisconnect, &QAction::triggered, this, [=]{
+      QMetaObject::invokeMethod(d->imager, "destroy", Qt::QueuedConnection);
     });
 
     d->enableUIWidgets(false);
@@ -216,7 +248,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     d->saveImages->moveToThread(&d->displayImageThread);
     connect(&d->displayImageThread, &QThread::started, bind(&DisplayImage::create_qimages, d->displayImage));
     d->displayImageThread.start();
-
+    d->imagerThread.start();
     connect(qApp, &QApplication::aboutToQuit, this, [=]{
       if(d->imager)
         d->imager->stopLive();
@@ -225,6 +257,8 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
       d->displayImage->quit();
       d->displayImageThread.quit();
       d->displayImageThread.wait();
+      d->imagerThread.quit();
+      d->imagerThread.wait();
     });
     connect(d->ui->actionEdges_Detection, &QAction::toggled, [=](bool detect){
       d->displayImage->detectEdges(detect);
@@ -237,9 +271,6 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     connect(d->image, &ZoomableImage::selectedROI, [&](const QRectF &rect) {  // TODO: safety check if we add more selection modes other than ROI
       d->imager->setROI(rect.toRect());
       d->image->clearROI();
-    });
-    connect(&d->imager_future_watcher, &QFutureWatcher<ImagerPtr>::finished, this, [&]{
-      d->onImagerInitialized(d->imager_future_watcher.result());
     });
 }
 
@@ -286,7 +317,7 @@ void PlanetaryImagerMainWindow::Private::rescan_devices()
 
 void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::CameraPtr& camera)
 {
-  imager_future_watcher.setFuture(QtConcurrent::run([=]{ return camera->imager(ImageHandlerPtr{new ImageHandlers{displayImage, saveImages, histogram}}); }));
+  CreateImagerWorker::create(camera, ImageHandlerPtr{new ImageHandlers{displayImage, saveImages, histogram}}, &imagerThread, q, bind(&Private::onImagerInitialized, this, _1) );
 }
 
 void PlanetaryImagerMainWindow::Private::onImagerInitialized(const ImagerPtr& imager)
@@ -303,7 +334,7 @@ void PlanetaryImagerMainWindow::Private::onImagerInitialized(const ImagerPtr& im
     connect(imager.get(), &Imager::temperature, statusbar_info_widget, bind(&StatusBarInfoWidget::temperature, statusbar_info_widget, _1, false), Qt::QueuedConnection);
 
     ui->settings_container->setWidget(cameraSettingsWidget = new CameraControlsWidget(imager, settings));
-    ui->chipInfoWidget->setWidget(cameraInfoWidget = new CameraInfoWidget(imager));
+    ui->chipInfoWidget->setWidget(cameraInfoWidget = new CameraInfoWidget(imager.get()));
     enableUIWidgets(true);
     ui->actionSelect_ROI->setEnabled(imager->supportsROI());
     ui->actionClear_ROI->setEnabled(imager->supportsROI());

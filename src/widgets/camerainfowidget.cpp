@@ -24,12 +24,12 @@ using namespace std;
 using namespace std::placeholders;
 
 DPTR_IMPL(CameraInfoWidget) {
-  ImagerPtr imager;
+  Imager *imager;
   CameraInfoWidget *q;
   unique_ptr<Ui::CameraInfoWidget> ui;
 };
 
-CameraInfoWidget::CameraInfoWidget(const ImagerPtr &imager, QWidget* parent): QWidget(parent), dptr(imager, this)
+CameraInfoWidget::CameraInfoWidget(Imager *imager, QWidget* parent): QWidget(parent), dptr(imager, this)
 {
   d->ui = make_unique<Ui::CameraInfoWidget>();
   d->ui->setupUi(this);

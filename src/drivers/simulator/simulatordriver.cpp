@@ -91,10 +91,6 @@ ImagerPtr SimulatorCamera::imager ( const ImageHandlerPtr& imageHandler ) const
 
 SimulatorImager::~SimulatorImager()
 {
-  LOG_F_SCOPE
-  dumpObjectInfo();
-  stopLive();
-  emit disconnected();
 }
 
 
@@ -120,8 +116,7 @@ SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{
   _settings["exposure"].duration_unit = 1ms;
   _settings["seeing"].supports_auto = true;
   
-  refresh_temperature.moveToThread(qApp->thread());
-  connect(&refresh_temperature, &QTimer::timeout, qApp, [this]{
+  connect(&refresh_temperature, &QTimer::timeout, this, [this]{
     if(!imager_thread)
       return; // TODO: ugly fix
     imager_thread->push_job([&]{
@@ -129,6 +124,7 @@ SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{
       emit temperature(celsius);
     });
   });
+  refresh_temperature.start(2000);
 }
 
 
@@ -253,7 +249,6 @@ void SimulatorImager::startLive()
 {
   LOG_F_SCOPE
   qDebug() << "Creating simulator imager: current owning thread: " << thread() << ", qApp thread: " << qApp->thread() << ", timer thread: " << refresh_temperature.thread() << ", current thread: " << QThread::currentThread();
-  refresh_temperature.start(2000);
   worker = make_shared<Worker>(this);
   imager_thread = make_shared<ImagerThread>(worker, this, imageHandler);
   imager_thread->start();

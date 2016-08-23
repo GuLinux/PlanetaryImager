@@ -27,7 +27,7 @@ class CameraInfoWidget : public QWidget
 {
   Q_OBJECT
 public:
-  CameraInfoWidget(const ImagerPtr &imager, QWidget *parent = 0);
+  CameraInfoWidget(Imager* imager, QWidget* parent = 0);
   virtual ~CameraInfoWidget();
 private:
   DPTR

@@ -29,6 +29,7 @@ class Imager : public QObject {
   Q_OBJECT
 public:
   Imager() : QObject(nullptr) {}
+  virtual ~Imager() {}
   struct Control {
     int64_t id;
     QString name;
@@ -68,6 +69,7 @@ public slots:
   virtual void setControl(const Control &control) = 0;
   virtual void startLive() = 0;
   virtual void stopLive() = 0;
+  virtual void destroy();
 signals:
   void fps(double rate);
   void temperature(double celsius);

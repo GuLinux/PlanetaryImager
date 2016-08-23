@@ -47,3 +47,9 @@ bool Imager::Control::valid() const
     return ! name.isEmpty();
 }
 
+void Imager::destroy()
+{
+  stopLive();
+  emit disconnected();
+  this->deleteLater();
+}
