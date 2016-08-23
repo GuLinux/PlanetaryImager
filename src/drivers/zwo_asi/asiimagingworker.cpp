@@ -92,6 +92,7 @@ int ASIImagingWorker::Private::getCVImageType()
 {
     switch(format) {
     case ASI_IMG_RAW8:
+    case ASI_IMG_Y8:
         return CV_8UC1;
     case ASI_IMG_RAW16:
         return CV_16UC1;

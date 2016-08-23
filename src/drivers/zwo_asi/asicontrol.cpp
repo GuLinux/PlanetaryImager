@@ -94,6 +94,15 @@ ASIControl::operator Imager::Control() const
     control.decimals = 1;
     control.value = static_cast<double>(value) / 10.;
   }
+  if(caps.ControlType == ASI_FLIP) {
+    control.type = Imager::Control::Combo;
+    control.choices = {
+      {"no", static_cast<double>(ASI_FLIP_NONE)},
+      {"horizontal", static_cast<double>(ASI_FLIP_HORIZ)},
+      {"vertical", static_cast<double>(ASI_FLIP_VERT)},
+      {"horizontal and vertical", static_cast<double>(ASI_FLIP_BOTH)},
+    };
+  }
   control.readonly = !caps.IsWritable;
   control.value_auto = caps.IsAutoSupported && is_auto;
   control.supports_auto = caps.IsAutoSupported;
