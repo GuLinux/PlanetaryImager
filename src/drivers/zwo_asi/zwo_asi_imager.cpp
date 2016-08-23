@@ -90,6 +90,7 @@ ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandlerPt
 
 ZWO_ASI_Imager::~ZWO_ASI_Imager()
 {
+    d->reload_temperature_timer.stop();
     stopLive();
     ASI_CHECK << ASICloseCamera(d->info.CameraID) << "Close Camera";
 }

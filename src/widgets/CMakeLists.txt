@@ -6,6 +6,8 @@ add_library(planetaryimager-widgets STATIC
     recordingpanel.ui
     cameracontrolswidget.cpp
     cameracontrolswidget.ui
+    camerainfowidget.ui
+    camerainfowidget.cpp
     controls/controlwidget.cpp
     controls/boolcontrolwidget.cpp
     controls/numbercontrolwidget.cpp

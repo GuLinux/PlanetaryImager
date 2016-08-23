@@ -122,6 +122,8 @@ SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{
   
   refresh_temperature.moveToThread(qApp->thread());
   connect(&refresh_temperature, &QTimer::timeout, qApp, [this]{
+    if(!imager_thread)
+      return; // TODO: ugly fix
     imager_thread->push_job([&]{
       double celsius = SimulatorImager::rand(_settings["temperature"].min, _settings["temperature"].max);
       emit temperature(celsius);

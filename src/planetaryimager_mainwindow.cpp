@@ -41,6 +41,7 @@
 #include "displayimage.h"
 #include "widgets/recordingpanel.h"
 #include "widgets/histogram.h"
+#include "widgets/camerainfowidget.h"
 #include "Qt/zoomableimage.h"
 #include <QGridLayout>
 #include <QToolBar>
@@ -72,6 +73,7 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   shared_ptr<SaveImages> saveImages;
   shared_ptr<Histogram> histogram;
   CameraControlsWidget* cameraSettingsWidget = nullptr;
+  CameraInfoWidget* cameraInfoWidget = nullptr;
   ConfigurationDialog *configurationDialog;
     
   RecordingPanel* recording_panel;
@@ -288,17 +290,8 @@ void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::CameraPtr& 
 }
 
 void PlanetaryImagerMainWindow::Private::onImagerInitialized(const ImagerPtr& imager)
-{
-    auto chip_text = [=](QLabel *text_label, const QString &text, const QList<int> &values){
-        bool valid = all_of(begin(values), end(values), bind(greater<int>(), _1, 0));
-        text_label->setText(valid ? text : "-");
-    };
-  
+{  
     if(!imager) {
-      for(auto widget: QList<QLabel*>{ui->camera_chip_size, ui->camera_pixels_size, ui->camera_bpp, ui->camera_resolution})
-          chip_text(widget, "", {-1});
-      qDeleteAll(ui->chipInfo->findChildren<QWidget*>("", Qt::FindDirectChildrenOnly));
-
       return;
     }
     cameraDisconnected();
@@ -308,20 +301,9 @@ void PlanetaryImagerMainWindow::Private::onImagerInitialized(const ImagerPtr& im
     connect(imager.get(), &Imager::disconnected, q, bind(&Private::cameraDisconnected, this), Qt::QueuedConnection);
     connect(imager.get(), &Imager::fps, statusbar_info_widget, &StatusBarInfoWidget::captureFPS, Qt::QueuedConnection);
     connect(imager.get(), &Imager::temperature, statusbar_info_widget, bind(&StatusBarInfoWidget::temperature, statusbar_info_widget, _1, false), Qt::QueuedConnection);
-    ui->camera_name->setText(imager->name());
-    auto chip = imager->chip();
-    
-    chip_text(ui->camera_chip_size, QString("%1x%2").arg(chip.width, 2).arg(chip.height, 2), {chip.width, chip.height});
-    chip_text(ui->camera_pixels_size, QString("%1x%2").arg(chip.pixelwidth, 2).arg(chip.pixelheight, 2), {chip.pixelwidth, chip.pixelheight});
-    
-    chip_text(ui->camera_bpp, "%1"_q % chip.bpp, {chip.bpp});
-    chip_text(ui->camera_resolution, "%1x%2"_q % chip.xres % chip.yres, {chip.xres, chip.yres});
-    ui->chipInfo->setLayout(new QVBoxLayout);
-    for(auto property: chip.properties) {
-      qDebug() << "Property name: " << property.name << " = " << property.value;
-      ui->chipInfo->layout()->addWidget(new QLabel("%1: %2"_q % property.name % property.value, ui->chipInfo));
-    }
+
     ui->settings_container->setWidget(cameraSettingsWidget = new CameraControlsWidget(imager, settings));
+    ui->chipInfoWidget->setWidget(cameraInfoWidget = new CameraInfoWidget(imager));
     enableUIWidgets(true);
     ui->actionSelect_ROI->setEnabled(imager->supportsROI());
     ui->actionClear_ROI->setEnabled(imager->supportsROI());
@@ -363,17 +345,14 @@ void PlanetaryImagerMainWindow::Private::cameraDisconnected()
   enableUIWidgets(false);
     ui->actionSelect_ROI->setEnabled(false);
   ui->actionClear_ROI->setEnabled(false);
-  ui->camera_name->clear();
-  ui->camera_chip_size->clear();
-  ui->camera_bpp->clear();
-  ui->camera_pixels_size->clear();
-  ui->camera_resolution->clear();
-  qDeleteAll(ui->chipInfo->findChildren<QWidget*>("", Qt::FindDirectChildrenOnly));
-
+  
   delete cameraSettingsWidget;
-  cameraSettingsWidget = 0;
+  cameraSettingsWidget = nullptr;
+  delete cameraInfoWidget;
+  cameraInfoWidget = nullptr;
   image->setImage({});
   statusbar_info_widget->captureFPS(0);
+  statusbar_info_widget->temperature(0, true);
 }
 
 void PlanetaryImagerMainWindow::Private::enableUIWidgets(bool cameraConnected)
