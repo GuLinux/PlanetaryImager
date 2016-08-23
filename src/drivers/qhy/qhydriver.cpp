@@ -45,7 +45,7 @@ private:
 class QHYCamera : public Driver::Camera {
 public:
   QHYCamera(int index) : index{index} {}
-  virtual ImagerPtr imager(const ImageHandlerPtr& imageHandler) const { return make_shared<QHYCCDImager>(name(), id, imageHandler); }
+  virtual ImagerPtr imager(const ImageHandlerPtr& imageHandler) const { return new QHYCCDImager(name(), id, imageHandler); }
   virtual QString name() const {   return QString(id).remove(QRegularExpression{"-[\\da-f]+$"}); }
   char id[255];
   int index;

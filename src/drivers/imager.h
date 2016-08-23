@@ -77,7 +77,7 @@ signals:
   void disconnected();
 };
 
-typedef std::shared_ptr<Imager> ImagerPtr;
+typedef Imager* ImagerPtr;
 QDebug operator<<(QDebug dbg, const Imager::Chip &chip);
 QDebug operator<<(QDebug dbg, const Imager::Control &setting);
 QDebug operator<<(QDebug dbg, const Imager::Control::Choice &choice);

@@ -86,7 +86,7 @@ private:
 
 ImagerPtr SimulatorCamera::imager ( const ImageHandlerPtr& imageHandler ) const
 {
-  return make_shared<SimulatorImager>(imageHandler);
+  return new SimulatorImager(imageHandler);
 }
 
 SimulatorImager::~SimulatorImager()

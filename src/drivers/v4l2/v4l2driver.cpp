@@ -50,7 +50,7 @@ V4L2Driver::~V4L2Driver()
 class V4L2DeviceInfo : public Driver::Camera {
 public:
   V4L2DeviceInfo(int index, const QString &name) : _index {index}, _name{name} {}
-  virtual ImagerPtr imager ( const ImageHandlerPtr& imageHandler ) const { return make_shared<V4L2Imager>(_name , _index, imageHandler); }
+  virtual ImagerPtr imager ( const ImageHandlerPtr& imageHandler ) const { return new V4L2Imager(_name , _index, imageHandler); }
   virtual QString name() const { return _name; }
 private:
   int _index;

@@ -161,7 +161,7 @@ CameraControlsWidget::CameraControlsWidget(const ImagerPtr& imager, QSettings& s
       imager_control.value = settings.value(imager_control.name).toDouble();
       imager->setControl(imager_control);
     }
-    auto control = new CameraControl(imager_control, imager.get(), settings, this);
+    auto control = new CameraControl(imager_control, imager, settings, this);
     connect(d->ui->apply, &QPushButton::clicked, control, &CameraControl::apply);
     connect(d->ui->restore, &QPushButton::clicked, control, &CameraControl::restore);
     grid->addWidget(new QLabel(control->label()), row, 0);

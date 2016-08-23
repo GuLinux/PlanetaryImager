@@ -326,22 +326,22 @@ void PlanetaryImagerMainWindow::Private::onImagerInitialized(const ImagerPtr& im
       return;
     }
     cameraDisconnected();
-    this->imager = imager.get();
+    this->imager = imager;
     imager->startLive();
     statusbar_info_widget->deviceConnected(imager->name());
-    connect(imager.get(), &Imager::disconnected, q, bind(&Private::cameraDisconnected, this), Qt::QueuedConnection);
-    connect(imager.get(), &Imager::fps, statusbar_info_widget, &StatusBarInfoWidget::captureFPS, Qt::QueuedConnection);
-    connect(imager.get(), &Imager::temperature, statusbar_info_widget, bind(&StatusBarInfoWidget::temperature, statusbar_info_widget, _1, false), Qt::QueuedConnection);
+    connect(imager, &Imager::disconnected, q, bind(&Private::cameraDisconnected, this), Qt::QueuedConnection);
+    connect(imager, &Imager::fps, statusbar_info_widget, &StatusBarInfoWidget::captureFPS, Qt::QueuedConnection);
+    connect(imager, &Imager::temperature, statusbar_info_widget, bind(&StatusBarInfoWidget::temperature, statusbar_info_widget, _1, false), Qt::QueuedConnection);
 
     ui->settings_container->setWidget(cameraSettingsWidget = new CameraControlsWidget(imager, settings));
-    ui->chipInfoWidget->setWidget(cameraInfoWidget = new CameraInfoWidget(imager.get()));
+    ui->chipInfoWidget->setWidget(cameraInfoWidget = new CameraInfoWidget(imager));
     enableUIWidgets(true);
     ui->actionSelect_ROI->setEnabled(imager->supportsROI());
     ui->actionClear_ROI->setEnabled(imager->supportsROI());
-    connect(imager.get(), &Imager::changed, q, [this](const Imager::Control &changed_setting){
+    connect(imager, &Imager::changed, q, [this](const Imager::Control &changed_setting){
       settings_to_save_queue.enqueue(changed_setting);
     }, Qt::QueuedConnection);
-    connect(imager.get(), &Imager::fps, q, [this, imager]{
+    connect(imager, &Imager::fps, q, [this, imager]{
       while(!settings_to_save_queue.isEmpty()) {
         auto setting = settings_to_save_queue.dequeue();
         qDebug() << "Settings changed, camera still alive: " << setting;

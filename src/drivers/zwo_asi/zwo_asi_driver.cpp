@@ -44,7 +44,7 @@ namespace {
 
 ImagerPtr ZWO_ASI_Camera::imager(const ImageHandlerPtr& imageHandler) const
 {
-  return make_shared<ZWO_ASI_Imager>(info, imageHandler);
+  return new ZWO_ASI_Imager(info, imageHandler);
 }
 
 
