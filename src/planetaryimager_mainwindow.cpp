@@ -183,6 +183,12 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     setupDockWidget(d->ui->actionCamera_Settings, d->ui->camera_settings);
     setupDockWidget(d->ui->actionRecording, d->ui->recording);
     setupDockWidget(d->ui->actionHistogram, d->ui->histogram);
+    if(! d->configuration.widgets_setup_first_run() ) {
+      tabifyDockWidget(d->ui->chipInfoWidget, d->ui->camera_settings);
+      tabifyDockWidget(d->ui->chipInfoWidget, d->ui->histogram);
+      tabifyDockWidget(d->ui->chipInfoWidget, d->ui->recording);
+      d->configuration.set_widgets_setup_first_run();
+    }
     connect(d->ui->actionHide_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::hide, _1) ); });
     connect(d->ui->actionShow_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::show, _1) ); });
     

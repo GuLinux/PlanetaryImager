@@ -98,6 +98,9 @@ public:
     
     bool save_info_file() const;
     void set_save_info_file(bool save);
+    
+    bool widgets_setup_first_run() const;
+    void set_widgets_setup_first_run();
 private:
   DPTR
 };

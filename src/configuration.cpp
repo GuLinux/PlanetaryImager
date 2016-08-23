@@ -318,3 +318,14 @@ QString Configuration::savefile() const
     % extension[saveFormat()]
     ;
 }
+
+void Configuration::set_widgets_setup_first_run()
+{
+  d->set<bool>("widgets_setup_first_run",true);
+}
+
+bool Configuration::widgets_setup_first_run() const
+{
+  return d->value<bool>("widgets_setup_first_run", false);
+}
+
