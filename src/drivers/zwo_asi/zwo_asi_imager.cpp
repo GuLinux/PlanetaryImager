@@ -165,23 +165,23 @@ Imager::Controls ZWO_ASI_Imager::controls() const
 
 void ZWO_ASI_Imager::setControl(const Control& control)
 {
-  d->imager_thread->push_job([=]{
-    qDebug() << __PRETTY_FUNCTION__;
-    if(control.id == ImgTypeControlID) {
-        d->start_thread(d->worker->bin(), d->worker->roi(), static_cast<ASI_IMG_TYPE>(control.value));
-        emit changed(control);
-        return;
-    }
-    if(control.id == BinControlID) {
-        auto bin = static_cast<int>(control.value);
-        d->start_thread(bin, d->maxROI(bin), d->worker->format());
-        emit changed(control);
-        return;
-    }
+  qDebug() << __PRETTY_FUNCTION__;
+  if(control.id == ImgTypeControlID) {
+      d->start_thread(d->worker->bin(), d->worker->roi(), static_cast<ASI_IMG_TYPE>(control.value));
+      emit changed(control);
+      return;
+  }
+  if(control.id == BinControlID) {
+      auto bin = static_cast<int>(control.value);
+      d->start_thread(bin, d->maxROI(bin), d->worker->format());
+      emit changed(control);
+      return;
+  }
 
-    auto camera_control = *find_if(d->controls.begin(), d->controls.end(),
-                           [&](const ASIControl::ptr &c){ return c->caps.ControlType == static_cast<ASI_CONTROL_TYPE>(control.id); });
-    qDebug() << "Changing control " << camera_control->control();
+  auto camera_control = *find_if(d->controls.begin(), d->controls.end(),
+			  [&](const ASIControl::ptr &c){ return c->caps.ControlType == static_cast<ASI_CONTROL_TYPE>(control.id); });
+  qDebug() << "Changing control " << camera_control->control();
+  d->imager_thread->push_job([=]{
     camera_control->set(control.value, control.value_auto);
     qDebug() << "Changed control " << camera_control->control();
     emit changed(*camera_control);
