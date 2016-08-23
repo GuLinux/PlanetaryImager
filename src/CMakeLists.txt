@@ -11,6 +11,7 @@ set(QHYImager_SRCS
   configurationdialog.ui
   configuration.cpp
   displayimage.cpp
+  histogram.cpp
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})

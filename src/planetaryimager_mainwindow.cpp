@@ -40,7 +40,7 @@
 #include <QMessageBox>
 #include "displayimage.h"
 #include "widgets/recordingpanel.h"
-#include "widgets/histogram.h"
+#include "histogram.h"
 #include "widgets/camerainfowidget.h"
 #include "Qt/zoomableimage.h"
 #include <QGridLayout>
