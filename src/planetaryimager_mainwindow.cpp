@@ -142,7 +142,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     d->configurationDialog = new ConfigurationDialog(d->configuration, this);
     d->displayImage = make_shared<DisplayImage>(d->configuration);
     d->saveImages = make_shared<SaveImages>(d->configuration);
-    d->histogram = make_shared<Histogram>();
+    d->histogram = make_shared<Histogram>(d->configuration);
     d->ui->histogram->setWidget(d->histogramWidget = new HistogramWidget(d->histogram, d->configuration));
     d->ui->statusbar->addPermanentWidget(d->statusbar_info_widget = new StatusBarInfoWidget(), 1);
 
@@ -188,10 +188,12 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     connect(d->recording_panel, &RecordingPanel::stop, bind(&SaveImages::endRecording, d->saveImages));
     
     connect(d->saveImages.get(), &SaveImages::recording, d->displayImage.get(), bind(&DisplayImage::setRecording, d->displayImage, true), Qt::QueuedConnection);
+    connect(d->saveImages.get(), &SaveImages::recording, d->histogram.get(), bind(&Histogram::setRecording, d->histogram, true), Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::recording, d->recording_panel, bind(&RecordingPanel::recording, d->recording_panel, true, _1), Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::finished, d->recording_panel, bind(&RecordingPanel::recording, d->recording_panel, false, QString{}), Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::finished, d->displayImage.get(), [=]{
         QTimer::singleShot(5000,  bind(&DisplayImage::setRecording, d->displayImage, false));
+        QTimer::singleShot(5000,  bind(&Histogram::setRecording, d->histogram, false));
     }, Qt::QueuedConnection);
     setupDockWidget(d->ui->actionChip_Info, d->ui->chipInfoWidget);
     setupDockWidget(d->ui->actionCamera_Settings, d->ui->camera_settings);

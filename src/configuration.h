@@ -113,6 +113,11 @@ public:
     
     bool histogram_enabled() const;
     void set_histogram_enabled(bool enabled);
+    
+    long histogram_timeout_not_recording() const;
+    void set_histogram_timeout_not_recording(long milliseconds);
+    long histogram_timeout_recording() const;
+    void set_histogram_timeout_recording(long milliseconds);
 private:
   DPTR
 };

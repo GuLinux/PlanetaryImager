@@ -359,3 +359,24 @@ void Configuration::set_histogram_enabled(bool enabled)
 {
   d->set<bool>("histogram-enabled", enabled);
 }
+
+long Configuration::histogram_timeout_not_recording() const
+{
+  return d->value<long long>("histogram-timeout-while-not-recording", 3'500);
+}
+
+void Configuration::set_histogram_timeout_not_recording(long milliseconds)
+{
+  d->set<long long>("histogram-timeout-while-not-recording", milliseconds);
+}
+
+long Configuration::histogram_timeout_recording() const
+{
+  return d->value<long long>("histogram-timeout-while-recording", 10'000);
+}
+
+void Configuration::set_histogram_timeout_recording(long milliseconds)
+{
+  d->set<long long>("histogram-timeout-while-recording", milliseconds);
+}
+

@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>329</width>
-    <height>293</height>
+    <width>346</width>
+    <height>358</height>
    </rect>
   </property>
   <layout class="QGridLayout" name="gridLayout_2">
@@ -340,7 +340,7 @@
    <item row="5" column="0" colspan="4">
     <widget class="QCheckBox" name="save_info_file">
      <property name="text">
-      <string>Save information file as ${filename}.info</string>
+      <string>Save information file as ${filename}.txt</string>
      </property>
     </widget>
    </item>
