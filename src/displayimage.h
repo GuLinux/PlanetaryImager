@@ -40,6 +40,7 @@ public slots:
   void create_qimages();
   void detectEdges(bool detect);
   void quit();
+  void read_settings();
 private:
   DPTR
 };
