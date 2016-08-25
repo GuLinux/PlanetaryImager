@@ -110,6 +110,9 @@ public:
     
     int histogram_bins() const;
     void set_histogram_bins(int bins);
+    
+    bool histogram_enabled() const;
+    void set_histogram_enabled(bool enabled);
 private:
   DPTR
 };

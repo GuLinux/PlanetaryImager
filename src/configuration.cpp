@@ -350,3 +350,12 @@ void Configuration::set_histogram_bins(int bins)
   d->set<int>("histogram-bins", bins);
 }
 
+bool Configuration::histogram_enabled() const
+{
+  return d->value<bool>("histogram-enabled", true);
+}
+
+void Configuration::set_histogram_enabled(bool enabled)
+{
+  d->set<bool>("histogram-enabled", enabled);
+}

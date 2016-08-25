@@ -32,6 +32,7 @@ public:
   Histogram(QObject* parent = 0);
   virtual void handle(const cv::Mat& imageData);
   void set_bins(std::size_t bins_size);
+  void setEnabled(bool enabled);
 signals:
   void histogram(const std::vector<uint32_t> &);
 private:

@@ -31,6 +31,7 @@ DPTR_IMPL(HistogramWidget) {
   std::unique_ptr<Ui::HistogramWidget> ui;
   QCPBars *histogram_plot;
   void got_histogram(const vector< uint32_t >& histogram);
+  void toggle_histogram(bool enabled);
 };
 HistogramWidget::~HistogramWidget()
 {
@@ -40,7 +41,7 @@ HistogramWidget::~HistogramWidget()
 
 HistogramWidget::HistogramWidget(const Histogram::ptr &histogram, Configuration &configuration, QWidget* parent) : dptr(histogram, configuration, this)
 {
-    d->ui = make_unique<Ui::HistogramWidget>();
+    d->ui.reset(new Ui::HistogramWidget);
     d->ui->setupUi(this);
     d->ui->histogram_bins->setValue(d->configuration.histogram_bins());
     
@@ -54,8 +55,22 @@ HistogramWidget::HistogramWidget(const Histogram::ptr &histogram, Configuration 
     d->ui->histogram_plot->addPlottable(d->histogram_plot);
     connect(d->ui->histogram_bins, F_PTR(QSpinBox, valueChanged, int), update_bins);
     connect(d->histogram.get(), &Histogram::histogram, this, bind(&Private::got_histogram, d.get(), _1), Qt::QueuedConnection);
+    connect(d->ui->enable_histogram, &QCheckBox::toggled, this, bind(&Private::toggle_histogram, d.get(), _1));
+    d->toggle_histogram(configuration.histogram_enabled());
 }
 
+void HistogramWidget::Private::toggle_histogram(bool enabled)
+{
+  ui->enable_histogram->setChecked(enabled);
+  ui->histogram_bins->setEnabled(enabled);
+  ui->histogram_plot->setEnabled(enabled);
+  histogram->setEnabled(enabled);
+  if(!enabled) {
+    histogram_plot->clearData();
+    ui->histogram_plot->replot();
+  }
+  configuration.set_histogram_enabled(enabled);
+}
 
 
 void HistogramWidget::Private::got_histogram(const vector<uint32_t>& histogram)

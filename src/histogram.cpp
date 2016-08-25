@@ -24,6 +24,7 @@
 #define cimg_plugin "plugins/cvMat.h"
 #include <CImg.h>
 #include <QtConcurrent/QtConcurrent>
+#include <atomic>
 
 using namespace cimg_library;
 
@@ -31,6 +32,7 @@ using namespace std;
 
 DPTR_IMPL(Histogram) {
   Histogram *q;
+  atomic_bool enabled;
   QElapsedTimer last;
   size_t bins_size;
 };
@@ -43,12 +45,13 @@ Histogram::~Histogram()
 Histogram::Histogram(QObject* parent) : QObject(parent), dptr(this)
 {
   d->last.start();
+  setEnabled(true);
 }
 
 void Histogram::handle(const cv::Mat& imageData)
 {
   // TODO: duration configurable, maybe with dual setting recording/not recording
-  if(d->last.elapsed() < 5000)
+  if(! d->enabled || d->last.elapsed() < 5000)
     return;
   QtConcurrent::run([=]{
     CImg<uint32_t> image(imageData);
@@ -59,6 +62,11 @@ void Histogram::handle(const cv::Mat& imageData)
     emit histogram(hist);
     d->last.restart();
   });
+}
+
+void Histogram::setEnabled(bool enabled)
+{
+  d->enabled = enabled;
 }
 
 

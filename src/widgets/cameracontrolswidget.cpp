@@ -152,7 +152,6 @@ CameraControlsWidget::CameraControlsWidget(Imager *imager, Configuration &config
   d->ui.reset(new Ui::CameraControlsWidget);
   d->ui->setupUi(this);
   auto grid = new QGridLayout(d->ui->controls_box);
-  configuration.qSettings()->beginGroup(imager->name());
   int row = 0;
   for(auto imager_control: imager->controls()) {
     qDebug() << "adding setting: " << imager_control;
