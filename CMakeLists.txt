@@ -42,7 +42,6 @@ add_subdirectory(support)
 
 install(FILES README.md Changelog.md DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/PlanetaryImager)
 
-
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "GuLinux.net Planetary Imager for Linux")
 SET(CPACK_PACKAGE_VENDOR "GuLinux <marco@gulinux.net>")
 SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_SOURCE_DIR}/README.md")
@@ -52,7 +51,7 @@ SET(CPACK_PACKAGE_VERSION_MINOR "${MINOR_VERSION}")
 SET(CPACK_PACKAGE_VERSION_PATCH "${PATCH_VERSION}")
 SET(CPACK_PACKAGE_CONTACT "marco@gulinux.net")
 #SET(CPACK_STRIP_FILES "bin/planetary_imager")
-SET(CPACK_GENERATOR DEB)
+SET(CPACK_GENERATOR DEB CACHE STRING "CPack generator type (default: DEB)")
 set(LIBOPENCV_UBUNTU_VERSION_STR "2.4v5" CACHE INTERNAL "libopencv dependency version for ubuntu")
 set(LIBQCUSTOMPLOT_UBUNTU_VERSION_STR "1.3" CACHE INTERNAL "libqcustomplot dependency version for ubuntu")
 SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libusb-1.0-0, libqt5gui5 (>= 5.4.0), libqt5network5 (>= 5.4.0), libqt5widgets5 (>= 5.4.0), \

@@ -9,5 +9,4 @@ include_directories(${ZWO_SDK_DIR}/include)
 add_imager_dependencies(zwo_asi_imager ${ZWO_SDK_DIR}/lib/${ZWO_TARGET_ARCH}/libASICamera2.a -lusb-1.0)
 define_driver(drivers/zwo_asi/zwo_asi_driver.h ZWO_ASI_Driver)
 
-set(ASI_UDEVRULES_INSTALL_DIR "/lib/udev/rules.d" CACHE STRING "Base directory for udev rules")
-install(FILES ${ZWO_SDK_DIR}/lib/asi.rules DESTINATION ${ASI_UDEVRULES_INSTALL_DIR})
+install(FILES ${ZWO_SDK_DIR}/lib/asi.rules DESTINATION ${UDEVRULES_INSTALL_DIR})

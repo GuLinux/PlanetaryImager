@@ -5,6 +5,7 @@ function(define_driver include class)
   set(available_drivers_CLASSES "${available_drivers_CLASSES}std::make_shared<${class}>()," CACHE INTERNAL "driver classes" FORCE)
 endfunction(define_driver)
 
+ set(UDEVRULES_INSTALL_DIR "/lib/udev/rules.d" CACHE STRING "Base directory for udev rules")
 option(enable_qhy "Enable QHY Driver (default: ON)" ON)
 if(enable_qhy)
   message("qhyccd input module enabled")
