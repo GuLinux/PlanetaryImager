@@ -106,12 +106,9 @@ SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{
     {"movement", {2, "movement", 0, 5, 1, 1}},
     {"seeing",   {3, "seeing", 0, 5, 1, 1}},
     {"bin",	 {4, "bin", 0, 3, 1, 1, 1, Control::Combo, { {"1x1", 1}, {"2x2", 2}, {"3x3", 3}, {"4x4", 4} } }}, 
-    {"temperature", {5, "temperature", 0, 300, 0.1, 30, 0} },
   }
 {
   qDebug() << "Creating simulator imager: current owning thread: " << thread() << ", qApp thread: " << qApp->thread();
-  _settings["temperature"].decimals = 1;
-  _settings["temperature"].readonly = true;
   _settings["exposure"].is_duration = true;
   _settings["exposure"].duration_unit = 1ms;
   _settings["seeing"].supports_auto = true;
@@ -120,7 +117,7 @@ SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{
     if(!imager_thread)
       return; // TODO: ugly fix
     imager_thread->push_job([&]{
-      double celsius = SimulatorImager::rand(_settings["temperature"].min, _settings["temperature"].max);
+      double celsius = SimulatorImager::rand(200, 500) / 10.;
       emit temperature(celsius);
     });
   });

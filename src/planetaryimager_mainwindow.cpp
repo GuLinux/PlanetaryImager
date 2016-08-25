@@ -41,6 +41,7 @@
 #include "widgets/recordingpanel.h"
 #include "histogram.h"
 #include "widgets/camerainfowidget.h"
+#include "widgets/histogramwidget.h"
 #include "Qt/zoomableimage.h"
 #include <QGridLayout>
 #include <QToolBar>
@@ -71,9 +72,10 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   QThread displayImageThread;
   QThread imagerThread;
   shared_ptr<SaveImages> saveImages;
-  shared_ptr<Histogram> histogram;
+  Histogram::ptr histogram;
   CameraControlsWidget* cameraSettingsWidget = nullptr;
   CameraInfoWidget* cameraInfoWidget = nullptr;
+  HistogramWidget *histogramWidget = nullptr;
   ConfigurationDialog *configurationDialog;
     
   RecordingPanel* recording_panel;
@@ -83,8 +85,7 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   void enableUIWidgets(bool cameraConnected);
     void init_devices_watcher();
   ZoomableImage *image;
-  QCPBars *histogram_plot;
-  void got_histogram(const vector< uint32_t >& histogram);
+  
   QQueue<Imager::Control> settings_to_save_queue;
   void onImagerInitialized(Imager *imager);
 };
@@ -138,9 +139,6 @@ PlanetaryImagerMainWindow::Private::Private(PlanetaryImagerMainWindow* q)
 PlanetaryImagerMainWindow::~PlanetaryImagerMainWindow()
 {
   LOG_F_SCOPE
-  d->ui->histogram_plot->clearItems();
-  d->ui->histogram_plot->clearGraphs();
-  d->ui.reset();
 }
 
 void PlanetaryImagerMainWindow::Private::saveState()
@@ -158,15 +156,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     d->displayImage = make_shared<DisplayImage>(d->configuration);
     d->saveImages = make_shared<SaveImages>(d->configuration);
     d->histogram = make_shared<Histogram>();
-    d->ui->histogram_bins->setValue(d->settings.value("histogram-bins", 50).toInt());
-    
-    auto update_bins = [&]{
-      auto value = d->ui->histogram_bins->value();
-      d->histogram->set_bins(value);
-      d->settings.setValue("histogram-bins", value);
-    };
-    update_bins();
-    connect(d->ui->histogram_bins, F_PTR(QSpinBox, valueChanged, int), update_bins);
+    d->ui->histogram->setWidget(d->histogramWidget = new HistogramWidget(d->histogram, d->configuration));
     d->ui->statusbar->addPermanentWidget(d->statusbar_info_widget = new StatusBarInfoWidget(), 1);
 
     d->ui->image->setLayout(new QGridLayout);
@@ -231,7 +221,6 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     
     d->rescan_devices();
     connect(d->displayImage.get(), &DisplayImage::gotImage, this, bind(&ZoomableImage::setImage, d->image, _1), Qt::QueuedConnection);
-    connect(d->histogram.get(), &Histogram::histogram, this, bind(&Private::got_histogram, d.get(), _1), Qt::QueuedConnection);
 
     
     connect(d->displayImage.get(), &DisplayImage::displayFPS, d->statusbar_info_widget, &StatusBarInfoWidget::displayFPS, Qt::QueuedConnection);
@@ -264,8 +253,6 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
       d->displayImage->detectEdges(detect);
     });
     d->init_devices_watcher();
-    d->histogram_plot = new QCPBars(d->ui->histogram_plot->xAxis, d->ui->histogram_plot->yAxis);
-    d->ui->histogram_plot->addPlottable(d->histogram_plot);
     connect(d->ui->actionClear_ROI, &QAction::triggered, [&] { d->imager->clearROI(); });
     connect(d->ui->actionSelect_ROI, &QAction::triggered, [&] { d->image->startSelectionMode(); });
     connect(d->image, &ZoomableImage::selectedROI, [&](const QRectF &rect) {  // TODO: safety check if we add more selection modes other than ROI
@@ -352,21 +339,6 @@ void PlanetaryImagerMainWindow::Private::onImagerInitialized(Imager * imager)
       }
     }, Qt::QueuedConnection);
 }
-
-
-void PlanetaryImagerMainWindow::Private::got_histogram(const vector<uint32_t>& histogram)
-{
-//   ui->histogram_plot->graph(0)->clearData();
-  QVector<double> x(histogram.size());
-  QVector<double> y(histogram.size());
-  std::iota(x.begin(), x.end(), 0);
-
-  transform(histogram.begin(), histogram.end(), y.begin(), [](uint32_t i) { return static_cast<double>(i); });
-  histogram_plot->clearData();
-  histogram_plot->setData(x, y);
-  histogram_plot->rescaleAxes();
-  ui->histogram_plot->replot();
-} 
 
 
 void PlanetaryImagerMainWindow::Private::cameraDisconnected()

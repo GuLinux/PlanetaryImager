@@ -78,6 +78,7 @@ size_t ASIImagingWorker::Private::calcBufferSize()
     auto base_size = roi.width() * roi.height();
     switch(format) {
     case ASI_IMG_RAW8:
+    case ASI_IMG_Y8:
         return base_size;
     case ASI_IMG_RAW16:
         return base_size * 2;

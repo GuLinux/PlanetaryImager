@@ -329,3 +329,13 @@ bool Configuration::widgets_setup_first_run() const
   return d->value<bool>("widgets_setup_first_run", false);
 }
 
+int Configuration::histogram_bins() const
+{
+  return d->value<int>("histogram-bins", 50);
+}
+
+void Configuration::set_histogram_bins(int bins)
+{
+  d->set<int>("histogram-bins", bins);
+}
+
