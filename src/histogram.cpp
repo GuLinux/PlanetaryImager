@@ -37,7 +37,7 @@ DPTR_IMPL(Histogram) {
   Histogram *q;
   QElapsedTimer last;
   size_t bins_size;
-  long timeout() const;
+  bool should_read_frame() const;
 };
 
 
@@ -52,8 +52,8 @@ Histogram::Histogram(Configuration &configuration, QObject* parent) : QObject(pa
 
 void Histogram::handle(const cv::Mat& imageData)
 {
-  // TODO: duration configurable, maybe with dual setting recording/not recording
-  if(! d->enabled || d->last.elapsed() < d->timeout() )
+  
+  if( ! d->should_read_frame() )
     return;
   d->last.restart();
   QtConcurrent::run([=]{
@@ -82,9 +82,13 @@ void Histogram::setRecording(bool recording)
   d->recording = recording;
 }
 
-long Histogram::Private::timeout() const
+
+bool Histogram::Private::should_read_frame() const // TODO read limits only once, when changed
 {
-  return recording ? configuration.histogram_timeout_recording() : configuration.histogram_timeout();
+  if( ! enabled || ( recording && configuration.histogram_disable_on_recording() ) )
+    return false;
+  return last.elapsed() >= (recording ? configuration.histogram_timeout_recording() : configuration.histogram_timeout() );
 }
+
 
 #include "histogram.moc"

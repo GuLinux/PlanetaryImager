@@ -36,9 +36,9 @@ using namespace std;
 
 DPTR_IMPL(DisplayImage) {
   Configuration &configuration;
-  unique_ptr<fps_counter> capture_fps;
   DisplayImage *q;
-  
+  unique_ptr<fps_counter> capture_fps;
+  atomic_bool recording;
   atomic_bool running;
   int milliseconds_limit = 0;
   QElapsedTimer elapsed;
@@ -46,6 +46,7 @@ DPTR_IMPL(DisplayImage) {
   boost::lockfree::spsc_queue<cv::Mat, boost::lockfree::capacity<5>> queue;
   bool detectEdges = false;
   QVector<QRgb> grayScale;
+  bool should_display_frame() const;
   void canny(cv::Mat& source, int lowThreshold = 1, int ratio = 3, int kernel_size = 3, int blurSize = 3);
   void sobel( cv::Mat& source, int blur_size = 3, int ker_size = 3, int scale = 1, int delta = 0 );
 };
@@ -59,8 +60,9 @@ DisplayImage::~DisplayImage()
 }
 
 DisplayImage::DisplayImage(Configuration& configuration, QObject* parent)
-  : QObject(parent), dptr(configuration, make_unique<fps_counter>([=](double fps){ emit displayFPS(fps);}), this)
+  : QObject(parent), dptr(configuration, this)
 {
+  d->capture_fps.reset(new fps_counter([=](double fps){ emit displayFPS(fps);}) );
   d->running = true;
   setRecording(false);
   for(int i=0; i<0xff; i++)
@@ -68,14 +70,23 @@ DisplayImage::DisplayImage(Configuration& configuration, QObject* parent)
 }
 void DisplayImage::setRecording(bool recording)
 {
-  int fps = recording ? d->configuration.max_display_fps_recording() : d->configuration.max_display_fps();
-  d->milliseconds_limit = (fps == 0 ? 1000./40. : 1000/fps);
+  d->recording = recording;
+  int fps_limit = recording ? d->configuration.max_display_fps_recording() : d->configuration.max_display_fps();
+  bool enable_limit = recording ? d->configuration.limit_fps_recording() : d->configuration.limit_fps();
+  d->milliseconds_limit = (enable_limit ? 1000./40. : 1000/ fps_limit);
   d->elapsed.restart();
+}
+
+bool DisplayImage::Private::should_display_frame() const // TODO: read these values only when settings are really changed, with a slot possibly
+{
+  if( (recording && !configuration.limit_fps_recording() ) || (!recording && !configuration.limit_fps()) )
+    return true;
+  return elapsed.elapsed() >= 1000/(recording ? configuration.max_display_fps_recording() : configuration.max_display_fps() );
 }
 
 void DisplayImage::handle( const cv::Mat& imageData )
 {
-  if( (d->milliseconds_limit > 0 && d->elapsed.elapsed() < d->milliseconds_limit) || !imageData.data || ! d->queue.push(imageData) ) {
+  if( ! d->should_display_frame()  || !imageData.data || ! d->queue.push(imageData) ) {
     return;
   }
   d->elapsed.restart();

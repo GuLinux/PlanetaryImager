@@ -28,13 +28,11 @@
 
 using namespace std;
 DPTR_IMPL(Configuration) {
-public:
   shared_ptr<QSettings> settings;
   Configuration *q;
   template<typename T> T value(const QString &key, const T &defaultValue = {}) const;
   template<typename T> void set(const QString &key, const T &value);
   mutable QHash<QString, QVariant> values_cache;
-private:
 };
 
 Configuration::Configuration() : dptr(make_shared<QSettings>("GuLinux", qApp->applicationName()), this)
@@ -83,6 +81,9 @@ define_setting(max_memory_usage, long long, 20*1024*1024)
 define_setting(buffered_output, bool, true)
 define_setting(max_display_fps, int, 30)
 define_setting(max_display_fps_recording, int, 5)
+define_setting(limit_fps, bool, true)
+define_setting(limit_fps_recording, bool, true)
+
 define_setting(recording_frames_limit, long long, 0)
 define_setting(save_file_prefix, QString, {})
 define_setting(save_file_suffix, QString, {})
@@ -121,6 +122,7 @@ define_setting(save_info_file, bool, true)
 define_setting(widgets_setup_first_run, bool, false)
 define_setting(histogram_bins, int, 50)
 define_setting(histogram_enabled, bool, true)
+define_setting(histogram_disable_on_recording, bool, true)
 define_setting(histogram_timeout, long long, 3'500)
 define_setting(histogram_timeout_recording, long long, 10'000)
 

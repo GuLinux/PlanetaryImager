@@ -6,6 +6,7 @@
  - Temperature polling in statusbar
  - Histogram: allow to toggle on/off to reduce CPU usage
  - Histogram: configurable interval, with different values while recording, to reduce CPU usage
+ - Lots of more configurable options
  
 ## 0.5.0 2016-08-21
  - Fix ASI controls issue

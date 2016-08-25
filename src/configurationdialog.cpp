@@ -28,19 +28,11 @@
 using namespace std::placeholders;
 using namespace std;
 
-class ConfigurationDialog::Private {
-public:
-  Private(Configuration &configuration, ConfigurationDialog *q);
+DPTR_IMPL(ConfigurationDialog) {
   Configuration &configuration;
-  shared_ptr<Ui::ConfigurationDialog> ui;
-private:
   ConfigurationDialog *q;
+  unique_ptr<Ui::ConfigurationDialog> ui;
 };
-
-ConfigurationDialog::Private::Private(Configuration& configuration, ConfigurationDialog* q) : configuration{configuration}, ui{make_shared<Ui::ConfigurationDialog>()}, q{q}
-{
-}
-
 
 ConfigurationDialog::~ConfigurationDialog()
 {
@@ -48,6 +40,7 @@ ConfigurationDialog::~ConfigurationDialog()
 
 ConfigurationDialog::ConfigurationDialog(Configuration& configuration, QWidget* parent) : QDialog(parent), dptr(configuration, this)
 {
+  d->ui.reset(new Ui::ConfigurationDialog);
     d->ui->setupUi(this);
     
     auto edge_settings = [=] {
@@ -104,14 +97,45 @@ ConfigurationDialog::ConfigurationDialog(Configuration& configuration, QWidget* 
     });
     
     d->ui->buffered_file->setChecked(configuration.buffered_output());
-    d->ui->drop_view_fps_on_save->setChecked(configuration.max_display_fps_recording() > 0);
+    
+    // FPS Limit - not recording
+    d->ui->enable_fps_limit->setChecked(configuration.limit_fps());
+    d->ui->fps_limit->setValue(configuration.max_display_fps());
+    d->ui->fps_limit->setEnabled(configuration.limit_fps());
+    connect(d->ui->enable_fps_limit, &QCheckBox::toggled, [this, &configuration] (bool checked){
+      configuration.set_limit_fps(checked);
+      d->ui->fps_limit->setEnabled(checked);
+    });
+    connect(d->ui->fps_limit, F_PTR(QSpinBox, valueChanged, int), [ &configuration] (int v){ configuration.set_max_display_fps(v); });
+    
+    // FPS Limit - recording
+    d->ui->enable_fps_limit_recording->setChecked(configuration.limit_fps_recording());
+    d->ui->fps_limit_recording->setValue(configuration.max_display_fps_recording());
+    d->ui->fps_limit_recording->setEnabled(configuration.limit_fps_recording());
+    connect(d->ui->enable_fps_limit_recording, &QCheckBox::toggled, [this, &configuration] (bool checked){
+      configuration.set_limit_fps_recording(checked);
+      d->ui->fps_limit_recording->setEnabled(checked);
+    });
+    connect(d->ui->fps_limit_recording, F_PTR(QSpinBox, valueChanged, int), [ &configuration] (int v){ configuration.set_max_display_fps_recording(v); });
+
+    d->ui->histogram_timeout->setValue(configuration.histogram_timeout() / 1000.);
+    connect(d->ui->histogram_timeout, F_PTR(QDoubleSpinBox, valueChanged, double), [&configuration](double v) { configuration.set_histogram_timeout(v*1000); });
+    d->ui->histogram_disable_on_recording->setChecked(configuration.histogram_disable_on_recording());
+    connect(d->ui->histogram_disable_on_recording, &QCheckBox::toggled, [this, &configuration](bool c) {
+      d->ui->histogram_timeout_recording->setEnabled(!c);
+      configuration.set_histogram_disable_on_recording(c);
+    });
+    d->ui->histogram_timeout_recording->setEnabled(! configuration.histogram_disable_on_recording());
+    d->ui->histogram_timeout_recording->setValue(configuration.histogram_timeout_recording() / 1000.);
+    connect(d->ui->histogram_timeout_recording, F_PTR(QDoubleSpinBox, valueChanged, double), [&configuration](double v) { configuration.set_histogram_timeout_recording(v*1000); });
+    
     d->ui->memory_limit->setRange(0, 500*1024*1024);
     connect(d->ui->memory_limit, &QSlider::valueChanged, [=,&configuration](int value) {
       d->ui->memory_limit_label->setText("%1 MB"_q % QString::number(static_cast<double>(value/(1024.*1024)), 'f', 2));
       configuration.set_max_memory_usage(value);
     });
     connect(d->ui->buffered_file, &QCheckBox::toggled, bind(&Configuration::set_buffered_output, &configuration, _1));
-    connect(d->ui->drop_view_fps_on_save, &QCheckBox::toggled, [&configuration](bool checked){ configuration.set_max_display_fps_recording(checked ? 10 : 0); });
+        
     d->ui->telescope->setText(configuration.telescope());
     d->ui->observer->setText(configuration.observer());
     connect(d->ui->observer, &QLineEdit::textChanged, bind(&Configuration::set_observer, &configuration, _1));

@@ -40,7 +40,9 @@ public:
     declare_setting(max_memory_usage, long long )
     declare_setting(buffered_output, bool )
     declare_setting(max_display_fps, int )
+    declare_setting(limit_fps, bool)
     declare_setting(max_display_fps_recording, int )
+    declare_setting(limit_fps_recording, bool)
     declare_setting(recording_frames_limit, long long )
     declare_setting(save_directory, QString)
     declare_setting(save_file_prefix, QString)
@@ -69,6 +71,7 @@ public:
     declare_setting(widgets_setup_first_run, bool)
     declare_setting(histogram_bins, int)
     declare_setting(histogram_enabled, bool)
+    declare_setting(histogram_disable_on_recording, bool)
     declare_setting(histogram_timeout, long long)
     declare_setting(histogram_timeout_recording, long long)
     
