@@ -47,6 +47,7 @@ Histogram::Histogram(QObject* parent) : QObject(parent), dptr(this)
 
 void Histogram::handle(const cv::Mat& imageData)
 {
+  // TODO: duration configurable, maybe with dual setting recording/not recording
   if(d->last.elapsed() < 5000)
     return;
   QtConcurrent::run([=]{
