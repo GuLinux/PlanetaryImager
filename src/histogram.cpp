@@ -23,6 +23,8 @@
 #define cimg_display 0
 #define cimg_plugin "plugins/cvMat.h"
 #include <CImg.h>
+#include <QtConcurrent/QtConcurrent>
+
 using namespace cimg_library;
 
 using namespace std;
@@ -45,16 +47,17 @@ Histogram::Histogram(QObject* parent) : QObject(parent), dptr(this)
 
 void Histogram::handle(const cv::Mat& imageData)
 {
-  if(d->last.elapsed() < 1000)
+  if(d->last.elapsed() < 5000)
     return;
-
-  CImg<uint32_t> image(imageData);
-  image.histogram(d->bins_size);
-  vector<uint32_t> hist(image.size());
-  move(image.begin(), image.end(), hist.begin());
-  
-  emit histogram(hist);
-  d->last.restart();
+  QtConcurrent::run([=]{
+    CImg<uint32_t> image(imageData);
+    image.histogram(d->bins_size);
+    vector<uint32_t> hist(image.size());
+    move(image.begin(), image.end(), hist.begin());
+    
+    emit histogram(hist);
+    d->last.restart();
+  });
 }
 
 
