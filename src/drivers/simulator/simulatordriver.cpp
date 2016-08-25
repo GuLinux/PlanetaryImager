@@ -32,6 +32,7 @@
 #include "utils.h"
 #include "Qt/functional.h"
 #include <atomic>
+#include <chrono>
 
 
 using namespace GuLinux;
@@ -204,7 +205,7 @@ bool SimulatorImager::Worker::shoot(const ImageHandlerPtr &imageHandler)
       cropped.copyTo(blurred);
   }
   double exposure_percent = (exposure.value - exposure.min) / (exposure.max - exposure.min) * 100;
-  int exposure_offset = log(exposure_percent)*150 - 100;
+  double exposure_offset = log(exposure_percent)*150 - 100;
   static auto started = chrono::steady_clock::now();
   auto now = chrono::steady_clock::now();
   if( (now-started) >= 1s) {
@@ -219,7 +220,7 @@ bool SimulatorImager::Worker::shoot(const ImageHandlerPtr &imageHandler)
       depth = 32;
   auto scale = bin.value;
   if(scale > 1)
-    cv::resize(result, result, {result.cols/scale, result.rows/scale});
+    cv::resize(result, result, {static_cast<int>(result.cols/scale), static_cast<int>(result.rows/scale)});
   imageHandler->handle(result);
   QThread::usleep(exposure.value * 1000);
   return true;
