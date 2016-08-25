@@ -68,7 +68,7 @@ void ZWO_ASI_Imager::Private::read_temperature() {
   qDebug() << "Refreshing ASI_TEMPERATURE if found..";
   if(temperature_control)
     imager_thread->push_job([=]{
-      emit q->temperature(temperature_control->reload().value);
+      emit q->temperature(temperature_control->reload().control().value);
     });
 }
 
