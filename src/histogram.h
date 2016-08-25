@@ -34,6 +34,8 @@ public:
   void set_bins(std::size_t bins_size);
   void setEnabled(bool enabled);
   void setRecording(bool recording);
+public slots:
+  void read_settings();
 signals:
   void histogram(const std::vector<uint32_t> &);
 private:

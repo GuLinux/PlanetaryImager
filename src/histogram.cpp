@@ -25,6 +25,7 @@
 #include <CImg.h>
 #include <QtConcurrent/QtConcurrent>
 #include "configuration.h"
+#include <atomic>
 
 using namespace cimg_library;
 
@@ -32,9 +33,12 @@ using namespace std;
 
 DPTR_IMPL(Histogram) {
   Configuration &configuration;
-  bool enabled;
-  bool recording;
   Histogram *q;
+  atomic_bool enabled;
+  atomic_bool recording;
+  atomic_bool histogram_disable_on_recording;
+  atomic_long histogram_timeout;
+  atomic_long histogram_timeout_recording;
   QElapsedTimer last;
   size_t bins_size;
   bool should_read_frame() const;
@@ -45,9 +49,12 @@ Histogram::~Histogram()
 {
 }
 
-Histogram::Histogram(Configuration &configuration, QObject* parent) : QObject(parent), dptr(configuration, true, false, this)
+Histogram::Histogram(Configuration &configuration, QObject* parent) : QObject(parent), dptr(configuration, this)
 {
   d->last.start();
+  d->enabled = true;
+  d->recording = false;
+  read_settings();
 }
 
 void Histogram::handle(const cv::Mat& imageData)
@@ -56,14 +63,13 @@ void Histogram::handle(const cv::Mat& imageData)
   if( ! d->should_read_frame() )
     return;
   d->last.restart();
-  QtConcurrent::run([=]{
+  
     qDebug() << "Analysing histogram";
     CImg<uint32_t> image(imageData);
     image.histogram(d->bins_size);
     vector<uint32_t> hist(image.size());
     move(image.begin(), image.end(), hist.begin());
     emit histogram(hist);
-  });
 }
 
 void Histogram::setEnabled(bool enabled)
@@ -82,12 +88,19 @@ void Histogram::setRecording(bool recording)
   d->recording = recording;
 }
 
+void Histogram::read_settings()
+{
+  d->histogram_disable_on_recording = d->configuration.histogram_disable_on_recording();
+  d->histogram_timeout = d->configuration.histogram_timeout();
+  d->histogram_timeout_recording = d->configuration.histogram_timeout_recording();
+}
+
 
 bool Histogram::Private::should_read_frame() const // TODO read limits only once, when changed
 {
-  if( ! enabled || ( recording && configuration.histogram_disable_on_recording() ) )
+  if( ! enabled || ( recording && histogram_disable_on_recording ) )
     return false;
-  return last.elapsed() >= (recording ? configuration.histogram_timeout_recording() : configuration.histogram_timeout() );
+  return last.elapsed() >= (recording ? histogram_timeout_recording : histogram_timeout );
 }
 
 

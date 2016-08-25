@@ -185,14 +185,15 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     };
 
     connect(d->configurationDialog, &QDialog::accepted, this, bind(&DisplayImage::read_settings, d->displayImage), Qt::DirectConnection);
+    connect(d->configurationDialog, &QDialog::accepted, this, bind(&Histogram::read_settings, d->histogram), Qt::DirectConnection);
     connect(d->recording_panel, &RecordingPanel::start, [=]{d->saveImages->startRecording(d->imager);});
     connect(d->recording_panel, &RecordingPanel::stop, bind(&SaveImages::endRecording, d->saveImages));
     
-    connect(d->saveImages.get(), &SaveImages::recording, d->displayImage.get(), bind(&DisplayImage::setRecording, d->displayImage, true), Qt::QueuedConnection);
-    connect(d->saveImages.get(), &SaveImages::recording, d->histogram.get(), bind(&Histogram::setRecording, d->histogram, true), Qt::QueuedConnection);
+    connect(d->saveImages.get(), &SaveImages::recording, this, bind(&DisplayImage::setRecording, d->displayImage, true), Qt::QueuedConnection);
+    connect(d->saveImages.get(), &SaveImages::recording, this, bind(&Histogram::setRecording, d->histogram, true), Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::recording, d->recording_panel, bind(&RecordingPanel::recording, d->recording_panel, true, _1), Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::finished, d->recording_panel, bind(&RecordingPanel::recording, d->recording_panel, false, QString{}), Qt::QueuedConnection);
-    connect(d->saveImages.get(), &SaveImages::finished, d->displayImage.get(), [=]{
+    connect(d->saveImages.get(), &SaveImages::finished, this, [=]{
         QTimer::singleShot(5000,  bind(&DisplayImage::setRecording, d->displayImage, false));
         QTimer::singleShot(5000,  bind(&Histogram::setRecording, d->histogram, false));
     }, Qt::QueuedConnection);
