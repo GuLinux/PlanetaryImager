@@ -34,7 +34,7 @@ using namespace std;
 class CameraControl : public QObject {
   Q_OBJECT
 public:
-  CameraControl(const Imager::Control &control, Imager *imager, Configuration &configuration, QWidget* parent = 0);
+  CameraControl(const Imager::Control &control, Imager *imager, QWidget* parent = 0);
   void apply();
   void restore();
   QString label() const;
@@ -55,7 +55,7 @@ private:
   QCheckBox *auto_value_widget;
 };
 
-CameraControl::CameraControl(const Imager::Control& control, Imager* imager, Configuration& configuration, QWidget* parent)
+CameraControl::CameraControl(const Imager::Control& control, Imager* imager, QWidget* parent)
   : QObject(parent), control{control}, imager{imager}, new_value{control.value, control.value_auto}, old_value{control.value, control.value_auto}
 {
     if(control.type == Imager::Control::Number) {
@@ -86,7 +86,7 @@ CameraControl::CameraControl(const Imager::Control& control, Imager* imager, Con
     control_widget->setEnabled(!control.readonly && ! control.value_auto); // TODO: add different behaviour depending on widget type
     // TODO: handle value
     // TODO: move from here
-    connect(imager, &Imager::changed, this, [=,&configuration](const Imager::Control &changed_control){
+    connect(imager, &Imager::changed, this, [=](const Imager::Control &changed_control){
       if(changed_control.id != control.id)
         return;
       qDebug() << "control changed:" << changed_control.id << changed_control.name << "=" << changed_control.value;
@@ -156,12 +156,7 @@ CameraControlsWidget::CameraControlsWidget(Imager *imager, Configuration &config
   int row = 0;
   for(auto imager_control: imager->controls()) {
     qDebug() << "adding setting: " << imager_control;
-    if(configuration.qSettings()->contains(imager_control.name)) {
-      qDebug() << "found setting value for " << imager_control.name << configuration.qSettings()->value(imager_control.name);
-      imager_control.value = configuration.qSettings()->value(imager_control.name).toDouble();
-      imager->setControl(imager_control);
-    }
-    auto control = new CameraControl(imager_control, imager, configuration, this);
+    auto control = new CameraControl(imager_control, imager, this);
     connect(d->ui->apply, &QPushButton::clicked, control, &CameraControl::apply);
     connect(d->ui->restore, &QPushButton::clicked, control, &CameraControl::restore);
     grid->addWidget(new QLabel(control->label()), row, 0);
@@ -171,7 +166,6 @@ CameraControlsWidget::CameraControlsWidget(Imager *imager, Configuration &config
   grid->addItem(new QSpacerItem(0, 0, QSizePolicy::MinimumExpanding, QSizePolicy::Expanding), row, 0, 3);
   grid->setRowStretch(row, 1);
   grid->setColumnStretch(1, 1);
-  configuration.qSettings()->endGroup();
 }
 
 #include "cameracontrolswidget.moc"

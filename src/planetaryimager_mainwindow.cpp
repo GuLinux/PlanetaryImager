@@ -82,7 +82,6 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
     void init_devices_watcher();
   ZoomableImage *image;
   
-  QQueue<Imager::Control> settings_to_save_queue;
   void onImagerInitialized(Imager *imager);
 };
 
@@ -284,7 +283,7 @@ void PlanetaryImagerMainWindow::Private::rescan_devices()
       auto message = tr("Found %1 devices").arg(cameras.size());
       qDebug() << message;
       statusbar_info_widget->showMessage(message, 10'000);
-      auto action = ui->menu_device_load->addAction(device->name());
+      QAction *action = ui->menu_device_load->addAction(device->name());
       QObject::connect(action, &QAction::triggered, bind(&Private::connectCamera, this, device));
     }
   });
@@ -313,19 +312,6 @@ void PlanetaryImagerMainWindow::Private::onImagerInitialized(Imager * imager)
     enableUIWidgets(true);
     ui->actionSelect_ROI->setEnabled(imager->supportsROI());
     ui->actionClear_ROI->setEnabled(imager->supportsROI());
-    connect(imager, &Imager::changed, q, [this](const Imager::Control &changed_setting){
-      settings_to_save_queue.enqueue(changed_setting);
-    }, Qt::QueuedConnection);
-    connect(imager, &Imager::fps, q, [this, imager]{
-      while(!settings_to_save_queue.isEmpty()) {
-        auto setting = settings_to_save_queue.dequeue();
-        qDebug() << "Settings changed, camera still alive: " << setting;
-        configuration.qSettings()->beginGroup(imager->name());
-        qDebug() << "setting " << setting.name << " to " << setting.value;
-        configuration.qSettings()->setValue(setting.name,  setting.value);
-        configuration.qSettings()->endGroup();
-      }
-    }, Qt::QueuedConnection);
 }
 
 
