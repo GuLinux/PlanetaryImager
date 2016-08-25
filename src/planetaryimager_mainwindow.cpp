@@ -129,7 +129,7 @@ PlanetaryImagerMainWindow::~PlanetaryImagerMainWindow()
 
 void PlanetaryImagerMainWindow::Private::saveState()
 {
-  configuration.saveDockStatus(q->saveState());
+  configuration.set_dock_status(q->saveState());
 }
 
 
@@ -163,7 +163,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     d->image->toolbar()->setFloatable(true);
     d->image->toolbar()->setMovable(true);
     
-    restoreState(d->configuration.dockStatus());
+    restoreState(d->configuration.dock_status());
     connect(d->ui->actionAbout, &QAction::triggered, bind(&QMessageBox::about, this, tr("About"),
 							  tr("%1 version %2.\nFast imaging capture software for planetary imaging").arg(qApp->applicationDisplayName())
 							 .arg(qApp->applicationVersion())));
@@ -203,7 +203,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
       tabifyDockWidget(d->ui->chipInfoWidget, d->ui->camera_settings);
       tabifyDockWidget(d->ui->chipInfoWidget, d->ui->histogram);
       tabifyDockWidget(d->ui->chipInfoWidget, d->ui->recording);
-      d->configuration.set_widgets_setup_first_run();
+      d->configuration.set_widgets_setup_first_run(true);
     }
     connect(d->ui->actionHide_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::hide, _1) ); });
     connect(d->ui->actionShow_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::show, _1) ); });

@@ -27,8 +27,26 @@
    <item row="1" column="0">
     <widget class="QTabWidget" name="configurationTab">
      <property name="currentIndex">
-      <number>1</number>
+      <number>0</number>
      </property>
+     <widget class="QWidget" name="tab">
+      <attribute name="title">
+       <string>Performance</string>
+      </attribute>
+      <widget class="QCheckBox" name="drop_view_fps_on_save">
+       <property name="geometry">
+        <rect>
+         <x>50</x>
+         <y>30</y>
+         <width>459</width>
+         <height>22</height>
+        </rect>
+       </property>
+       <property name="text">
+        <string>Slow down preview while saving (uses less CPU)</string>
+       </property>
+      </widget>
+     </widget>
      <widget class="QWidget" name="saving">
       <attribute name="title">
        <string>Saving</string>
@@ -72,13 +90,6 @@
            <widget class="QCheckBox" name="buffered_file">
             <property name="text">
              <string>Use buffered output</string>
-            </property>
-           </widget>
-          </item>
-          <item>
-           <widget class="QCheckBox" name="drop_view_fps_on_save">
-            <property name="text">
-             <string>Slow down preview while saving (uses less CPU)</string>
             </property>
            </widget>
           </item>

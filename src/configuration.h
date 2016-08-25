@@ -27,99 +27,55 @@ class Configuration
 public:
     Configuration();
     ~Configuration();
-    
+
     // Try avoiding directly accessing QSettings
     [[deprecated]] std::shared_ptr<QSettings> qSettings() const;
-    
-    void saveDockStatus(const QByteArray &status);
-    QByteArray dockStatus() const;
-        
-    long long maxMemoryUsage() const;
-    void setMaxMemoryUsage(long long memoryUsage);
-    
-    bool bufferedOutput() const;
-    void setBufferedOutput(bool buffered);
-    
-    int maxPreviewFPSOnSaving() const;
-    void setMaxPreviewFPSOnSaving(int maxFPS);
-    
-    void setRecordingFramesLimit(long long limit);
-    long long recordingFramesLimit() const;
-    
-    void setSaveDirectory(const QString &directory);
-    QString saveDirectory() const;
-    
-    void setSaveFilePrefix(const QString &prefix);
-    QString saveFilePrefix() const;
-    
-    void setSaveFileSuffix(const QString &suffix);
-    QString saveFileSuffix() const;
-    
-    void setObserver(const QString &observer);
-    QString observer() const;
-    
-    void setTelescope(const QString &telescope);
-    QString telescope() const;
-    
-    QString savefile() const;
-    
+
+#define declare_setting(name, type) \
+    void set_## name(const type &value); \
+    void reset_## name(); \
+    type name() const;
+
+    declare_setting(dock_status, QByteArray )
+    declare_setting(max_memory_usage, long long )
+    declare_setting(buffered_output, bool )
+    declare_setting(max_display_fps, int )
+    declare_setting(max_display_fps_recording, int )
+    declare_setting(recording_frames_limit, long long )
+    declare_setting(save_directory, QString)
+    declare_setting(save_file_prefix, QString)
+    declare_setting(save_file_suffix, QString )
+    declare_setting(observer, QString)
+    declare_setting(telescope, QString)
+
     enum EdgeAlgorithm { Sobel, Canny };
-    
-    void setEdgeAlgorithm(EdgeAlgorithm algorithm);
-    EdgeAlgorithm edgeAlgorithm() const;
-    
-    void setSobelKernel(int size);
-    int sobelKernel() const;
-    
-    void setSobelBlurSize(int size);
-    int sobelBlurSize() const;
-    
-    void setSobelScale(double scale);
-    double sobelScale() const;
-    
-    void setSobelDelta(double delta);
-    double sobelDelta() const;
-    
-    double cannyLowThreshold() const;
-    void setCannyLowThreshold(double threshold);
-    
-    double cannyThresholdRatio() const;
-    void setCannyThresholdRatio(double ratio);
-    
-    int cannyKernelSize() const;
-    void setCannyKernelSize(int size);
-    
-    int cannyBlurSize() const;
-    void setCannyBlurSize(int size);
-    
+    declare_setting(edge_algorithm, EdgeAlgorithm)
+    declare_setting(sobel_kernel, int)
+    declare_setting(sobel_blur_size, int)
+    declare_setting(sobel_scale, double)
+    declare_setting(sobel_delta, double)
+    declare_setting(canny_low_threshold, double)
+    declare_setting(canny_threshold_ratio, double)
+    declare_setting(canny_kernel_size, int)
+    declare_setting(canny_blur_size, int)
+
     void resetCannyAdvancedSettings();
     void resetSobelAdvancedSettings();
 
     enum SaveFormat { SER, Video };
-    void setSaveFormat(SaveFormat format);
-    SaveFormat saveFormat() const;
+    declare_setting(save_format, SaveFormat)
+    declare_setting(video_codec, QString)
+    declare_setting(save_info_file, bool)
+    declare_setting(widgets_setup_first_run, bool)
+    declare_setting(histogram_bins, int)
+    declare_setting(histogram_enabled, bool)
+    declare_setting(histogram_timeout, long long)
+    declare_setting(histogram_timeout_recording, long long)
     
-    QString videoCodec() const;
-    void setVideoCodec(const QString &codec);
-    
-    bool save_info_file() const;
-    void set_save_info_file(bool save);
-    
-    bool widgets_setup_first_run() const;
-    void set_widgets_setup_first_run();
-    
-    int histogram_bins() const;
-    void set_histogram_bins(int bins);
-    
-    bool histogram_enabled() const;
-    void set_histogram_enabled(bool enabled);
-    
-    long histogram_timeout_not_recording() const;
-    void set_histogram_timeout_not_recording(long milliseconds);
-    long histogram_timeout_recording() const;
-    void set_histogram_timeout_recording(long milliseconds);
+    QString savefile() const;
+
 private:
-  DPTR
+    DPTR
 };
 
 

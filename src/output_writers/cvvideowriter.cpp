@@ -59,7 +59,7 @@ void cvVideoWriter::handle ( const cv::Mat& imageData )
   auto size = cv::Size{imageData.cols, imageData.rows};
   try {
     if(!d->videoWriter.isOpened())
-      d->videoWriter.open(d->filename.toStdString(), fourcc(d->configuration.videoCodec().toStdString()), 25, size);
+      d->videoWriter.open(d->filename.toStdString(), fourcc(d->configuration.video_codec().toStdString()), 25, size);
     if(! d->videoWriter.isOpened()) {
       qWarning() << "unable to open video file" << d->filename << size;
       return;

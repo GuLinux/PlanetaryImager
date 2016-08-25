@@ -46,8 +46,8 @@ SERWriter::Private::Private ( const QString& deviceName, Configuration& configur
 
 SERWriter::SERWriter ( const QString& deviceName, Configuration& configuration ) : dptr(deviceName, configuration, this)
 {
-  qDebug() << "Using buffered output: " << configuration.bufferedOutput();
-  if(configuration.bufferedOutput())
+  qDebug() << "Using buffered output: " << configuration.buffered_output();
+  if(configuration.buffered_output())
     d->file.open(QIODevice::ReadWrite);
   else
     d->file.open(QIODevice::ReadWrite | QIODevice::Unbuffered);

@@ -23,6 +23,7 @@
 #include "Qt/strings.h"
 #include <QDir>
 #include <QDateTime>
+#include <QProcessEnvironment>
 #include <QCoreApplication>
 
 using namespace std;
@@ -68,250 +69,60 @@ template<typename T> void Configuration::Private::set(const QString& key, const 
   values_cache[key] = value;
 }
 
-void Configuration::saveDockStatus(const QByteArray& status)
-{
-  d->set("dock_status", status);
-}
+#define define_setting_reset(name) void Configuration::reset_ ##name() { d->settings->remove(#name); d->values_cache.remove(#name); }
+#define define_setting_set(name, type) void Configuration::set_ ##name(const type &value) { d->set<type>( #name, value); }
+#define define_setting_enum_set(name, type) void Configuration::set_ ##name(const type &value) { d->set<int>( #name, static_cast<int>(value) ); }
+#define define_setting_get(name, type, default_value) type Configuration::name() const { return d->value<type>(#name, default_value); }
+#define define_setting_enum_get(name, type, default_value) type Configuration::name() const { return static_cast<type>(d->value<int>(#name, static_cast<int>(default_value) )); }
 
-QByteArray Configuration::dockStatus() const
-{
-    return d->value<QByteArray>("dock_status", {});
-}
+#define define_setting(name, type, default_value) define_setting_get(name, type, default_value)  define_setting_set(name, type) define_setting_reset(name)
+#define define_setting_enum(name, type, default_value) define_setting_enum_get(name, type, default_value)  define_setting_enum_set(name, type) define_setting_reset(name)
 
-
-bool Configuration::bufferedOutput() const
-{
-  return d->value("buffered_output", true);
-}
-
-void Configuration::setBufferedOutput(bool buffered)
-{
-  d->set("buffered_output", buffered);
-}
-
-long long Configuration::maxMemoryUsage() const
-{
-  return d->value("max_save_memory_usage", 20*1024*1024);
-}
-
-void Configuration::setMaxMemoryUsage(long long memoryUsage)
-{
-  d->set("max_save_memory_usage", memoryUsage);
-}
-
-int Configuration::maxPreviewFPSOnSaving() const
-{
-  return d->value("max_preview_fps", 0);
-}
-
-void Configuration::setMaxPreviewFPSOnSaving(int maxFPS)
-{
-  d->set("max_preview_fps", maxFPS);
-}
-
-
-long long int Configuration::recordingFramesLimit() const
-{
-  return d->value("recording_frames_limit", 0);
-}
-
-void Configuration::setRecordingFramesLimit(long long int limit)
-{
-  d->set("recording_frames_limit", limit);
-}
-
-QString Configuration::saveFilePrefix() const
-{
-  return d->value<QString>("save_file_prefix");
-}
-
-void Configuration::setSaveFilePrefix(const QString& prefix)
-{
-  d->set("save_file_prefix", prefix);
-}
-
-
-QString Configuration::saveFileSuffix() const
-{
-  return d->value<QString>("save_file_suffix");
-}
-
-void Configuration::setSaveFileSuffix(const QString& suffix)
-{
-  d->set("save_file_suffix", suffix);
-}
-
-QString Configuration::saveDirectory() const
-{
-  return d->value<QString>("save_directory");
-}
-
-void Configuration::setSaveDirectory(const QString& directory)
-{
-  d->set("save_directory", directory);
-}
-
-Configuration::SaveFormat Configuration::saveFormat() const
-{
-  return static_cast<SaveFormat>(d->value<int>("save_format", SER));
-}
-
-void Configuration::setSaveFormat(Configuration::SaveFormat format)
-{
-  d->set("save_format", static_cast<int>(format));
-}
-
-QString Configuration::observer() const
-{
-  return d->value<QString>("save_observer");
-}
-
-void Configuration::setObserver(const QString& observer)
-{
-  d->set<QString>("save_observer", observer);
-}
-
-QString Configuration::telescope() const
-{
-  return d->value<QString>("save_telescope");
-}
-
-void Configuration::setTelescope(const QString& telescope)
-{
-  d->set<QString>("save_telescope", telescope);
-}
-
-Configuration::EdgeAlgorithm Configuration::edgeAlgorithm() const
-{
-  return static_cast<EdgeAlgorithm>(d->value<int>("edge_algorithm", Canny));
-}
-
-void Configuration::setEdgeAlgorithm(Configuration::EdgeAlgorithm algorithm)
-{
-  d->set("edge_algorithm", static_cast<int>(algorithm));
-}
-
-int Configuration::sobelKernel() const
-{
-  return d->value<int>("sobel_kernel_size", 3);
-}
-
-void Configuration::setSobelKernel(int size)
-{
-  d->set("sobel_kernel_size", size);
-}
-
-int Configuration::sobelBlurSize() const
-{
-    return d->value<int>("sobel_blur_size", 3);
-}
-
-void Configuration::setSobelBlurSize(int size)
-{
-    d->set("sobel_blur_size", size);
-}
-
-
-double Configuration::cannyLowThreshold() const
-{
-  return d->value<double>("canny_low_threshold", 1);
-}
-
-void Configuration::setCannyLowThreshold(double threshold)
-{
-  d->set<double>("canny_low_threshold", threshold);
-}
-
-
-double Configuration::cannyThresholdRatio() const
-{
-  return d->value<double>("canny_threshold_ratio", 3);
-}
-
-void Configuration::setCannyThresholdRatio(double ratio)
-{
-  d->set<double>("canny_threshold_ratio", ratio);
-}
-
-void Configuration::setSobelDelta(double delta)
-{
-  d->set<double>("sobel_delta", delta);
-}
-
-double Configuration::sobelDelta() const
-{
-  return d->value<double>("sobel_delta", 0);
-}
-
-double Configuration::sobelScale() const
-{
-  return d->value<double>("sobel_scale", 1);
-}
-
-void Configuration::setSobelScale(double scale)
-{
-  d->set<double>("sobel_scale", scale);
-}
-
-int Configuration::cannyKernelSize() const
-{
-  return d->value("canny_kernel", 3);
-}
-
-void Configuration::setCannyKernelSize(int size)
-{
-  d->set("canny_kernel", size);
-}
-
-int Configuration::cannyBlurSize() const
-{
-  return d->value("canny_blur", 3);
-}
-
-void Configuration::setCannyBlurSize(int size)
-{
-  d->set("canny_blur", size);
-}
+define_setting(dock_status, QByteArray, {})
+define_setting(max_memory_usage, long long, 20*1024*1024)
+define_setting(buffered_output, bool, true)
+define_setting(max_display_fps, int, 30)
+define_setting(max_display_fps_recording, int, 5)
+define_setting(recording_frames_limit, long long, 0)
+define_setting(save_file_prefix, QString, {})
+define_setting(save_file_suffix, QString, {})
+define_setting(save_directory, QString, QProcessEnvironment::systemEnvironment().value("HOME"))
+define_setting(telescope, QString, {})
+define_setting(observer, QString, {})
+define_setting_enum(edge_algorithm, Configuration::EdgeAlgorithm, Configuration::Canny)
+define_setting(sobel_kernel, int, 3)
+define_setting(sobel_blur_size, int, 3)
+define_setting(canny_low_threshold, double, 1)
+define_setting(canny_threshold_ratio, double, 3)
+define_setting(sobel_delta, double, 0)
+define_setting(sobel_scale, double, 1)
+define_setting(canny_kernel_size, int, 3)
+define_setting(canny_blur_size, int, 3)
 
 void Configuration::resetCannyAdvancedSettings()
 {
-    d->settings->remove("canny_blur");
-    d->settings->remove("canny_kernel");
-    d->settings->remove("canny_threshold_ratio");
-    d->settings->remove("canny_low_threshold");
-    d->values_cache.clear();
+  reset_canny_blur_size();
+  reset_canny_kernel_size();
+  reset_canny_low_threshold();
+  reset_canny_threshold_ratio();
 }
 
 void Configuration::resetSobelAdvancedSettings()
 {
-    d->settings->remove("sobel_blur_size");
-    d->settings->remove("sobel_delta");
-    d->settings->remove("sobel_scale");
-    d->settings->remove("sobel_kernel_size");
-    d->values_cache.clear();
+  reset_sobel_blur_size();
+  reset_sobel_delta();
+  reset_sobel_kernel();
+  reset_sobel_scale();
 }
 
-void Configuration::setVideoCodec(const QString &codec)
-{
-    d->set<QString>("video_codec", codec);
-}
-
-QString Configuration::videoCodec() const
-{
-    return d->value<QString>("video_codec", "HFYU");
-}
-
-
-bool Configuration::save_info_file() const
-{
-  return d->value<bool>("save_info_file", true);
-}
-
-void Configuration::set_save_info_file(bool save)
-{
-  d->set<bool>("save_info_file",save);
-}
-
+define_setting_enum(save_format, Configuration::SaveFormat, Configuration::SER)
+define_setting(video_codec, QString, "HFYU")
+define_setting(save_info_file, bool, true)
+define_setting(widgets_setup_first_run, bool, false)
+define_setting(histogram_bins, int, 50)
+define_setting(histogram_enabled, bool, true)
+define_setting(histogram_timeout, long long, 3'500)
+define_setting(histogram_timeout_recording, long long, 10'000)
 
 
 QString Configuration::savefile() const
@@ -321,62 +132,11 @@ QString Configuration::savefile() const
     { Video, ".mkv" },
   };
   return "%1%2%3%4%5%6"_q
-    % saveDirectory()
+    % save_directory()
     % QDir::separator()
-    % saveFilePrefix()
+    % save_file_prefix()
     % QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss_zzz_t")
-    % saveFileSuffix()
-    % extension[saveFormat()]
+    % save_file_suffix()
+    % extension[save_format()]
     ;
 }
-
-void Configuration::set_widgets_setup_first_run()
-{
-  d->set<bool>("widgets_setup_first_run",true);
-}
-
-bool Configuration::widgets_setup_first_run() const
-{
-  return d->value<bool>("widgets_setup_first_run", false);
-}
-
-int Configuration::histogram_bins() const
-{
-  return d->value<int>("histogram-bins", 50);
-}
-
-void Configuration::set_histogram_bins(int bins)
-{
-  d->set<int>("histogram-bins", bins);
-}
-
-bool Configuration::histogram_enabled() const
-{
-  return d->value<bool>("histogram-enabled", true);
-}
-
-void Configuration::set_histogram_enabled(bool enabled)
-{
-  d->set<bool>("histogram-enabled", enabled);
-}
-
-long Configuration::histogram_timeout_not_recording() const
-{
-  return d->value<long long>("histogram-timeout-while-not-recording", 3'500);
-}
-
-void Configuration::set_histogram_timeout_not_recording(long milliseconds)
-{
-  d->set<long long>("histogram-timeout-while-not-recording", milliseconds);
-}
-
-long Configuration::histogram_timeout_recording() const
-{
-  return d->value<long long>("histogram-timeout-while-recording", 10'000);
-}
-
-void Configuration::set_histogram_timeout_recording(long milliseconds)
-{
-  d->set<long long>("histogram-timeout-while-recording", milliseconds);
-}
-

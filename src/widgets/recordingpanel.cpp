@@ -49,34 +49,34 @@ RecordingPanel::RecordingPanel(Configuration& configuration, QWidget* parent) : 
   d->ui->setupUi(this);
   recording(false);
   d->ui->save_info_file->setChecked(configuration.save_info_file());
-  d->ui->saveDirectory->setText(configuration.saveDirectory());
-  d->ui->saveFramesLimit->setCurrentText(configuration.recordingFramesLimit() == 0 ? tr("Infinite") : QString::number(configuration.recordingFramesLimit()));
-  d->ui->filePrefix->setText(configuration.saveFilePrefix());
-  d->ui->fileSuffix->setText(configuration.saveFileSuffix());
-  d->ui->videoOutputType->setCurrentIndex(configuration.saveFormat() == Configuration::SER ? 0 : 1);
+  d->ui->saveDirectory->setText(configuration.save_directory());
+  d->ui->saveFramesLimit->setCurrentText(configuration.recording_frames_limit() == 0 ? tr("Infinite") : QString::number(configuration.recording_frames_limit()));
+  d->ui->filePrefix->setText(configuration.save_file_prefix());
+  d->ui->fileSuffix->setText(configuration.save_file_suffix());
+  d->ui->videoOutputType->setCurrentIndex(configuration.save_format() == Configuration::SER ? 0 : 1);
   connect(d->ui->videoOutputType, F_PTR(QComboBox, currentIndexChanged, int), [&](int index) {
     if(index == 0)
-      configuration.setSaveFormat(Configuration::SER);
+      configuration.set_save_format(Configuration::SER);
     if(index == 1)
-      configuration.setSaveFormat(Configuration::Video);
+      configuration.set_save_format(Configuration::Video);
   });
   connect(d->ui->saveDirectory, &QLineEdit::textChanged, [&configuration](const QString &directory){
-    configuration.setSaveDirectory(directory);
+    configuration.set_save_directory(directory);
   });
   connect(d->ui->filePrefix, &QLineEdit::textChanged, [&configuration](const QString &prefix){
-    configuration.setSaveFilePrefix(prefix);
+    configuration.set_save_file_prefix(prefix);
   });
   connect(d->ui->fileSuffix, &QLineEdit::textChanged, [&configuration](const QString &suffix){
-    configuration.setSaveFileSuffix(suffix);
+    configuration.set_save_file_suffix(suffix);
   });
   connect(d->ui->save_info_file, &QCheckBox::toggled, [&configuration](bool checked) { configuration.set_save_info_file(checked); });
   connect(d->ui->saveFramesLimit, &QComboBox::currentTextChanged, [&configuration](const QString &text){
     bool ok = false;
     auto frameLimit = text.toLongLong(&ok);
     if(ok)
-      configuration.setRecordingFramesLimit(frameLimit);
+      configuration.set_recording_frames_limit(frameLimit);
     else
-      configuration.setRecordingFramesLimit(0);
+      configuration.set_recording_frames_limit(0);
   });
   connect(d->ui->start_stop_recording, &QPushButton::clicked, [=]{
     if(d->recording)
@@ -89,14 +89,14 @@ RecordingPanel::RecordingPanel(Configuration& configuration, QWidget* parent) : 
   connect(pickDirectory, &QAction::triggered, [&]{
     QFileDialog *filedialog = new QFileDialog(this);
     filedialog->setFileMode(QFileDialog::Directory);
-    filedialog->setDirectory(configuration.saveDirectory());
+    filedialog->setDirectory(configuration.save_directory());
     filedialog->setOption(QFileDialog::ShowDirsOnly);
     connect(filedialog, SIGNAL(fileSelected(QString)), d->ui->saveDirectory, SLOT(setText(QString)));
     connect(filedialog, SIGNAL(finished(int)), filedialog, SLOT(deleteLater()));
     filedialog->show();
   });
   auto check_directory = [&] {
-    d->ui->start_stop_recording->setEnabled(QDir(configuration.saveDirectory()).exists());
+    d->ui->start_stop_recording->setEnabled(QDir(configuration.save_directory()).exists());
   };
   check_directory();
   connect(d->ui->saveDirectory, &QLineEdit::textChanged, check_directory);

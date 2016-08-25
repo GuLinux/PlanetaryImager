@@ -68,7 +68,7 @@ DisplayImage::DisplayImage(Configuration& configuration, QObject* parent)
 }
 void DisplayImage::setRecording(bool recording)
 {
-  int fps = recording ? d->configuration.maxPreviewFPSOnSaving() : 0;
+  int fps = recording ? d->configuration.max_display_fps_recording() : d->configuration.max_display_fps();
   d->milliseconds_limit = (fps == 0 ? 1000./40. : 1000/fps);
   d->elapsed.restart();
 }
@@ -97,12 +97,12 @@ void DisplayImage::create_qimages()
     auto cv_image = new cv::Mat;
     cv::cvtColor(imageData, *cv_image, imageData.channels() == 1 ? CV_GRAY2RGB : CV_BGR2RGB);
     if(d->detectEdges) {
-      if(d->configuration.edgeAlgorithm() == Configuration::Sobel) {
+      if(d->configuration.edge_algorithm() == Configuration::Sobel) {
 	QBENCH(sobel)->every(200)->ms();
-	d->sobel(*cv_image, d->configuration.sobelBlurSize(), d->configuration.sobelKernel(), d->configuration.sobelScale(), d->configuration.sobelDelta());
-      } else if(d->configuration.edgeAlgorithm() == Configuration::Canny) {
+	d->sobel(*cv_image, d->configuration.sobel_blur_size(), d->configuration.sobel_kernel(), d->configuration.sobel_scale(), d->configuration.sobel_delta());
+      } else if(d->configuration.edge_algorithm() == Configuration::Canny) {
 	QBENCH(canny)->every(200)->ms();
-	d->canny(*cv_image, d->configuration.cannyLowThreshold(), d->configuration.cannyThresholdRatio(), d->configuration.cannyKernelSize(), d->configuration.cannyBlurSize());
+	d->canny(*cv_image, d->configuration.canny_low_threshold(), d->configuration.canny_threshold_ratio(), d->configuration.canny_kernel_size(), d->configuration.canny_blur_size());
       }
     }
     QImage image{cv_image->data, cv_image->cols, cv_image->rows, cv_image->step, cv_image->channels() == 1 ? QImage::Format_Indexed8: QImage::Format_RGB888, 

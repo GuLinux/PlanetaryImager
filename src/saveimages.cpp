@@ -137,7 +137,7 @@ FileWriter::Factory SaveImages::Private::writerFactory()
     return {};
   }
 
-  return FileWriter::factories()[configuration.saveFormat()];
+  return FileWriter::factories()[configuration.save_format()];
 }
 
 class WriterThreadWorker : public QObject {
@@ -239,8 +239,8 @@ void SaveImages::startRecording(Imager *imager)
     if(d->configuration.save_info_file())
       recording_information = make_shared<RecordingInformation>(d->configuration, imager);
     d->worker = new WriterThreadWorker(bind(writerFactory, imager->name(), std::ref<Configuration>(d->configuration)),
-				       d->configuration.recordingFramesLimit() == 0 ? std::numeric_limits<long long>().max() : d->configuration.recordingFramesLimit(), 
-				       d->configuration.maxMemoryUsage(), 
+				       d->configuration.recording_frames_limit() == 0 ? std::numeric_limits<long long>().max() : d->configuration.recording_frames_limit(), 
+				       d->configuration.max_memory_usage(), 
 				       d->is_recording, this, recording_information);
 
     connect(&d->recordingThread, &QThread::finished, bind(&SaveImages::finished, this));

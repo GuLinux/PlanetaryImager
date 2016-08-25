@@ -84,7 +84,7 @@ void Histogram::setRecording(bool recording)
 
 long Histogram::Private::timeout() const
 {
-  return recording ? configuration.histogram_timeout_recording() : configuration.histogram_timeout_not_recording();
+  return recording ? configuration.histogram_timeout_recording() : configuration.histogram_timeout();
 }
 
 #include "histogram.moc"
