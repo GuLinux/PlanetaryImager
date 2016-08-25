@@ -1,6 +1,12 @@
 ## 0.5.1 2016-08-xx
- - Removed deprecated edge detection algorithm, using only OpenCV provided canny and sobel
-
+ - Removed deprecated edge detection algorithm, using only OpenCV provided canny and sobel. This allows compilation in other platforms (for instance, arm)
+ - ASI: Updated ASI SDK to v0.3.819, with great speed improvements for USB3 cameras
+ - QHY: use static libraries instead of installing dynamic libraries to the system
+ - Improved threading for cameras: a lot of infrastructure refactoring to improve both performances and stability
+ - Temperature polling in statusbar
+ - Histogram: allow to toggle on/off to reduce CPU usage
+ - Histogram: configurable interval, with different values while recording, to reduce CPU usage
+ 
 ## 0.5.0 2016-08-21
  - Fix ASI controls issue
  - Fix UI settings value refresh
