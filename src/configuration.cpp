@@ -23,29 +23,30 @@
 #include "Qt/strings.h"
 #include <QDir>
 #include <QDateTime>
+#include <QCoreApplication>
 
-class Configuration::Private {
+using namespace std;
+DPTR_IMPL(Configuration) {
 public:
-  Private(QSettings &settings, Configuration *q);
-  QSettings &settings;
+  shared_ptr<QSettings> settings;
+  Configuration *q;
   template<typename T> T value(const QString &key, const T &defaultValue = {}) const;
   template<typename T> void set(const QString &key, const T &value);
-  mutable QVariantMap values_cache;
+  mutable QHash<QString, QVariant> values_cache;
 private:
-  Configuration *q;
 };
 
-Configuration::Private::Private(QSettings& settings, Configuration* q) : settings(settings), q(q)
-{
-}
-
-
-Configuration::Configuration(QSettings &settings) : dptr(settings, this)
+Configuration::Configuration() : dptr(make_shared<QSettings>("GuLinux", qApp->applicationName()), this)
 {
 }
 
 Configuration::~Configuration()
 {
+}
+
+std::shared_ptr<QSettings> Configuration::qSettings() const
+{
+  return d->settings;
 }
 
 template<typename T> T Configuration::Private::value(const QString& key, const T& defaultValue) const
@@ -54,7 +55,7 @@ template<typename T> T Configuration::Private::value(const QString& key, const T
   if(values_cache.count(key)) {
     found_value = values_cache[key];
   } else {
-    found_value = settings.value(key, defaultValue);
+    found_value = settings->value(key, defaultValue);
     values_cache[key] = found_value;
   }
   return qvariant_cast<T>(found_value);
@@ -63,8 +64,18 @@ template<typename T> T Configuration::Private::value(const QString& key, const T
 
 template<typename T> void Configuration::Private::set(const QString& key, const T& value)
 {
-  settings.setValue(key, value);
+  settings->setValue(key, value);
   values_cache[key] = value;
+}
+
+void Configuration::saveDockStatus(const QByteArray& status)
+{
+  d->set("dock_status", status);
+}
+
+QByteArray Configuration::dockStatus() const
+{
+    return d->value<QByteArray>("dock_status", {});
 }
 
 
@@ -264,19 +275,19 @@ void Configuration::setCannyBlurSize(int size)
 
 void Configuration::resetCannyAdvancedSettings()
 {
-    d->settings.remove("canny_blur");
-    d->settings.remove("canny_kernel");
-    d->settings.remove("canny_threshold_ratio");
-    d->settings.remove("canny_low_threshold");
+    d->settings->remove("canny_blur");
+    d->settings->remove("canny_kernel");
+    d->settings->remove("canny_threshold_ratio");
+    d->settings->remove("canny_low_threshold");
     d->values_cache.clear();
 }
 
 void Configuration::resetSobelAdvancedSettings()
 {
-    d->settings.remove("sobel_blur_size");
-    d->settings.remove("sobel_delta");
-    d->settings.remove("sobel_scale");
-    d->settings.remove("sobel_kernel_size");
+    d->settings->remove("sobel_blur_size");
+    d->settings->remove("sobel_delta");
+    d->settings->remove("sobel_scale");
+    d->settings->remove("sobel_kernel_size");
     d->values_cache.clear();
 }
 

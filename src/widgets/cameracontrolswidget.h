@@ -22,12 +22,12 @@
 #include "dptr.h"
 #include "drivers/imager.h"
 
-class QSettings;
+class Configuration;
 class CameraControlsWidget : public QWidget
 {
 public:
 ~CameraControlsWidget();
-CameraControlsWidget(Imager *imager, QSettings &settings, QWidget* parent = 0);
+CameraControlsWidget(Imager *imager, Configuration &configuration, QWidget* parent = 0);
 
 private:
     DPTR

@@ -26,7 +26,6 @@
 #include "saveimages.h"
 #include <QLabel>
 #include <QDoubleSpinBox>
-#include <QSettings>
 #include <QThread>
 #include <QFileDialog>
 #include <QDateTime>
@@ -57,13 +56,10 @@ Q_DECLARE_METATYPE(cv::Mat)
 
 DPTR_IMPL(PlanetaryImagerMainWindow) {
   PlanetaryImagerMainWindow *q;
-  
-  Private(PlanetaryImagerMainWindow *q);
-  shared_ptr<Ui::PlanetaryImagerMainWindow> ui;
+  unique_ptr<Ui::PlanetaryImagerMainWindow> ui;
   DriverPtr driver = make_shared<SupportedDrivers>();
   Imager *imager = nullptr;
   void rescan_devices();
-  QSettings settings;
   Configuration configuration;
   void saveState();
 
@@ -127,15 +123,6 @@ void CreateImagerWorker::exec()
 }
 
 
-PlanetaryImagerMainWindow::Private::Private(PlanetaryImagerMainWindow* q) 
-  : ui{make_shared<Ui::PlanetaryImagerMainWindow>()},
-  settings{"GuLinux", qApp->applicationName()}, 
-  configuration{settings}, 
-  q{q}
-{
-}
-
-
 PlanetaryImagerMainWindow::~PlanetaryImagerMainWindow()
 {
   LOG_F_SCOPE
@@ -143,12 +130,13 @@ PlanetaryImagerMainWindow::~PlanetaryImagerMainWindow()
 
 void PlanetaryImagerMainWindow::Private::saveState()
 {
-  settings.setValue("dock_settings", q->saveState());
+  configuration.saveDockStatus(q->saveState());
 }
 
 
 PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::WindowFlags flags) : dptr(this)
 {
+    d->ui.reset(new Ui::PlanetaryImagerMainWindow);
     d->ui->setupUi(this);
     setWindowIcon(QIcon::fromTheme("planetary_imager"));
     d->ui->recording->setWidget(d->recording_panel = new RecordingPanel{d->configuration});
@@ -176,7 +164,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     d->image->toolbar()->setFloatable(true);
     d->image->toolbar()->setMovable(true);
     
-    restoreState(d->settings.value("dock_settings").toByteArray());
+    restoreState(d->configuration.dockStatus());
     connect(d->ui->actionAbout, &QAction::triggered, bind(&QMessageBox::about, this, tr("About"),
 							  tr("%1 version %2.\nFast imaging capture software for planetary imaging").arg(qApp->applicationDisplayName())
 							 .arg(qApp->applicationVersion())));
@@ -320,7 +308,7 @@ void PlanetaryImagerMainWindow::Private::onImagerInitialized(Imager * imager)
     connect(imager, &Imager::fps, statusbar_info_widget, &StatusBarInfoWidget::captureFPS, Qt::QueuedConnection);
     connect(imager, &Imager::temperature, statusbar_info_widget, bind(&StatusBarInfoWidget::temperature, statusbar_info_widget, _1, false), Qt::QueuedConnection);
 
-    ui->settings_container->setWidget(cameraSettingsWidget = new CameraControlsWidget(imager, settings));
+    ui->settings_container->setWidget(cameraSettingsWidget = new CameraControlsWidget(imager, configuration));
     ui->chipInfoWidget->setWidget(cameraInfoWidget = new CameraInfoWidget(imager));
     enableUIWidgets(true);
     ui->actionSelect_ROI->setEnabled(imager->supportsROI());
@@ -332,10 +320,10 @@ void PlanetaryImagerMainWindow::Private::onImagerInitialized(Imager * imager)
       while(!settings_to_save_queue.isEmpty()) {
         auto setting = settings_to_save_queue.dequeue();
         qDebug() << "Settings changed, camera still alive: " << setting;
-        settings.beginGroup(imager->name());
+        configuration.qSettings()->beginGroup(imager->name());
         qDebug() << "setting " << setting.name << " to " << setting.value;
-        settings.setValue(setting.name,  setting.value);
-        settings.endGroup();
+        configuration.qSettings()->setValue(setting.name,  setting.value);
+        configuration.qSettings()->endGroup();
       }
     }, Qt::QueuedConnection);
 }

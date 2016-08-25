@@ -25,8 +25,14 @@ class QSettings;
 class Configuration
 {
 public:
-    Configuration(QSettings &settings);
+    Configuration();
     ~Configuration();
+    
+    // Try avoiding directly accessing QSettings
+    [[deprecated]] std::shared_ptr<QSettings> qSettings() const;
+    
+    void saveDockStatus(const QByteArray &status);
+    QByteArray dockStatus() const;
         
     long long maxMemoryUsage() const;
     void setMaxMemoryUsage(long long memoryUsage);
