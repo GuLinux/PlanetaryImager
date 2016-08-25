@@ -30,36 +30,11 @@ class Imager : public QObject {
 public:
   Imager() : QObject(nullptr) {}
   virtual ~Imager() {}
-  struct Control {
-    int64_t id;
-    QString name;
-    double min, max, step, value, defaut_value;
-    enum Type { Number, Combo, Bool } type;
-    struct Choice {
-     QString label;
-     double value;
-    };
-    QList<Choice> choices;
-    bool valid() const;
-    int decimals = 2;
-    bool is_duration = false;
-    std::chrono::duration<double> duration_unit;
-    bool supports_auto = false;
-    bool value_auto = false;
-    bool readonly = false;
-  };
+  struct Control;
+  struct Chip;
   typedef QList<Control> Controls;
 
   virtual Controls controls() const = 0;  
-  struct Chip {
-    double width, height, pixelwidth, pixelheight;
-    uint32_t xres, yres, bpp;
-    struct Property {
-      QString name;
-      QString value;
-    };
-    QList<Property> properties;
-  };
   virtual QString name() const = 0;
   virtual Chip chip() const = 0;
   virtual bool supportsROI() = 0;
@@ -77,9 +52,39 @@ signals:
   void disconnected();
 };
 
+struct Imager::Control {
+  int64_t id;
+  QString name;
+  double min, max, step, value, defaut_value;
+  enum Type { Number, Combo, Bool } type;
+  struct Choice {
+    QString label;
+    double value;
+  };
+  QList<Choice> choices;
+  bool valid() const;
+  int decimals = 2;
+  bool is_duration = false;
+  std::chrono::duration<double> duration_unit;
+  bool supports_auto = false;
+  bool value_auto = false;
+  bool readonly = false;
+};
+
+struct Imager::Chip {
+  double width, height, pixelwidth, pixelheight;
+  uint32_t xres, yres, bpp;
+  struct Property {
+    QString name;
+    QString value;
+  };
+  QList<Property> properties;
+};
+
 QDebug operator<<(QDebug dbg, const Imager::Chip &chip);
 QDebug operator<<(QDebug dbg, const Imager::Control &setting);
 QDebug operator<<(QDebug dbg, const Imager::Control::Choice &choice);
+
 
 Q_DECLARE_METATYPE(Imager::Control)
 #endif
