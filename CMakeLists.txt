@@ -25,6 +25,7 @@ include_directories(${OpenCV_INCLUDE_DIRS})
 include(FindPkgConfig)
 pkg_check_modules(LIBUSB libusb-1.0 REQUIRED)
 link_directories(${LIBUSB_LIBRARY_DIRS})
+include_directories(${LIBUSB_INCLUDE_DIRS})
 
 option(cflags_fpic "Use -fPIC for compilation " on)
 if(cflags_fpic)
@@ -35,6 +36,7 @@ set(MAJOR_VERSION 0)
 set(MINOR_VERSION 5)
 set(PATCH_VERSION 1)
 
+SET(EXTRA_LIBRARIES "" CACHE STRING "Extra libraries for linking")
 add_subdirectory(GuLinux-Commons/Qt)
 
 include_directories(${LIBUSB_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
@@ -44,7 +46,6 @@ add_subdirectory(files)
 add_subdirectory(support)
 
 install(FILES README.md Changelog.md DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/PlanetaryImager)
-SET(EXTRA_LIBRARIES "" CACHE STRING "Extra libraries for linking")
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "GuLinux.net Planetary Imager for Linux")
 SET(CPACK_PACKAGE_VENDOR "GuLinux <marco@gulinux.net>")
 SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_SOURCE_DIR}/README.md")

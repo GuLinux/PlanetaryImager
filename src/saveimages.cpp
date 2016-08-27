@@ -71,6 +71,15 @@ RecordingInformation::RecordingInformation(Configuration& configuration, Imager 
 	choices[choice.label] = choice.value;
       setting_value["choices"] = choices;
     }
+    if(setting.type == Imager::Control::Number && setting.is_duration) {
+      setting_value["type"] = "duration";
+      QList<QPair<QString, double>> units {
+	{"seconds", 1}, {"milliseconds", 1000}, {"microseconds", 1000000}
+      };
+      for(auto unit: units) {
+	setting_value["value_%1"_q % unit.first] = setting.value * setting.duration_unit.count() * unit.second;
+      }
+    }
     camera_settings[setting.name] = setting_value;
   }
   properties["camera-settings"] = camera_settings;
