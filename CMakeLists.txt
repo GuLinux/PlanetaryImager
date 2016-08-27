@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.11)
+cmake_minimum_required(VERSION 3.1)
 set(CMAKE_CXX_STANDARD 14)
 
 enable_testing()
@@ -20,9 +20,12 @@ find_package(Boost REQUIRED)
 find_package(OpenCV REQUIRED )
 find_package(QCustomPlot REQUIRED)
 
+
 include_directories(${OpenCV_INCLUDE_DIRS})
 include(FindPkgConfig)
 pkg_check_modules(LIBUSB libusb-1.0 REQUIRED)
+link_directories(${LIBUSB_LIBRARY_DIRS})
+
 option(cflags_fpic "Use -fPIC for compilation " on)
 if(cflags_fpic)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
@@ -41,7 +44,7 @@ add_subdirectory(files)
 add_subdirectory(support)
 
 install(FILES README.md Changelog.md DESTINATION ${CMAKE_INSTALL_PREFIX}/share/doc/PlanetaryImager)
-
+SET(EXTRA_LIBRARIES "" CACHE STRING "Extra libraries for linking")
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "GuLinux.net Planetary Imager for Linux")
 SET(CPACK_PACKAGE_VENDOR "GuLinux <marco@gulinux.net>")
 SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_SOURCE_DIR}/README.md")

@@ -44,6 +44,7 @@ target_link_libraries(planetary_imager
     Qt5::Widgets
     drivers # needs to be added twice for cyclic dependency
     pthread
+    ${EXTRA_LIBRARIES}
 )
 install(TARGETS planetary_imager RUNTIME DESTINATION bin)
 
