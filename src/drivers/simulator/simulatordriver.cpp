@@ -69,8 +69,9 @@ public:
       virtual void start();
       virtual void stop();
       void setROI(const QRect &roi);
+      enum ImageType{ RGB = 0, Mono = 10};
     private:
-      cv::Mat image;
+      QHash<int, cv::Mat> images;
       SimulatorImager *imager;
       QRect roi;
     };
@@ -107,6 +108,7 @@ SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{
     {"movement", {2, "movement", 0, 5, 1, 1}},
     {"seeing",   {3, "seeing", 0, 5, 1, 1}},
     {"bin",	 {4, "bin", 0, 3, 1, 1, 1, Control::Combo, { {"1x1", 1}, {"2x2", 2}, {"3x3", 3}, {"4x4", 4} } }}, 
+    {"format",	 {5, "format", 0, 100, 1, Worker::Mono, Worker::Mono, Control::Combo, { {"Mono", Worker::Mono}, {"RGB", Worker::RGB},  } }}, 
   }
 {
   qDebug() << "Creating simulator imager: current owning thread: " << thread() << ", qApp thread: " << qApp->thread();
@@ -169,7 +171,13 @@ SimulatorImager::Worker::Worker(SimulatorImager* imager) : imager{imager}
     QFile file(":/simulator/jupiter.png");
     file.open(QIODevice::ReadOnly);
     QByteArray file_data = file.readAll();
-    image = cv::imdecode(cv::InputArray{file_data.data(), file_data.size()}, CV_LOAD_IMAGE_COLOR);
+    images[RGB] = cv::imdecode(cv::InputArray{file_data.data(), file_data.size()}, CV_LOAD_IMAGE_COLOR);
+    cv::cvtColor(images[RGB], images[Mono], CV_BGR2GRAY);
+    for(int bin = 1; bin < 5; bin++) {
+      double ratio = 4. / bin;
+      cv::resize(images[RGB], images[RGB + bin], {}, ratio, ratio);
+      cv::resize(images[Mono], images[Mono + bin], {}, ratio, ratio);
+    }
 }
 
 
@@ -177,16 +185,18 @@ bool SimulatorImager::Worker::shoot(const ImageHandlerPtr &imageHandler)
 {
   auto rand = [](int a, int b) { return qrand() % ((b + 1) - a) + a; };
   cv::Mat cropped, blurred, result;
-  int h = image.rows;
-  int w = image.cols;
-  Control exposure, seeing, movement, bin;
+  Control exposure, seeing, movement, bin, format;
   {
       QMutexLocker lock_settings(&imager->settingsMutex);
       exposure = imager->_settings["exposure"];
       bin = imager->_settings["bin"];
+      format = imager->_settings["format"];
       seeing = imager->_settings["seeing"];
       movement = imager->_settings["movement"];
   }
+  const cv::Mat &image = images[format.value + bin.value];
+  int h = image.rows;
+  int w = image.cols;
   int crop_factor = movement.value;
   int pix_w = rand(0, crop_factor);
   int pix_h = rand(0, crop_factor);
@@ -218,9 +228,7 @@ bool SimulatorImager::Worker::shoot(const ImageHandlerPtr &imageHandler)
       depth = 16;
   if(result.depth() > CV_16S)
       depth = 32;
-  auto scale = bin.value;
-  if(scale > 1)
-    cv::resize(result, result, {static_cast<int>(result.cols/scale), static_cast<int>(result.rows/scale)});
+
   imageHandler->handle(Frame::create(result));
   QThread::usleep(exposure.value * 1000);
   return true;
