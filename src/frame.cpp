@@ -18,17 +18,39 @@
  */
 
 #include "frame.h"
+using namespace std;
 
 DPTR_IMPL(Frame) {
-  
+  cv::Mat mat;
 };
 
-Frame::Frame()
+Frame::Frame() : dptr()
 {
-
 }
 
 Frame::~Frame()
 {
-
 }
+
+Frame::ptr Frame::create(const cv::Mat& mat)
+{
+  ptr frame{new Frame};
+  frame->d->mat = mat;
+  return frame;
+}
+
+cv::Mat Frame::mat() const
+{
+  return d->mat;
+}
+
+QSize Frame::resolution() const
+{
+  return QSize{d->mat.cols, d->mat.rows};
+}
+
+std::size_t Frame::size() const
+{
+  return d->mat.total()* d->mat.elemSize();
+}
+

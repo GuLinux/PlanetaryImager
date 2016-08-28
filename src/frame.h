@@ -20,14 +20,21 @@
 #ifndef FRAME_H
 #define FRAME_H
 
+#include <opencv2/opencv.hpp>
 #include "c++/dptr.h"
+#include <QSize>
+
 class Frame
 {
 public:
   typedef std::shared_ptr<Frame> ptr;
-    Frame();
+    static ptr create(const cv::Mat &mat);
     ~Frame();
+    std::size_t size() const;
+    QSize resolution() const;
+    cv::Mat mat() const;
 private:
+  Frame();
   DPTR
 };
 
