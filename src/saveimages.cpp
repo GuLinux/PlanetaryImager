@@ -159,7 +159,8 @@ void SaveImages::handle(const Frame::ptr &frame)
 {
   if(!d->is_recording)
     return;
-  QtConcurrent::run(bind(&WriterThreadWorker::handle, d->worker, frame));
+  d->worker->handle(frame);
+//   QtConcurrent::run(bind(&WriterThreadWorker::handle, d->worker, frame));
 }
 
 void SaveImages::startRecording(Imager *imager)
