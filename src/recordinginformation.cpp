@@ -67,7 +67,7 @@ RecordingInformation::RecordingInformation(Configuration& configuration, Imager 
   d->properties["camera-settings"] = camera_settings;
 }
 
-void RecordingInformation::set_ended(int total_frames, int width, int height)
+void RecordingInformation::set_ended(int total_frames, int width, int height, uint8_t bpp, uint8_t channels)
 {
   auto ended =QDateTime::currentDateTime();
   auto elapsed = d->started.secsTo(ended);
@@ -75,6 +75,8 @@ void RecordingInformation::set_ended(int total_frames, int width, int height)
   d->properties["total-frames"] = total_frames;
   d->properties["width"] = width;
   d->properties["height"] = height;
+  d->properties["bpp"] = bpp;
+  d->properties["channels"] = channels;
   d->properties["mean-fps"] = static_cast<double>(total_frames) / static_cast<double>(elapsed);
 }
 

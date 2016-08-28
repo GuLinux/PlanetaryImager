@@ -93,8 +93,8 @@ QString SERWriter::filename() const
 void SERWriter::handle ( const Frame::ptr &frame )
 {
   if(! d->header->imageWidth) {
-    d->header->colorId = frame->mat().channels() == 1 ? SER_Header::MONO : SER_Header::RGB;
-    d->header->pixelDepth = (frame->mat().depth() == CV_8U || frame->mat().depth() == CV_8S) ? 8 : 16; // TODO imageData->bpp();
+    d->header->colorId = frame->channels() == 1 ? SER_Header::MONO : SER_Header::RGB;
+    d->header->pixelDepth = frame->bpp();
     qDebug() << "SER PixelDepth set to " << d->header->pixelDepth << "bpp";
     d->header->imageWidth = frame->resolution().width();
     d->header->imageHeight = frame->resolution().height();

@@ -54,3 +54,14 @@ std::size_t Frame::size() const
   return d->mat.total()* d->mat.elemSize();
 }
 
+uint8_t Frame::bpp() const
+{
+  return d->mat.depth() == CV_8U || d->mat.depth() == CV_8S ? 8 : 16;
+}
+
+uint8_t Frame::channels() const
+{
+  return d->mat.channels();
+}
+
+

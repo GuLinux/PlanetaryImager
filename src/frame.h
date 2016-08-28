@@ -33,6 +33,8 @@ public:
     std::size_t size() const;
     QSize resolution() const;
     cv::Mat mat() const;
+    uint8_t channels() const;
+    uint8_t bpp() const;
 private:
   Frame();
   DPTR

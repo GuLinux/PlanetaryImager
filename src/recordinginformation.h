@@ -32,7 +32,7 @@ public:
   RecordingInformation(Configuration &configuration, Imager *imager);
   ~RecordingInformation();
   void set_base_filename(const QString &filename);
-  void set_ended(int total_frames, int width, int height);
+  void set_ended(int total_frames, int width, int height, uint8_t bpp, uint8_t channels);
 private:
   DPTR
 };

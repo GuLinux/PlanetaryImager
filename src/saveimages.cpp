@@ -86,7 +86,7 @@ private:
   FileWriterFactory fileWriterFactory;
   shared_ptr<boost::lockfree::spsc_queue<Frame::ptr>> framesQueue;
   uint64_t max_frames;
-  long long max_memory;
+  size_t max_memory;
   bool &is_recording;
   uint64_t dropped_frames = 0;
   SaveImages *saveImages;
@@ -106,7 +106,7 @@ WriterThreadWorker::~WriterThreadWorker()
 void WriterThreadWorker::handle(const Frame::ptr &frame)
 {
   if(!framesQueue) {
-    framesQueue = make_shared<boost::lockfree::spsc_queue<Frame::ptr>>(max_memory/frame->size());
+    framesQueue = make_shared<boost::lockfree::spsc_queue<Frame::ptr>>( std::max(max_memory/frame->size(), size_t{1})  );
     qDebug() << "allocated framesqueue with " << max_memory << " bytes capacity (" << max_memory/frame->size()<< " frames)";
   }
   
@@ -127,7 +127,7 @@ void WriterThreadWorker::run()
     fps_counter meanfps{[=](double fps){ emit saveImages->meanFPS(fps);}, fps_counter::Elapsed, 1000, true};
     uint64_t frames = 0;
     emit saveImages->recording(fileWriter->filename());
-    int width = -1, height = -1;
+    int width = -1, height = -1, channels = -1, bpp = -1;
     while(is_recording && frames < max_frames) {
       Frame::ptr frame;
       if(framesQueue && framesQueue->pop(frame)) {
@@ -138,6 +138,8 @@ void WriterThreadWorker::run()
 	if(width == -1 || height == -1) {
 	  width = frame->resolution().width();
 	  height = frame->resolution().height();
+      channels = frame->channels();
+      bpp = frame->bpp();
 	}
       } else {
 	QThread::msleep(1);
@@ -145,7 +147,7 @@ void WriterThreadWorker::run()
     }
     is_recording = false;
     if(recording_information)
-      recording_information->set_ended(frames, width, height);
+      recording_information->set_ended(frames, width, height, bpp, channels);
   }
   qDebug() << "closing thread";
   emit saveImages->finished();
