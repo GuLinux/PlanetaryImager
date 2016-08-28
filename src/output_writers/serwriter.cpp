@@ -34,7 +34,8 @@ public:
   QFile file;
   SER_Header *header;
   uint32_t frames = 0;
-  vector<SER_Timestamp> timestamps;
+  vector<QDateTime> frames_datetimes;
+  SER_Timestamp timestamp(const QDateTime &datetime) const;
 private:
   SERWriter *q;
 };
@@ -52,8 +53,8 @@ SERWriter::SERWriter ( const QString& deviceName, Configuration& configuration )
   else
     d->file.open(QIODevice::ReadWrite | QIODevice::Unbuffered);
   SER_Header empty_header;
-  empty_header.datetime = QDateTime({1, 1, 1}, {0,0,0}).msecsTo(QDateTime::currentDateTime()) * 10000;
-  empty_header.datetime_utc = QDateTime({1, 1, 1}, {0,0,0}, Qt::UTC).msecsTo(QDateTime::currentDateTimeUtc()) * 10000;
+  empty_header.datetime = d->timestamp(QDateTime::currentDateTime());
+  empty_header.datetime_utc = d->timestamp(QDateTime::currentDateTimeUtc());
   ::strcpy(empty_header.camera, deviceName.left(40).toLatin1());
   ::strcpy(empty_header.observer, configuration.observer().left(40).toLatin1());
   ::strcpy(empty_header.telescope, configuration.telescope().left(40).toLatin1());
@@ -65,12 +66,19 @@ SERWriter::SERWriter ( const QString& deviceName, Configuration& configuration )
   }
 }
 
+SER_Timestamp SERWriter::Private::timestamp(const QDateTime& datetime) const
+{
+  static const QDateTime reference{{1, 1, 1}, {0,0,0}};
+  return reference.msecsTo(datetime) * 10000;
+}
+
 
 SERWriter::~SERWriter()
 {
   qDebug() << "closing file..";
   d->header->frames = d->frames;
-  for(auto timestamp: d->timestamps) {
+  for(auto datetime: d->frames_datetimes) {
+    SER_Timestamp timestamp = d->timestamp(datetime);
     d->file.write(reinterpret_cast<char*>(&timestamp), sizeof(timestamp));
   }
   d->file.close();
@@ -91,7 +99,7 @@ void SERWriter::handle ( const cv::Mat& imageData )
     d->header->imageWidth = imageData.cols;
     d->header->imageHeight = imageData.rows;
   }
-  d->timestamps.push_back(QDateTime({1, 1, 1}, {0,0,0}, Qt::UTC).msecsTo(QDateTime::currentDateTimeUtc()) * 10000);
+  d->frames_datetimes.push_back(QDateTime::currentDateTimeUtc());
   d->file.write(reinterpret_cast<const char*>(imageData.data), imageData.total() * imageData.elemSize());
   ++d->frames;
 }
