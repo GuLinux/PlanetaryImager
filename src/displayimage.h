@@ -30,7 +30,7 @@ Q_OBJECT
 public:
     ~DisplayImage();
     DisplayImage(Configuration &configuration, QObject* parent = 0);
-    virtual void handle(const cv::Mat& imageData);
+    virtual void handle(const Frame::ptr &frame);
     void setRecording(bool recording);
     QRect imageRect() const;
 signals:

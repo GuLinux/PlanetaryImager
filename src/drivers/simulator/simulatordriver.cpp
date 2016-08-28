@@ -221,7 +221,7 @@ bool SimulatorImager::Worker::shoot(const ImageHandlerPtr &imageHandler)
   auto scale = bin.value;
   if(scale > 1)
     cv::resize(result, result, {static_cast<int>(result.cols/scale), static_cast<int>(result.rows/scale)});
-  imageHandler->handle(result);
+  imageHandler->handle(Frame::create(result));
   QThread::usleep(exposure.value * 1000);
   return true;
 }

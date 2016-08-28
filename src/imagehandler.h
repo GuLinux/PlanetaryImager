@@ -21,12 +21,11 @@
 #include <memory>
 #include <QList>
 #include<algorithm>
-#include <opencv2/opencv.hpp>
-
+#include <frame.h>
 
 class ImageHandler {
 public:
-  virtual void handle(const cv::Mat &imageData) = 0;
+  virtual void handle(const Frame::ptr &frame) = 0;
 };
 
 typedef std::shared_ptr<ImageHandler> ImageHandlerPtr;
@@ -34,9 +33,9 @@ typedef std::shared_ptr<ImageHandler> ImageHandlerPtr;
 class ImageHandlers : public ImageHandler {
 public:
   ImageHandlers(std::initializer_list<ImageHandlerPtr> handlers) : handlers{handlers} {}
-  virtual void handle(const cv::Mat& imageData) {
+  virtual void handle(const Frame::ptr &frame) {
     for(auto handler: handlers)
-      handler->handle(imageData);
+      handler->handle(frame);
   }
 private:
   QList<ImageHandlerPtr> handlers;

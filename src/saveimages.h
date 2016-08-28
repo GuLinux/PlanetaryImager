@@ -31,7 +31,7 @@ class SaveImages : public QObject, public ImageHandler
 public:
     SaveImages(Configuration &configuration, QObject *parent = 0);
     ~SaveImages();
-    virtual void handle(const cv::Mat& imageData);
+    virtual void handle(const Frame::ptr &frame);
 public slots:
   void startRecording(Imager *imager);
   void endRecording();

@@ -28,7 +28,7 @@ public:
  SERWriter(const QString &deviceName, Configuration &configuration);
  ~SERWriter();
  virtual QString filename() const;
- virtual void handle(const cv::Mat& imageData);
+ virtual void handle(const Frame::ptr &frame);
 
 private:
    DPTR

@@ -57,7 +57,7 @@ Histogram::Histogram(Configuration &configuration, QObject* parent) : QObject(pa
   read_settings();
 }
 
-void Histogram::handle(const cv::Mat& imageData)
+void Histogram::handle(const Frame::ptr &frame)
 {
   
   if( ! d->should_read_frame() )
@@ -65,7 +65,7 @@ void Histogram::handle(const cv::Mat& imageData)
   d->last.restart();
   
     qDebug() << "Analysing histogram";
-    CImg<uint32_t> image(imageData);
+    CImg<uint32_t> image(frame->mat());
     image.histogram(d->bins_size);
     vector<uint32_t> hist(image.size());
     move(image.begin(), image.end(), hist.begin());

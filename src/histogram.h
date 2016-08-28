@@ -30,7 +30,7 @@ public:
   typedef std::shared_ptr<Histogram> ptr;
   ~Histogram();
   Histogram(Configuration &configuration, QObject* parent = 0);
-  virtual void handle(const cv::Mat& imageData);
+  virtual void handle(const Frame::ptr &frame);
   void set_bins(std::size_t bins_size);
   void setEnabled(bool enabled);
   void setRecording(bool recording);

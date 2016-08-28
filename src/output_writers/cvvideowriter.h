@@ -28,7 +28,7 @@ public:
  cvVideoWriter(const QString &deviceName, Configuration &configuration);
  ~cvVideoWriter();
  virtual QString filename() const;
- virtual void handle(const cv::Mat& imageData);
+ virtual void handle(const Frame::ptr &frame);
 
 private:
     DPTR

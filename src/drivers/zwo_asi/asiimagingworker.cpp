@@ -58,7 +58,7 @@ bool ASIImagingWorker::shoot(const ImageHandlerPtr& imageHandler)
         cv::Mat image( {d->roi.width(), d->roi.height()}, d->getCVImageType(), d->buffer.data());
         cv::Mat copy;
         image.copyTo(copy);
-        imageHandler->handle(copy);
+        imageHandler->handle(Frame::create(copy));
         return true;
   }
    catch(ZWOException &e) {

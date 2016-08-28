@@ -80,11 +80,11 @@ public:
   explicit WriterThreadWorker ( const FileWriterFactory& fileWriterFactory, uint64_t max_frames, long long int max_memory, bool& is_recording, SaveImages *saveImages, const RecordingInformation::ptr &recording_information, QObject* parent = 0 );
   virtual ~WriterThreadWorker();
 public slots:
-  virtual void handle(const cv::Mat& imageData);
+  virtual void handle(const Frame::ptr &frame);
   void run();
 private:
   FileWriterFactory fileWriterFactory;
-  shared_ptr<boost::lockfree::spsc_queue<cv::Mat>> framesQueue;
+  shared_ptr<boost::lockfree::spsc_queue<Frame::ptr>> framesQueue;
   uint64_t max_frames;
   long long max_memory;
   bool &is_recording;
@@ -103,15 +103,14 @@ WriterThreadWorker::~WriterThreadWorker()
 }
 
 
-void WriterThreadWorker::handle(const cv::Mat& imageData)
+void WriterThreadWorker::handle(const Frame::ptr &frame)
 {
-  auto imageDataSize = imageData.total()* imageData.elemSize();
   if(!framesQueue) {
-    framesQueue = make_shared<boost::lockfree::spsc_queue<cv::Mat>>(max_memory/imageDataSize);
-    qDebug() << "allocated framesqueue with " << max_memory << " bytes capacity (" << max_memory/imageDataSize << " frames)";
+    framesQueue = make_shared<boost::lockfree::spsc_queue<Frame::ptr>>(max_memory/frame->size());
+    qDebug() << "allocated framesqueue with " << max_memory << " bytes capacity (" << max_memory/frame->size()<< " frames)";
   }
   
-  if(!framesQueue->push(imageData)) {
+  if(!framesQueue->push(frame)) {
     qWarning() << "Frames queue too high, dropping frame";
     emit saveImages->droppedFrames(++dropped_frames);
   }
@@ -130,15 +129,15 @@ void WriterThreadWorker::run()
     emit saveImages->recording(fileWriter->filename());
     int width = -1, height = -1;
     while(is_recording && frames < max_frames) {
-      cv::Mat frame;
+      Frame::ptr frame;
       if(framesQueue && framesQueue->pop(frame)) {
 	fileWriter->handle(frame);
 	++savefps;
 	++meanfps;
 	emit saveImages->savedFrames(++frames);
 	if(width == -1 || height == -1) {
-	  width = frame.cols;
-	  height = frame.rows;
+	  width = frame->resolution().width();
+	  height = frame->resolution().height();
 	}
       } else {
 	QThread::msleep(1);
@@ -156,11 +155,11 @@ void WriterThreadWorker::run()
 }
 
 
-void SaveImages::handle(const cv::Mat& imageData)
+void SaveImages::handle(const Frame::ptr &frame)
 {
   if(!d->is_recording)
     return;
-  QtConcurrent::run(bind(&WriterThreadWorker::handle, d->worker, imageData));
+  QtConcurrent::run(bind(&WriterThreadWorker::handle, d->worker, frame));
 }
 
 void SaveImages::startRecording(Imager *imager)

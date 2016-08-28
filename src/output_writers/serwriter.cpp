@@ -90,16 +90,16 @@ QString SERWriter::filename() const
   return d->file.fileName();
 }
 
-void SERWriter::handle ( const cv::Mat& imageData )
+void SERWriter::handle ( const Frame::ptr &frame )
 {
   if(! d->header->imageWidth) {
-    d->header->colorId = imageData.channels() == 1 ? SER_Header::MONO : SER_Header::RGB;
-    d->header->pixelDepth = (imageData.depth() == CV_8U || imageData.depth() == CV_8S) ? 8 : 16; // TODO imageData->bpp();
+    d->header->colorId = frame->mat().channels() == 1 ? SER_Header::MONO : SER_Header::RGB;
+    d->header->pixelDepth = (frame->mat().depth() == CV_8U || frame->mat().depth() == CV_8S) ? 8 : 16; // TODO imageData->bpp();
     qDebug() << "SER PixelDepth set to " << d->header->pixelDepth << "bpp";
-    d->header->imageWidth = imageData.cols;
-    d->header->imageHeight = imageData.rows;
+    d->header->imageWidth = frame->resolution().width();
+    d->header->imageHeight = frame->resolution().height();
   }
   d->frames_datetimes.push_back(QDateTime::currentDateTimeUtc());
-  d->file.write(reinterpret_cast<const char*>(imageData.data), imageData.total() * imageData.elemSize());
+  d->file.write(reinterpret_cast<const char*>(frame->mat().data), frame->size());
   ++d->frames;
 }

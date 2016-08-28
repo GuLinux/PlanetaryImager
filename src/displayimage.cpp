@@ -63,7 +63,7 @@ DPTR_IMPL(DisplayImage) {
 
   QElapsedTimer elapsed;
   QRect imageRect;
-  boost::lockfree::spsc_queue<cv::Mat, boost::lockfree::capacity<5>> queue;
+  boost::lockfree::spsc_queue<Frame::ptr, boost::lockfree::capacity<5>> queue;
   atomic_bool detectEdges;
   QVector<QRgb> grayScale;
   bool should_display_frame() const;
@@ -124,9 +124,9 @@ void DisplayImage::read_settings()
 }
 
 
-void DisplayImage::handle( const cv::Mat& imageData )
+void DisplayImage::handle( const Frame::ptr &frame )
 {
-  if( ! d->should_display_frame()  || !imageData.data || ! d->queue.push(imageData) ) {
+  if( ! d->should_display_frame()  || !frame->mat().data || ! d->queue.push(frame) ) {
     return;
   }
   d->elapsed.restart();
@@ -134,12 +134,13 @@ void DisplayImage::handle( const cv::Mat& imageData )
 
 void DisplayImage::create_qimages()
 {
-  cv::Mat imageData;
+  Frame::ptr frame;
   while(d->running) {
-    if(!d->queue.pop(imageData)) {
+    if(!d->queue.pop(frame)) {
       QThread::msleep(1);
       continue;
     }
+    auto imageData = frame->mat();
     if(imageData.depth() != CV_8U && imageData.depth() != CV_8S) {
       imageData.convertTo(imageData, CV_8U, 0.00390625); // TODO: handle color images
     }

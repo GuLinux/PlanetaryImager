@@ -279,7 +279,7 @@ void ImagingWorker::start_live()
       ++_fps;
       cv::Mat copy;
       image.copyTo(copy);
-      imageHandler->handle(copy);
+      imageHandler->handle(Frame::create(copy));
     }
   }
   result = StopQHYCCDLive(handle);

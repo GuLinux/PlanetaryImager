@@ -53,10 +53,10 @@ QString cvVideoWriter::filename() const
   return d->filename;
 }
 
-void cvVideoWriter::handle ( const cv::Mat& imageData )
+void cvVideoWriter::handle ( const Frame::ptr &frame )
 {
   auto fourcc = [](const string &s) { return CV_FOURCC(s[0], s[1], s[2], s[3]); };
-  auto size = cv::Size{imageData.cols, imageData.rows};
+  auto size = cv::Size{frame->mat().cols, frame->mat().rows};
   try {
     if(!d->videoWriter.isOpened())
       d->videoWriter.open(d->filename.toStdString(), fourcc(d->configuration.video_codec().toStdString()), 25, size);
@@ -64,7 +64,7 @@ void cvVideoWriter::handle ( const cv::Mat& imageData )
       qWarning() << "unable to open video file" << d->filename << size;
       return;
     }
-    d->videoWriter << imageData;
+    d->videoWriter << frame->mat();
   } catch(cv::Exception &e) {
     qWarning() << "error on handle:" << e.msg << e.code << e.file << e.line << e.func;
   }
