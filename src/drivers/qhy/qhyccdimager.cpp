@@ -26,7 +26,6 @@
 #include <QImage>
 #include <QElapsedTimer>
 #include <QtConcurrent/QtConcurrent>
-#include "image_data.h"
 #include <fps_counter.h>
 #include <chrono>
 #include "Qt/strings.h"

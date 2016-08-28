@@ -18,7 +18,6 @@
 #ifndef IMAGE_HANDLER_H
 #define IMAGE_HANDLER_H
 
-#include "image_data.h"
 #include <memory>
 #include <QList>
 #include<algorithm>

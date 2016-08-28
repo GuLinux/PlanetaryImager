@@ -13,6 +13,7 @@ set(QHYImager_SRCS
   displayimage.cpp
   histogram.cpp
   recordinginformation.cpp
+  frame.cpp
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
