@@ -102,7 +102,6 @@ WriterThreadWorker::~WriterThreadWorker()
 {
 }
 
-#define MB(arg) (arg* 1024 * 1024)
 
 void WriterThreadWorker::handle(const cv::Mat& imageData)
 {

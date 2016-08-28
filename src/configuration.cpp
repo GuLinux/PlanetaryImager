@@ -77,10 +77,10 @@ template<typename T> void Configuration::Private::set(const QString& key, const 
 #define define_setting_enum(name, type, default_value) define_setting_enum_get(name, type, default_value)  define_setting_enum_set(name, type) define_setting_reset(name)
 
 define_setting(dock_status, QByteArray, {})
-define_setting(max_memory_usage, long long, 20*1024*1024)
+define_setting(max_memory_usage, long long, 1024*1024*1024)
 define_setting(buffered_output, bool, true)
 define_setting(max_display_fps, int, 30)
-define_setting(max_display_fps_recording, int, 5)
+define_setting(max_display_fps_recording, int, 2)
 define_setting(limit_fps, bool, true)
 define_setting(limit_fps_recording, bool, true)
 

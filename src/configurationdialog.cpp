@@ -129,18 +129,23 @@ ConfigurationDialog::ConfigurationDialog(Configuration& configuration, QWidget* 
     d->ui->histogram_timeout_recording->setValue(configuration.histogram_timeout_recording() / 1000.);
     connect(d->ui->histogram_timeout_recording, F_PTR(QDoubleSpinBox, valueChanged, double), [&configuration](double v) { configuration.set_histogram_timeout_recording(v*1000); });
     
-    d->ui->memory_limit->setRange(0, 500*1024*1024);
-    connect(d->ui->memory_limit, &QSlider::valueChanged, [=,&configuration](int value) {
-      d->ui->memory_limit_label->setText("%1 MB"_q % QString::number(static_cast<double>(value/(1024.*1024)), 'f', 2));
-      configuration.set_max_memory_usage(value);
-    });
+    auto set_memory_limit = [=,&configuration](int value) {
+      if(value < 1024)
+	d->ui->memory_limit_label->setText("%1 MB"_q % value);
+      else
+	d->ui->memory_limit_label->setText("%1 GB"_q.arg(static_cast<double>(value) / 1024., 0, 'f', 2) );
+      configuration.set_max_memory_usage(static_cast<long>(value) * 1024l * 1024l);
+    };
+    d->ui->memory_limit->setRange(0, 8*1024);
+    connect(d->ui->memory_limit, &QSlider::valueChanged, set_memory_limit);
     connect(d->ui->buffered_file, &QCheckBox::toggled, bind(&Configuration::set_buffered_output, &configuration, _1));
+    d->ui->memory_limit->setValue(configuration.max_memory_usage() / 1024 / 1024 );
+    set_memory_limit(d->ui->memory_limit->value());
         
     d->ui->telescope->setText(configuration.telescope());
     d->ui->observer->setText(configuration.observer());
     connect(d->ui->observer, &QLineEdit::textChanged, bind(&Configuration::set_observer, &configuration, _1));
     connect(d->ui->telescope, &QLineEdit::textChanged, bind(&Configuration::set_telescope, &configuration, _1));
-    d->ui->memory_limit->setValue(configuration.max_memory_usage());
     for(auto codec: QList<QPair<QString,QString>>{
         {"X264", tr("Good compression and quality")},
         {"MJPG", "Motion JPEG, good compression"},
