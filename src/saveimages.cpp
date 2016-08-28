@@ -32,86 +32,10 @@
 #include "opencv_utils.h"
 #include <Qt/strings.h>
 #include "output_writers/filewriter.h"
-
+#include "recordinginformation.h"
 
 using namespace std;
 using namespace std::placeholders;
-
-struct RecordingInformation {
-  RecordingInformation(Configuration &configuration, Imager *imager);
-  ~RecordingInformation();
-  void set_base_filename(const QString &filename);
-  void set_ended(int total_frames, int width, int height);
-  QVariantMap properties;
-  typedef shared_ptr<RecordingInformation> ptr;
-  QString filename;
-  QDateTime started;
-};
-
-RecordingInformation::RecordingInformation(Configuration& configuration, Imager *imager)
-{
-  started = QDateTime::currentDateTime();
-  properties["started"] = started.toString(Qt::ISODate);
-  properties["camera"] = imager->name();
-  properties["observer"] = configuration.observer();
-  properties["telescope"] = configuration.telescope();
-  QVariantMap camera_settings;
-  for(auto setting: imager->controls()) {
-    QVariantMap setting_value;
-    setting_value["value"] = setting.value;
-    static QMap<Imager::Control::Type, QString> types {
-      {Imager::Control::Number, "number"},
-      {Imager::Control::Combo, "combo"},
-      {Imager::Control::Bool, "bool"}
-    };
-    setting_value["type"] = types[setting.type];
-    if(setting.type == Imager::Control::Combo) {
-      QVariantMap choices;
-      for(auto choice: setting.choices)
-	choices[choice.label] = choice.value;
-      setting_value["choices"] = choices;
-    }
-    if(setting.type == Imager::Control::Number && setting.is_duration) {
-      setting_value["type"] = "duration";
-      QList<QPair<QString, double>> units {
-	{"seconds", 1}, {"milliseconds", 1000}, {"microseconds", 1000000}
-      };
-      for(auto unit: units) {
-	setting_value["value_%1"_q % unit.first] = setting.value * setting.duration_unit.count() * unit.second;
-      }
-    }
-    camera_settings[setting.name] = setting_value;
-  }
-  properties["camera-settings"] = camera_settings;
-}
-
-void RecordingInformation::set_ended(int total_frames, int width, int height)
-{
-  auto ended =QDateTime::currentDateTime();
-  auto elapsed = started.secsTo(ended);
-  properties["ended"] = ended.toString(Qt::ISODate);
-  properties["total-frames"] = total_frames;
-  properties["width"] = width;
-  properties["height"] = height;
-  properties["mean-fps"] = static_cast<double>(total_frames) / static_cast<double>(elapsed);
-}
-
-void RecordingInformation::set_base_filename(const QString& filename)
-{
-  this->filename = filename + ".txt";
-}
-
-RecordingInformation::~RecordingInformation()
-{
-  QFile file(filename);
-  if(filename.isEmpty() || ! file.open(QIODevice::WriteOnly))
-    return;
-  auto json = QJsonDocument::fromVariant(properties);
-  file.write(json.toJson(QJsonDocument::Indented));
-  file.close();
-}
-
-
 
 class WriterThreadWorker;
 class SaveImages::Private {
