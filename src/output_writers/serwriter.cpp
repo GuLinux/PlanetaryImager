@@ -27,31 +27,25 @@ using namespace std;
 using namespace std::placeholders;
 
 
-class SERWriter::Private
-{
-public:
-  Private ( const QString& deviceName, Configuration& configuration, SERWriter *q );
+DPTR_IMPL(SERWriter) {
+  SERWriter *q;
   QFile file;
   SER_Header *header;
   uint32_t frames = 0;
   vector<QDateTime> frames_datetimes;
   SER_Timestamp timestamp(const QDateTime &datetime) const;
-private:
-  SERWriter *q;
 };
 
-SERWriter::Private::Private ( const QString& deviceName, Configuration& configuration, SERWriter* q ) 
-  : file(configuration.savefile()), q ( q )
+SERWriter::SERWriter ( const QString& deviceName, Configuration& configuration ) : dptr(this)
 {
-}
-
-SERWriter::SERWriter ( const QString& deviceName, Configuration& configuration ) : dptr(deviceName, configuration, this)
-{
+  d->file.setFileName(configuration.savefile());
   qDebug() << "Using buffered output: " << configuration.buffered_output();
-  if(configuration.buffered_output())
+  if(configuration.buffered_output()) {
     d->file.open(QIODevice::ReadWrite);
-  else
+  }
+  else {
     d->file.open(QIODevice::ReadWrite | QIODevice::Unbuffered);
+  }
   SER_Header empty_header;
   empty_header.datetime = d->timestamp(QDateTime::currentDateTime());
   empty_header.datetime_utc = d->timestamp(QDateTime::currentDateTimeUtc());
@@ -100,6 +94,11 @@ void SERWriter::handle ( const Frame::ptr &frame )
     d->header->imageHeight = frame->resolution().height();
   }
   d->frames_datetimes.push_back(QDateTime::currentDateTimeUtc());
-  d->file.write(reinterpret_cast<const char*>(frame->mat().data), frame->size());
-  ++d->frames;
+  auto frame_bytes = frame->size();
+  size_t wrote_bytes = d->file.write(reinterpret_cast<const char*>(frame->mat().data), frame->size());
+  if(wrote_bytes == frame->size() ) {
+    ++d->frames;
+  } else {
+    qWarning() << "Error writing frame: wrote only " << wrote_bytes << " instead of " << frame_bytes;
+  }
 }
