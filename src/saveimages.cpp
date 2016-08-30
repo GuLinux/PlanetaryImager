@@ -77,7 +77,7 @@ class WriterThreadWorker : public QObject {
   Q_OBJECT
 public:
   typedef function< FileWriter::Ptr() > FileWriterFactory;
-  explicit WriterThreadWorker ( const FileWriterFactory& fileWriterFactory, uint64_t max_frames, long long int max_memory, bool& is_recording, SaveImages *saveImages, const RecordingInformation::ptr &recording_information, QObject* parent = 0 );
+  WriterThreadWorker ( const FileWriterFactory& fileWriterFactory, uint64_t max_frames, size_t max_memory, bool& is_recording, SaveImages *saveImages, const RecordingInformation::ptr &recording_information, QObject* parent = 0 );
   virtual ~WriterThreadWorker();
 public slots:
   virtual void handle(const Frame::ptr &frame);
@@ -93,7 +93,7 @@ private:
   RecordingInformation::ptr recording_information;
 };
 
-WriterThreadWorker::WriterThreadWorker ( const WriterThreadWorker::FileWriterFactory& fileWriterFactory, uint64_t max_frames, long long int max_memory, bool& is_recording, SaveImages* saveImages, const RecordingInformation::ptr& recording_information, QObject* parent )
+WriterThreadWorker::WriterThreadWorker ( const WriterThreadWorker::FileWriterFactory& fileWriterFactory, uint64_t max_frames, size_t max_memory, bool& is_recording, SaveImages* saveImages, const RecordingInformation::ptr& recording_information, QObject* parent )
   : QObject(parent), fileWriterFactory(fileWriterFactory), max_frames(max_frames), max_memory{max_memory}, is_recording{is_recording}, saveImages{saveImages}, recording_information{recording_information}
 {
 }
