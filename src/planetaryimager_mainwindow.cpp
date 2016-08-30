@@ -46,6 +46,7 @@
 #include <QToolBar>
 #include "Qt/strings.h"
 #include <Qt/functional.h>
+#include "threadimagehandler.h"
 
 using namespace GuLinux;
 using namespace std;
@@ -135,6 +136,11 @@ void PlanetaryImagerMainWindow::Private::saveState()
 
 PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::WindowFlags flags) : dptr(this)
 {
+    static bool metatypes_registered = false;
+    if(!metatypes_registered) {
+      metatypes_registered = true;
+      qRegisterMetaType<Frame::ptr>("Frame::ptr");
+    }
     d->ui.reset(new Ui::PlanetaryImagerMainWindow);
     d->ui->setupUi(this);
     setWindowIcon(QIcon::fromTheme("planetary_imager"));
@@ -295,7 +301,9 @@ void PlanetaryImagerMainWindow::Private::rescan_devices()
 
 void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::CameraPtr& camera)
 {
-  CreateImagerWorker::create(camera, ImageHandlerPtr{new ImageHandlers{displayImage, saveImages, histogram}}, &imagerThread, q, bind(&Private::onImagerInitialized, this, _1) );
+  auto compositeImageHandler = ImageHandlerPtr{new ImageHandlers{displayImage, saveImages, histogram}};
+  auto threadImageHandler = ImageHandlerPtr{new ThreadImageHandler{compositeImageHandler}};
+  CreateImagerWorker::create(camera, threadImageHandler, &imagerThread, q, bind(&Private::onImagerInitialized, this, _1) );
 }
 
 void PlanetaryImagerMainWindow::Private::onImagerInitialized(Imager * imager)
@@ -345,3 +353,4 @@ void PlanetaryImagerMainWindow::Private::enableUIWidgets(bool cameraConnected)
 }
 
 #include "planetaryimager_mainwindow.moc"
+#include "threadimagehandler.h"

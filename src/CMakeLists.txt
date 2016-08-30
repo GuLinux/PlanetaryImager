@@ -1,6 +1,6 @@
 configure_file(version.h.in version.h)
 
-set(QHYImager_SRCS
+set(PlanetaryImager_SRCS
   main.cpp 
   planetaryimager_mainwindow.cpp 
   planetaryimager_mainwindow.ui 
@@ -14,6 +14,7 @@ set(QHYImager_SRCS
   histogram.cpp
   recordinginformation.cpp
   frame.cpp
+  threadimagehandler.cpp
 )
 
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
@@ -26,7 +27,7 @@ endfunction(add_imager_dependencies)
 add_subdirectory(drivers)
 add_subdirectory(output_writers)
 add_subdirectory(widgets)
-add_executable(planetary_imager ${QHYImager_SRCS})
+add_executable(planetary_imager ${PlanetaryImager_SRCS})
 
 
 
