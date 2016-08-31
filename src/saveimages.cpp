@@ -38,51 +38,49 @@
 
 using namespace std;
 using namespace std::placeholders;
-
+namespace {
 class WriterThreadWorker;
+};
 
 DPTR_IMPL(SaveImages) {
     Configuration &configuration;
     WriterThreadWorker *worker;
+    QThread *recordingThread;
     SaveImages *q;
-    QThread recordingThread;
     FileWriter::Factory writerFactory();
 };
 
-FileWriter::Factory SaveImages::Private::writerFactory()
-{
-  if(configuration.savefile().isEmpty()) {
-    return {};
-  }
 
-  return FileWriter::factories()[configuration.save_format()];
-}
-
+namespace {
+typedef boost::lockfree::spsc_queue<Frame::ptr> FramesQueue;
+typedef function< FileWriter::Ptr() > CreateFileWriter;
+struct Recording;
+  
 class WriterThreadWorker : public QObject {
   Q_OBJECT
 public:
-  typedef function< FileWriter::Ptr() > FileWriterFactory;
-  struct Recording;
   WriterThreadWorker ( SaveImages *saveImages, QObject* parent = 0 );
   virtual ~WriterThreadWorker();
   void stop();
 public slots:
   virtual void handle(const Frame::ptr &frame);
-  void start(const WriterThreadWorker::Recording &recording, qlonglong max_memory_usage);
+  void start(const Recording &recording, qlonglong max_memory_usage);
 private:
-  unique_ptr<boost::lockfree::spsc_queue<Frame::ptr>> framesQueue;
+  unique_ptr<FramesQueue> framesQueue;
   SaveImages *saveImages;
   atomic_bool is_recording;
   size_t max_memory_usage;
   uint64_t dropped_frames;
 };
 
-struct WriterThreadWorker::Recording {
-  FileWriterFactory fileWriterFactory;
+struct Recording {
+    CreateFileWriter fileWriterFactory;
   long long max_frames;
   RecordingInformation::ptr recording_information;
 };
-Q_DECLARE_METATYPE(WriterThreadWorker::Recording)
+}
+Q_DECLARE_METATYPE(Recording)
+
 
 WriterThreadWorker::WriterThreadWorker (SaveImages *saveImages, QObject* parent )
   : QObject(parent), saveImages{saveImages}, is_recording{false}
@@ -109,7 +107,7 @@ void WriterThreadWorker::handle(const Frame::ptr &frame)
   if(!is_recording)
     return;
   if(!framesQueue) {
-    framesQueue = std::make_unique<boost::lockfree::spsc_queue<Frame::ptr>>( std::max(max_memory_usage/frame->size(), size_t{1})  );
+    framesQueue.reset(new FramesQueue{ std::max(max_memory_usage/frame->size(), size_t{1})  } );
     qDebug() << "allocated framesqueue with " << max_memory_usage << " bytes capacity (" << max_memory_usage/frame->size()<< " frames)";
   }
   
@@ -119,7 +117,7 @@ void WriterThreadWorker::handle(const Frame::ptr &frame)
   }
 }
 
-void WriterThreadWorker::start(const WriterThreadWorker::Recording& recording, qlonglong max_memory_usage)
+void WriterThreadWorker::start(const Recording& recording, qlonglong max_memory_usage)
 {
   this->max_memory_usage = static_cast<size_t>(max_memory_usage);
   dropped_frames = 0;
@@ -154,18 +152,27 @@ void WriterThreadWorker::start(const WriterThreadWorker::Recording& recording, q
 }
 
 
-SaveImages::SaveImages(Configuration& configuration, QObject* parent) : QObject(parent), dptr(configuration, new WriterThreadWorker(this), this)
+FileWriter::Factory SaveImages::Private::writerFactory()
 {
-  d->worker->moveToThread(&d->recordingThread);
-  d->recordingThread.start();
+  if(configuration.savefile().isEmpty()) {
+    return {};
+  }
+
+  return FileWriter::factories()[configuration.save_format()];
+}
+
+SaveImages::SaveImages(Configuration& configuration, QObject* parent) : QObject(parent), dptr(configuration, new WriterThreadWorker(this), new QThread, this)
+{
+  d->worker->moveToThread(d->recordingThread);
+  d->recordingThread->start();
 }
 
 
 SaveImages::~SaveImages()
 {
   endRecording();
-  d->recordingThread.quit();
-  d->recordingThread.wait();
+  d->recordingThread->quit();
+  d->recordingThread->wait();
 }
 
 
@@ -183,13 +190,13 @@ void SaveImages::startRecording(Imager *imager)
     if(d->configuration.save_info_file())
       recording_information = make_shared<RecordingInformation>(d->configuration, imager);
     
-    WriterThreadWorker::Recording recording{
+    Recording recording{
       bind(writerFactory, imager->name(), std::ref<Configuration>(d->configuration)), 
       d->configuration.recording_frames_limit() == 0 ? std::numeric_limits<long long>().max() : d->configuration.recording_frames_limit(),
       recording_information,
     };
     
-    QMetaObject::invokeMethod(d->worker, "start", Q_ARG(WriterThreadWorker::Recording, recording), Q_ARG(qlonglong, d->configuration.max_memory_usage() ));    
+    QMetaObject::invokeMethod(d->worker, "start", Q_ARG(Recording, recording), Q_ARG(qlonglong, d->configuration.max_memory_usage() ));    
   }
 }
 
