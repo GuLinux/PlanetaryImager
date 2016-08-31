@@ -54,7 +54,12 @@ DPTR_IMPL(SaveImages) {
 namespace {
 typedef boost::lockfree::spsc_queue<Frame::ptr> FramesQueue;
 typedef function< FileWriter::Ptr() > CreateFileWriter;
-struct Recording;
+
+struct RecordingParameters {
+  CreateFileWriter fileWriterFactory;
+  long long max_frames;
+  RecordingInformation::ptr recording_information;
+};
   
 class WriterThreadWorker : public QObject {
   Q_OBJECT
@@ -63,8 +68,8 @@ public:
   virtual ~WriterThreadWorker();
   void stop();
 public slots:
-  virtual void handle(const Frame::ptr &frame);
-  void start(const Recording &recording, qlonglong max_memory_usage);
+  virtual void queue(const Frame::ptr &frame);
+  void start(const RecordingParameters &recording, qlonglong max_memory_usage);
 private:
   unique_ptr<FramesQueue> framesQueue;
   SaveImages *saveImages;
@@ -73,13 +78,8 @@ private:
   uint64_t dropped_frames;
 };
 
-struct Recording {
-    CreateFileWriter fileWriterFactory;
-  long long max_frames;
-  RecordingInformation::ptr recording_information;
-};
 }
-Q_DECLARE_METATYPE(Recording)
+Q_DECLARE_METATYPE(RecordingParameters)
 
 
 WriterThreadWorker::WriterThreadWorker (SaveImages *saveImages, QObject* parent )
@@ -88,7 +88,7 @@ WriterThreadWorker::WriterThreadWorker (SaveImages *saveImages, QObject* parent 
     static bool metatypes_registered = false;
     if(!metatypes_registered) {
       metatypes_registered = true;
-      qRegisterMetaType<Recording>();
+      qRegisterMetaType<RecordingParameters>();
     }
 }
 
@@ -102,7 +102,7 @@ void WriterThreadWorker::stop()
 }
 
 
-void WriterThreadWorker::handle(const Frame::ptr &frame)
+void WriterThreadWorker::queue(const Frame::ptr &frame)
 {
   if(!is_recording)
     return;
@@ -117,7 +117,7 @@ void WriterThreadWorker::handle(const Frame::ptr &frame)
   }
 }
 
-void WriterThreadWorker::start(const Recording& recording, qlonglong max_memory_usage)
+void WriterThreadWorker::start(const RecordingParameters & recording, qlonglong max_memory_usage)
 {
   this->max_memory_usage = static_cast<size_t>(max_memory_usage);
   dropped_frames = 0;
@@ -178,7 +178,7 @@ SaveImages::~SaveImages()
 
 void SaveImages::handle(const Frame::ptr &frame)
 {
-  d->worker->handle(frame);
+  d->worker->queue(frame);
 //   QtConcurrent::run(bind(&WriterThreadWorker::handle, d->worker, frame));
 }
 
@@ -190,13 +190,13 @@ void SaveImages::startRecording(Imager *imager)
     if(d->configuration.save_info_file())
       recording_information = make_shared<RecordingInformation>(d->configuration, imager);
     
-    Recording recording{
+        RecordingParameters recording{
       bind(writerFactory, imager->name(), std::ref<Configuration>(d->configuration)), 
       d->configuration.recording_frames_limit() == 0 ? std::numeric_limits<long long>().max() : d->configuration.recording_frames_limit(),
       recording_information,
     };
     
-    QMetaObject::invokeMethod(d->worker, "start", Q_ARG(Recording, recording), Q_ARG(qlonglong, d->configuration.max_memory_usage() ));    
+    QMetaObject::invokeMethod(d->worker, "start", Q_ARG(RecordingParameters, recording), Q_ARG(qlonglong, d->configuration.max_memory_usage() ));    
   }
 }
 
