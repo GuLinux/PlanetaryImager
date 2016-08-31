@@ -60,7 +60,24 @@ struct RecordingParameters {
   long long max_frames;
   RecordingInformation::ptr recording_information;
 };
-  
+
+class Recording {
+public:
+  typedef shared_ptr<Recording> ptr;
+    Recording(const RecordingParameters &parameters, SaveImages *saveImagesObject);
+  ~Recording();
+  RecordingParameters parameters() const { return _parameters; }
+  void add(const Frame::ptr &frame);
+  bool accepting_frames() const;
+private:
+  const RecordingParameters _parameters;
+  SaveImages *saveImagesObject;
+  fps_counter savefps, meanfps;
+  FileWriter::Ptr file_writer;
+  size_t frames = 0;
+  Frame::ptr reference;
+};
+
 class WriterThreadWorker : public QObject {
   Q_OBJECT
 public:
@@ -78,9 +95,40 @@ private:
   uint64_t dropped_frames;
 };
 
+
 }
 Q_DECLARE_METATYPE(RecordingParameters)
 
+
+Recording::Recording(const RecordingParameters &parameters, SaveImages *saveImagesObject) : 
+  _parameters{parameters},
+  saveImagesObject{saveImagesObject},
+  savefps{[=](double fps){ emit saveImagesObject->saveFPS(fps);}, fps_counter::Elapsed},
+  meanfps{[=](double fps){ emit saveImagesObject->meanFPS(fps);}, fps_counter::Elapsed, 1000, true},
+  file_writer{parameters.fileWriterFactory()}
+{
+  _parameters.recording_information->set_base_filename(file_writer->filename());
+  emit saveImagesObject->recording(file_writer->filename());
+}
+
+void Recording::add(const Frame::ptr &frame) {
+  if(frames == 0)
+    reference = frame;
+  file_writer->handle(frame);
+  ++savefps;
+  ++meanfps;
+  emit saveImagesObject->savedFrames(++frames);
+}
+
+bool Recording::accepting_frames() const {
+  return frames < _parameters.max_frames;
+}
+
+Recording::~Recording() {
+  if(reference)
+    _parameters.recording_information->set_ended(frames, reference->resolution().width(), reference->resolution().height(), reference->bpp(), reference->channels());
+  emit saveImagesObject->finished();
+}
 
 WriterThreadWorker::WriterThreadWorker (SaveImages *saveImages, QObject* parent )
   : QObject(parent), saveImages{saveImages}, is_recording{false}
@@ -106,7 +154,7 @@ void WriterThreadWorker::queue(const Frame::ptr &frame)
 {
   if(!is_recording)
     return;
-  if(!framesQueue) {
+  if(!framesQueue  ) {
     framesQueue.reset(new FramesQueue{ std::max(max_memory_usage/frame->size(), size_t{1})  } );
     qDebug() << "allocated framesqueue with " << max_memory_usage << " bytes capacity (" << max_memory_usage/frame->size()<< " frames)";
   }
@@ -117,34 +165,23 @@ void WriterThreadWorker::queue(const Frame::ptr &frame)
   }
 }
 
-void WriterThreadWorker::start(const RecordingParameters & recording, qlonglong max_memory_usage)
+void WriterThreadWorker::start(const RecordingParameters & recording_parameters, qlonglong max_memory_usage)
 {
+  Recording recording{recording_parameters, saveImages};
   this->max_memory_usage = static_cast<size_t>(max_memory_usage);
+  
   dropped_frames = 0;
   is_recording = true;
-  auto fileWriter = recording.fileWriterFactory();
-  recording.recording_information->set_base_filename(fileWriter->filename());
-  fps_counter savefps{[=](double fps){ emit saveImages->saveFPS(fps);}, fps_counter::Elapsed};
-  fps_counter meanfps{[=](double fps){ emit saveImages->meanFPS(fps);}, fps_counter::Elapsed, 1000, true};
-  uint64_t frames = 0;
-  emit saveImages->recording(fileWriter->filename());
-  Frame::ptr reference;
+
+  
   GuLinux::Scope on_finish{[&]{
     is_recording = false;
     framesQueue.reset();
-    recording.recording_information->set_ended(frames, reference->resolution().width(), reference->resolution().height(), reference->bpp(), reference->channels());
-    emit saveImages->finished();
   }};
-  while(is_recording && frames < recording.max_frames) {
+  while(is_recording && recording.accepting_frames() ) {
     Frame::ptr frame;
     if(framesQueue && framesQueue->pop(frame)) {
-      fileWriter->handle(frame);
-      ++savefps;
-      ++meanfps;
-      emit saveImages->savedFrames(++frames);
-      if(! reference) {
-        reference = frame;
-      }
+      recording.add(frame);
     } else {
       QThread::msleep(1);
     }
