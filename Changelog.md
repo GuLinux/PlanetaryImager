@@ -1,4 +1,5 @@
-## 0.5.1 2016-08-xx
+## 0.6.0 2016-09-xx
+ - Allow to choose recording duration based on frames number or seconds
  - Removed deprecated edge detection algorithm, using only OpenCV provided canny and sobel. This allows compilation in other platforms (for instance, arm)
  - ASI: Updated ASI SDK to v0.3.819, with great speed improvements for USB3 cameras
  - QHY: use static libraries instead of installing dynamic libraries to the system
@@ -7,6 +8,7 @@
  - Histogram: allow to toggle on/off to reduce CPU usage
  - Histogram: configurable interval, with different values while recording, to reduce CPU usage
  - Lots of more configurable options
+ - More reliable frame creation timestamp
  
 ## 0.5.0 2016-08-21
  - Fix ASI controls issue
