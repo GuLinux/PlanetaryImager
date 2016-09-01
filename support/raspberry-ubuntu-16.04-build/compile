@@ -1,0 +1,13 @@
+#!/bin/bash
+. commons
+
+mkdir -p "$root/build" "$root/PlanetaryImager"
+chmod a+rwx -R "$root/build"
+[[ -d "$root/PlanetaryImager/.git" ]] || mount --bind "$project" "$root/PlanetaryImager"
+
+rrun <<EOF
+cd /build
+cmake /PlanetaryImager -DCMAKE_BUILD_TYPE=Debug -DCMAKE_INSTALL_PREFIX=/usr -DEXTRA_LIBRARIES=udev -DCMAKE_PREFIX_PATH=/opt/libusb-git $CMAKE_OPTS
+make $@
+
+EOF
