@@ -59,6 +59,7 @@ struct RecordingParameters {
   CreateFileWriter fileWriterFactory;
   long long max_frames;
   RecordingInformation::ptr recording_information;
+  enum {Infinite, FramesNumber, Duration, Size } limit_type;
 };
 
 class Recording {
@@ -124,7 +125,11 @@ void Recording::add(const Frame::ptr &frame) {
 }
 
 bool Recording::accepting_frames() const {
-  return is_recording_control && frames < _parameters.max_frames;
+  return 
+    is_recording_control && (
+    _parameters.limit_type == RecordingParameters::Infinite || 
+    ( _parameters.limit_type == RecordingParameters::FramesNumber && frames < _parameters.max_frames )
+    );
 }
 
 Recording::~Recording() {
@@ -228,9 +233,10 @@ void SaveImages::startRecording(Imager *imager)
     
         RecordingParameters recording{
       bind(writerFactory, imager->name(), std::ref<Configuration>(d->configuration)), 
-      d->configuration.recording_frames_limit() == 0 ? std::numeric_limits<long long>().max() : d->configuration.recording_frames_limit(),
+      d->configuration.recording_frames_limit(),
       recording_information,
     };
+    recording.limit_type = d->configuration.recording_frames_limit() == 0 ? RecordingParameters::Infinite : RecordingParameters::FramesNumber;
     
     QMetaObject::invokeMethod(d->worker, "start", Q_ARG(RecordingParameters, recording), Q_ARG(qlonglong, d->configuration.max_memory_usage() ));    
   }
