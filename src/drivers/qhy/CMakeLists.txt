@@ -1,6 +1,13 @@
 execute_process(COMMAND ${CMAKE_SOURCE_DIR}/scripts/qhy_errors_to_map ${CMAKE_CURRENT_SOURCE_DIR}/QHYCCD_Linux/qhyccderr.h OUTPUT_VARIABLE qhy_error_codes)
 execute_process(COMMAND ${CMAKE_SOURCE_DIR}/scripts/qhy_devices_to_map ${CMAKE_CURRENT_SOURCE_DIR}/QHYCCD_Linux/qhyccdcamdef.h OUTPUT_VARIABLE qhy_devices_codes)
-include_directories(QHYCCD_Linux/)
+
+configure_file(QHYCCD_Linux/qhyccd.h ${CMAKE_CURRENT_BINARY_DIR}/ COPYONLY)
+configure_file(QHYCCD_Linux/qhyccdcamdef.h ${CMAKE_CURRENT_BINARY_DIR}/ COPYONLY)
+configure_file(QHYCCD_Linux/qhyccdstruct.h ${CMAKE_CURRENT_BINARY_DIR}/ COPYONLY)
+configure_file(QHYCCD_Linux/qhyccderr.h ${CMAKE_CURRENT_BINARY_DIR}/ COPYONLY)
+execute_process(COMMAND ${CMAKE_SOURCE_DIR}/scripts/qhy_fix_libusb_include ${CMAKE_CURRENT_BINARY_DIR}/qhyccdstruct.h)
+
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 set(qhy_SOURCES qhydriver.cpp qhyccdimager.cpp)
 

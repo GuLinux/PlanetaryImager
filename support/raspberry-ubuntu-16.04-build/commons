@@ -1,7 +1,7 @@
 #!/bin/bash
 
 root="$( dirname "$( readlink -f "$0" )" )/raspberry-root"
-project="$( readlink -f "$( dirname "$0" )/../../..")"
+project="$( readlink -f "$( dirname "$0" )/../../")"
 rrun() {
 
 

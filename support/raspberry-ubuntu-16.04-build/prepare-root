@@ -11,6 +11,5 @@ rrun apt-get update && rrun apt-get install -y git cmake autoconf libudev-dev qt
 if ! [[ -d "$root"/opt/libusb-git ]]; then
   rrun <<EOF
 cd / && git clone https://github.com/libusb/libusb.git libusb-git && cd libusb-git && ./autogen.sh && ./configure --enable-static=yes --enable-shared=no --prefix=/opt/libusb-git && make all install && cd / && rm -rf /libusb-git
-ln -s /opt/libusb-git/include/libusb-1.0/ /usr/include # temp workaround for QHY include path
 EOF
 fi
