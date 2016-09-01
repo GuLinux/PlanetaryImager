@@ -1,0 +1,8 @@
+#!/bin/bash
+img_url="http://cdimage.ubuntu.com/ubuntu/releases/16.04/release/ubuntu-16.04-preinstalled-server-armhf+raspi2.img.xz"
+img_file="$( basename "$img_url")"
+img="${img_file%.*}"
+[[ -r "$img_file" ]] || curl -O -L "$img_url"
+[[ -r "$img" ]] || unxz -k "$img_file"
+
+
