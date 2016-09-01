@@ -44,6 +44,7 @@
 #include "Qt/zoomableimage.h"
 #include <QGridLayout>
 #include <QToolBar>
+#include <QWhatsThis>
 #include "Qt/strings.h"
 #include <Qt/functional.h>
 #include "threadimagehandler.h"
@@ -166,6 +167,9 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     d->image->actions()[ZoomableImage::Actions::ZoomRealSize]->setShortcut({Qt::CTRL + Qt::Key_Backspace});
     
     addToolBar(d->image->toolbar());
+    QToolBar *helpToolBar = new QToolBar;
+    helpToolBar->addAction(QWhatsThis::createAction());
+    addToolBar(helpToolBar);
     d->image->toolbar()->setFloatable(true);
     d->image->toolbar()->setMovable(true);
     
