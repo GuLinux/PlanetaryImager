@@ -4,5 +4,9 @@ img_file="$( basename "$img_url")"
 img="${img_file%.*}"
 [[ -r "$img_file" ]] || curl -O -L "$img_url"
 [[ -r "$img" ]] || unxz -k "$img_file"
+part_start="$( sfdisk -d -u S "$img" | grep "${img}2" | awk '{ print $4 }' | tr -d , )"
+part_size="$( sfdisk -d -u S "$img" | grep "${img}2" | awk '{ print $6 }' | tr -d ,)"
 
-
+dd if="$img" of=root.img skip="$part_start" count="$part_size"
+# rm -f "$img"
+#e2tools
