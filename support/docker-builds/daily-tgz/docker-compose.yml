@@ -1,7 +1,11 @@
 version: '2'
 services:
     ubuntu-build:
-        build: .
+        build:
+          context: .
+          args:
+            - http_proxy
+            - https_proxy
         image: planetaryimager-ubuntu:16.04
         volumes:
             - ../../../:/code
