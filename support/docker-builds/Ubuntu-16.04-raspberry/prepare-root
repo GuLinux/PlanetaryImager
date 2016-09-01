@@ -1,0 +1,16 @@
+#!/bin/bash
+RELEASE="xenial"
+. commons
+apt-get install -y qemu-user-static binfmt-support debootstrap
+update-binfmts --enable
+[[ -r "$root"/usr/bin/qemu-arm-static ]] || qemu-debootstrap --arch armhf $RELEASE "$root" http://ports.ubuntu.com/ && cp -av /usr/bin/qemu-arm-static raspberry-root/usr/bin
+cat >"$root"/etc/apt/sources.list <<EOF
+deb http://ports.ubuntu.com/ubuntu-ports xenial main restricted universe multiverse
+EOF
+rrun apt-get update && rrun apt-get install -y git cmake autoconf libudev-dev qtbase5-dev build-essential cimg-dev libopencv-dev libqcustomplot-dev libboost-all-dev
+if ! [[ -d "$root"/opt/libusb-git ]]; then
+  rrun <<EOF
+cd / && git clone https://github.com/libusb/libusb.git libusb-git && cd libusb-git && ./autogen.sh && ./configure --enable-static=yes --enable-shared=no --prefix=/opt/libusb-git && make all install && cd / && rm -rf /libusb-git
+ln -s /opt/libusb-git/include/libusb-1.0/ /usr/include # temp workaround for QHY include path
+EOF
+fi
