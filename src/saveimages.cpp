@@ -64,7 +64,7 @@ struct RecordingParameters {
 class Recording {
 public:
   typedef shared_ptr<Recording> ptr;
-    Recording(const RecordingParameters &parameters, SaveImages *saveImagesObject);
+    Recording(const RecordingParameters &parameters, SaveImages *saveImagesObject, std::atomic_bool &is_recording_control);
   ~Recording();
   RecordingParameters parameters() const { return _parameters; }
   void add(const Frame::ptr &frame);
@@ -72,6 +72,7 @@ public:
 private:
   const RecordingParameters _parameters;
   SaveImages *saveImagesObject;
+  std::atomic_bool &is_recording_control;
   fps_counter savefps, meanfps;
   FileWriter::Ptr file_writer;
   size_t frames = 0;
@@ -100,13 +101,15 @@ private:
 Q_DECLARE_METATYPE(RecordingParameters)
 
 
-Recording::Recording(const RecordingParameters &parameters, SaveImages *saveImagesObject) : 
+Recording::Recording(const RecordingParameters &parameters, SaveImages *saveImagesObject, std::atomic_bool &is_recording_control) : 
   _parameters{parameters},
   saveImagesObject{saveImagesObject},
+  is_recording_control(is_recording_control),
   savefps{[=](double fps){ emit saveImagesObject->saveFPS(fps);}, fps_counter::Elapsed},
   meanfps{[=](double fps){ emit saveImagesObject->meanFPS(fps);}, fps_counter::Elapsed, 1000, true},
   file_writer{parameters.fileWriterFactory()}
 {
+  is_recording_control = true;
   _parameters.recording_information->set_base_filename(file_writer->filename());
   emit saveImagesObject->recording(file_writer->filename());
 }
@@ -121,12 +124,13 @@ void Recording::add(const Frame::ptr &frame) {
 }
 
 bool Recording::accepting_frames() const {
-  return frames < _parameters.max_frames;
+  return is_recording_control && frames < _parameters.max_frames;
 }
 
 Recording::~Recording() {
   if(reference)
     _parameters.recording_information->set_ended(frames, reference->resolution().width(), reference->resolution().height(), reference->bpp(), reference->channels());
+  is_recording_control = false;
   emit saveImagesObject->finished();
 }
 
@@ -167,18 +171,13 @@ void WriterThreadWorker::queue(const Frame::ptr &frame)
 
 void WriterThreadWorker::start(const RecordingParameters & recording_parameters, qlonglong max_memory_usage)
 {
-  Recording recording{recording_parameters, saveImages};
   this->max_memory_usage = static_cast<size_t>(max_memory_usage);
-  
   dropped_frames = 0;
-  is_recording = true;
+  framesQueue.reset();
 
+  Recording recording{recording_parameters, saveImages, is_recording};
   
-  GuLinux::Scope on_finish{[&]{
-    is_recording = false;
-    framesQueue.reset();
-  }};
-  while(is_recording && recording.accepting_frames() ) {
+  while(recording.accepting_frames() ) {
     Frame::ptr frame;
     if(framesQueue && framesQueue->pop(frame)) {
       recording.add(frame);
