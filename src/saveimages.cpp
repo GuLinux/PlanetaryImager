@@ -57,8 +57,10 @@ typedef function< FileWriter::Ptr() > CreateFileWriter;
 
 struct RecordingParameters {
   CreateFileWriter fileWriterFactory;
-  long long max_frames;
   RecordingInformation::ptr recording_information;
+  int64_t max_frames;
+  std::chrono::duration<double> max_seconds;
+  int64_t max_size;
   enum {Infinite, FramesNumber, Duration, Size } limit_type;
 };
 
@@ -74,6 +76,7 @@ private:
   const RecordingParameters _parameters;
   SaveImages *saveImagesObject;
   std::atomic_bool &is_recording_control;
+  chrono::steady_clock::time_point started;
   fps_counter savefps, meanfps;
   FileWriter::Ptr file_writer;
   size_t frames = 0;
@@ -106,6 +109,7 @@ Recording::Recording(const RecordingParameters &parameters, SaveImages *saveImag
   _parameters{parameters},
   saveImagesObject{saveImagesObject},
   is_recording_control(is_recording_control),
+  started{chrono::steady_clock::now()},
   savefps{[=](double fps){ emit saveImagesObject->saveFPS(fps);}, fps_counter::Elapsed},
   meanfps{[=](double fps){ emit saveImagesObject->meanFPS(fps);}, fps_counter::Elapsed, 1000, true},
   file_writer{parameters.fileWriterFactory()}
@@ -128,7 +132,9 @@ bool Recording::accepting_frames() const {
   return 
     is_recording_control && (
     _parameters.limit_type == RecordingParameters::Infinite || 
-    ( _parameters.limit_type == RecordingParameters::FramesNumber && frames < _parameters.max_frames )
+    ( _parameters.limit_type == RecordingParameters::FramesNumber && frames < _parameters.max_frames ) ||
+    ( _parameters.limit_type == RecordingParameters::Duration && chrono::steady_clock::now() - started < _parameters.max_seconds) ||
+    ( _parameters.limit_type == RecordingParameters::Size && (! reference || reference->size() * frames < _parameters.max_size) )
     );
 }
 
@@ -233,8 +239,8 @@ void SaveImages::startRecording(Imager *imager)
     
         RecordingParameters recording{
       bind(writerFactory, imager->name(), std::ref<Configuration>(d->configuration)), 
-      d->configuration.recording_frames_limit(),
       recording_information,
+      d->configuration.recording_frames_limit(),
     };
     recording.limit_type = d->configuration.recording_frames_limit() == 0 ? RecordingParameters::Infinite : RecordingParameters::FramesNumber;
     
