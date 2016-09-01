@@ -58,10 +58,10 @@ typedef function< FileWriter::Ptr() > CreateFileWriter;
 struct RecordingParameters {
   CreateFileWriter fileWriterFactory;
   RecordingInformation::ptr recording_information;
+  Configuration::RecordingLimit limit_type;
   int64_t max_frames;
   std::chrono::duration<double> max_seconds;
   int64_t max_size;
-  enum {Infinite, FramesNumber, Duration, Size } limit_type;
 };
 
 class Recording {
@@ -131,10 +131,10 @@ void Recording::add(const Frame::ptr &frame) {
 bool Recording::accepting_frames() const {
   return 
     is_recording_control && (
-    _parameters.limit_type == RecordingParameters::Infinite || 
-    ( _parameters.limit_type == RecordingParameters::FramesNumber && frames < _parameters.max_frames ) ||
-    ( _parameters.limit_type == RecordingParameters::Duration && chrono::steady_clock::now() - started < _parameters.max_seconds) ||
-    ( _parameters.limit_type == RecordingParameters::Size && (! reference || reference->size() * frames < _parameters.max_size) )
+    _parameters.limit_type == Configuration::Infinite || 
+    ( _parameters.limit_type == Configuration::FramesNumber && frames < _parameters.max_frames ) ||
+    ( _parameters.limit_type == Configuration::Duration && chrono::steady_clock::now() - started < _parameters.max_seconds) ||
+    ( _parameters.limit_type == Configuration::FileSize && (! reference || reference->size() * frames < _parameters.max_size) )
     );
 }
 
@@ -240,10 +240,10 @@ void SaveImages::startRecording(Imager *imager)
         RecordingParameters recording{
       bind(writerFactory, imager->name(), std::ref<Configuration>(d->configuration)), 
       recording_information,
+      d->configuration.recording_limit_type(),
       d->configuration.recording_frames_limit(),
-    };
-    recording.limit_type = d->configuration.recording_frames_limit() == 0 ? RecordingParameters::Infinite : RecordingParameters::FramesNumber;
-    
+      chrono::duration<double>{d->configuration.recording_seconds_limit()},
+    };    
     QMetaObject::invokeMethod(d->worker, "start", Q_ARG(RecordingParameters, recording), Q_ARG(qlonglong, d->configuration.max_memory_usage() ));    
   }
 }
