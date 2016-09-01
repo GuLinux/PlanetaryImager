@@ -93,7 +93,7 @@ void SERWriter::handle ( const Frame::ptr &frame )
     d->header->imageWidth = frame->resolution().width();
     d->header->imageHeight = frame->resolution().height();
   }
-  d->frames_datetimes.push_back(QDateTime::currentDateTimeUtc());
+  d->frames_datetimes.push_back(frame->created_utc());
   auto frame_bytes = frame->size();
   size_t wrote_bytes = d->file.write(reinterpret_cast<const char*>(frame->mat().data), frame->size());
   if(wrote_bytes == frame->size() ) {

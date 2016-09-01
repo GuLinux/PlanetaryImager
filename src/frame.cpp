@@ -21,10 +21,11 @@
 using namespace std;
 
 DPTR_IMPL(Frame) {
+  QDateTime created_utc;
   cv::Mat mat;
 };
 
-Frame::Frame() : dptr()
+Frame::Frame() : dptr(QDateTime::currentDateTimeUtc())
 {
 }
 
@@ -62,6 +63,11 @@ uint8_t Frame::bpp() const
 uint8_t Frame::channels() const
 {
   return d->mat.channels();
+}
+
+QDateTime Frame::created_utc() const
+{
+  return d->created_utc;
 }
 
 

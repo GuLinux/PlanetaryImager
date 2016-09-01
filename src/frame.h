@@ -23,6 +23,7 @@
 #include <opencv2/opencv.hpp>
 #include "c++/dptr.h"
 #include <QSize>
+#include <QDateTime>
 
 class Frame
 {
@@ -35,6 +36,7 @@ public:
     cv::Mat mat() const;
     uint8_t channels() const;
     uint8_t bpp() const;
+    QDateTime created_utc() const;
 private:
   Frame();
   DPTR
