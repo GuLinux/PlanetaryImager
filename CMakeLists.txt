@@ -34,8 +34,20 @@ endif(cflags_fpic)
 
 set(MAJOR_VERSION 0)
 set(MINOR_VERSION 5)
-set(PATCH_VERSION 1)
+set(PATCH_VERSION 99)
 
+# adapted from QHYCCD CMakeLists.txt
+ IF (CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "armv6l")
+  set(PlanetaryImager_ARCH armv6)
+ elseif(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "armv7")
+  set(PlanetaryImager_ARCH armv7l)
+ elseif(CMAKE_SIZEOF_VOID_P EQUAL "8")
+  set(PlanetaryImager_ARCH x86_64)
+ else()
+  set(PlanetaryImager_ARCH i686)
+ endif (CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "armv6l")
+
+ message("Detected architecture: ${PlanetaryImager_ARCH}")
 SET(EXTRA_LIBRARIES "" CACHE STRING "Extra libraries for linking")
 add_subdirectory(GuLinux-Commons/Qt)
 

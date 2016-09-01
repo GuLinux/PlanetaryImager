@@ -2,7 +2,13 @@ add_library(zwo_asi_imager STATIC zwo_asi_driver.cpp zwo_asi_imager.cpp zwoexcep
 set(ZWO_SDK_VERSION 0.3.0819)
 #set(ZWO_SDK_VERSION 0.3.0727)
 set(ZWO_SDK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ASI_SDK_v${ZWO_SDK_VERSION}/)
-set(ZWO_TARGET_ARCH "x64" CACHE STRING "ZWO Architecture (default: x64, look at ${ZWO_SDK_DIR}/lib for possible values)")
+
+set(ZWO_ARCH_x86_64 x64)
+set(ZWO_ARCH_1686 x86)
+set(ZWO_ARCH_armv7 armv7)
+set(ZWO_ARCH_armv6 armv6)
+
+set(ZWO_TARGET_ARCH ${ZWO_ARCH_${PlanetaryImager_ARCH}})
 
 include_directories(${ZWO_SDK_DIR}/include)
 

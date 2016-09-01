@@ -10,6 +10,6 @@ services:
         volumes:
             - ../../../:/code
             - ${DEST}:/dest
-        command: "bash -c \"cmake /code -DEXTRA_LIBRARIES=udev -DCMAKE_PREFIX_PATH=/opt/libusb-git -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} ${CMAKE_EXTRA_OPTIONS} && make ${MAKE_OPTS} && mkdir PlanetaryImager-${DAILY_TAG} && make install DESTDIR=/build/PlanetaryImager-${DAILY_TAG} && tar czf /dest/PlanetaryImager-${DAILY_TAG}.tar.gz PlanetaryImager-${DAILY_TAG} \""
+        command: "bash -c \"cmake /code -DEXTRA_LIBRARIES=udev -DCMAKE_PREFIX_PATH=/opt/libusb-git -DCMAKE_INSTALL_PREFIX=/usr -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} ${CMAKE_EXTRA_OPTIONS} && make ${MAKE_OPTS} && mkdir PlanetaryImager-${DAILY_TAG} && make install DESTDIR=/build/PlanetaryImager-${DAILY_TAG}-x86_64 && tar czf /dest/PlanetaryImager-${DAILY_TAG}-x86_64.tar.gz PlanetaryImager-${DAILY_TAG}-x86_64 \""
 
 
