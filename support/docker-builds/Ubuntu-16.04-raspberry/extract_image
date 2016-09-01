@@ -1,12 +1,28 @@
 #!/bin/bash
 img_url="http://cdimage.ubuntu.com/ubuntu/releases/16.04/release/ubuntu-16.04-preinstalled-server-armhf+raspi2.img.xz"
+clear="false"
+is_true() {
+  [[ "$1" == "true" ]]
+}
+
+while [[ -n "$1" ]]; do
+  case "$1" in
+    -c|--clear)
+      clear=true
+      ;;
+    -u|--url)
+    img_url="$2"; shift
+      ;;
+  esac
+  shift
+done
+
 img_file="$( basename "$img_url")"
 img="${img_file%.*}"
 [[ -r "$img_file" ]] || curl -O -L "$img_url"
 [[ -r "$img" ]] || unxz -k "$img_file"
-part_start="$( sfdisk -d -u S "$img" | grep "${img}2" | awk '{ print $4 }' | tr -d , )"
-part_size="$( sfdisk -d -u S "$img" | grep "${img}2" | awk '{ print $6 }' | tr -d ,)"
-
-dd if="$img" of=root.img skip="$part_start" count="$part_size"
-# rm -f "$img"
-#e2tools
+is_true "$clear" && rm -f "$img_file"
+[[ -r "1.img" ]] || 7z x "$img" 1.img
+is_true "$clear" && rm -f "$img"
+7z x -oroot 1.img 
+is_true "$clear" && rm -f "$img" 
