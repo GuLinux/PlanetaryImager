@@ -22,17 +22,25 @@
 
 #include "c++/dptr.h"
 #include <QString>
-
+#include <QVariantMap>
 class Configuration;
 class Imager;
 class RecordingInformation
 {
 public:
   typedef std::shared_ptr<RecordingInformation> ptr;
+  class Writer {
+  public:
+    typedef std::shared_ptr<Writer> ptr;
+    virtual void write(const QVariantMap &information) = 0;
+  };
   RecordingInformation(Configuration &configuration, Imager *imager);
   ~RecordingInformation();
   void set_base_filename(const QString &filename);
   void set_ended(int total_frames, int width, int height, uint8_t bpp, uint8_t channels);
+  static Writer::ptr json(const QString &file_base_name);
+  static Writer::ptr txt(const QString &file_base_name);
+  static Writer::ptr composite(const QList<Writer::ptr> &writers);
 private:
   DPTR
 };
