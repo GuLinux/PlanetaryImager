@@ -23,6 +23,7 @@ using namespace std;
 DPTR_IMPL(Frame) {
   QDateTime created_utc;
   cv::Mat mat;
+  ColorFormat color_format;
 };
 
 Frame::Frame() : dptr(QDateTime::currentDateTimeUtc())
@@ -33,10 +34,11 @@ Frame::~Frame()
 {
 }
 
-Frame::ptr Frame::create(const cv::Mat& mat)
+Frame::ptr Frame::create(const cv::Mat &mat, ColorFormat colorFormat)
 {
   ptr frame{new Frame};
   frame->d->mat = mat;
+  frame->d->color_format = colorFormat;
   return frame;
 }
 
@@ -70,4 +72,8 @@ QDateTime Frame::created_utc() const
   return d->created_utc;
 }
 
+Frame::ColorFormat Frame::colorFormat() const
+{
+  return d->color_format;
+}
 

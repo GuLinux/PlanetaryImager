@@ -344,7 +344,7 @@ bool V4L2Imager::Private::Worker::shoot(const ImageHandlerPtr& imageHandler)
         return false; // TODO: throw exception?
     }
     BENCH_END(decode_image);
-    d->handler->handle(Frame::create(image));
+    d->handler->handle(Frame::create(image, Frame::RGB)); // TODO: other types?
     buffer->queue();
     return true;
   } catch(V4L2Device::exception &e) {

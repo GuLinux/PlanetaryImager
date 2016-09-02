@@ -229,7 +229,7 @@ bool SimulatorImager::Worker::shoot(const ImageHandlerPtr &imageHandler)
   if(result.depth() > CV_16S)
       depth = 32;
 
-  imageHandler->handle(Frame::create(result));
+  imageHandler->handle(Frame::create(result, format.value == Worker::Mono ? Frame::Mono : Frame::RGB)); // TODO: use real colour image; simulate both RGB and bayer
   QThread::usleep(exposure.value * 1000);
   return true;
 }

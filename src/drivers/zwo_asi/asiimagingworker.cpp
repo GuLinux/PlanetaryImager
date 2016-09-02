@@ -29,6 +29,8 @@ DPTR_IMPL(ASIImagingWorker) {
   std::vector<uint8_t> buffer;
   size_t calcBufferSize();
   int getCVImageType();
+  Frame::ColorFormat color_format;
+  Frame::ColorFormat colorFormat() const;
 };
 
 ASIImagingWorker::ASIImagingWorker(const QRect& requestedROI, int bin, const ASI_CAMERA_INFO& info, ASI_IMG_TYPE format)
@@ -40,6 +42,18 @@ ASIImagingWorker::ASIImagingWorker(const QRect& requestedROI, int bin, const ASI
     ASI_CHECK << ASIStartVideoCapture(d->info.CameraID) << "Start video capture";
     d->buffer.resize(d->calcBufferSize());
     qDebug() << "Imaging started: imageFormat=" << d->format << ", roi: " << d->roi << ", bin: " << d->bin;
+    
+    static std::map<ASI_BAYER_PATTERN, Frame::ColorFormat> color_formats{
+    {ASI_BAYER_RG, Frame::Bayer_RGGB},
+    {ASI_BAYER_BG, Frame::Bayer_BGGR},
+    {ASI_BAYER_GR, Frame::Bayer_GRBG},
+    {ASI_BAYER_GB, Frame::Bayer_GBRG},
+  };
+  if(info.IsColorCam) {
+    d->color_format = color_formats[info.BayerPattern];
+  } else {
+    d->color_format = Frame::Mono;
+  }
 }
 
 ASIImagingWorker::~ASIImagingWorker()
@@ -58,7 +72,7 @@ bool ASIImagingWorker::shoot(const ImageHandlerPtr& imageHandler)
         cv::Mat image( {d->roi.width(), d->roi.height()}, d->getCVImageType(), d->buffer.data());
         cv::Mat copy;
         image.copyTo(copy);
-        imageHandler->handle(Frame::create(copy));
+        imageHandler->handle(Frame::create(copy, d->colorFormat() ));
         return true;
   }
    catch(ZWOException &e) {
@@ -103,6 +117,13 @@ int ASIImagingWorker::Private::getCVImageType()
         throw runtime_error("Format not supported");
 
     }
+}
+
+Frame::ColorFormat ASIImagingWorker::Private::colorFormat() const {
+  if(format == ASI_IMG_RGB24)
+    return Frame::RGB;
+
+  return color_format;
 }
 
 QRect ASIImagingWorker::roi() const

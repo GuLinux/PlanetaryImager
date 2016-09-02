@@ -279,7 +279,7 @@ void ImagingWorker::start_live()
       ++_fps;
       cv::Mat copy;
       image.copyTo(copy);
-      imageHandler->handle(Frame::create(copy));
+      imageHandler->handle(Frame::create(copy, Frame::Mono)); // TODO: Properly handle with debayer setting, I guess... find a tester!
     }
   }
   result = StopQHYCCDLive(handle);

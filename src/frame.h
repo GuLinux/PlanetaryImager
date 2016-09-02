@@ -29,7 +29,16 @@ class Frame
 {
 public:
   typedef std::shared_ptr<Frame> ptr;
-    static ptr create(const cv::Mat &mat);
+    enum ColorFormat {
+      Mono,
+      RGB,
+      BGR, // Is this ever used?
+      Bayer_RGGB,
+      Bayer_GRBG,
+      Bayer_GBRG,
+      Bayer_BGGR,
+    };
+    static ptr create(const cv::Mat &mat, ColorFormat colorFormat);
     ~Frame();
     std::size_t size() const;
     QSize resolution() const;
@@ -37,6 +46,7 @@ public:
     uint8_t channels() const;
     uint8_t bpp() const;
     QDateTime created_utc() const;
+    ColorFormat colorFormat() const;
 private:
   Frame();
   DPTR
