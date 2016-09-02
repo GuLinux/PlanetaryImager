@@ -86,8 +86,23 @@ QString SERWriter::filename() const
 
 void SERWriter::handle ( const Frame::ptr &frame )
 {
+  static map<Frame::ColorFormat, SER_Header::ColorId> color_formats{
+    {Frame::Mono, SER_Header::MONO},
+    {Frame::Bayer_RGGB, SER_Header::BAYER_RGGB},
+    {Frame::Bayer_GRBG, SER_Header::BAYER_GRBG},
+    {Frame::Bayer_GBRG, SER_Header::BAYER_GBRG},
+    {Frame::Bayer_BGGR, SER_Header::BAYER_BGGR},
+        // TODO: not yet handled
+//        BAYER_CYYM = 16,
+//        BAYER_YCMY = 17,
+//        BAYER_YMCY = 18,
+//        BAYER_MYYC = 19,
+    {Frame::RGB, SER_Header::RGB},
+    {Frame::BGR, SER_Header::BGR},
+  };
+  
   if(! d->header->imageWidth) {
-    d->header->colorId = frame->channels() == 1 ? SER_Header::MONO : SER_Header::RGB;
+    d->header->colorId = color_formats[frame->colorFormat()];
     d->header->pixelDepth = frame->bpp();
     qDebug() << "SER PixelDepth set to " << d->header->pixelDepth << "bpp";
     d->header->imageWidth = frame->resolution().width();

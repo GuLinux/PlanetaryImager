@@ -147,7 +147,14 @@ void DisplayImage::create_qimages()
     ++*d->capture_fps;
 //     cv::Mat origin{imageData->height(), imageData->width(), imageData->channels() == 1 ? CV_8UC1 : CV_8UC3, imageData->data()};
     auto cv_image = new cv::Mat;
-    cv::cvtColor(imageData, *cv_image, imageData.channels() == 1 ? CV_GRAY2RGB : CV_BGR2RGB);
+    if( imageData.channels() == 1) { // TODO: Handle bayer and BGR formats
+      cv::cvtColor(imageData, *cv_image, CV_GRAY2RGB);
+    } else {
+      if(frame->colorFormat() == Frame::RGB)
+        imageData.copyTo(*cv_image);
+      else
+      cv::cvtColor(imageData, *cv_image, CV_BGR2RGB);
+    }
     if(d->detectEdges) {
       if(d->edge_detection_sobel) {
         QBENCH(sobel)->every(200)->ms();
@@ -157,7 +164,7 @@ void DisplayImage::create_qimages()
         d->canny(*cv_image, d->canny_low_threshold, d->canny_threshold_ratio, d->canny_kernel_size, d->canny_blur);
       }
     }
-    QImage image{cv_image->data, cv_image->cols, cv_image->rows, static_cast<int>(cv_image->step), cv_image->channels() == 1 ? QImage::Format_Indexed8: QImage::Format_RGB888, 
+    QImage image{cv_image->data, cv_image->cols, cv_image->rows, static_cast<int>(cv_image->step), cv_image->channels() == 1 ? QImage::Format_Grayscale8: QImage::Format_RGB888, 
       [](void *data){ delete reinterpret_cast<cv::Mat*>(data); }, cv_image};
     if(cv_image->channels() == 1) {
       image.setColorTable(d->grayScale);

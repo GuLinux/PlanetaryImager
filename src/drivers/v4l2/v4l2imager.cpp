@@ -328,12 +328,14 @@ V4L2Imager::Private::Worker::Worker(V4L2Imager::Private* d) : d{d}
 bool V4L2Imager::Private::Worker::shoot(const ImageHandlerPtr& imageHandler)
 {
   try {
+    Frame::ColorFormat color_format = Frame::RGB;
     QBENCH(dequeue_buffer)->every(100)->ms();
     auto buffer = buffers.dequeue(d->device);
     BENCH_END(dequeue_buffer);
     QBENCH(decode_image)->every(100)->ms();
     cv::Mat image{static_cast<int>(format.fmt.pix.height), static_cast<int>(format.fmt.pix.width), CV_8UC3};
     if(format.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG) {
+        color_format = Frame::BGR;
         cv::InputArray inputArray{buffer->memory,  buffer->bufferinfo.bytesused};
         image = cv::imdecode(inputArray, -1);
     } else if(format.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
@@ -344,7 +346,7 @@ bool V4L2Imager::Private::Worker::shoot(const ImageHandlerPtr& imageHandler)
         return false; // TODO: throw exception?
     }
     BENCH_END(decode_image);
-    d->handler->handle(Frame::create(image, Frame::RGB)); // TODO: other types?
+    d->handler->handle(Frame::create(image, color_format)); // TODO: other types?
     buffer->queue();
     return true;
   } catch(V4L2Device::exception &e) {
