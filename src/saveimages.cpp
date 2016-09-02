@@ -61,8 +61,20 @@ struct RecordingParameters {
   Configuration::RecordingLimit limit_type;
   int64_t max_frames;
   std::chrono::duration<double> max_seconds;
+  bool write_txt_info;
+  bool write_json_info;
   int64_t max_size;
+  RecordingInformation::Writer::ptr recording_information_writer(const FileWriter::Ptr &file_writer) const;
 };
+
+RecordingInformation::Writer::ptr RecordingParameters::recording_information_writer(const FileWriter::Ptr &file_writer) const {
+  QList<RecordingInformation::Writer::ptr> writers;
+  if(write_txt_info)
+    writers.push_back(RecordingInformation::txt(file_writer->filename()));
+  if(write_json_info)
+    writers.push_back(RecordingInformation::json(file_writer->filename()));
+  return RecordingInformation::composite(writers);
+}
 
 class Recording {
 public:
@@ -115,7 +127,7 @@ Recording::Recording(const RecordingParameters &parameters, SaveImages *saveImag
   file_writer{parameters.fileWriterFactory()}
 {
   is_recording_control = true;
-  _parameters.recording_information->set_base_filename(file_writer->filename());
+  _parameters.recording_information->set_writer(_parameters.recording_information_writer(file_writer));
   emit saveImagesObject->recording(file_writer->filename());
 }
 
@@ -234,15 +246,15 @@ void SaveImages::startRecording(Imager *imager)
   auto writerFactory = d->writerFactory();
   if(writerFactory) {
     RecordingInformation::ptr recording_information;
-    if(d->configuration.save_info_file())
-      recording_information = make_shared<RecordingInformation>(d->configuration, imager);
     
-        RecordingParameters recording{
+    RecordingParameters recording{
       bind(writerFactory, imager->name(), std::ref<Configuration>(d->configuration)), 
-      recording_information,
+      make_shared<RecordingInformation>(d->configuration, imager),
       d->configuration.recording_limit_type(),
       d->configuration.recording_frames_limit(),
       chrono::duration<double>{d->configuration.recording_seconds_limit()},
+      d->configuration.save_info_file(),
+      d->configuration.save_json_info_file(),
     };    
     QMetaObject::invokeMethod(d->worker, "start", Q_ARG(RecordingParameters, recording), Q_ARG(qlonglong, d->configuration.max_memory_usage() ));    
   }

@@ -82,10 +82,11 @@ void RecordingInformation::set_ended(int total_frames, int width, int height, ui
   d->properties["mean-fps"] = static_cast<double>(total_frames) / static_cast<double>(elapsed);
 }
 
-void RecordingInformation::set_base_filename(const QString& filename)
+void RecordingInformation::set_writer(const Writer::ptr& writer)
 {
-  d->writer = composite({ json(filename), txt(filename)});
+  d->writer = writer;
 }
+
 
 RecordingInformation::~RecordingInformation()
 {

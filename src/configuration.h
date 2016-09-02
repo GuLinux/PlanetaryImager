@@ -73,6 +73,7 @@ public:
     enum SaveFormat { SER, Video };
     declare_setting(save_format, SaveFormat)
     declare_setting(video_codec, QString)
+    declare_setting(save_json_info_file, bool)
     declare_setting(save_info_file, bool)
     declare_setting(widgets_setup_first_run, bool)
     declare_setting(histogram_bins, int)

@@ -36,7 +36,7 @@ public:
   };
   RecordingInformation(Configuration &configuration, Imager *imager);
   ~RecordingInformation();
-  void set_base_filename(const QString &filename);
+  void set_writer(const Writer::ptr &writer);
   void set_ended(int total_frames, int width, int height, uint8_t bpp, uint8_t channels);
   static Writer::ptr json(const QString &file_base_name);
   static Writer::ptr txt(const QString &file_base_name);

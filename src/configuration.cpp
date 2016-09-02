@@ -122,6 +122,7 @@ void Configuration::resetSobelAdvancedSettings()
 
 define_setting_enum(save_format, Configuration::SaveFormat, Configuration::SER)
 define_setting(video_codec, QString, "HFYU")
+define_setting(save_json_info_file, bool, true)
 define_setting(save_info_file, bool, true)
 define_setting(widgets_setup_first_run, bool, false)
 define_setting(histogram_bins, int, 50)
