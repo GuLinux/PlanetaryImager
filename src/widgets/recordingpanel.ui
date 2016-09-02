@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>471</width>
-    <height>368</height>
+    <width>469</width>
+    <height>320</height>
    </rect>
   </property>
   <layout class="QGridLayout" name="gridLayout_3">
@@ -18,7 +18,7 @@
      </property>
     </widget>
    </item>
-   <item row="10" column="2">
+   <item row="11" column="2">
     <spacer name="verticalSpacer_2">
      <property name="orientation">
       <enum>Qt::Vertical</enum>
@@ -30,16 +30,6 @@
       </size>
      </property>
     </spacer>
-   </item>
-   <item row="8" column="0" colspan="5">
-    <widget class="QCheckBox" name="save_info_file">
-     <property name="whatsThis">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Checking this box will save camera and recording settings to a separate file.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <property name="text">
-      <string>Save information file as ${filename}.txt</string>
-     </property>
-    </widget>
    </item>
    <item row="1" column="3" colspan="2">
     <widget class="QLineEdit" name="fileSuffix">
@@ -54,7 +44,7 @@
      </property>
     </widget>
    </item>
-   <item row="9" column="0" colspan="5">
+   <item row="10" column="0" colspan="5">
     <widget class="QGroupBox" name="recordingBox">
      <property name="title">
       <string>Recording</string>
@@ -237,20 +227,6 @@
      </property>
     </widget>
    </item>
-   <item row="1" column="2">
-    <widget class="QLabel" name="label_11">
-     <property name="text">
-      <string>yyymmdd_hhmmss</string>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="0" rowspan="2">
-    <widget class="QLabel" name="label_9">
-     <property name="text">
-      <string>Output format</string>
-     </property>
-    </widget>
-   </item>
    <item row="7" column="2" colspan="2">
     <widget class="QComboBox" name="videoOutputType">
      <property name="whatsThis">
@@ -266,6 +242,23 @@
        <string>Video File</string>
       </property>
      </item>
+    </widget>
+   </item>
+   <item row="0" column="1" colspan="4">
+    <widget class="QLineEdit" name="saveDirectory"/>
+   </item>
+   <item row="1" column="2">
+    <widget class="QLabel" name="label_11">
+     <property name="text">
+      <string>yyymmdd_hhmmss</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="0" rowspan="2">
+    <widget class="QLabel" name="label_9">
+     <property name="text">
+      <string>Output format</string>
+     </property>
     </widget>
    </item>
    <item row="1" column="1">
@@ -291,16 +284,6 @@
      </property>
     </widget>
    </item>
-   <item row="0" column="1" colspan="4">
-    <widget class="QLineEdit" name="saveDirectory"/>
-   </item>
-   <item row="5" column="0">
-    <widget class="QLabel" name="label_8">
-     <property name="text">
-      <string>Limit</string>
-     </property>
-    </widget>
-   </item>
    <item row="5" column="1">
     <widget class="QComboBox" name="limitType">
      <property name="whatsThis">
@@ -321,6 +304,44 @@
        <string>duration</string>
       </property>
      </item>
+    </widget>
+   </item>
+   <item row="5" column="0">
+    <widget class="QLabel" name="label_8">
+     <property name="text">
+      <string>Limit</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="1" colspan="4">
+    <widget class="QComboBox" name="save_recording_info">
+     <item>
+      <property name="text">
+       <string>don't save</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>as JSON settings file</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>as TXT file</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>both</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="8" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Save information</string>
+     </property>
     </widget>
    </item>
    <item row="5" column="2" colspan="3">

@@ -48,7 +48,7 @@ RecordingPanel::RecordingPanel(Configuration& configuration, QWidget* parent) : 
   d->ui.reset(new Ui::RecordingPanel);
   d->ui->setupUi(this);
   recording(false);
-  d->ui->save_info_file->setChecked(configuration.save_info_file());
+  d->ui->save_recording_info->setCurrentIndex( (configuration.save_json_info_file() ? 1 : 0) + (configuration.save_info_file() ? 2 : 0) );
   d->ui->saveDirectory->setText(configuration.save_directory());
   d->ui->filePrefix->setText(configuration.save_file_prefix());
   d->ui->fileSuffix->setText(configuration.save_file_suffix());
@@ -84,7 +84,26 @@ RecordingPanel::RecordingPanel(Configuration& configuration, QWidget* parent) : 
       configuration.set_recording_seconds_limit(seconds);
   });
   
-  connect(d->ui->save_info_file, &QCheckBox::toggled, [&configuration](bool checked) { configuration.set_save_info_file(checked); });
+  connect(d->ui->save_recording_info, F_PTR(QComboBox, currentIndexChanged, int), [&configuration](int index) {
+    switch(index) {
+      case 0:
+        configuration.set_save_info_file(false);
+        configuration.set_save_json_info_file(false);
+        break;
+      case 1:
+        configuration.set_save_info_file(false);
+        configuration.set_save_json_info_file(true);
+        break;
+      case 2:
+        configuration.set_save_info_file(true);
+        configuration.set_save_json_info_file(false);
+        break;
+      case 3:
+        configuration.set_save_info_file(true);
+        configuration.set_save_json_info_file(true);
+        break;
+    }
+  });
   connect(d->ui->start_stop_recording, &QPushButton::clicked, [=]{
     if(d->recording)
       emit stop();
