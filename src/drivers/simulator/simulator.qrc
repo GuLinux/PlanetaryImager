@@ -1,5 +1,5 @@
 <!DOCTYPE RCC><RCC version="1.0">
 <qresource prefix="/simulator">
-    <file alias="jupiter.png">jupiter_gulinux.png</file>
+    <file alias="jupiter_hubble.jpg">jupiter_hubble.jpg</file>
 </qresource>
 </RCC>

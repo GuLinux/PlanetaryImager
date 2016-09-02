@@ -33,6 +33,7 @@
 #include "Qt/functional.h"
 #include <atomic>
 #include <chrono>
+#include <unordered_map>
 
 
 using namespace GuLinux;
@@ -69,7 +70,7 @@ public:
       virtual void start();
       virtual void stop();
       void setROI(const QRect &roi);
-      enum ImageType{ RGB = 0, Mono = 10};
+      enum ImageType{ BGR = 0, Mono = 10, Bayer = 20};
     private:
       QHash<int, cv::Mat> images;
       SimulatorImager *imager;
@@ -108,7 +109,7 @@ SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{
     {"movement", {2, "movement", 0, 5, 1, 1}},
     {"seeing",   {3, "seeing", 0, 5, 1, 1}},
     {"bin",	 {4, "bin", 0, 3, 1, 1, 1, Control::Combo, { {"1x1", 1}, {"2x2", 2}, {"3x3", 3}, {"4x4", 4} } }}, 
-    {"format",	 {5, "format", 0, 100, 1, Worker::Mono, Worker::Mono, Control::Combo, { {"Mono", Worker::Mono}, {"RGB", Worker::RGB},  } }}, 
+    {"format",	 {5, "format", 0, 100, 1, Worker::Mono, Worker::Mono, Control::Combo, { {"Mono", Worker::Mono}, {"BGR", Worker::BGR},  {"Bayer", Worker::Bayer}} }}, 
   }
 {
   qDebug() << "Creating simulator imager: current owning thread: " << thread() << ", qApp thread: " << qApp->thread();
@@ -168,21 +169,39 @@ void SimulatorImager::Worker::stop()
 
 SimulatorImager::Worker::Worker(SimulatorImager* imager) : imager{imager}
 {
-    QFile file(":/simulator/jupiter.png");
+    QFile file(":/simulator/jupiter_hubble.jpg");
     file.open(QIODevice::ReadOnly);
     QByteArray file_data = file.readAll();
-    images[RGB] = cv::imdecode(cv::InputArray{file_data.data(), file_data.size()}, CV_LOAD_IMAGE_COLOR);
-    cv::cvtColor(images[RGB], images[Mono], CV_BGR2GRAY);
+    images[BGR] = cv::imdecode(cv::InputArray{file_data.data(), file_data.size()}, CV_LOAD_IMAGE_COLOR);
+    cv::cvtColor(images[BGR], images[Mono], CV_BGR2GRAY);
+    images[Bayer] = cv::Mat(images[BGR].rows, images[BGR].cols, CV_8UC1);
+    
+    QHash<QPair<int,int>, int> bayer_pattern_channels {
+      // B=0, G=1, R=2
+      { {0, 0}, 2 }, { {0, 1}, 1 }, { {1, 0}, 1 }, { {1, 1}, 0}
+    };
+    for(int row = 0; row < images[BGR].rows; row++) {
+      for(int column = 0; column < images[BGR].cols; column++) {
+        int channel = bayer_pattern_channels[{row%2, column%2}];
+        images[Bayer].at<uint8_t>(row, column) = images[BGR].at<cv::Vec3b>(row, column).val[channel];
+      }
+    }
     for(int bin = 1; bin < 5; bin++) {
       double ratio = 4. / bin;
-      cv::resize(images[RGB], images[RGB + bin], {}, ratio, ratio);
+      cv::resize(images[BGR], images[BGR + bin], {}, ratio, ratio);
       cv::resize(images[Mono], images[Mono + bin], {}, ratio, ratio);
+      cv::resize(images[Bayer], images[Bayer + bin], {}, ratio, ratio);
     }
 }
 
 
 bool SimulatorImager::Worker::shoot(const ImageHandlerPtr &imageHandler)
 {
+  static map<Worker::ImageType, Frame::ColorFormat> formats {
+    {Worker::Mono, Frame::Mono},
+    {Worker::BGR, Frame::BGR},
+    {Worker::Bayer, Frame::Bayer_RGGB},
+  };
   auto rand = [](int a, int b) { return qrand() % ((b + 1) - a) + a; };
   cv::Mat cropped, blurred, result;
   Control exposure, seeing, movement, bin, format;
@@ -195,6 +214,7 @@ bool SimulatorImager::Worker::shoot(const ImageHandlerPtr &imageHandler)
       movement = imager->_settings["movement"];
   }
   const cv::Mat &image = images[format.value + bin.value];
+  bool is_bayer = static_cast<ImageType>(format.value) == Bayer;
   int h = image.rows;
   int w = image.cols;
   int crop_factor = movement.value;
@@ -204,11 +224,11 @@ bool SimulatorImager::Worker::shoot(const ImageHandlerPtr &imageHandler)
   cv::Rect crop_rect(0, 0, w, h);
   crop_rect -= cv::Size{crop_factor, crop_factor};
   crop_rect += cv::Point{pix_w, pix_h};
-  cropped = image(crop_rect);
-  if(roi.isValid()) {
+  cropped = is_bayer ? image : image(crop_rect);
+  if(roi.isValid() && ! is_bayer) {
     cropped = cropped(cv::Rect{roi.x(), roi.y(), roi.width(), roi.height()});
   }
-  if(rand(0, seeing.max) > (seeing.value_auto ? 3 : seeing.value) ) {
+  if(! is_bayer && (rand(0, seeing.max) > (seeing.value_auto ? 3 : seeing.value) ) ) {
       auto ker_size = rand(1, 7);
       cv::blur(cropped, blurred, {ker_size, ker_size});
   } else {
@@ -228,8 +248,7 @@ bool SimulatorImager::Worker::shoot(const ImageHandlerPtr &imageHandler)
       depth = 16;
   if(result.depth() > CV_16S)
       depth = 32;
-
-  imageHandler->handle(Frame::create(result, format.value == Worker::Mono ? Frame::Mono : Frame::RGB)); // TODO: use real colour image; simulate both RGB and bayer
+  imageHandler->handle(Frame::create(result, formats[static_cast<Worker::ImageType>(format.value)]));
   QThread::usleep(exposure.value * 1000);
   return true;
 }
