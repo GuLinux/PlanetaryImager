@@ -32,7 +32,7 @@ public:
     enum ColorFormat {
       Mono,
       RGB,
-      BGR, // Is this ever used?
+      BGR,
       Bayer_RGGB,
       Bayer_GRBG,
       Bayer_GBRG,

@@ -42,6 +42,8 @@ ConfigurationDialog::ConfigurationDialog(Configuration& configuration, QWidget* 
 {
   d->ui.reset(new Ui::ConfigurationDialog);
     d->ui->setupUi(this);
+    connect(d->ui->debayer, &QCheckBox::toggled, bind(&Configuration::set_debayer, &configuration, _1));
+    d->ui->debayer->setChecked(configuration.debayer());
     
     auto edge_settings = [=] {
       d->ui->cannySettingsBox->setVisible(d->configuration.edge_algorithm() == Configuration::Canny);

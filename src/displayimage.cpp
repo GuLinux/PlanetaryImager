@@ -35,6 +35,7 @@
 #include <atomic>
 
 using namespace std;
+using namespace std::placeholders;
 
 DPTR_IMPL(DisplayImage) {
   Configuration &configuration;
@@ -59,6 +60,8 @@ DPTR_IMPL(DisplayImage) {
   atomic<double> canny_threshold_ratio;
   atomic<double> canny_low_threshold;
   
+  atomic_bool debayer;
+  
 //         d->sobel(*cv_image, d->configuration.sobel_blur_size(), d->configuration.sobel_kernel(), d->configuration.sobel_scale(), d->configuration.sobel_delta());
 
   QElapsedTimer elapsed;
@@ -69,6 +72,11 @@ DPTR_IMPL(DisplayImage) {
   bool should_display_frame() const;
   void canny(cv::Mat& source, int lowThreshold = 1, int ratio = 3, int kernel_size = 3, int blurSize = 3);
   void sobel( cv::Mat& source, int blur_size = 3, int ker_size = 3, int scale = 1, int delta = 0 );
+  
+  void bayer2rgb(const Frame::ptr &frame, cv::Mat &image);
+  void bgr2rgb(const Frame::ptr &frame, cv::Mat &image);
+  void rgb2rgb(const Frame::ptr &frame, cv::Mat &image);
+  void gray2rgb(const Frame::ptr &frame, cv::Mat &image);
 };
 
 
@@ -121,6 +129,7 @@ void DisplayImage::read_settings()
   d->canny_kernel_size = d->configuration.canny_kernel_size();
   d->canny_low_threshold = d->configuration.canny_low_threshold();
   d->canny_threshold_ratio = d->configuration.canny_threshold_ratio();
+  d->debayer = d->configuration.debayer();
 }
 
 
@@ -140,20 +149,22 @@ void DisplayImage::create_qimages()
       QThread::msleep(1);
       continue;
     }
-    auto imageData = frame->mat();
-    if(imageData.depth() != CV_8U && imageData.depth() != CV_8S) {
-      imageData.convertTo(imageData, CV_8U, 0.00390625); // TODO: handle color images
-    }
+
     ++*d->capture_fps;
-//     cv::Mat origin{imageData->height(), imageData->width(), imageData->channels() == 1 ? CV_8UC1 : CV_8UC3, imageData->data()};
     auto cv_image = new cv::Mat;
-    if( imageData.channels() == 1) { // TODO: Handle bayer and BGR formats
-      cv::cvtColor(imageData, *cv_image, CV_GRAY2RGB);
-    } else {
-      if(frame->colorFormat() == Frame::RGB)
-        imageData.copyTo(*cv_image);
-      else
-      cv::cvtColor(imageData, *cv_image, CV_BGR2RGB);
+    static QHash<Frame::ColorFormat, std::function<void(const Frame::ptr &, cv::Mat&)>> converters {
+      {Frame::Mono, bind(&Private::gray2rgb, d.get(), _1, _2)},
+      {Frame::RGB, bind(&Private::rgb2rgb, d.get(), _1, _2)},
+      {Frame::BGR, bind(&Private::bgr2rgb, d.get(), _1, _2)},
+      {Frame::Bayer_RGGB, bind(&Private::bayer2rgb, d.get(), _1, _2)},
+      {Frame::Bayer_GRBG, bind(&Private::bayer2rgb, d.get(), _1, _2)},
+      {Frame::Bayer_GBRG, bind(&Private::bayer2rgb, d.get(), _1, _2)},
+      {Frame::Bayer_BGGR, bind(&Private::bayer2rgb, d.get(), _1, _2)},
+    };
+    converters[frame->colorFormat()](frame, *cv_image);
+
+    if(cv_image->depth() != CV_8U && cv_image->depth() != CV_8S) {
+      cv_image->convertTo(*cv_image, CV_8UC3, 0.00390625);
     }
     if(d->detectEdges) {
       if(d->edge_detection_sobel) {
@@ -174,6 +185,38 @@ void DisplayImage::create_qimages()
   }
   QThread::currentThread()->quit();
 }
+
+void DisplayImage::Private::bayer2rgb(const Frame::ptr& frame, cv::Mat& image)
+{
+  if(! debayer) {
+    gray2rgb(frame, image);
+    return;
+  }
+  static QHash<Frame::ColorFormat, int> bayer_patterns {
+    // For some strange reason, opencv is confusing RGB and BGR
+    {Frame::Bayer_RGGB, CV_BayerRG2BGR},
+    {Frame::Bayer_GBRG, CV_BayerGB2BGR},
+    {Frame::Bayer_GRBG, CV_BayerGR2BGR},
+    {Frame::Bayer_BGGR, CV_BayerBG2BGR},
+  };
+  cv::cvtColor(frame->mat(), image, bayer_patterns[frame->colorFormat()]);
+}
+
+void DisplayImage::Private::bgr2rgb(const Frame::ptr& frame, cv::Mat& image)
+{
+  cv::cvtColor(frame->mat(), image, CV_BGR2RGB);
+}
+
+void DisplayImage::Private::gray2rgb(const Frame::ptr& frame, cv::Mat& image)
+{
+  cv::cvtColor(frame->mat(), image, CV_GRAY2RGB);
+}
+
+void DisplayImage::Private::rgb2rgb(const Frame::ptr& frame, cv::Mat& image)
+{
+  frame->mat().copyTo(image);
+}
+
 
 QRect DisplayImage::imageRect() const
 {

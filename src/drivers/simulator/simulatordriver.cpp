@@ -190,7 +190,6 @@ SimulatorImager::Worker::Worker(SimulatorImager* imager) : imager{imager}
       double ratio = 4. / bin;
       cv::resize(images[BGR], images[BGR + bin], {}, ratio, ratio);
       cv::resize(images[Mono], images[Mono + bin], {}, ratio, ratio);
-      cv::resize(images[Bayer], images[Bayer + bin], {}, ratio, ratio);
     }
 }
 
@@ -213,8 +212,8 @@ bool SimulatorImager::Worker::shoot(const ImageHandlerPtr &imageHandler)
       seeing = imager->_settings["seeing"];
       movement = imager->_settings["movement"];
   }
-  const cv::Mat &image = images[format.value + bin.value];
   bool is_bayer = static_cast<ImageType>(format.value) == Bayer;
+  const cv::Mat &image = is_bayer ? images[Bayer] : images[format.value + bin.value];
   int h = image.rows;
   int w = image.cols;
   int crop_factor = movement.value;
