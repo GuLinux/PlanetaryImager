@@ -109,7 +109,8 @@ SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{
     {"movement", {2, "movement", 0, 5, 1, 1}},
     {"seeing",   {3, "seeing", 0, 5, 1, 1}},
     {"bin",	 {4, "bin", 0, 3, 1, 1, 1, Control::Combo, { {"1x1", 1}, {"2x2", 2}, {"3x3", 3}, {"4x4", 4} } }}, 
-    {"format",	 {5, "format", 0, 100, 1, Worker::Mono, Worker::Mono, Control::Combo, { {"Mono", Worker::Mono}, {"BGR", Worker::BGR},  {"Bayer", Worker::Bayer}} }}, 
+    {"format", {5, "format", 0, 100, 1, Worker::Mono, Worker::Mono, Control::Combo, { {"Mono", Worker::Mono}, {"BGR", Worker::BGR},  {"Bayer", Worker::Bayer}} }}, 
+    {"bpp",	 {6, "bpp", 8, 16, 8, 8, 8, Control::Combo, { {"8", 8}, {"16", 16},  } }}, 
   }
 {
   qDebug() << "Creating simulator imager: current owning thread: " << thread() << ", qApp thread: " << qApp->thread();
@@ -203,7 +204,7 @@ bool SimulatorImager::Worker::shoot(const ImageHandlerPtr &imageHandler)
   };
   auto rand = [](int a, int b) { return qrand() % ((b + 1) - a) + a; };
   cv::Mat cropped, blurred, result;
-  Control exposure, seeing, movement, bin, format;
+  Control exposure, seeing, movement, bin, format, bpp;
   {
       QMutexLocker lock_settings(&imager->settingsMutex);
       exposure = imager->_settings["exposure"];
@@ -211,6 +212,7 @@ bool SimulatorImager::Worker::shoot(const ImageHandlerPtr &imageHandler)
       format = imager->_settings["format"];
       seeing = imager->_settings["seeing"];
       movement = imager->_settings["movement"];
+      bpp = imager->_settings["bpp"];
   }
   bool is_bayer = static_cast<ImageType>(format.value) == Bayer;
   const cv::Mat &image = is_bayer ? images[Bayer] : images[format.value + bin.value];
@@ -242,11 +244,9 @@ bool SimulatorImager::Worker::shoot(const ImageHandlerPtr &imageHandler)
     started = now;
   }
   result = blurred + cv::Scalar{exposure_offset, exposure_offset, exposure_offset};
-  int depth = 8;
-  if(result.depth() > CV_8S)
-      depth = 16;
-  if(result.depth() > CV_16S)
-      depth = 32;
+
+  if(bpp.value == 16)
+      result.convertTo(result, result.channels() == 1 ? CV_16UC1 : CV_16UC3, BITS_8_TO_16);
   imageHandler->handle(Frame::create(result, formats[static_cast<Worker::ImageType>(format.value)]));
   QThread::usleep(exposure.value * 1000);
   return true;

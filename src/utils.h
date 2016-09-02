@@ -31,6 +31,8 @@
     printed = true; \
   }
 
+static constexpr double BITS_8_TO_16 = 256.;
+static constexpr double BITS_16_TO_8 = 1./256.;
 class LogScope {
 public:
   LogScope(const QString &fname, const QString &enter = "ENTER", const QString &exit = "EXIT") : fname{fname}, exit{exit} {

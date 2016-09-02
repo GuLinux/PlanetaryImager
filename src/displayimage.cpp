@@ -33,6 +33,7 @@
 #include <atomic>
 #include "Qt/benchmark.h"
 #include <atomic>
+#include "utils.h"
 
 using namespace std;
 using namespace std::placeholders;
@@ -164,7 +165,7 @@ void DisplayImage::create_qimages()
     converters[frame->colorFormat()](frame, *cv_image);
 
     if(cv_image->depth() != CV_8U && cv_image->depth() != CV_8S) {
-      cv_image->convertTo(*cv_image, CV_8UC3, 0.00390625);
+      cv_image->convertTo(*cv_image, CV_8UC3, BITS_16_TO_8);
     }
     if(d->detectEdges) {
       if(d->edge_detection_sobel) {
