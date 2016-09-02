@@ -1,4 +1,6 @@
 ## 0.6.0 2016-09-xx
+ - Improved colour camera support: display and save both bayer and debayered image, along with RGB formats
+ - Optional debayer filter for display configurable in the main settings
  - Allow to choose recording duration based on frames number or seconds
  - Removed deprecated edge detection algorithm, using only OpenCV provided canny and sobel. This allows compilation in other platforms (for instance, arm)
  - ASI: Updated ASI SDK to v0.3.819, with great speed improvements for USB3 cameras
