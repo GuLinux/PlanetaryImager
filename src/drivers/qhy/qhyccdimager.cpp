@@ -244,6 +244,21 @@ ImagingWorker::ImagingWorker(qhyccd_handle* handle, QHYCCDImager* imager, const 
 
 void ImagingWorker::start_live()
 {
+  static map<int, Frame::ColorFormat> color_formats {
+    {BAYER_GB, Frame::Bayer_GBRG},
+    {BAYER_GR, Frame::Bayer_GRBG},
+    {BAYER_BG, Frame::Bayer_BGGR},
+    {BAYER_RG, Frame::Bayer_RGGB},
+  };
+  int colorret = IsQHYCCDControlAvailable(handle,CAM_COLOR);
+  Frame::ColorFormat color_format;
+  if(color_formats.count(colorret)) {
+    color_format = color_formats[colorret];
+    SetQHYCCDDebayerOnOff(handle, false);
+  } else {
+    color_format = Frame::Mono;
+  }
+  
   auto size = GetQHYCCDMemLength(handle);
   qDebug() << "size: " << static_cast<double>(size)/1024. << "kb, required for 8bit: " << (1280.*960.)/1024 << "kb, for 16bit: " << (1280.*960.*2.)/1024. << "kb";
   auto result =  SetQHYCCDStreamMode(handle,1);
@@ -279,7 +294,7 @@ void ImagingWorker::start_live()
       ++_fps;
       cv::Mat copy;
       image.copyTo(copy);
-      imageHandler->handle(Frame::create(copy, Frame::Mono)); // TODO: Properly handle with debayer setting, I guess... find a tester!
+      imageHandler->handle(Frame::create(copy, color_format)); // TODO: Properly handle with debayer setting, I guess... find a tester!
     }
   }
   result = StopQHYCCDLive(handle);
