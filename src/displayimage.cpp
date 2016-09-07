@@ -163,6 +163,7 @@ void DisplayImage::create_qimages()
       {Frame::Bayer_BGGR, bind(&Private::bayer2rgb, d.get(), _1, _2)},
     };
     converters[frame->colorFormat()](frame, *cv_image);
+    
 
     if(cv_image->depth() != CV_8U && cv_image->depth() != CV_8S) {
       cv_image->convertTo(*cv_image, CV_8UC3, BITS_16_TO_8);

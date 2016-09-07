@@ -174,12 +174,20 @@ SimulatorImager::Worker::Worker(SimulatorImager* imager) : imager{imager}
     file.open(QIODevice::ReadOnly);
     QByteArray file_data = file.readAll();
     images[BGR] = cv::imdecode(cv::InputArray{file_data.data(), file_data.size()}, CV_LOAD_IMAGE_COLOR);
+    enum ChannelIndexes {B = 0, G = 1, R = 2 };
+    /*
+    vector<cv::Mat> channels;
+    cv::split(images[BGR], channels);
+    cv::imwrite("/tmp/hubble_b.png", channels[B]);
+    cv::imwrite("/tmp/hubble_g.png", channels[G]);
+    cv::imwrite("/tmp/hubble_r.png", channels[R]);
+    */
     cv::cvtColor(images[BGR], images[Mono], CV_BGR2GRAY);
     images[Bayer] = cv::Mat(images[BGR].rows, images[BGR].cols, CV_8UC1);
     
     QHash<QPair<int,int>, int> bayer_pattern_channels {
       // B=0, G=1, R=2
-      { {0, 0}, 2 }, { {0, 1}, 1 }, { {1, 0}, 1 }, { {1, 1}, 0}
+      { {0, 0}, R }, { {0, 1}, G }, { {1, 0}, G }, { {1, 1}, B}
     };
     for(int row = 0; row < images[BGR].rows; row++) {
       for(int column = 0; column < images[BGR].cols; column++) {
