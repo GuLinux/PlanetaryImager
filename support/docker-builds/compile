@@ -50,6 +50,6 @@ compile-dir() {
 }
 
 
-while read dir; do
+for dir in $COMPILE_DIRS; do
     compile-dir "$dir"
-done <<< "$COMPILE_DIRS"
+done
