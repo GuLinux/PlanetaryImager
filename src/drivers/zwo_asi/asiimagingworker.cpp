@@ -115,15 +115,15 @@ int ASIImagingWorker::Private::getCVImageType()
         return CV_8UC3;
     default:
         throw runtime_error("Format not supported");
-
     }
 }
 
 Frame::ColorFormat ASIImagingWorker::Private::colorFormat() const {
   if(format == ASI_IMG_RGB24)
-    return Frame::RGB;
-
-  return color_format;
+    return Frame::BGR; // TODO: apparently what is reported as RGB is infact BGR; check with ASI devs
+  if(format == ASI_IMG_Y8)
+    return Frame::Mono;
+  return info.IsColorCam ? color_format : Frame::Mono;
 }
 
 QRect ASIImagingWorker::roi() const
