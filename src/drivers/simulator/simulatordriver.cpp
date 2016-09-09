@@ -108,7 +108,7 @@ SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{
     {"exposure",    {1, "exposure", 0.1, 1000, 0.1, 19.5}},
     {"movement", {2, "movement", 0, 5, 1, 1}},
     {"seeing",   {3, "seeing", 0, 5, 1, 1}},
-    {"bin",	 {4, "bin", 0, 3, 1, 1, 1, Control::Combo, { {"1x1", 1}, {"2x2", 2}, {"3x3", 3}, {"4x4", 4} } }}, 
+    {"bin",	 {4, "bin", 0, 3, 1, 4, 4, Control::Combo, { {"1x1", 1}, {"2x2", 2}, {"3x3", 3}, {"4x4", 4} } }}, 
     {"format", {5, "format", 0, 100, 1, Worker::Mono, Worker::Mono, Control::Combo, { {"Mono", Worker::Mono}, {"BGR", Worker::BGR},  {"Bayer", Worker::Bayer}} }}, 
     {"bpp",	 {6, "bpp", 8, 16, 8, 8, 8, Control::Combo, { {"8", 8}, {"16", 16},  } }}, 
     {"reject",	 {7, "reject", 0, 10, 1, 0, 0, Control::Combo, { {"Never", 0}, {"1 out of 10", 10}, {"1 out of 5", 5}, {"1 out of 3", 3}, {"1 out of 2", 2} } }}, 

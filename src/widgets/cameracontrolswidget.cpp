@@ -41,8 +41,9 @@ public:
   void apply();
   void restore();
   QString label() const;
-  QCheckBox *autoValueWidget() const;
-  ControlWidget *controlWidget() const;
+  QCheckBox *autoValueWidget() const { return auto_value_widget; }
+  QLabel *controlChangedLed() const { return control_changed_led; }
+  ControlWidget *controlWidget() const { return control_widget; }
   void control_updated(const Imager::Control &changed_control);
   bool is_pending() const;
 private:
@@ -53,6 +54,7 @@ private:
   void set_value(const Imager::Control & value);
   ControlWidget *control_widget;
   QCheckBox *auto_value_widget;
+  QLabel *control_changed_led;
 signals:
     void changed();
 };
@@ -72,6 +74,8 @@ CameraControl::CameraControl(const Imager::Control& control, Imager* imager, QWi
       control_widget = new BoolControlWidget;
     
     control_widget->update(control);
+    control_changed_led = new QLabel();
+    control_changed_led->setHidden(true);
 
     auto_value_widget = new QCheckBox("auto");
     auto_value_widget->setVisible(control.supports_auto);
@@ -87,14 +91,14 @@ CameraControl::CameraControl(const Imager::Control& control, Imager* imager, QWi
       emit changed();
     });
 
-    control_widget->setEnabled(!control.readonly && ! control.value_auto); // TODO: add different behaviour depending on widget type
-    // TODO: handle value
-    // TODO: move from here
+    control_widget->setEnabled(!control.readonly && ! control.value_auto);
     connect(imager, &Imager::changed, this, &CameraControl::control_updated, Qt::QueuedConnection);
 }
 
 void CameraControl::control_updated(const Imager::Control& changed_control)
 {
+    static QPixmap red_dot{":/resources/dot_red.png"};
+    static QPixmap green_dot{":/resources/dot_green.png"};
       if(changed_control.id != control.id)
         return;
       bool is_expected_value = changed_control.same_value(new_value);
@@ -102,8 +106,9 @@ void CameraControl::control_updated(const Imager::Control& changed_control)
       control = changed_control;
       new_value = control;
       control_widget->update(changed_control);
-      control_widget->setStyleSheet("background: %1;"_q % (is_expected_value ? "green" : "red") );
-      QTimer::singleShot(5000, [this]{ control_widget->setStyleSheet(""); });
+      control_changed_led->setPixmap(is_expected_value ? green_dot : red_dot);
+      control_changed_led->show();
+      QTimer::singleShot(5000, [this]{ control_changed_led->hide(); });
       emit changed();
 }
 
@@ -112,15 +117,6 @@ QString CameraControl::label() const
   return tr(qPrintable(control.name));
 }
 
-QCheckBox* CameraControl::autoValueWidget() const
-{
-  return auto_value_widget;
-}
-
-ControlWidget* CameraControl::controlWidget() const
-{
-  return control_widget;
-}
 
 
 void CameraControl::apply()
@@ -178,9 +174,10 @@ CameraControlsWidget::CameraControlsWidget(Imager *imager, Configuration &config
     connect(control, &CameraControl::changed, this, bind(&Private::controls_changed, d.get()));
     connect(d->ui->apply, &QPushButton::clicked, control, &CameraControl::apply);
     connect(d->ui->restore, &QPushButton::clicked, control, &CameraControl::restore);
-    grid->addWidget(new QLabel(control->label()), row, 0);
-    grid->addWidget(control->controlWidget(), row, 1);
-    grid->addWidget(control->autoValueWidget(), row++, 2);
+    grid->addWidget(control->controlChangedLed(), row, 0);
+    grid->addWidget(new QLabel(control->label()), row, 1);
+    grid->addWidget(control->controlWidget(), row, 2);
+    grid->addWidget(control->autoValueWidget(), row++, 3);
   }
   grid->addItem(new QSpacerItem(0, 0, QSizePolicy::MinimumExpanding, QSizePolicy::Expanding), row, 0, 3);
   grid->setRowStretch(row, 1);
