@@ -69,6 +69,7 @@ struct Imager::Control {
   bool supports_auto = false;
   bool value_auto = false;
   bool readonly = false;
+  bool same_value(const Control &other) const;
 };
 
 struct Imager::Chip {

@@ -53,3 +53,12 @@ void Imager::destroy()
   emit disconnected();
   this->deleteLater();
 }
+
+
+bool Imager::Control::same_value(const Imager::Control& other) const
+{
+    if(supports_auto && (value_auto || other.value_auto) ) {
+        return other.value_auto == value_auto;
+    }
+    return value == other.value;
+}

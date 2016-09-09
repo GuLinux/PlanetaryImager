@@ -40,23 +40,22 @@ public:
   QString label() const;
   QCheckBox *autoValueWidget() const;
   ControlWidget *controlWidget() const;
+  
+  bool is_pending() const;
 private:
-  struct Value {
-    double num;
-    bool is_auto;
-  };
 
   Imager::Control control;
+  Imager::Control new_value;
   Imager *imager;
-  Value new_value;
-  Value old_value;
-  void set_value(Value value);
+  void set_value(const Imager::Control & value);
   ControlWidget *control_widget;
   QCheckBox *auto_value_widget;
+signals:
+    void changed();
 };
 
 CameraControl::CameraControl(const Imager::Control& control, Imager* imager, QWidget* parent)
-  : QObject(parent), control{control}, imager{imager}, new_value{control.value, control.value_auto}, old_value{control.value, control.value_auto}
+  : QObject(parent), control{control}, new_value{control}, imager{imager}
 {
     if(control.type == Imager::Control::Number) {
       if(control.is_duration)
@@ -76,10 +75,10 @@ CameraControl::CameraControl(const Imager::Control& control, Imager* imager, QWi
     auto_value_widget->setChecked(control.value_auto);
     
     connect(control_widget, &ControlWidget::valueChanged, [=](double v) {
-      new_value = {v, new_value.is_auto };
+      new_value.value = v;
     });
     connect(auto_value_widget, &QCheckBox::toggled, this, [this](bool checked) {
-      new_value = {new_value.num, checked};
+      new_value.value_auto = checked;
       control_widget->setEnabled(!checked);
     });
 
@@ -117,20 +116,23 @@ void CameraControl::apply()
 
 void CameraControl::restore()
 {
-  set_value(old_value);
+  set_value(control);
 }
 
-void CameraControl::set_value(Value value)
+void CameraControl::set_value(const Imager::Control &value)
 {
-  if(value.num == control.value && value.is_auto == control.value_auto)
+  if(control.same_value(value))
     return;
-  qDebug() << value.num;
-  old_value = {control.value, control.value_auto};
-  control.value = value.num;
-  control.value_auto = value.is_auto;
-  imager->setControl(control);
-  control_widget->update(control);
+  qDebug() << "GUI: setting control " << control << " to " << value;;
+  imager->setControl(value);
+  control_widget->update(value);
 }
+
+bool CameraControl::is_pending() const
+{
+    return control.same_value(new_value);
+}
+
 
 
 DPTR_IMPL(CameraControlsWidget)
