@@ -40,7 +40,7 @@ DurationControlWidget::DurationControlWidget(QWidget *parent) : ControlWidget(pa
   d->unit_combo->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::QSizePolicy::Fixed);
   d->edit->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
   connect(d->edit, F_PTR(QDoubleSpinBox, valueChanged, double), this, bind(&Private::valueChanged, d.get() ));
-  connect(d->unit_combo, F_PTR(QComboBox, currentIndexChanged, int), this, bind(&Private::updateWidgets, d.get() ));
+  connect(d->unit_combo, F_PTR(QComboBox, activated, int), this, bind(&Private::updateWidgets, d.get() ));
   d->unit_combo->addItem("s", 1.);
   d->unit_combo->addItem("ms", 0.001);
   d->unit_combo->addItem("us", 0.000001);

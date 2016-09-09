@@ -53,7 +53,7 @@ RecordingPanel::RecordingPanel(Configuration& configuration, QWidget* parent) : 
   d->ui->filePrefix->setText(configuration.save_file_prefix());
   d->ui->fileSuffix->setText(configuration.save_file_suffix());
   d->ui->videoOutputType->setCurrentIndex(configuration.save_format() == Configuration::SER ? 0 : 1);
-  connect(d->ui->videoOutputType, F_PTR(QComboBox, currentIndexChanged, int), [&](int index) {
+  connect(d->ui->videoOutputType, F_PTR(QComboBox, activated, int), [&](int index) {
     if(index == 0)
       configuration.set_save_format(Configuration::SER);
     if(index == 1)
@@ -70,8 +70,8 @@ RecordingPanel::RecordingPanel(Configuration& configuration, QWidget* parent) : 
   });
   
   d->ui->limitType->setCurrentIndex(configuration.recording_limit_type());
-  connect(d->ui->limitType, F_PTR(QComboBox, currentIndexChanged, int), d->ui->limitsWidgets, &QStackedWidget::setCurrentIndex);
-  connect(d->ui->limitType, F_PTR(QComboBox, currentIndexChanged, int), [&configuration](int index){ configuration.set_recording_limit_type(static_cast<Configuration::RecordingLimit>(index)); });
+  connect(d->ui->limitType, F_PTR(QComboBox, activated, int), d->ui->limitsWidgets, &QStackedWidget::setCurrentIndex);
+  connect(d->ui->limitType, F_PTR(QComboBox, activated, int), [&configuration](int index){ configuration.set_recording_limit_type(static_cast<Configuration::RecordingLimit>(index)); });
   d->ui->limitsWidgets->setCurrentIndex(d->ui->limitType->currentIndex());
   
   d->ui->saveFramesLimit->setCurrentText(QString::number(configuration.recording_frames_limit()));
@@ -84,7 +84,7 @@ RecordingPanel::RecordingPanel(Configuration& configuration, QWidget* parent) : 
       configuration.set_recording_seconds_limit(seconds);
   });
   
-  connect(d->ui->save_recording_info, F_PTR(QComboBox, currentIndexChanged, int), [&configuration](int index) {
+  connect(d->ui->save_recording_info, F_PTR(QComboBox, activated, int), [&configuration](int index) {
     switch(index) {
       case 0:
         configuration.set_save_info_file(false);

@@ -143,7 +143,7 @@ QString SimulatorImager::name() const
 void SimulatorImager::setControl(const Imager::Control& setting)
 {
   QMutexLocker lock_settings(&settingsMutex);
-  qDebug() << "Received setting: \n" << setting << "\n saved setting: \n" << _settings[setting.name];
+  qDebug() << "Received control: " << setting << "; saved: " << _settings[setting.name];
   _settings[setting.name] = setting;
   emit changed(setting);
 }

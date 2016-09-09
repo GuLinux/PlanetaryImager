@@ -24,7 +24,10 @@ struct MenuControlWidget::Private {
 MenuControlWidget::MenuControlWidget(QWidget* parent): ControlWidget(parent), dptr()
 {
   layout()->addWidget(d->edit = new QComboBox);
-  connect(d->edit, F_PTR(QComboBox, currentIndexChanged, int), [=](int index) { emit valueChanged(d->edit->itemData(index).toDouble()); });
+  connect(d->edit, F_PTR(QComboBox, activated, int), [=](int index) {
+     qDebug() << "control index  changed: " << index; 
+     emit valueChanged(d->edit->itemData(index).toDouble());
+});
 }
 
 MenuControlWidget::~MenuControlWidget()

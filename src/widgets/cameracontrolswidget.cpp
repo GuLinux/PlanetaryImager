@@ -28,6 +28,7 @@
 #include <QComboBox>
 #include "controls/controls.h"
 #include "ui_cameracontrolswidget.h"
+#include "Qt/strings.h"
 
 using namespace std;
 using namespace std::placeholders;
@@ -96,10 +97,13 @@ void CameraControl::control_updated(const Imager::Control& changed_control)
 {
       if(changed_control.id != control.id)
         return;
-      qDebug() << "control changed:" << changed_control.id << changed_control.name << "=" << changed_control.value;
+      bool is_expected_value = changed_control.same_value(new_value);
+      qDebug() << "control changed:" << changed_control << "(" << control << "/" << new_value << "), is_expected_value: " << is_expected_value;
       control = changed_control;
       new_value = control;
       control_widget->update(changed_control);
+      control_widget->setStyleSheet("background: %1;"_q % (is_expected_value ? "green" : "red") );
+      QTimer::singleShot(5000, [this]{ control_widget->setStyleSheet(""); });
       emit changed();
 }
 

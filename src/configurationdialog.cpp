@@ -162,5 +162,5 @@ ConfigurationDialog::ConfigurationDialog(Configuration& configuration, QWidget* 
         d->ui->video_codec->addItem("%1 (%2)"_q % codec.first % codec.second, codec.first);
     }
     d->ui->video_codec->setCurrentIndex(d->ui->video_codec->findData(d->configuration.video_codec()));
-    connect(d->ui->video_codec, F_PTR(QComboBox, currentIndexChanged, int), [=](int index){ d->configuration.set_video_codec(d->ui->video_codec->itemData(index).toString()); });
+    connect(d->ui->video_codec, F_PTR(QComboBox, activated, int), [=](int index){ d->configuration.set_video_codec(d->ui->video_codec->itemData(index).toString()); });
 }
