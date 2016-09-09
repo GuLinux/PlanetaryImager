@@ -28,7 +28,9 @@
 #include <QComboBox>
 #include "controls/controls.h"
 #include "ui_cameracontrolswidget.h"
+
 using namespace std;
+using namespace std::placeholders;
 
 
 class CameraControl : public QObject {
@@ -40,7 +42,7 @@ public:
   QString label() const;
   QCheckBox *autoValueWidget() const;
   ControlWidget *controlWidget() const;
-  
+  void control_updated(const Imager::Control &changed_control);
   bool is_pending() const;
 private:
 
@@ -76,21 +78,29 @@ CameraControl::CameraControl(const Imager::Control& control, Imager* imager, QWi
     
     connect(control_widget, &ControlWidget::valueChanged, [=](double v) {
       new_value.value = v;
+      emit changed();
     });
     connect(auto_value_widget, &QCheckBox::toggled, this, [this](bool checked) {
       new_value.value_auto = checked;
       control_widget->setEnabled(!checked);
+      emit changed();
     });
 
     control_widget->setEnabled(!control.readonly && ! control.value_auto); // TODO: add different behaviour depending on widget type
     // TODO: handle value
     // TODO: move from here
-    connect(imager, &Imager::changed, this, [=](const Imager::Control &changed_control){
+    connect(imager, &Imager::changed, this, &CameraControl::control_updated, Qt::QueuedConnection);
+}
+
+void CameraControl::control_updated(const Imager::Control& changed_control)
+{
       if(changed_control.id != control.id)
         return;
       qDebug() << "control changed:" << changed_control.id << changed_control.name << "=" << changed_control.value;
+      control = changed_control;
+      new_value = control;
       control_widget->update(changed_control);
-    }, Qt::QueuedConnection);
+      emit changed();
 }
 
 QString CameraControl::label() const
@@ -130,7 +140,7 @@ void CameraControl::set_value(const Imager::Control &value)
 
 bool CameraControl::is_pending() const
 {
-    return control.same_value(new_value);
+    return ! control.same_value(new_value);
 }
 
 
@@ -139,6 +149,8 @@ DPTR_IMPL(CameraControlsWidget)
 {
   CameraControlsWidget *q;
   unique_ptr<Ui::CameraControlsWidget> ui;
+  list<CameraControl *> control_widgets;
+  void controls_changed();
 };
 
 
@@ -158,6 +170,8 @@ CameraControlsWidget::CameraControlsWidget(Imager *imager, Configuration &config
   for(auto imager_control: imager->controls()) {
     qDebug() << "adding setting: " << imager_control;
     auto control = new CameraControl(imager_control, imager, this);
+    d->control_widgets.push_back(control);
+    connect(control, &CameraControl::changed, this, bind(&Private::controls_changed, d.get()));
     connect(d->ui->apply, &QPushButton::clicked, control, &CameraControl::apply);
     connect(d->ui->restore, &QPushButton::clicked, control, &CameraControl::restore);
     grid->addWidget(new QLabel(control->label()), row, 0);
@@ -167,6 +181,14 @@ CameraControlsWidget::CameraControlsWidget(Imager *imager, Configuration &config
   grid->addItem(new QSpacerItem(0, 0, QSizePolicy::MinimumExpanding, QSizePolicy::Expanding), row, 0, 3);
   grid->setRowStretch(row, 1);
   grid->setColumnStretch(1, 1);
+}
+
+void CameraControlsWidget::Private::controls_changed()
+{
+    bool any_changed = std::any_of(control_widgets.begin(), control_widgets.end(), bind(&CameraControl::is_pending, _1));
+    qDebug() << "Any control pending: " << any_changed;
+    ui->apply->setEnabled(any_changed);
+    ui->restore->setEnabled(any_changed);
 }
 
 #include "cameracontrolswidget.moc"
