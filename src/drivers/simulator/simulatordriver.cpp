@@ -111,6 +111,7 @@ SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{
     {"bin",	 {4, "bin", 0, 3, 1, 1, 1, Control::Combo, { {"1x1", 1}, {"2x2", 2}, {"3x3", 3}, {"4x4", 4} } }}, 
     {"format", {5, "format", 0, 100, 1, Worker::Mono, Worker::Mono, Control::Combo, { {"Mono", Worker::Mono}, {"BGR", Worker::BGR},  {"Bayer", Worker::Bayer}} }}, 
     {"bpp",	 {6, "bpp", 8, 16, 8, 8, 8, Control::Combo, { {"8", 8}, {"16", 16},  } }}, 
+    {"reject",	 {7, "reject", 0, 10, 1, 0, 0, Control::Combo, { {"Never", 0}, {"1 out of 10", 10}, {"1 out of 5", 5}, {"1 out of 3", 3}, {"1 out of 2", 2} } }}, 
   }
 {
   qDebug() << "Creating simulator imager: current owning thread: " << thread() << ", qApp thread: " << qApp->thread();
@@ -143,7 +144,14 @@ QString SimulatorImager::name() const
 void SimulatorImager::setControl(const Imager::Control& setting)
 {
   QMutexLocker lock_settings(&settingsMutex);
+  static uint64_t controls_changed = 0;
   qDebug() << "Received control: " << setting << "; saved: " << _settings[setting.name];
+  int reject_every = static_cast<int>(_settings["reject"].value);
+  if(reject_every > 0 && controls_changed++ % reject_every == 0) {
+      qDebug() << "Rejecting control (" << reject_every << " reached)";
+      emit changed(_settings[setting.name]);
+      return;
+  }
   _settings[setting.name] = setting;
   emit changed(setting);
 }
