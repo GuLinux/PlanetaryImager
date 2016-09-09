@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>469</width>
-    <height>320</height>
+    <width>419</width>
+    <height>327</height>
    </rect>
   </property>
   <layout class="QGridLayout" name="gridLayout_3">
@@ -227,30 +227,16 @@
      </property>
     </widget>
    </item>
-   <item row="7" column="2" colspan="2">
-    <widget class="QComboBox" name="videoOutputType">
-     <property name="whatsThis">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;File format for your recording:&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;LuCam SER&lt;/span&gt;: RAW format, supports 8 and 16 bit, monochrome and color images. It's usually much faster, as no encoding process is needed, and offers the maximum quality. It also needs much more disk space, but it can be manually compressed after processing for storage (bzip2 algorithm is suggested).&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Video File&lt;/span&gt;: frames will be encoded using the encoder specified in the main settings. This is usually slower, usually supports only 8 bits color images, and quality may vary, depending on the encoder used, but disk usage will usually be much lower.&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <item>
-      <property name="text">
-       <string>LuCam SER</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Video File</string>
-      </property>
-     </item>
-    </widget>
-   </item>
    <item row="0" column="1" colspan="4">
     <widget class="QLineEdit" name="saveDirectory"/>
    </item>
    <item row="1" column="2">
     <widget class="QLabel" name="label_11">
+     <property name="whatsThis">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;File name will be composed by the date and time of the recording.&lt;/p&gt;&lt;p&gt;Example: for 20 may 2016, 13:22:20, it will be:&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;&amp;lt;prefix&amp;gt;20160520_132220_&amp;lt;timezone&amp;gt;&amp;lt;suffix&amp;gt;.&amp;lt;extension&amp;gt;&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <property name="text">
-      <string>yyymmdd_hhmmss</string>
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;name&lt;span style=&quot; vertical-align:super;&quot;&gt;?&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
      </property>
     </widget>
    </item>
@@ -359,7 +345,7 @@
       <number>0</number>
      </property>
      <property name="currentIndex">
-      <number>0</number>
+      <number>2</number>
      </property>
      <widget class="QWidget" name="no_limits_page"/>
      <widget class="QWidget" name="limit_frames_number_page">
@@ -455,7 +441,10 @@
        <property name="bottomMargin">
         <number>0</number>
        </property>
-       <property name="spacing">
+       <property name="horizontalSpacing">
+        <number>2</number>
+       </property>
+       <property name="verticalSpacing">
         <number>0</number>
        </property>
        <item row="0" column="0">
@@ -478,6 +467,23 @@
       </layout>
      </widget>
      <widget class="QWidget" name="limit_sfilesize_page"/>
+    </widget>
+   </item>
+   <item row="7" column="1" colspan="3">
+    <widget class="QComboBox" name="videoOutputType">
+     <property name="whatsThis">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;File format for your recording:&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;LuCam SER&lt;/span&gt;: RAW format, supports 8 and 16 bit, monochrome and color images. It's usually much faster, as no encoding process is needed, and offers the maximum quality. It also needs much more disk space, but it can be manually compressed after processing for storage (bzip2 algorithm is suggested).&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Video File&lt;/span&gt;: frames will be encoded using the encoder specified in the main settings. This is usually slower, usually supports only 8 bits color images, and quality may vary, depending on the encoder used, but disk usage will usually be much lower.&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <item>
+      <property name="text">
+       <string>LuCam SER</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Video File</string>
+      </property>
+     </item>
     </widget>
    </item>
   </layout>

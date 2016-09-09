@@ -142,7 +142,7 @@ QString Configuration::savefile() const
     % save_directory()
     % QDir::separator()
     % save_file_prefix()
-    % QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss_zzz_t")
+    % QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss_t")
     % save_file_suffix()
     % extension[save_format()]
     ;

@@ -36,8 +36,6 @@ MenuControlWidget::~MenuControlWidget()
 
 void MenuControlWidget::update(const Imager::Control& setting)
 {
-//   if(d->edit->currentData().toDouble() == setting.value)
-//     return;
   d->edit->clear();
   for(auto item: setting.choices) {
     d->edit->addItem(item.label, item.value);
