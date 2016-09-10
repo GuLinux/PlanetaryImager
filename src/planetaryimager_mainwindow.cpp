@@ -309,6 +309,8 @@ void PlanetaryImagerMainWindow::Private::rescan_devices()
 
 void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::CameraPtr& camera)
 {
+    if(imager)
+        imager->destroy();
   auto compositeImageHandler = ImageHandlerPtr{new ImageHandlers{displayImage, saveImages, histogram}};
   auto threadImageHandler = ImageHandlerPtr{new ThreadImageHandler{compositeImageHandler}};
   CreateImagerWorker::create(camera, threadImageHandler, &imagerThread, q, bind(&Private::onImagerInitialized, this, _1) );
