@@ -127,6 +127,10 @@ void CreateImagerWorker::exec()
 PlanetaryImagerMainWindow::~PlanetaryImagerMainWindow()
 {
   LOG_F_SCOPE
+  if(d->imager)
+      d->imager->stopLive();
+  d->imagerThread.quit();
+  d->imagerThread.wait();
 }
 
 void PlanetaryImagerMainWindow::Private::saveState()
