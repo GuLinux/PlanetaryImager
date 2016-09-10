@@ -127,6 +127,7 @@ void CreateImagerWorker::exec()
 PlanetaryImagerMainWindow::~PlanetaryImagerMainWindow()
 {
   LOG_F_SCOPE
+  d->saveState();
   if(d->imager)
       d->imager->stopLive();
   d->imagerThread.quit();
@@ -136,6 +137,7 @@ PlanetaryImagerMainWindow::~PlanetaryImagerMainWindow()
 void PlanetaryImagerMainWindow::Private::saveState()
 {
   configuration.set_dock_status(q->saveState());
+  configuration.set_main_window_geometry(q->saveGeometry());
 }
 
 
@@ -177,6 +179,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     d->image->toolbar()->setFloatable(true);
     d->image->toolbar()->setMovable(true);
     
+    restoreGeometry(d->configuration.main_window_geometry());
     restoreState(d->configuration.dock_status());
     connect(d->ui->actionAbout, &QAction::triggered, bind(&QMessageBox::about, this, tr("About"),
 							  tr("%1 version %2.\nFast imaging capture software for planetary imaging").arg(qApp->applicationDisplayName())

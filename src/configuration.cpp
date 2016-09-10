@@ -77,6 +77,7 @@ template<typename T> void Configuration::Private::set(const QString& key, const 
 #define define_setting_enum(name, type, default_value) define_setting_enum_get(name, type, default_value)  define_setting_enum_set(name, type) define_setting_reset(name)
 
 define_setting(dock_status, QByteArray, {})
+define_setting(main_window_geometry, QByteArray, {})
 define_setting(max_memory_usage, long long, 1024*1024*1024)
 define_setting(buffered_output, bool, true)
 define_setting(max_display_fps, int, 30)

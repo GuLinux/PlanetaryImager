@@ -37,6 +37,7 @@ public:
     type name() const;
 
     declare_setting(dock_status, QByteArray )
+    declare_setting(main_window_geometry, QByteArray )
     declare_setting(max_memory_usage, long long )
     declare_setting(buffered_output, bool )
     declare_setting(max_display_fps, int )
