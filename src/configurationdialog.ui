@@ -338,7 +338,7 @@
        <item>
         <widget class="QRadioButton" name="edge_canny">
          <property name="text">
-          <string>Canny (&amp;usually better quality and faster</string>
+          <string>Canny (&amp;usually better quality and faster)</string>
          </property>
         </widget>
        </item>
