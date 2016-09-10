@@ -11,6 +11,9 @@
  - Histogram: configurable interval, with different values while recording, to reduce CPU usage
  - Lots of more configurable options
  - More reliable frame creation timestamp
+ - Window size is now saved and restored during sessions
+ - Notify user of controls accepted/rejected from camera, also disable "apply" button when no controls have pending changes
+
  
 ## 0.5.0 2016-08-21
  - Fix ASI controls issue
