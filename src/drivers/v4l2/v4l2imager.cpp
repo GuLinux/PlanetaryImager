@@ -124,7 +124,7 @@ V4L2Imager::~V4L2Imager()
     stopLive();
 }
 
-Imager::Chip V4L2Imager::chip() const
+Imager::Properties V4L2Imager::chip() const
 {
     return {};
 }

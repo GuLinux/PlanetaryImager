@@ -60,7 +60,7 @@ public:
   QString name;
   QString id;
   ImageHandlerPtr imageHandler;
-  Chip chip;
+    Properties chip;
   Controls settings;
   void load_settings();
   QThread imaging_thread;
@@ -98,7 +98,7 @@ QHYCCDImager::QHYCCDImager(const QString &cameraName, const char *id, const Imag
   uint32_t width, height, bpp;
   GetQHYCCDChipInfo(d->handle, &chipwidth, &chipheight, &width, &height, &pixelwidth, &pixelheight, &bpp);
   d->chip.set_chip_size(chipwidth, chipheight).set_pixel_size(pixelwidth, pixelheight).set_resolution({static_cast<int>(width), static_cast<int>(height)});
-  d->chip << Chip::Property{"bpp", bpp};
+  d->chip << Properties::Property{"bpp", bpp};
   qDebug() << d->chip;
   d->load_settings();
   qDebug() << d->settings;
@@ -119,7 +119,7 @@ QHYCCDImager::~QHYCCDImager()
   emit disconnected();
 }
 
-QHYCCDImager::Chip QHYCCDImager::chip() const
+QHYCCDImager::Properties QHYCCDImager::chip() const
 {
   return d->chip;
 }

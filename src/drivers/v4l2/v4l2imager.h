@@ -27,7 +27,7 @@ class V4L2Imager : public Imager
 public:
     V4L2Imager(const QString &name, int index, const ImageHandlerPtr &handler);
     ~V4L2Imager();
-    virtual Imager::Chip chip() const;
+    virtual Imager::Properties chip() const;
     virtual QString name() const;
     virtual Imager::Controls controls() const;
     virtual bool supportsROI() {

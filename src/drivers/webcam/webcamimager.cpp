@@ -45,9 +45,9 @@ WebcamImager::~WebcamImager()
     stopLive();
 }
 
-Imager::Chip WebcamImager::chip() const
+Imager::Properties WebcamImager::chip() const
 {
-    Chip chip{};
+    Properties chip{};
     return chip;
 }
 

@@ -32,7 +32,7 @@ public:
     ~QHYCCDImager();
 
     virtual QString name() const;
-    virtual Chip chip() const;
+    virtual Properties chip() const;
 
     virtual Controls controls() const;  
     virtual bool supportsROI();

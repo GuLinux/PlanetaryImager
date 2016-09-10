@@ -28,7 +28,7 @@ class ZWO_ASI_Imager : public Imager
 public:
     ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandlerPtr &imageHandler);
     ~ZWO_ASI_Imager();
-    virtual Imager::Chip chip() const;
+    virtual Imager::Properties chip() const;
     virtual QString name() const;
     virtual Imager::Controls controls() const;
     virtual bool supportsROI();

@@ -31,12 +31,12 @@ public:
   Imager() : QObject(nullptr) {}
   virtual ~Imager() {}
   struct Control;
-  struct Chip;
+  struct Properties;
   typedef QList<Control> Controls;
 
   virtual Controls controls() const = 0;  
   virtual QString name() const = 0;
-  virtual Chip chip() const = 0;
+  virtual Properties chip() const = 0;
   virtual bool supportsROI() = 0;
 public slots:
   virtual void setROI(const QRect &) = 0;
@@ -72,13 +72,13 @@ struct Imager::Control {
   bool same_value(const Control &other) const;
 };
 
-struct Imager::Chip {
-  Chip &set_resolution_pixelsize(const QSize &resolution, double pixelwidth, double pixelheight);
-  Chip &set_resolution_chipsize(const QSize &resolution, double width, double height);
-  Chip &set_pixelsize_chipsize(double pixelwidth, double pixelheight, double width, double height);
-  Chip &set_resolution(const QSize &resolution);
-  Chip &set_pixel_size(double width, double height);
-  Chip &set_chip_size(double width, double height);
+struct Imager::Properties {
+    Properties &set_resolution_pixelsize(const QSize &resolution, double pixelwidth, double pixelheight);
+    Properties &set_resolution_chipsize(const QSize &resolution, double width, double height);
+    Properties &set_pixelsize_chipsize(double pixelwidth, double pixelheight, double width, double height);
+    Properties &set_resolution(const QSize &resolution);
+    Properties &set_pixel_size(double width, double height);
+    Properties &set_chip_size(double width, double height);
 //   double width, height, pixelwidth, pixelheight;
 //   uint32_t xres, yres, bpp;
   struct Property {
@@ -91,12 +91,12 @@ struct Imager::Chip {
     QString displayName() const;
     QString displayValue() const;
   };
-  Chip &operator<<(const Property &property);
+    Properties &operator<<(const Property &property);
   QList<Property> properties;
 };
 
-QDebug operator<<(QDebug dbg, const Imager::Chip &chip);
-QDebug operator<<(QDebug dbg, const Imager::Chip::Property &property);
+QDebug operator<<(QDebug dbg, const Imager::Properties &chip);
+QDebug operator<<(QDebug dbg, const Imager::Properties::Property &property);
 QDebug operator<<(QDebug dbg, const Imager::Control &setting);
 QDebug operator<<(QDebug dbg, const Imager::Control::Choice &choice);
 

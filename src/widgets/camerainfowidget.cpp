@@ -29,14 +29,14 @@ DPTR_IMPL(CameraInfoWidget) {
   Imager *imager;
   CameraInfoWidget *q;
   QGridLayout *layout;
-  void addProperty(const Imager::Chip::Property &property);
+  void addProperty(const Imager::Properties::Property &property);
 };
 
 CameraInfoWidget::CameraInfoWidget(Imager *imager, QWidget* parent): QWidget(parent), dptr(imager, this)
 {
   d->layout = new QGridLayout(this);
   setLayout(d->layout);
-  d->addProperty(Imager::Chip::Property{"Name", QVariant{imager->name()}});
+  d->addProperty({"Name", QVariant{imager->name()}});
   auto properties = imager->chip().properties;
   properties.erase(remove_if(properties.begin(), properties.end(), [](const auto &p){ return p.hidden; }), properties.end());
   std::for_each(properties.begin(), properties.end(), bind(&Private::addProperty, d.get(), _1));
@@ -47,7 +47,7 @@ CameraInfoWidget::~CameraInfoWidget()
 {
 }
 
-void CameraInfoWidget::Private::addProperty(const Imager::Chip::Property& property)
+void CameraInfoWidget::Private::addProperty(const Imager::Properties::Property& property)
 {
     int next_row = layout->rowCount();
     layout->addWidget(new QLabel(property.displayName()), next_row, 0);

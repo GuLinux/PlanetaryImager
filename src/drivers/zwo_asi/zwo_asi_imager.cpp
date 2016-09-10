@@ -51,7 +51,7 @@ DPTR_IMPL(ZWO_ASI_Imager) {
     ImageHandlerPtr imageHandler;
     ZWO_ASI_Imager *q;
 
-    Chip chip;
+    Properties chip;
 
     ASIControl::vector controls;
     ASIControl::ptr temperature_control;
@@ -76,8 +76,8 @@ void ZWO_ASI_Imager::Private::read_temperature() {
 ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandlerPtr &imageHandler) : dptr(info, imageHandler, this)
 {
     d->chip.set_resolution_pixelsize({static_cast<int>(info.MaxWidth), static_cast<int>(info.MaxHeight)}, info.PixelSize, info.PixelSize);
-    d->chip << Chip::Property{"Camera Speed", info.IsUSB3Camera ? "USB3" : "USB2"};
-    d->chip << Chip::Property{"Host Speed", info.IsUSB3Host ? "USB3" : "USB2"};
+    d->chip << Properties::Property{"Camera Speed", info.IsUSB3Camera ? "USB3" : "USB2"};
+    d->chip << Properties::Property{"Host Speed", info.IsUSB3Host ? "USB3" : "USB2"};
     ASI_CHECK << ASIOpenCamera(info.CameraID) << "Open Camera";
     connect(&d->reload_temperature_timer, &QTimer::timeout, this, bind(&Private::read_temperature, d.get() ));
     d->reload_temperature_timer.start(5000);
@@ -90,7 +90,7 @@ ZWO_ASI_Imager::~ZWO_ASI_Imager()
     ASI_CHECK << ASICloseCamera(d->info.CameraID) << "Close Camera";
 }
 
-Imager::Chip ZWO_ASI_Imager::chip() const
+Imager::Properties ZWO_ASI_Imager::chip() const
 {
     return d->chip;
 }
