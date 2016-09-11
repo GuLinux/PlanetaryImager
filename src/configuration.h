@@ -52,6 +52,9 @@ public:
     declare_setting(recording_frames_limit, long long )
     
     declare_setting(save_directory, QString)
+    declare_setting(save_file_prefix_suffix_separator, QString)
+    declare_setting(save_file_avail_prefixes, QStringList)
+    declare_setting(save_file_avail_suffixes, QStringList)
     declare_setting(save_file_prefix, QString)
     declare_setting(save_file_suffix, QString )
     declare_setting(observer, QString)

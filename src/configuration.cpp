@@ -92,6 +92,10 @@ define_setting(recording_frames_limit, long long, 100)
 
 define_setting(save_file_prefix, QString, {})
 define_setting(save_file_suffix, QString, {})
+define_setting(save_file_prefix_suffix_separator, QString, "-")
+define_setting(save_file_avail_prefixes, QStringList, (QStringList{"Moon", "Jupiter", "Saturn", "Venus", "Mercury"}))
+define_setting(save_file_avail_suffixes, QStringList, (QStringList{"L", "R", "G", "B", "IR", "Flat", "Dark", "Light"}))
+
 define_setting(save_directory, QString, QProcessEnvironment::systemEnvironment().value("HOME"))
 define_setting(telescope, QString, {})
 define_setting(observer, QString, {})
@@ -142,9 +146,9 @@ QString Configuration::savefile() const
   return "%1%2%3%4%5%6"_q
     % save_directory()
     % QDir::separator()
-    % save_file_prefix()
+    % (save_file_prefix().isEmpty() ? QString{} : "%1%2"_q % save_file_prefix() % save_file_prefix_suffix_separator())
     % QDateTime::currentDateTime().toString("yyyyMMdd_HHmmss_t")
-    % save_file_suffix()
+    % (save_file_suffix().isEmpty() ? QString{} : "%1%2"_q % save_file_prefix_suffix_separator() % save_file_suffix())
     % extension[save_format()]
     ;
 }

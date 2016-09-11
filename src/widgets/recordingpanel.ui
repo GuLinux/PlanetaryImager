@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>419</width>
-    <height>327</height>
+    <width>455</width>
+    <height>331</height>
    </rect>
   </property>
   <layout class="QGridLayout" name="gridLayout_3">
@@ -18,33 +18,314 @@
      </property>
     </widget>
    </item>
-   <item row="11" column="2">
-    <spacer name="verticalSpacer_2">
-     <property name="orientation">
-      <enum>Qt::Vertical</enum>
-     </property>
-     <property name="sizeHint" stdset="0">
-      <size>
-       <width>20</width>
-       <height>10000</height>
-      </size>
-     </property>
-    </spacer>
+   <item row="0" column="1">
+    <widget class="QLineEdit" name="saveDirectory"/>
    </item>
-   <item row="1" column="3" colspan="2">
-    <widget class="QLineEdit" name="fileSuffix">
-     <property name="whatsThis">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;String to append to file name, for instance to indicate the filter in use, or if it's a light or dark image.&lt;/p&gt;&lt;p&gt;Remember to add a separator character (for instance &lt;span style=&quot; font-weight:600;&quot;&gt;-&lt;/span&gt; or &lt;span style=&quot; font-weight:600;&quot;&gt;_&lt;/span&gt;) at the beginning of the suffix.&lt;/p&gt;&lt;p&gt;Example: if you enter &amp;quot;&lt;span style=&quot; font-weight:600;&quot;&gt;_red&lt;/span&gt;&amp;quot;, the resulting file name ill be &lt;span style=&quot; font-weight:600;&quot;&gt;20160902_112332_red.ser&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <property name="placeholderText">
-      <string>suffix</string>
-     </property>
-     <property name="clearButtonEnabled">
-      <bool>true</bool>
+   <item row="1" column="0">
+    <widget class="QLabel" name="label_10">
+     <property name="text">
+      <string>File name:</string>
      </property>
     </widget>
    </item>
-   <item row="10" column="0" colspan="5">
+   <item row="1" column="1">
+    <layout class="QHBoxLayout" name="horizontalLayout_8">
+     <item>
+      <widget class="QComboBox" name="filePrefix">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="editable">
+        <bool>true</bool>
+       </property>
+       <property name="maxVisibleItems">
+        <number>15</number>
+       </property>
+       <property name="insertPolicy">
+        <enum>QComboBox::InsertAtTop</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QLabel" name="label_11">
+       <property name="whatsThis">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;File name will be composed by the date and time of the recording.&lt;/p&gt;&lt;p&gt;Example: for 20 may 2016, 13:22:20, it will be:&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;&amp;lt;prefix&amp;gt;20160520_132220_&amp;lt;timezone&amp;gt;&amp;lt;suffix&amp;gt;.&amp;lt;extension&amp;gt;&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <property name="text">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;name&lt;span style=&quot; vertical-align:super;&quot;&gt;?&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QComboBox" name="fileSuffix">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="MinimumExpanding" vsizetype="Fixed">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="editable">
+        <bool>true</bool>
+       </property>
+       <property name="maxVisibleItems">
+        <number>15</number>
+       </property>
+       <property name="insertPolicy">
+        <enum>QComboBox::InsertAtTop</enum>
+       </property>
+      </widget>
+     </item>
+     <item>
+      <widget class="QToolButton" name="filename_options">
+       <property name="text">
+        <string>...</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="2" column="0">
+    <widget class="QLabel" name="label_8">
+     <property name="text">
+      <string>Limit</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1">
+    <layout class="QHBoxLayout" name="horizontalLayout_7">
+     <item>
+      <widget class="QComboBox" name="limitType">
+       <property name="whatsThis">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Configure limits for your recording:&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Infinite&lt;/span&gt;: recording will stop only when you press the &amp;quot;&lt;span style=&quot; font-style:italic;&quot;&gt;stop&lt;/span&gt;&amp;quot; button.&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Frames number&lt;/span&gt;: recording will automatically stop when reaching the desired frames number.&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Duration&lt;/span&gt;: recording will automatically stop after the desired number of seconds.&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>infinite</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>frames number</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>duration</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <widget class="QStackedWidget" name="limitsWidgets">
+       <property name="sizePolicy">
+        <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
+         <horstretch>0</horstretch>
+         <verstretch>0</verstretch>
+        </sizepolicy>
+       </property>
+       <property name="lineWidth">
+        <number>0</number>
+       </property>
+       <property name="currentIndex">
+        <number>3</number>
+       </property>
+       <widget class="QWidget" name="no_limits_page"/>
+       <widget class="QWidget" name="limit_frames_number_page">
+        <layout class="QGridLayout" name="gridLayout_2">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <property name="spacing">
+          <number>0</number>
+         </property>
+         <item row="0" column="0">
+          <widget class="QComboBox" name="saveFramesLimit">
+           <property name="editable">
+            <bool>true</bool>
+           </property>
+           <property name="currentText">
+            <string>50</string>
+           </property>
+           <item>
+            <property name="text">
+             <string>50</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>100</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>250</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>500</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>750</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>1000</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>2500</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>2000</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>3000</string>
+            </property>
+           </item>
+           <item>
+            <property name="text">
+             <string>5000</string>
+            </property>
+           </item>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="limit_duration_page">
+        <layout class="QGridLayout" name="gridLayout_4">
+         <property name="leftMargin">
+          <number>0</number>
+         </property>
+         <property name="topMargin">
+          <number>0</number>
+         </property>
+         <property name="rightMargin">
+          <number>0</number>
+         </property>
+         <property name="bottomMargin">
+          <number>0</number>
+         </property>
+         <property name="horizontalSpacing">
+          <number>2</number>
+         </property>
+         <property name="verticalSpacing">
+          <number>0</number>
+         </property>
+         <item row="0" column="0">
+          <widget class="QDoubleSpinBox" name="duration_limit">
+           <property name="decimals">
+            <number>3</number>
+           </property>
+           <property name="maximum">
+            <double>999.990000000000009</double>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLabel" name="duration_limit_label">
+           <property name="text">
+            <string>seconds</string>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+       <widget class="QWidget" name="limit_sfilesize_page"/>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="3" column="0">
+    <widget class="QLabel" name="label">
+     <property name="text">
+      <string>Save information</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="QComboBox" name="save_recording_info">
+     <property name="whatsThis">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Choose if you want to save additional information of this recording in the same directory of the output file, as &lt;span style=&quot; font-style:italic;&quot;&gt;TXT&lt;/span&gt;, &lt;span style=&quot; font-style:italic;&quot;&gt;JSON&lt;/span&gt; or both.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;TXT&lt;/span&gt;: human readable description of the camera controls, fps values, and various camera information.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;JSON&lt;/span&gt;: same information, but in a machine readable format. This could be use to import previous settings in a future version of &lt;span style=&quot; font-style:italic;&quot;&gt;PlanetaryImager&lt;/span&gt;.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
+     <item>
+      <property name="text">
+       <string>don't save</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>as JSON settings file</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>as TXT file</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>both</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="4" column="0">
+    <widget class="QLabel" name="label_9">
+     <property name="text">
+      <string>Output format</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1">
+    <layout class="QHBoxLayout" name="horizontalLayout">
+     <item>
+      <widget class="QComboBox" name="videoOutputType">
+       <property name="whatsThis">
+        <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;File format for your recording:&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;LuCam SER&lt;/span&gt;: RAW format, supports 8 and 16 bit, monochrome and color images. It's usually much faster, as no encoding process is needed, and offers the maximum quality. It also needs much more disk space, but it can be manually compressed after processing for storage (bzip2 algorithm is suggested).&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Video File&lt;/span&gt;: frames will be encoded using the encoder specified in the main settings. This is usually slower, usually supports only 8 bits color images, and quality may vary, depending on the encoder used, but disk usage will usually be much lower.&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</string>
+       </property>
+       <item>
+        <property name="text">
+         <string>LuCam SER</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>Video File</string>
+        </property>
+       </item>
+      </widget>
+     </item>
+     <item>
+      <widget class="QPushButton" name="start_stop_recording">
+       <property name="text">
+        <string>Start</string>
+       </property>
+      </widget>
+     </item>
+    </layout>
+   </item>
+   <item row="5" column="0" colspan="2">
     <widget class="QGroupBox" name="recordingBox">
      <property name="title">
       <string>Recording</string>
@@ -220,271 +501,18 @@
      </layout>
     </widget>
    </item>
-   <item row="6" column="4" rowspan="2">
-    <widget class="QPushButton" name="start_stop_recording">
-     <property name="text">
-      <string>Start</string>
+   <item row="6" column="0" colspan="2">
+    <spacer name="verticalSpacer_2">
+     <property name="orientation">
+      <enum>Qt::Vertical</enum>
      </property>
-    </widget>
-   </item>
-   <item row="0" column="1" colspan="4">
-    <widget class="QLineEdit" name="saveDirectory"/>
-   </item>
-   <item row="1" column="2">
-    <widget class="QLabel" name="label_11">
-     <property name="whatsThis">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;File name will be composed by the date and time of the recording.&lt;/p&gt;&lt;p&gt;Example: for 20 may 2016, 13:22:20, it will be:&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;&amp;lt;prefix&amp;gt;20160520_132220_&amp;lt;timezone&amp;gt;&amp;lt;suffix&amp;gt;.&amp;lt;extension&amp;gt;&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     <property name="sizeHint" stdset="0">
+      <size>
+       <width>20</width>
+       <height>10000</height>
+      </size>
      </property>
-     <property name="text">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;name&lt;span style=&quot; vertical-align:super;&quot;&gt;?&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-    </widget>
-   </item>
-   <item row="6" column="0" rowspan="2">
-    <widget class="QLabel" name="label_9">
-     <property name="text">
-      <string>Output format</string>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="1">
-    <widget class="QLineEdit" name="filePrefix">
-     <property name="statusTip">
-      <string/>
-     </property>
-     <property name="whatsThis">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;String to prepend to file name, for instance to indicate the shot main feature (Moon, planet name, star).&lt;/p&gt;&lt;p&gt;Remember to add a separator character (for instance &lt;span style=&quot; font-weight:600;&quot;&gt;-&lt;/span&gt; or &lt;span style=&quot; font-weight:600;&quot;&gt;_&lt;/span&gt;) at the end of the prefix.&lt;/p&gt;&lt;p&gt;Example: if you enter &amp;quot;&lt;span style=&quot; font-weight:600;&quot;&gt;Moon_&lt;/span&gt;&amp;quot;, the resulting file name ill be &lt;span style=&quot; font-weight:600;&quot;&gt;Moon_20160902_112332.ser&lt;/span&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <property name="placeholderText">
-      <string>prefix</string>
-     </property>
-     <property name="clearButtonEnabled">
-      <bool>true</bool>
-     </property>
-    </widget>
-   </item>
-   <item row="1" column="0">
-    <widget class="QLabel" name="label_10">
-     <property name="text">
-      <string>File name:</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="1">
-    <widget class="QComboBox" name="limitType">
-     <property name="whatsThis">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Configure limits for your recording:&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Infinite&lt;/span&gt;: recording will stop only when you press the &amp;quot;&lt;span style=&quot; font-style:italic;&quot;&gt;stop&lt;/span&gt;&amp;quot; button.&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Frames number&lt;/span&gt;: recording will automatically stop when reaching the desired frames number.&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Duration&lt;/span&gt;: recording will automatically stop after the desired number of seconds.&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <item>
-      <property name="text">
-       <string>infinite</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>frames number</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>duration</string>
-      </property>
-     </item>
-    </widget>
-   </item>
-   <item row="5" column="0">
-    <widget class="QLabel" name="label_8">
-     <property name="text">
-      <string>Limit</string>
-     </property>
-    </widget>
-   </item>
-   <item row="8" column="1" colspan="4">
-    <widget class="QComboBox" name="save_recording_info">
-     <property name="whatsThis">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Choose if you want to save additional information of this recording in the same directory of the output file, as &lt;span style=&quot; font-style:italic;&quot;&gt;TXT&lt;/span&gt;, &lt;span style=&quot; font-style:italic;&quot;&gt;JSON&lt;/span&gt; or both.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;TXT&lt;/span&gt;: human readable description of the camera controls, fps values, and various camera information.&lt;/p&gt;&lt;p&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;JSON&lt;/span&gt;: same information, but in a machine readable format. This could be use to import previous settings in a future version of &lt;span style=&quot; font-style:italic;&quot;&gt;PlanetaryImager&lt;/span&gt;.&lt;/p&gt;&lt;p&gt;&lt;br/&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <item>
-      <property name="text">
-       <string>don't save</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>as JSON settings file</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>as TXT file</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>both</string>
-      </property>
-     </item>
-    </widget>
-   </item>
-   <item row="8" column="0">
-    <widget class="QLabel" name="label">
-     <property name="text">
-      <string>Save information</string>
-     </property>
-    </widget>
-   </item>
-   <item row="5" column="2" colspan="3">
-    <widget class="QStackedWidget" name="limitsWidgets">
-     <property name="sizePolicy">
-      <sizepolicy hsizetype="Minimum" vsizetype="Preferred">
-       <horstretch>0</horstretch>
-       <verstretch>0</verstretch>
-      </sizepolicy>
-     </property>
-     <property name="lineWidth">
-      <number>0</number>
-     </property>
-     <property name="currentIndex">
-      <number>2</number>
-     </property>
-     <widget class="QWidget" name="no_limits_page"/>
-     <widget class="QWidget" name="limit_frames_number_page">
-      <layout class="QGridLayout" name="gridLayout_2">
-       <property name="leftMargin">
-        <number>0</number>
-       </property>
-       <property name="topMargin">
-        <number>0</number>
-       </property>
-       <property name="rightMargin">
-        <number>0</number>
-       </property>
-       <property name="bottomMargin">
-        <number>0</number>
-       </property>
-       <property name="spacing">
-        <number>0</number>
-       </property>
-       <item row="0" column="0">
-        <widget class="QComboBox" name="saveFramesLimit">
-         <property name="editable">
-          <bool>true</bool>
-         </property>
-         <property name="currentText">
-          <string>50</string>
-         </property>
-         <item>
-          <property name="text">
-           <string>50</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>100</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>250</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>500</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>750</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>1000</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>2500</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>2000</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>3000</string>
-          </property>
-         </item>
-         <item>
-          <property name="text">
-           <string>5000</string>
-          </property>
-         </item>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="limit_duration_page">
-      <layout class="QGridLayout" name="gridLayout_4">
-       <property name="leftMargin">
-        <number>0</number>
-       </property>
-       <property name="topMargin">
-        <number>0</number>
-       </property>
-       <property name="rightMargin">
-        <number>0</number>
-       </property>
-       <property name="bottomMargin">
-        <number>0</number>
-       </property>
-       <property name="horizontalSpacing">
-        <number>2</number>
-       </property>
-       <property name="verticalSpacing">
-        <number>0</number>
-       </property>
-       <item row="0" column="0">
-        <widget class="QDoubleSpinBox" name="duration_limit">
-         <property name="decimals">
-          <number>3</number>
-         </property>
-         <property name="maximum">
-          <double>999.990000000000009</double>
-         </property>
-        </widget>
-       </item>
-       <item row="0" column="1">
-        <widget class="QLabel" name="duration_limit_label">
-         <property name="text">
-          <string>seconds</string>
-         </property>
-        </widget>
-       </item>
-      </layout>
-     </widget>
-     <widget class="QWidget" name="limit_sfilesize_page"/>
-    </widget>
-   </item>
-   <item row="7" column="1" colspan="3">
-    <widget class="QComboBox" name="videoOutputType">
-     <property name="whatsThis">
-      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;File format for your recording:&lt;/p&gt;&lt;ul style=&quot;margin-top: 0px; margin-bottom: 0px; margin-left: 0px; margin-right: 0px; -qt-list-indent: 1;&quot;&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;LuCam SER&lt;/span&gt;: RAW format, supports 8 and 16 bit, monochrome and color images. It's usually much faster, as no encoding process is needed, and offers the maximum quality. It also needs much more disk space, but it can be manually compressed after processing for storage (bzip2 algorithm is suggested).&lt;/li&gt;&lt;li style=&quot; margin-top:12px; margin-bottom:12px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;span style=&quot; font-weight:600;&quot;&gt;Video File&lt;/span&gt;: frames will be encoded using the encoder specified in the main settings. This is usually slower, usually supports only 8 bits color images, and quality may vary, depending on the encoder used, but disk usage will usually be much lower.&lt;/li&gt;&lt;/ul&gt;&lt;/body&gt;&lt;/html&gt;</string>
-     </property>
-     <item>
-      <property name="text">
-       <string>LuCam SER</string>
-      </property>
-     </item>
-     <item>
-      <property name="text">
-       <string>Video File</string>
-      </property>
-     </item>
-    </widget>
+    </spacer>
    </item>
   </layout>
  </widget>

@@ -50,8 +50,8 @@ RecordingPanel::RecordingPanel(Configuration& configuration, QWidget* parent) : 
   recording(false);
   d->ui->save_recording_info->setCurrentIndex( (configuration.save_json_info_file() ? 1 : 0) + (configuration.save_info_file() ? 2 : 0) );
   d->ui->saveDirectory->setText(configuration.save_directory());
-  d->ui->filePrefix->setText(configuration.save_file_prefix());
-  d->ui->fileSuffix->setText(configuration.save_file_suffix());
+  d->ui->filePrefix->setCurrentText(configuration.save_file_prefix());
+  d->ui->fileSuffix->setCurrentText(configuration.save_file_suffix());
   d->ui->videoOutputType->setCurrentIndex(configuration.save_format() == Configuration::SER ? 0 : 1);
   connect(d->ui->videoOutputType, F_PTR(QComboBox, activated, int), [&](int index) {
     if(index == 0)
@@ -62,13 +62,25 @@ RecordingPanel::RecordingPanel(Configuration& configuration, QWidget* parent) : 
   connect(d->ui->saveDirectory, &QLineEdit::textChanged, [&configuration](const QString &directory){
     configuration.set_save_directory(directory);
   });
-  connect(d->ui->filePrefix, &QLineEdit::textChanged, [&configuration](const QString &prefix){
-    configuration.set_save_file_prefix(prefix);
-  });
-  connect(d->ui->fileSuffix, &QLineEdit::textChanged, [&configuration](const QString &suffix){
-    configuration.set_save_file_suffix(suffix);
-  });
   
+  
+  auto is_reloading_prefix_suffix = make_shared<bool>(false);
+  auto change_prefix = [is_reloading_prefix_suffix, &configuration](const QString &prefix){ if(! *is_reloading_prefix_suffix) configuration.set_save_file_prefix(prefix); };
+  auto change_suffix = [is_reloading_prefix_suffix, &configuration](const QString &suffix){ if(! *is_reloading_prefix_suffix) configuration.set_save_file_suffix(suffix); };
+  connect(d->ui->filePrefix, F_PTR(QComboBox, editTextChanged, const QString&), this, change_prefix);
+  connect(d->ui->fileSuffix, F_PTR(QComboBox, editTextChanged, const QString&), this, change_suffix);
+  
+  auto reload_filename_hints = [&,is_reloading_prefix_suffix]{
+      *is_reloading_prefix_suffix = true;
+      d->ui->filePrefix->clear();
+      d->ui->filePrefix->addItems(configuration.save_file_avail_prefixes());
+      d->ui->filePrefix->setCurrentText(configuration.save_file_prefix());
+      d->ui->fileSuffix->clear();
+      d->ui->fileSuffix->addItems(configuration.save_file_avail_suffixes());
+      d->ui->fileSuffix->setCurrentText(configuration.save_file_suffix());
+      *is_reloading_prefix_suffix = false;
+};
+  reload_filename_hints();
   d->ui->limitType->setCurrentIndex(configuration.recording_limit_type());
   connect(d->ui->limitType, F_PTR(QComboBox, activated, int), d->ui->limitsWidgets, &QStackedWidget::setCurrentIndex);
   connect(d->ui->limitType, F_PTR(QComboBox, activated, int), [&configuration](int index){ configuration.set_recording_limit_type(static_cast<Configuration::RecordingLimit>(index)); });
