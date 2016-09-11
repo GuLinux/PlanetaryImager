@@ -79,8 +79,8 @@ struct Imager::Chip {
   Chip &set_resolution(const QSize &resolution);
   Chip &set_pixel_size(double width, double height);
   Chip &set_chip_size(double width, double height);
-  double width, height, pixelwidth, pixelheight;
-  uint32_t xres, yres, bpp;
+//   double width, height, pixelwidth, pixelheight;
+//   uint32_t xres, yres, bpp;
   struct Property {
     QString name;
     QVariant value;
@@ -91,10 +91,12 @@ struct Imager::Chip {
     QString displayName() const;
     QString displayValue() const;
   };
+  Chip &operator<<(const Property &property);
   QList<Property> properties;
 };
 
 QDebug operator<<(QDebug dbg, const Imager::Chip &chip);
+QDebug operator<<(QDebug dbg, const Imager::Chip::Property &property);
 QDebug operator<<(QDebug dbg, const Imager::Control &setting);
 QDebug operator<<(QDebug dbg, const Imager::Control::Choice &choice);
 

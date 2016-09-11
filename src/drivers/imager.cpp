@@ -20,9 +20,18 @@
 
 QDebug operator<<(QDebug dbg, const Imager::Chip& chip)
 {
-  dbg.nospace() << "{ size: " << chip.width << "x" << chip.height << ", pixels size: " << chip.pixelwidth << "x" << chip.pixelheight <<
-    ", image size: " << chip.xres << "x" << chip.yres << "@" << chip.bpp << "bpp }";
+  dbg.nospace() << chip.properties;
   return dbg.space();
+}
+
+QDebug operator<<(QDebug dbg, const Imager::Chip::Property& property)
+{
+    dbg << "{name: " << property.name << ", value: " << property.value;
+    if(property.name != property.displayName())
+        dbg << ", display_name: " << property.displayName();
+    if(property.value != property.displayValue())
+        dbg << ", display_value: " << property.displayValue();
+    return dbg << ", hidden: " << property.hidden << "}";
 }
 
 QDebug operator<<(QDebug dbg, const Imager::Control& setting)
@@ -64,23 +73,26 @@ bool Imager::Control::same_value(const Imager::Control& other) const
     return value == other.value;
 }
 
+Imager::Chip & Imager::Chip::operator<<(const Imager::Chip::Property& property)
+{
+    properties.push_back(property);
+    return *this;
+}
+
 
 Imager::Chip & Imager::Chip::set_chip_size(double width, double height)
 {
-    properties.push_back({"chip_size", QVariantMap{ {"width", width}, {"height", height} },  "Chip size", "%1x%2 mm"_q % width% height });
-    return *this;
+    return *this << Property{"chip_size", QVariantMap{ {"width", width}, {"height", height} },  "Chip size", "%1x%2 mm"_q % width% height };
 }
 
 Imager::Chip & Imager::Chip::set_pixel_size(double width, double height)
 {
-  properties.push_back({"pixel_size", QVariantMap{ {"width", width}, {"height", width} },  "Pixel size", "%1x%2 um"_q % width% width });
-  return *this;
+  return *this << Property{"pixel_size", QVariantMap{ {"width", width}, {"height", width} },  "Pixel size", "%1x%2 um"_q % width% width };
 }
 
 Imager::Chip & Imager::Chip::set_resolution(const QSize& resolution)
 {
-    properties.push_back({"resolution", resolution,  "Resolution", "%1x%2"_q % resolution.width() % resolution.height() });
-    return *this;
+    return *this << Property{"resolution", resolution,  "Resolution", "%1x%2"_q % resolution.width() % resolution.height() };
 }
 
 

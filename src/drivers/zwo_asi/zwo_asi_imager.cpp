@@ -75,14 +75,9 @@ void ZWO_ASI_Imager::Private::read_temperature() {
 
 ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandlerPtr &imageHandler) : dptr(info, imageHandler, this)
 {
-    d->chip.xres = info.MaxWidth;
-    d->chip.yres = info.MaxHeight;
-    d->chip.pixelheight = info.PixelSize;
-    d->chip.pixelwidth = info.PixelSize;
-    d->chip.height = info.MaxHeight * info.PixelSize / 1000;
-    d->chip.width = info.MaxWidth * info.PixelSize / 1000;
-    d->chip.properties.push_back( {"Camera Speed", info.IsUSB3Camera ? "USB3" : "USB2"});
-    d->chip.properties.push_back( {"Host Speed", info.IsUSB3Host ? "USB3" : "USB2"});
+    d->chip.set_resolution_pixelsize({static_cast<int>(info.MaxWidth), static_cast<int>(info.MaxHeight)}, info.PixelSize, info.PixelSize);
+    d->chip << Chip::Property{"Camera Speed", info.IsUSB3Camera ? "USB3" : "USB2"};
+    d->chip << Chip::Property{"Host Speed", info.IsUSB3Host ? "USB3" : "USB2"};
     ASI_CHECK << ASIOpenCamera(info.CameraID) << "Open Camera";
     connect(&d->reload_temperature_timer, &QTimer::timeout, this, bind(&Private::read_temperature, d.get() ));
     d->reload_temperature_timer.start(5000);

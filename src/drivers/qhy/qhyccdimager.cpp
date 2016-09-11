@@ -94,7 +94,11 @@ QHYCCDImager::QHYCCDImager(const QString &cameraName, const char *id, const Imag
   GetQHYCCDFWVersion(d->handle, st);
   copy(begin(st), end(st), begin(buf));
   qDebug() << "firmware version: " << QByteArray{buf};
-  GetQHYCCDChipInfo(d->handle, &d->chip.width, &d->chip.height, &d->chip.xres, &d->chip.yres, &d->chip.pixelwidth, &d->chip.pixelheight, &d->chip.bpp);
+  double chipwidth, chipheight, pixelwidth, pixelheight;
+  uint32_t width, height, bpp;
+  GetQHYCCDChipInfo(d->handle, &chipwidth, &chipheight, &width, &height, &pixelwidth, &pixelheight, &bpp);
+  d->chip.set_chip_size(chipwidth, chipheight).set_pixel_size(pixelwidth, pixelheight).set_resolution({static_cast<int>(width), static_cast<int>(height)});
+  d->chip << Chip::Property{"bpp", bpp};
   qDebug() << d->chip;
   d->load_settings();
   qDebug() << d->settings;

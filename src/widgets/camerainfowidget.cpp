@@ -17,8 +17,10 @@
  */
 
 #include "camerainfowidget.h"
-#include "ui_camerainfowidget.h"
 #include "Qt/strings.h"
+#include <QGridLayout>
+#include <QLabel>
+#include <QSpacerItem>
 
 using namespace std;
 using namespace std::placeholders;
@@ -26,33 +28,29 @@ using namespace std::placeholders;
 DPTR_IMPL(CameraInfoWidget) {
   Imager *imager;
   CameraInfoWidget *q;
-  unique_ptr<Ui::CameraInfoWidget> ui;
+  QGridLayout *layout;
+  void addProperty(const Imager::Chip::Property &property);
 };
 
 CameraInfoWidget::CameraInfoWidget(Imager *imager, QWidget* parent): QWidget(parent), dptr(imager, this)
 {
-  d->ui = make_unique<Ui::CameraInfoWidget>();
-  d->ui->setupUi(this);
-  auto chip_text = [=](QLabel *text_label, const QString &text, const QList<int> &values){
-    bool valid = all_of(begin(values), end(values), bind(greater<int>(), _1, 0));
-    text_label->setText(valid ? text : "-");
-  };
-  d->ui->camera_name->setText(imager->name());
-  auto chip = imager->chip();
-  
-  chip_text(d->ui->camera_chip_size, QString("%1x%2").arg(chip.width, 2).arg(chip.height, 2), {chip.width, chip.height});
-  chip_text(d->ui->camera_pixels_size, QString("%1x%2").arg(chip.pixelwidth, 2).arg(chip.pixelheight, 2), {chip.pixelwidth, chip.pixelheight});
-  
-  chip_text(d->ui->camera_bpp, "%1"_q % chip.bpp, {chip.bpp});
-  chip_text(d->ui->camera_resolution, "%1x%2"_q % chip.xres % chip.yres, {chip.xres, chip.yres});
-  d->ui->chipInfo->setLayout(new QVBoxLayout);
-  for(auto property: chip.properties) {
-    qDebug() << "Property name: " << property.name << " = " << property.value;
-    d->ui->chipInfo->layout()->addWidget(new QLabel("%1: %2"_q % property.displayName() % property.displayValue(), d->ui->chipInfo));
-  }
+  d->layout = new QGridLayout(this);
+  setLayout(d->layout);
+  d->addProperty(Imager::Chip::Property{"Name", QVariant{imager->name()}});
+  auto properties = imager->chip().properties;
+  properties.erase(remove_if(properties.begin(), properties.end(), [](const auto &p){ return p.hidden; }), properties.end());
+  std::for_each(properties.begin(), properties.end(), bind(&Private::addProperty, d.get(), _1));
+  d->layout->setRowStretch(d->layout->rowCount(), 1);
 }
 
 CameraInfoWidget::~CameraInfoWidget()
 {
-
 }
+
+void CameraInfoWidget::Private::addProperty(const Imager::Chip::Property& property)
+{
+    int next_row = layout->rowCount();
+    layout->addWidget(new QLabel(property.displayName()), next_row, 0);
+    layout->addWidget(new QLabel(property.displayValue()), next_row, 1);
+}
+
