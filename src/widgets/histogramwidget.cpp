@@ -30,7 +30,7 @@ DPTR_IMPL(HistogramWidget) {
   HistogramWidget *q;
   std::unique_ptr<Ui::HistogramWidget> ui;
   QCPBars *histogram_plot;
-  void got_histogram(const vector< uint32_t >& histogram);
+  void got_histogram(const vector< double >& histogram);
   void toggle_histogram(bool enabled);
 };
 HistogramWidget::~HistogramWidget()
@@ -73,14 +73,14 @@ void HistogramWidget::Private::toggle_histogram(bool enabled)
 }
 
 
-void HistogramWidget::Private::got_histogram(const vector<uint32_t>& histogram)
+void HistogramWidget::Private::got_histogram(const vector<double>& histogram)
 {
 //   ui->histogram_plot->graph(0)->clearData();
   QVector<double> x(histogram.size());
   QVector<double> y(histogram.size());
   std::iota(x.begin(), x.end(), 0);
 
-  transform(histogram.begin(), histogram.end(), y.begin(), [](uint32_t i) { return static_cast<double>(i); });
+  copy(histogram.begin(), histogram.end(), y.begin());
   histogram_plot->clearData();
   histogram_plot->setData(x, y);
   histogram_plot->rescaleAxes();

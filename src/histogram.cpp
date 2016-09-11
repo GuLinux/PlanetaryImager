@@ -26,6 +26,9 @@
 #include <QtConcurrent/QtConcurrent>
 #include "configuration.h"
 #include <atomic>
+#include "c++/stringbuilder.h"
+
+#include <opencv2/opencv.hpp>
 
 using namespace cimg_library;
 
@@ -63,13 +66,23 @@ void Histogram::handle(const Frame::ptr &frame)
   if( ! d->should_read_frame() )
     return;
   d->last.restart();
+  cv::Mat source = frame->mat();
+  if(frame->channels() > 1)
+    cv::cvtColor(source,  source, cv::COLOR_BGR2GRAY);
   
-    qDebug() << "Analysing histogram";
-    CImg<uint32_t> image(frame->mat());
-    image.histogram(d->bins_size);
-    vector<uint32_t> hist(image.size());
-    move(image.begin(), image.end(), hist.begin());
-    emit histogram(hist);
+  cv::Mat hist;
+  int nimages = 1;
+  int channels[]{0};
+  int dims = 1;
+  int bins []{static_cast<int>(d->bins_size)};
+  float range[]{0, static_cast<float>( frame->bpp() == 8 ? numeric_limits<uint8_t>().max() : numeric_limits<uint16_t>().max() ) };
+  const float *ranges[]{range};
+  
+  cv::calcHist(&source, nimages, channels, cv::Mat{}, hist, dims, bins, ranges);
+  vector<double> hist_data;
+  normalize(hist, hist, 0, hist.rows, cv::NORM_MINMAX, -1, cv::Mat() );
+  copy(hist.begin<double>(), hist.end<double>(), back_inserter(hist_data));
+  emit histogram(hist_data);
 }
 
 void Histogram::setEnabled(bool enabled)
