@@ -20,17 +20,12 @@
 #include <functional>
 #include <opencv2/opencv.hpp>
 
-#define cimg_display 0
-#define cimg_plugin "plugins/cvMat.h"
-#include <CImg.h>
 #include <QtConcurrent/QtConcurrent>
 #include "configuration.h"
 #include <atomic>
 #include "c++/stringbuilder.h"
 
 #include <opencv2/opencv.hpp>
-
-using namespace cimg_library;
 
 using namespace std;
 
