@@ -19,6 +19,7 @@
 #include "recordingpanel.h"
 #include "ui_recordingpanel.h"
 #include "configuration.h"
+#include "savefileconfiguration.h"
 #include <QFileDialog>
 #include <Qt/functional.h>
 using namespace std;
@@ -86,6 +87,17 @@ RecordingPanel::RecordingPanel(Configuration& configuration, QWidget* parent) : 
   connect(d->ui->limitType, F_PTR(QComboBox, activated, int), [&configuration](int index){ configuration.set_recording_limit_type(static_cast<Configuration::RecordingLimit>(index)); });
   d->ui->limitsWidgets->setCurrentIndex(d->ui->limitType->currentIndex());
   
+  connect(d->ui->filename_options, &QPushButton::clicked, [&,reload_filename_hints] {
+      QDialog *dialog = new QDialog;
+      dialog->setWindowTitle(tr("Filename options"));
+      dialog->setLayout(new QVBoxLayout);
+      auto saveFileConfiguration = new SaveFileConfiguration(configuration, dialog);
+      dialog->layout()->addWidget(saveFileConfiguration);
+      dialog->resize(550, 100);
+      dialog->exec();
+      reload_filename_hints();
+      dialog->deleteLater();
+  });
   d->ui->saveFramesLimit->setCurrentText(QString::number(configuration.recording_frames_limit()));
   connect(d->ui->saveFramesLimit, &QComboBox::currentTextChanged, [&configuration](const QString &text){
       configuration.set_recording_frames_limit(text.toLongLong());
