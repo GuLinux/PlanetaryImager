@@ -76,8 +76,17 @@ void ZWO_ASI_Imager::Private::read_temperature() {
 ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandlerPtr &imageHandler) : dptr(info, imageHandler, this)
 {
     d->chip.set_resolution_pixelsize({static_cast<int>(info.MaxWidth), static_cast<int>(info.MaxHeight)}, info.PixelSize, info.PixelSize);
-    d->chip << Properties::Property{"Camera Speed", info.IsUSB3Camera ? "USB3" : "USB2"};
-    d->chip << Properties::Property{"Host Speed", info.IsUSB3Host ? "USB3" : "USB2"};
+    d->chip << Properties::Property{"Camera Speed", info.IsUSB3Camera ? "USB3" : "USB2"}
+                  << Properties::Property{"Host Speed", info.IsUSB3Host ? "USB3" : "USB2"}
+                  << Properties::Property{"Camera Type", info.IsColorCam ? "colour" : "mono"};
+    if(info.IsColorCam) {
+        static map<ASI_BAYER_PATTERN, QString> patterns {
+            {ASI_BAYER_RG, "RGGB"}, {ASI_BAYER_BG, "BGGR"}, {ASI_BAYER_GR, "GRBG"}, {ASI_BAYER_GB, "GBRG"}
+        };
+        d->chip << Properties::Property{"Bayer pattern", patterns[info.BayerPattern]};
+    }
+    
+    d->chip << Properties::Property{"ElecPerADU", info.ElecPerADU};
     ASI_CHECK << ASIOpenCamera(info.CameraID) << "Open Camera";
     connect(&d->reload_temperature_timer, &QTimer::timeout, this, bind(&Private::read_temperature, d.get() ));
     d->reload_temperature_timer.start(5000);
