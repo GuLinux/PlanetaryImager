@@ -73,11 +73,23 @@ struct Imager::Control {
 };
 
 struct Imager::Chip {
+  Chip &set_resolution_pixelsize(const QSize &resolution, double pixelwidth, double pixelheight);
+  Chip &set_resolution_chipsize(const QSize &resolution, double width, double height);
+  Chip &set_pixelsize_chipsize(double pixelwidth, double pixelheight, double width, double height);
+  Chip &set_resolution(const QSize &resolution);
+  Chip &set_pixel_size(double width, double height);
+  Chip &set_chip_size(double width, double height);
   double width, height, pixelwidth, pixelheight;
   uint32_t xres, yres, bpp;
   struct Property {
     QString name;
-    QString value;
+    QVariant value;
+    QString display_name;
+    QString display_value;
+    
+    bool hidden = false;
+    QString displayName() const;
+    QString displayValue() const;
   };
   QList<Property> properties;
 };

@@ -133,7 +133,10 @@ SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{
 
 Imager::Chip SimulatorImager::chip() const
 {
-  return {};
+    // Simulating ASI 178mm chip: 2.4x2.4 um pixels, sensor size 7.4x5mm, resolution 3096x2080
+  // return Imager::Chip().set_pixelsize_chipsize(2.4, 2.4, 7.4, 5);
+  // return Imager::Chip().set_resolution_chipsize({3096, 2080}, 7.4, 5);
+  return Imager::Chip().set_resolution_pixelsize({3096, 2080}, 2.4, 2.4);
 }
 
 QString SimulatorImager::name() const

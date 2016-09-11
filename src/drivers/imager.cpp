@@ -16,6 +16,7 @@
  *
  */
 #include "imager.h"
+#include "Qt/strings.h"
 
 QDebug operator<<(QDebug dbg, const Imager::Chip& chip)
 {
@@ -62,3 +63,54 @@ bool Imager::Control::same_value(const Imager::Control& other) const
     }
     return value == other.value;
 }
+
+
+Imager::Chip & Imager::Chip::set_chip_size(double width, double height)
+{
+    properties.push_back({"chip_size", QVariantMap{ {"width", width}, {"height", height} },  "Chip size", "%1x%2 mm"_q % width% height });
+    return *this;
+}
+
+Imager::Chip & Imager::Chip::set_pixel_size(double width, double height)
+{
+  properties.push_back({"pixel_size", QVariantMap{ {"width", width}, {"height", width} },  "Pixel size", "%1x%2 um"_q % width% width });
+  return *this;
+}
+
+Imager::Chip & Imager::Chip::set_resolution(const QSize& resolution)
+{
+    properties.push_back({"resolution", resolution,  "Resolution", "%1x%2"_q % resolution.width() % resolution.height() });
+    return *this;
+}
+
+
+Imager::Chip & Imager::Chip::set_pixelsize_chipsize(double pixelwidth, double pixelheight, double width, double height)
+{
+    QSize resolution = { static_cast<int>(width*1000./pixelwidth), static_cast<int>(height*1000./pixelheight)};
+    return set_resolution(resolution).set_chip_size(width,height).set_pixel_size(pixelwidth,pixelheight);
+}
+
+Imager::Chip & Imager::Chip::set_resolution_chipsize(const QSize& resolution, double width, double height)
+{
+    double pixelwidth = width * 1000. / static_cast<double>(resolution.width());
+    double pixelheight = height * 1000. / static_cast<double>(resolution.height());
+    return set_resolution(resolution).set_chip_size(width,height).set_pixel_size(pixelwidth,pixelheight);
+}
+
+Imager::Chip & Imager::Chip::set_resolution_pixelsize(const QSize& resolution, double pixelwidth, double pixelheight)
+{
+    double width = pixelwidth * resolution.width() / 1000.;
+    double height = pixelheight * resolution.height() / 1000.;
+    return set_resolution(resolution).set_chip_size(width,height).set_pixel_size(pixelwidth,pixelheight);
+}
+
+QString Imager::Chip::Property::displayName() const
+{
+    return display_name.isEmpty() ? name : display_name;
+}
+
+QString Imager::Chip::Property::displayValue() const
+{
+    return display_value.isEmpty() ? value.toString() : display_value;
+}
+

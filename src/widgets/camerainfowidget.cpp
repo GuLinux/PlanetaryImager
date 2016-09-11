@@ -48,7 +48,7 @@ CameraInfoWidget::CameraInfoWidget(Imager *imager, QWidget* parent): QWidget(par
   d->ui->chipInfo->setLayout(new QVBoxLayout);
   for(auto property: chip.properties) {
     qDebug() << "Property name: " << property.name << " = " << property.value;
-    d->ui->chipInfo->layout()->addWidget(new QLabel("%1: %2"_q % property.name % property.value, d->ui->chipInfo));
+    d->ui->chipInfo->layout()->addWidget(new QLabel("%1: %2"_q % property.displayName() % property.displayValue(), d->ui->chipInfo));
   }
 }
 
