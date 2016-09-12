@@ -91,8 +91,10 @@ void ImagerThread::Private::thread_started()
       if(queued_job)
         queued_job();
     }
-    if(worker->shoot(imageHandler))
+    if(auto frame = worker->shoot()) {
+        imageHandler->handle(frame);
       ++fps;
+    }
   }
   worker->stop();
 }

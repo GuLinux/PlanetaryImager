@@ -93,7 +93,7 @@ DPTR_IMPL(V4L2Imager)
 class V4L2Imager::Private::Worker : public ImagerThread::Worker {
 public:
   Worker(V4L2Imager::Private *d);
-  virtual bool shoot(const ImageHandlerPtr& imageHandler);
+  virtual Frame::ptr shoot();
   virtual void start();
   virtual void stop();
   V4L2Imager::Private *d;

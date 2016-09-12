@@ -325,7 +325,7 @@ V4L2Imager::Private::Worker::Worker(V4L2Imager::Private* d) : d{d}
 
 }
 
-bool V4L2Imager::Private::Worker::shoot(const ImageHandlerPtr& imageHandler)
+Frame::ptr V4L2Imager::Private::Worker::shoot()
 {
   try {
     Frame::ColorFormat color_format = Frame::RGB;
@@ -343,12 +343,11 @@ bool V4L2Imager::Private::Worker::shoot(const ImageHandlerPtr& imageHandler)
         cv::cvtColor(source, image, CV_YUV2RGB_YVYU);
     } else {
         qCritical() << "Unsupported image format: " << FOURCC2QS(format.fmt.pix.pixelformat);
-        return false; // TODO: throw exception?
+        return {}; // TODO: throw exception?
     }
     BENCH_END(decode_image);
-    d->handler->handle(Frame::create(image, color_format)); // TODO: other types?
-    buffer->queue();
-    return true;
+    buffer->queue(); // TODO: other types?
+    return Frame::create(image, color_format);
   } catch(V4L2Device::exception &e) {
     qWarning() << e;
   }

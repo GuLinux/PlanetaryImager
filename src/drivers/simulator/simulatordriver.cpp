@@ -34,7 +34,7 @@
 #include <atomic>
 #include <chrono>
 #include <unordered_map>
-
+#include "c++/stlutils.h"
 
 using namespace GuLinux;
 using namespace std;
@@ -66,7 +66,7 @@ public:
     class Worker : public ImagerThread::Worker {
     public:
       Worker(SimulatorImager *imager);
-      bool shoot(const ImageHandlerPtr& imageHandler);
+      virtual Frame::ptr shoot();
       virtual void start();
       virtual void stop();
       void setROI(const QRect &roi);
@@ -214,7 +214,7 @@ SimulatorImager::Worker::Worker(SimulatorImager* imager) : imager{imager}
 }
 
 
-bool SimulatorImager::Worker::shoot(const ImageHandlerPtr &imageHandler)
+Frame::ptr SimulatorImager::Worker::shoot()
 {
   static map<Worker::ImageType, Frame::ColorFormat> formats {
     {Worker::Mono, Frame::Mono},
@@ -266,9 +266,8 @@ bool SimulatorImager::Worker::shoot(const ImageHandlerPtr &imageHandler)
 
   if(bpp.value == 16)
       result.convertTo(result, result.channels() == 1 ? CV_16UC1 : CV_16UC3, BITS_8_TO_16);
-  imageHandler->handle(Frame::create(result, formats[static_cast<Worker::ImageType>(format.value)]));
-  QThread::usleep(exposure.value * 1000);
-  return true;
+  GuLinux::Scope sleep{[=]{ QThread::usleep(exposure.value * 1000); } };
+  return Frame::create(result, formats[static_cast<Worker::ImageType>(format.value)]);
 }
 
 void SimulatorImager::clearROI()

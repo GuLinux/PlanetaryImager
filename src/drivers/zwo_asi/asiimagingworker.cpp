@@ -65,19 +65,18 @@ void ASIImagingWorker::start()
 }
 
 
-bool ASIImagingWorker::shoot(const ImageHandlerPtr& imageHandler)
+Frame::ptr ASIImagingWorker::shoot()
 {
   try {
     ASI_CHECK << ASIGetVideoData(d->info.CameraID, d->buffer.data(), d->buffer.size(), 100000) << "Capture frame";
         cv::Mat image( {d->roi.width(), d->roi.height()}, d->getCVImageType(), d->buffer.data());
         cv::Mat copy;
         image.copyTo(copy);
-        imageHandler->handle(Frame::create(copy, d->colorFormat() ));
-        return true;
+        return Frame::create(copy, d->colorFormat() );
   }
    catch(ZWOException &e) {
       qDebug() << QString::fromStdString(e.what());
-      return false;
+      return {};
   }
 }
 

@@ -30,7 +30,7 @@ class ImagerThread
   class Worker {
   public:
     virtual void start() = 0;
-    virtual bool shoot(const ImageHandlerPtr &imageHandler) = 0;
+    virtual Frame::ptr shoot() = 0;
     virtual void stop() = 0;
     typedef std::shared_ptr<Worker> ptr;
   };

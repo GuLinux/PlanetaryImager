@@ -29,7 +29,7 @@ class ASIImagingWorker : public ImagerThread::Worker {
 public:
   ASIImagingWorker(const QRect &roi, int bin, const ASI_CAMERA_INFO &info, ASI_IMG_TYPE format);
   ~ASIImagingWorker();
-  virtual bool shoot(const ImageHandlerPtr& imageHandler);
+  virtual Frame::ptr shoot();
   virtual void start();
   virtual void stop();
 
