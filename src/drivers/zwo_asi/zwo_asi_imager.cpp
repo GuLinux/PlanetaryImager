@@ -121,9 +121,7 @@ void ZWO_ASI_Imager::Private::start_thread(int bin, const QRect& roi, ASI_IMG_TY
 
 Imager::Controls ZWO_ASI_Imager::controls() const
 {
-    qDebug() << __PRETTY_FUNCTION__;
     Controls controls;
-
     int controls_number;
     ASI_CHECK << ASIGetNumOfControls(d->info.CameraID, &controls_number) << "Get controls";
     d->controls = ASIControl::vector(controls_number);
@@ -169,7 +167,6 @@ Imager::Controls ZWO_ASI_Imager::controls() const
 
 void ZWO_ASI_Imager::setControl(const Control& control)
 {
-  qDebug() << __PRETTY_FUNCTION__;
   if(control.id == ImgTypeControlID) {
       d->start_thread(d->worker->bin(), d->worker->roi(), static_cast<ASI_IMG_TYPE>(control.value));
       emit changed(control);

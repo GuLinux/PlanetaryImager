@@ -127,12 +127,15 @@ void CameraControl::apply()
 void CameraControl::restore()
 {
   set_value(control);
+  control_widget->update(control);
 }
 
 void CameraControl::set_value(const Imager::Control &value)
 {
-  if(control.same_value(value))
+  if(control.same_value(value)) {
+    new_value = value;
     return;
+  }
   qDebug() << "GUI: setting control " << control << " to " << value;;
   imager->setControl(value);
   control_widget->update(value);
@@ -179,6 +182,7 @@ CameraControlsWidget::CameraControlsWidget(Imager *imager, Configuration &config
     grid->addWidget(control->controlWidget(), row, 2);
     grid->addWidget(control->autoValueWidget(), row++, 3);
   }
+connect(d->ui->restore, &QPushButton::clicked, this, bind(&Private::controls_changed, d.get()));
   grid->addItem(new QSpacerItem(0, 0, QSizePolicy::MinimumExpanding, QSizePolicy::Expanding), row, 0, 3);
   grid->setRowStretch(row, 1);
   grid->setColumnStretch(1, 1);
