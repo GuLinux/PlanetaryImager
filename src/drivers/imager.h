@@ -28,6 +28,7 @@
 class Imager : public QObject {
   Q_OBJECT
 public:
+  class exception;
   Imager() : QObject(nullptr) {}
   virtual ~Imager() {}
   struct Control;

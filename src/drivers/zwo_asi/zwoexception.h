@@ -22,27 +22,13 @@
 #include <stdexcept>
 #include "ASICamera2.h"
 #include "c++/dptr.h"
+#include "drivers/imagerexception.h"
 
-class ZWOException : public std::exception {
+class ZWOException : public Imager::exception {
 public:
-  ZWOException(ASI_ERROR_CODE code, const std::string &where = {});
-  ZWOException(const ZWOException &other);
-  ASI_ERROR_CODE code() const;
-  virtual const char* what() const noexcept;
-  class Check;
-private:
-  DPTR
+  ZWOException(int code, const std::string &where = {});
 };
 
-class ZWOException::Check {
-public:
-  Check(const std::string &file, int line);
-  ~Check();
-  Check &operator<<(ASI_ERROR_CODE code);
-  Check &operator<<(const std::string &operation);
-private:
-  DPTR
-};
-#define ASI_CHECK ZWOException::Check(__FILE__, __LINE__)
+#define ASI_CHECK C_ERROR_CHECK(std::less<int>, ZWOException, ASI_SUCCESS)
 
 #endif // ZWOEXCEPTION_H
