@@ -7,7 +7,7 @@ update-binfmts --enable
 cat >"$root"/etc/apt/sources.list <<EOF
 deb http://ports.ubuntu.com/ubuntu-ports xenial main restricted universe multiverse
 EOF
-rrun apt-get update && rrun apt-get install -y git cmake autoconf libudev-dev qtbase5-dev build-essential cimg-dev libopencv-dev libqcustomplot-dev libboost-all-dev
+rrun apt-get update && rrun apt-get install -y git cmake autoconf libudev-dev qtbase5-dev build-essential libopencv-dev libqcustomplot-dev libboost-all-dev
 if ! [[ -d "$root"/opt/libusb-git ]]; then
   rrun <<EOF
 cd / && git clone https://github.com/libusb/libusb.git libusb-git && cd libusb-git && ./autogen.sh && ./configure --enable-static=yes --enable-shared=no --prefix=/opt/libusb-git && make all install && cd / && rm -rf /libusb-git
