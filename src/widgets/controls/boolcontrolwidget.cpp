@@ -37,3 +37,8 @@ void BoolControlWidget::update(const Imager::Control& setting)
 {
   d->edit->setChecked(setting.value == 1);
 }
+
+double BoolControlWidget::value() const
+{
+  return static_cast<double>(d->edit->isChecked());
+}

@@ -87,6 +87,8 @@ CameraControl::CameraControl(const Imager::Control& control, Imager* imager, QWi
     });
     connect(auto_value_widget, &QCheckBox::toggled, this, [this](bool checked) {
       new_value.value_auto = checked;
+      if(! checked)
+        new_value.value = control_widget->value();
       control_widget->setEnabled(!checked);
       emit changed();
     });
@@ -191,7 +193,6 @@ connect(d->ui->restore, &QPushButton::clicked, this, bind(&Private::controls_cha
 void CameraControlsWidget::Private::controls_changed()
 {
     bool any_changed = std::any_of(control_widgets.begin(), control_widgets.end(), bind(&CameraControl::is_pending, _1));
-    qDebug() << "Any control pending: " << any_changed;
     ui->apply->setEnabled(any_changed);
     ui->restore->setEnabled(any_changed);
 }

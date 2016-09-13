@@ -26,7 +26,7 @@ MenuControlWidget::MenuControlWidget(QWidget* parent): ControlWidget(parent), dp
   layout()->addWidget(d->edit = new QComboBox);
   connect(d->edit, F_PTR(QComboBox, activated, int), [=](int index) {
      qDebug() << "control index  changed: " << index; 
-     emit valueChanged(d->edit->itemData(index).toDouble());
+     emit valueChanged(value() );
 });
 }
 
@@ -43,3 +43,7 @@ void MenuControlWidget::update(const Imager::Control& setting)
   d->edit->setCurrentIndex(d->edit->findData(setting.value));
 }
 
+double MenuControlWidget::value() const
+{
+  return d->edit->itemData(d->edit->currentIndex()).toDouble();
+}

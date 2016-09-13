@@ -28,6 +28,7 @@ class ControlWidget : public QWidget {
   Q_OBJECT
 public:
   ControlWidget(QWidget* parent = 0);
+  virtual double value() const = 0;
 public slots:
   virtual void update(const Imager::Control &setting) = 0;
 signals:

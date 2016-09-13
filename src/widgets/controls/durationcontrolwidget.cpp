@@ -42,8 +42,8 @@ DurationControlWidget::DurationControlWidget(QWidget *parent) : ControlWidget(pa
   connect(d->edit, F_PTR(QDoubleSpinBox, valueChanged, double), this, bind(&Private::valueChanged, d.get() ));
   connect(d->unit_combo, F_PTR(QComboBox, activated, int), this, bind(&Private::updateWidgets, d.get() ));
   d->unit_combo->addItem("s", 1.);
-  d->unit_combo->addItem("ms", 0.001);
-  d->unit_combo->addItem("us", 0.000001);
+  d->unit_combo->addItem("ms", 1./1000.);
+  d->unit_combo->addItem("us", 1./1000./1000.);
 }
 
 DurationControlWidget::~DurationControlWidget()
@@ -72,9 +72,15 @@ void DurationControlWidget::update(const Imager::Control &control)
 
 void DurationControlWidget::Private::valueChanged()
 {
-  double unit = unit_combo->currentData().toDouble();
-  q->valueChanged( (edit->value() *unit ) / device_unit.count() );
+  q->valueChanged( q->value() );
 }
+
+double DurationControlWidget::value() const
+{
+  double unit = d->unit_combo->currentData().toDouble();
+  return (d->edit->value() *unit ) / d->device_unit.count();
+}
+
 
 void DurationControlWidget::Private::updateWidgets()
 {
@@ -89,4 +95,6 @@ void DurationControlWidget::Private::updateWidgets()
   edit->setMaximum(max.count()/unit);
   edit->setSingleStep(step.count()/unit);
   edit->setValue(value.count()/unit);
+  qDebug() << "selected: " << unit_combo->currentText() << ", decimals: " << decimals << ", unit: " << unit << ", min: " << min.count() << ", max: " << max.count() << ", step: " << step.count() << ", value: " << value.count();
+  qDebug() << "corrected_values: min: " << min.count()/unit << ", max: " << max.count()/unit << ", step: " << step.count()/unit << ", value: " << value.count()/unit;
 }

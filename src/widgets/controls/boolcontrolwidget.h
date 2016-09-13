@@ -25,6 +25,7 @@ class BoolControlWidget : public ControlWidget {
 public:
     BoolControlWidget(QWidget* parent = 0);
     ~BoolControlWidget();
+    virtual double value() const;
 public slots:
   virtual void update(const Imager::Control &setting);
 private:

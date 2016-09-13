@@ -39,3 +39,8 @@ void NumberControlWidget::update(const Imager::Control& setting)
   d->edit->setSingleStep(setting.step != 0 ? setting.step : 0.1);
   d->edit->setValue(setting.value);
 }
+
+double NumberControlWidget::value() const
+{
+  return d->edit->value();
+}
