@@ -1,0 +1,17 @@
+#!/bin/bash
+destdir="$( dirname "$( readlink -f "$0" )" )/builds"
+echo mkdir -p "$destdir"
+type="${1:-daily}"
+
+cd docker-builds/
+if [[ "$type" == "daily" ]]; then
+  ./compile -d "$destdir" daily*
+else
+  ./compile -d "$destdir" Ubuntu* # todo: rename
+fi
+
+cd ../raspberry-ubuntu-16.04-build/
+sudo rm -rf dest/*
+sudo ./compile-$type
+sudo mv dest/PlanetaryImager-* "$destdir"
+
