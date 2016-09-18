@@ -1,3 +1,0 @@
-#!/bin/bash
-grep DEVICETYPE_ "$1" | awk '{ print $2 }'| while read d; do name=${d##DEVICETYPE_}; echo "{ $d, \"${name//_/-}\" },"; done
-

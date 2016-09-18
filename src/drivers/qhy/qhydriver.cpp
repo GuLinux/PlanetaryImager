@@ -31,14 +31,12 @@ using namespace std;
 DPTR_IMPL(QHYDriver) {
   QHYDriver *q;
   static map<int,QString> error_codes;
-  static map<char,QString> device_codes;
   class error : public std::runtime_error {
   public:
     error(const QString &label, int code) : runtime_error(("Error on %1: %2 (%3)"_q % label % code % error_codes[code]).toStdString()) {}
   };
 };
 
-#include "qhy_messages.cpp"
 
 class QHYCamera : public Driver::Camera {
 public:
@@ -48,13 +46,6 @@ public:
   char id[255];
   int index;
 };
-
-
-
-QString QHYDriver::error_name(int code)
-{
-  return Private::error_codes[code];
-}
 
 QHYDriver::QHYDriver() : dptr(this)
 {

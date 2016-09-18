@@ -27,7 +27,6 @@ public:
     QHYDriver();
     ~QHYDriver();
     virtual Cameras cameras() const;
-    static QString error_name(int code);
 private:
   DPTR
 };

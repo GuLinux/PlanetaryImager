@@ -1,8 +1,0 @@
-#include "qhyccderr.h"
-#include "qhyccdcamdef.h"
-std::map<int,QString> QHYDriver::Private::error_codes{
-${qhy_error_codes}
-};
-std::map<char,QString> QHYDriver::Private::device_codes{
-${qhy_devices_codes}
-};
