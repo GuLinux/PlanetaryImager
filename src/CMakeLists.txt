@@ -32,9 +32,6 @@ add_executable(planetary_imager ${PlanetaryImager_SRCS})
 
 
 message("dependencies: ${planetary_imager_DEPS}")
-if(NOT opencv_LINK_BUG)
-  set(cv_libs ${OpenCV_LIBS})
-endif(NOT opencv_LINK_BUG)
   
 target_link_libraries(planetary_imager
     GuLinux_Qt_Commons
@@ -42,7 +39,7 @@ target_link_libraries(planetary_imager
     planetaryimager-widgets
     ${Boost_LIBRARIES}
     ${planetary_imager_DEPS}
-    ${cv_libs}
+    ${OpenCV_LIBS}
     ${QCustomPlot_LIBRARIES}
     Qt5::Widgets
     drivers # needs to be added twice for cyclic dependency
