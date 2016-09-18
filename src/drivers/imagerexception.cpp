@@ -27,7 +27,7 @@ Imager::exception::exception(int code, const unordered_map<int, string> codes_ma
     : dptr(code)
 {
   ostringstream message;
-  message << message_prefix << codes_map.at(code) << " (code: " << code << ")";
+  message << message_prefix << (codes_map.count(code) ? codes_map.at(code) : "Unknown error code") << " (code: " << code << ")";
   if(!where.empty())
     message << " on " << where;
   d->what = message.str();
