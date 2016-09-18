@@ -104,7 +104,10 @@ void CameraControl::control_updated(const Imager::Control& changed_control)
       if(changed_control.id != control.id)
         return;
       bool is_expected_value = changed_control.same_value(new_value);
-      qDebug() << "control changed:" << changed_control << "(" << control << "/" << new_value << "), is_expected_value: " << is_expected_value;
+      qDebug() << "control changed: incoming =" << changed_control;
+      qDebug() << "control changed: expected =" << new_value;
+      qDebug() << "control changed: old value=" << control;
+      qDebug() << "control changed: is same value: " << is_expected_value;
       control = changed_control;
       new_value = control;
       control_widget->update(changed_control);

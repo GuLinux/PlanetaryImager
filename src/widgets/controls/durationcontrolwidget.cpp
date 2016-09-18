@@ -19,6 +19,7 @@
 #include "durationcontrolwidget.h"
 #include <QDoubleSpinBox>
 #include <QComboBox>
+#include "utils.h"
 using namespace std;
 using namespace std::chrono_literals;
 
@@ -27,10 +28,12 @@ struct DurationControlWidget::Private {
   QComboBox *unit_combo;
   DurationControlWidget *q;
   void valueChanged();
-  void updateWidgets();
   typedef chrono::duration<double> seconds;
   seconds min, max, step, device_unit, value;
   int decimals;
+  void updateWidgets();
+  double unit() const;
+  seconds edit_value() const;
 };
 
 DurationControlWidget::DurationControlWidget(QWidget *parent) : ControlWidget(parent), dptr(new QDoubleSpinBox, new QComboBox, this)
@@ -77,20 +80,31 @@ void DurationControlWidget::Private::valueChanged()
 
 double DurationControlWidget::value() const
 {
-  double unit = d->unit_combo->currentData().toDouble();
-  return (d->edit->value() *unit ) / d->device_unit.count();
+  return (d->edit->value() * d->unit()) / d->device_unit.count();
 }
+
+double DurationControlWidget::Private::unit() const
+{
+  return unit_combo->currentData().toDouble();
+}
+
+DurationControlWidget::Private::seconds DurationControlWidget::Private::edit_value() const
+{
+  return seconds{unit() * edit->value()};
+}
+
 
 
 void DurationControlWidget::Private::updateWidgets()
 {
-  double unit = unit_combo->currentData().toDouble();
   // currently it's best to ignore reported values for decimals and single step.
-  edit->setDecimals(2);
-  edit->setMinimum(min.count()/unit);
-  edit->setMaximum(max.count()/unit);
-  edit->setSingleStep(std::max(step.count()/unit, 0.1));
-  edit->setValue(value.count()/unit);
-  qDebug() << "selected: " << unit_combo->currentText() << ", decimals: " << decimals << ", unit: " << unit << ", min: " << min.count() << ", max: " << max.count() << ", step: " << step.count() << ", value: " << value.count();
-  qDebug() << "corrected_values: min: " << min.count()/unit << ", max: " << max.count()/unit << ", step: " << step.count()/unit << ", value: " << value.count()/unit;
+  int decimals = 3;
+  //for(double display_value = value.count() / unit() * pow(10, decimals) ; value.count() > 0 && display_value != trunc(display_value); display_value*=10.) {
+  //  decimals++;
+  //}
+  edit->setDecimals(decimals);
+  edit->setMinimum(min.count()/unit());
+  edit->setMaximum(max.count()/unit());
+  edit->setSingleStep(std::max(step.count()/unit(), 0.1));
+  edit->setValue(value.count()/unit());
 }

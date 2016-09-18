@@ -68,9 +68,10 @@ void Imager::destroy()
 bool Imager::Control::same_value(const Imager::Control& other) const
 {
     if(supports_auto && (value_auto || other.value_auto) ) {
-        return other.value_auto == value_auto;
+      qDebug() << "comparing auto values only";
+      return other.value_auto == value_auto;
     }
-    return value == other.value;
+    return qFuzzyCompare(value, other.value);
 }
 
 Imager::Properties & Imager::Properties::operator<<(const Imager::Properties::Property& property)
