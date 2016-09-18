@@ -163,6 +163,8 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     d->ui->image->layout()->setMargin(0);
     d->ui->image->layout()->setSpacing(0);
     d->ui->image->layout()->addWidget(d->image = new ZoomableImage(false));
+    connect(d->image, &ZoomableImage::zoomLevelChanged, d->statusbar_info_widget, &StatusBarInfoWidget::zoom);
+    d->statusbar_info_widget->zoom(d->image->zoomLevel());
     for(auto item: d->image->actions())
       d->ui->menuView->insertAction(d->ui->actionEdges_Detection, item);
     d->ui->menuView->insertSeparator(d->ui->actionEdges_Detection);

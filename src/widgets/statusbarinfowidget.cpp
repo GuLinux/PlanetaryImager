@@ -64,6 +64,11 @@ void StatusBarInfoWidget::temperature(double celsius, bool hide)
   d->ui->temperature->setText("%1°"_q % QString::number(celsius, 'f', 2));
 }
 
+void StatusBarInfoWidget::zoom(double ratio)
+{
+  d->ui->zoom->setText("%1%"_q % static_cast<int>(ratio * 100.));
+}
+
 void StatusBarInfoWidget::showMessage(const QString& message, long int timeout_ms)
 {
   d->clear_message_timer.stop();
