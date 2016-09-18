@@ -175,15 +175,11 @@ void QHYCCDImager::Private::load ( QHYCCDImager::Control& setting )
 void QHYCCDImager::setControl(const QHYCCDImager::Control& setting)
 {
   d->imager_thread->push_job([=]{
-    try {
-      QHY_CHECK << SetQHYCCDParam(d->handle, static_cast<CONTROL_ID>(setting.id), setting.value) << "Setting control " << setting.name << " to value " << setting.value;
-      Control &setting_ref = *find_if(begin(d->settings), end(d->settings), [setting](const Control &s) { return s.id == setting.id; });
-      d->load(setting_ref);
-      qDebug() << "setting" << setting.name << "updated to value" << setting_ref.value;
-      emit changed(setting_ref);
-    } catch(const QHYException &e) {
-      qCritical() << e.what();
-    }
+    QHY_CHECK << SetQHYCCDParam(d->handle, static_cast<CONTROL_ID>(setting.id), setting.value) << "Setting control " << setting.name << " to value " << setting.value;
+    Control &setting_ref = *find_if(begin(d->settings), end(d->settings), [setting](const Control &s) { return s.id == setting.id; });
+    d->load(setting_ref);
+    qDebug() << "setting" << setting.name << "updated to value" << setting_ref.value;
+    emit changed(setting_ref);
   });
 }
 

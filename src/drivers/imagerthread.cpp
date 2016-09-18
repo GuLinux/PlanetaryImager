@@ -26,6 +26,7 @@
 #include <boost/lockfree/spsc_queue.hpp>
 #include "stlutils.h"
 #include "Qt/benchmark.h"
+#include "imagerexception.h"
 
 using namespace std;
 
@@ -88,12 +89,21 @@ void ImagerThread::Private::thread_started()
   while(running) {
     Job queued_job;
     while(jobs_queue.pop(queued_job)) {
-      if(queued_job)
-        queued_job();
+      if(queued_job) {
+        try {
+          queued_job();
+        } catch(const Imager::exception &e) {
+          qWarning() << e.what();
+        }
+      }
     }
-    if(auto frame = worker->shoot()) {
-        imageHandler->handle(frame);
-      ++fps;
+    try {
+      if(auto frame = worker->shoot()) {
+          imageHandler->handle(frame);
+        ++fps;
+      }
+    } catch(const Imager::exception &e) {
+      qWarning() << e.what();
     }
   }
   worker->stop();

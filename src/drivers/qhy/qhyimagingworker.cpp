@@ -67,7 +67,6 @@ void QHYImagingWorker::start()
 
 Frame::ptr QHYImagingWorker::shoot()
 {
-  try {
   QHY_CHECK << GetQHYCCDLiveFrame(d->handle,&d->w,&d->h,&d->bpp,&d->channels,d->buffer.data()) << "Capturing live frame";
   
   if(all_of(d->buffer.begin(), d->buffer.end(), &Private::is_zero )) {
@@ -83,15 +82,10 @@ Frame::ptr QHYImagingWorker::shoot()
     return make_shared<Frame>(d->color_format, copy); //TODO port to new constructor
      // TODO: Properly handle with debayer setting, I guess... find a tester!
   }
-  } catch(const QHYException &e) {
-    qDebug() << QString::fromStdString(e.what());
-    return {};
-  }
 }
 
 void QHYImagingWorker::stop()
 {
-
 }
 
 bool QHYImagingWorker::Private::is_zero(uint8_t b)
