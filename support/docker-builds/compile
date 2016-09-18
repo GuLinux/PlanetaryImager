@@ -45,7 +45,7 @@ DAILY_TAG="$( date +%Y%m%d )-$DAILY_TAG_SUFFIX"
 compile-dir() {
     echo "Compiling $@"
     cd "$@"
-    DEST="$DEST" DAILY_TAG="$DAILY_TAG" docker-compose up
+    DEST="$DEST" DAILY_TAG="$DAILY_TAG" DAILY_TAG_SUFFIX="$DAILY_TAG_SUFFIX" docker-compose up
     cd ..
 }
 

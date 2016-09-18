@@ -19,6 +19,7 @@ services:
           -DCPACK_GENERATOR=TBZ2
           -DPACKAGE_VERSION_SUFFIX=-${DAILY_TAG}
           -DCPACK_PACKAGE_DIRECTORY=/dest
+          -DVERSION_SUFFIX=-${DAILY_TAG_SUFFIX}
           ${CMAKE_EXTRA_OPTIONS} &&
           make ${MAKE_OPTS} && make package"
 
