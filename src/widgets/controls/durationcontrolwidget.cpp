@@ -85,15 +85,11 @@ double DurationControlWidget::value() const
 void DurationControlWidget::Private::updateWidgets()
 {
   double unit = unit_combo->currentData().toDouble();
-
-  int decimals = this->decimals;
-  for(double display_value = value.count() / unit * pow(10, decimals) ; value.count() > 0 && display_value < 1.; display_value*=10.) {
-    decimals++;
-  }
-  edit->setDecimals(decimals);
+  // currently it's best to ignore reported values for decimals and single step.
+  edit->setDecimals(2);
   edit->setMinimum(min.count()/unit);
   edit->setMaximum(max.count()/unit);
-  edit->setSingleStep(step.count()/unit);
+  edit->setSingleStep(std::max(step.count()/unit, 0.1));
   edit->setValue(value.count()/unit);
   qDebug() << "selected: " << unit_combo->currentText() << ", decimals: " << decimals << ", unit: " << unit << ", min: " << min.count() << ", max: " << max.count() << ", step: " << step.count() << ", value: " << value.count();
   qDebug() << "corrected_values: min: " << min.count()/unit << ", max: " << max.count()/unit << ", step: " << step.count()/unit << ", value: " << value.count()/unit;
