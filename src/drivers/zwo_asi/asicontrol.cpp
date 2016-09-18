@@ -50,7 +50,7 @@ ASIControl &ASIControl::reload()
   ASI_BOOL read_is_auto;
   ASI_CHECK << ASIGetControlValue(camera_id, caps.ControlType, &value, &read_is_auto)
             << (stringbuilder() << "Get control value: " << caps.Name);
-  qDebug() << "Got raw control value for ControlType " << caps.ControlType << ", index " << index << ": value=" << value << ", is_auto=" << read_is_auto;
+  qDebug() << "Got raw control value for " << caps.Name << "(" << caps.ControlType << ")" << ": value=" << value << ", is_auto=" << read_is_auto;
   this->is_auto = asi2bool(read_is_auto);
   return *this;
 }
@@ -61,7 +61,7 @@ ASIControl &ASIControl::set(double new_value, bool write_is_auto)
   if(write_is_auto) {
     new_value_l = reload().value;
   }
-  qDebug() << "Setting control " << caps.ControlType << " to value " << new_value_l << ", auto=" << write_is_auto;
+  qDebug() << "Setting control " << caps.Name << "(" << caps.ControlType << ") to value " << new_value_l << ", auto=" << write_is_auto;
   ASI_CHECK << ASISetControlValue(camera_id, caps.ControlType, new_value_l, bool2asi(write_is_auto) )
             << (stringbuilder() << "Set new control value: " << caps.Name << " to " << new_value << " (auto: " << write_is_auto << ")");
   reload();
