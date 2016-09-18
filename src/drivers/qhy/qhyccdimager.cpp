@@ -29,6 +29,7 @@
 #include <fps_counter.h>
 #include <chrono>
 #include "Qt/strings.h"
+#include "qhyexception.h"
 #include <boost/lockfree/spsc_queue.hpp>
 
 
@@ -53,37 +54,26 @@ private:
   ImageHandlerPtr imageHandler;
 };
 
-class QHYCCDImager::Private {
-public:
-  Private(const QString& name, const QString& id, const ImageHandlerPtr& imageHandler, QHYCCDImager* q);
-  qhyccd_handle *handle;
+DPTR_IMPL(QHYCCDImager) {
   QString name;
   QString id;
   ImageHandlerPtr imageHandler;
+  QHYCCDImager *q;
+  qhyccd_handle *handle;
     Properties chip;
   Controls settings;
   void load_settings();
   QThread imaging_thread;
   ImagingWorker *worker;
   void load(Control &setting);
-private:
-  QHYCCDImager *q;
 };
 
-
-QHYCCDImager::Private::Private(const QString &name, const QString &id, const ImageHandlerPtr &imageHandler, QHYCCDImager* q) : name(name), id(id), imageHandler{imageHandler}, q{q}
-{
-}
 
 QHYCCDImager::QHYCCDImager(const QString &cameraName, const char *id, const ImageHandlerPtr &imageHandler) : dptr(cameraName, id, imageHandler, this)
 {
   d->handle = OpenQHYCCD(const_cast<char*>(id));
-  if(d->handle < QHYCCD_SUCCESS) {
-    throw QHYDriver::error("Initializing Camera %1"_q % id, (long)(d->handle));
-  }
-  if(int result = InitQHYCCD(d->handle) != QHYCCD_SUCCESS) {
-    throw QHYDriver::error("Initializing Camera %1"_q % id, result);
-  }
+  QHY_CHECK << reinterpret_cast<long>(d->handle) << "Initializing Camera %1"_q % id;
+  QHY_CHECK << InitQHYCCD(d->handle) << "Initializing Camera %1"_q % id;
   qDebug() << "Camera " << id << "initialized correctly";
   qDebug() << "gain: " << GetQHYCCDParam(d->handle, CONTROL_GAIN) << ", gamma: " << GetQHYCCDParam(d->handle, CONTROL_GAMMA) << ", exposure: " << GetQHYCCDParam(d->handle, CONTROL_EXPOSURE);
   char buf[1024];
@@ -114,8 +104,7 @@ QHYCCDImager::~QHYCCDImager()
     d->worker->stop();
     d->imaging_thread.wait();
   }
-  int result = CloseQHYCCD(d->handle);
-  qDebug() << "CloseQHYCCD result: " << result;
+  QHY_CHECK << CloseQHYCCD(d->handle) << "CloseQHYCCD result: ";
   emit disconnected();
 }
 

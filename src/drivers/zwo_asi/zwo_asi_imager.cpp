@@ -49,13 +49,13 @@ const int64_t BinControlID = 10001;
 DPTR_IMPL(ZWO_ASI_Imager) {
     ASI_CAMERA_INFO info;
     ImageHandlerPtr imageHandler;
+    shared_ptr<QTimer> reload_temperature_timer;
     ZWO_ASI_Imager *q;
 
     Properties chip;
 
     ASIControl::vector controls;
     ASIControl::ptr temperature_control;
-    QTimer reload_temperature_timer;
     
     ImagerThread::ptr imager_thread;
     shared_ptr<ASIImagingWorker> worker;
@@ -73,7 +73,7 @@ void ZWO_ASI_Imager::Private::read_temperature() {
 }
 
 
-ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandlerPtr &imageHandler) : dptr(info, imageHandler, this)
+ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandlerPtr &imageHandler) : dptr(info, imageHandler, make_shared<QTimer>(), this)
 {
     d->chip.set_resolution_pixelsize({static_cast<int>(info.MaxWidth), static_cast<int>(info.MaxHeight)}, info.PixelSize, info.PixelSize);
     d->chip << Properties::Property{"Camera Speed", info.IsUSB3Camera ? "USB3" : "USB2"}
@@ -88,13 +88,13 @@ ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandlerPt
     
     d->chip << Properties::Property{"ElecPerADU", info.ElecPerADU};
     ASI_CHECK << ASIOpenCamera(info.CameraID) << "Open Camera";
-    connect(&d->reload_temperature_timer, &QTimer::timeout, this, bind(&Private::read_temperature, d.get() ));
-    d->reload_temperature_timer.start(5000);
+    connect(d->reload_temperature_timer.get(), &QTimer::timeout, this, bind(&Private::read_temperature, d.get() ));
+    d->reload_temperature_timer->start(5000);
 }
 
 ZWO_ASI_Imager::~ZWO_ASI_Imager()
 {
-    d->reload_temperature_timer.stop();
+    d->reload_temperature_timer->stop();
     stopLive();
     ASI_CHECK << ASICloseCamera(d->info.CameraID) << "Close Camera";
 }

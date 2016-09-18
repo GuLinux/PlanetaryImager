@@ -24,20 +24,18 @@
 #include <QString>
 #include <QRegularExpression>
 #include "Qt/strings.h"
+#include "qhyexception.h"
 
 using namespace std;
 
-class QHYDriver::Private {
-public:
-  Private(QHYDriver *q);
+DPTR_IMPL(QHYDriver) {
+  QHYDriver *q;
   static map<int,QString> error_codes;
   static map<char,QString> device_codes;
   class error : public std::runtime_error {
   public:
     error(const QString &label, int code) : runtime_error(("Error on %1: %2 (%3)"_q % label % code % error_codes[code]).toStdString()) {}
   };
-private:
-  QHYDriver *q;
 };
 
 #include "qhy_messages.cpp"
@@ -51,14 +49,6 @@ public:
   int index;
 };
 
-QHYDriver::Private::Private(QHYDriver* q) : q(q)
-{
-
-}
-
-QHYDriver::error::error(const QString& label, int code):  runtime_error(("Error on %1: %2 (%3)"_q % label % code % Private::error_codes[code]).toStdString())
-{
-}
 
 
 QString QHYDriver::error_name(int code)
@@ -68,15 +58,13 @@ QString QHYDriver::error_name(int code)
 
 QHYDriver::QHYDriver() : dptr(this)
 {
-  if(int result = InitQHYCCDResource() != QHYCCD_SUCCESS)
-    throw error("initializing QHY Driver", result);
+  QHY_CHECK << InitQHYCCDResource() << "initializing QHY Driver";
   qDebug() << "Initialized QHY Driver";
 }
 
 QHYDriver::~QHYDriver()
 {
-  if(int result = ReleaseQHYCCDResource() != QHYCCD_SUCCESS)
-    throw error("releasing QHY Driver", result);
+  QHY_CHECK << ReleaseQHYCCDResource() << "releasing QHY Driver";
   qDebug() << "Released QHY Driver";
 }
 
@@ -84,17 +72,14 @@ QHYDriver::~QHYDriver()
 Driver::Cameras QHYDriver::cameras() const
 {
   Cameras cameras;
-  int scan_result= ScanQHYCCD();
-  if(scan_result == 0 /* was QHYCCD_ERROR_NO_DEVICE */) {
+  int found_cameras = ScanQHYCCD();
+  if(found_cameras == 0 /* was QHYCCD_ERROR_NO_DEVICE */) {
     return cameras;
   }
-  if(scan_result < QHYCCD_SUCCESS) {
-    throw error{"getting QHY cameras list", scan_result};
-  }
-  for(int i=0; i<scan_result; i++) {
+  QHY_CHECK << found_cameras << "Getting QHY cameras list";
+  for(int i=0; i<found_cameras; i++) {
     auto camera = make_shared<QHYCamera>(i);
-    if(int result = GetQHYCCDId(i, &camera->id[0]) != QHYCCD_SUCCESS)
-      throw error{"getting QHY Camera ID", result};
+    QHY_CHECK << GetQHYCCDId(i, &camera->id[0]) << "Getting QHY camera ID";
     qDebug() << "Found device at index " << i << " with id=" << camera->id << ")";
     cameras.push_back(camera);
   }

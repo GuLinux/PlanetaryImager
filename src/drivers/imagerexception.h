@@ -51,7 +51,9 @@ public:
     }
   }
   check &operator<<(int code) { this->code = code; return *this; }
+  check &operator<<(const char *operation) { this->operation = std::string{operation}; return *this; }
   check &operator<<(const std::string &operation) { this->operation = operation; return *this; }
+  check &operator<<(const QString &operation) { this->operation = operation.toStdString(); return *this; }
 private:
   const std::string file;
   const int line;
