@@ -87,6 +87,7 @@ ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandlerPt
     }
     
     d->chip << Properties::Property{"ElecPerADU", info.ElecPerADU};
+    d->chip << Properties::Property{"ASI SDK Version", ASI_SDK_VERSION};
     ASI_CHECK << ASIOpenCamera(info.CameraID) << "Open Camera";
 #ifdef ASI_CAMERA_REQUIRES_INIT
     ASI_CHECK << ASIInitCamera(info.CameraID) << "Init Camera";

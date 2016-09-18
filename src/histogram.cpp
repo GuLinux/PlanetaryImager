@@ -61,7 +61,8 @@ void Histogram::handle(const Frame::ptr &frame)
   if( ! d->should_read_frame() )
     return;
   d->last.restart();
-  cv::Mat source = frame->mat();
+  cv::Mat source;
+  frame->mat().copyTo(source);
   if(frame->channels() > 1)
     cv::cvtColor(source,  source, cv::COLOR_BGR2GRAY);
   
