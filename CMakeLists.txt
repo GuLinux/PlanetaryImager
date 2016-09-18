@@ -77,7 +77,7 @@ set(LIBOPENCV_UBUNTU_VERSION_STR "2.4v5" CACHE INTERNAL "libopencv dependency ve
 set(LIBQCUSTOMPLOT_UBUNTU_VERSION_STR "1.3" CACHE INTERNAL "libqcustomplot dependency version for ubuntu")
 SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libusb-1.0-0, libqt5gui5 (>= 5.4.0), libqt5network5 (>= 5.4.0), libqt5widgets5 (>= 5.4.0), \
     libopencv-imgproc${LIBOPENCV_UBUNTU_VERSION_STR},libopencv-core${LIBOPENCV_UBUNTU_VERSION_STR}, libopencv-highgui${LIBOPENCV_UBUNTU_VERSION_STR}, \
-    libqcustomplot${LIBQCUSTOMPLOT_UBUNTU_VERSION_STR} \
+    libqcustomplot${LIBQCUSTOMPLOT_UBUNTU_VERSION_STR} fxload \
     ")
 set(CPACK_SET_DESTDIR On)
 

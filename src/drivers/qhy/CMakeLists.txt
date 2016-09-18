@@ -22,7 +22,8 @@ set(QHY_LIBRARY_i686 ${CMAKE_CURRENT_SOURCE_DIR}/QHYCCD_Linux/libqhy_32.a)
 
 set(QHY_LIBRARY ${QHY_LIBRARY_${PlanetaryImager_ARCH}})
 install(FILES QHYCCD_Linux/85-qhy.rules DESTINATION ${UDEVRULES_INSTALL_DIR})
-
+file(GLOB QHY_FIRMWARE_FILES QHYCCD_Linux/firmware/*)
+install(FILES ${QHY_FIRMWARE_FILES} DESTINATION ${FIRMWARE_INSTALL_BASEDIR}/qhy)
 
 add_imager_dependencies(qhy_driver ${QHY_LIBRARY})
 define_driver(drivers/qhy/qhydriver.h QHYDriver)

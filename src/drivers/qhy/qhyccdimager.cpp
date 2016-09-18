@@ -57,8 +57,6 @@ QHYCCDImager::QHYCCDImager(const QString &cameraName, const char *id, const Imag
   d->handle = OpenQHYCCD(const_cast<char*>(id));
   QHY_CHECK << reinterpret_cast<long>(d->handle) << "Initializing Camera %1"_q % id;
   QHY_CHECK << InitQHYCCD(d->handle) << "Initializing Camera %1"_q % id;
-  qDebug() << "Camera " << id << "initialized correctly";
-  qDebug() << "gain: " << GetQHYCCDParam(d->handle, CONTROL_GAIN) << ", gamma: " << GetQHYCCDParam(d->handle, CONTROL_GAMMA) << ", exposure: " << GetQHYCCDParam(d->handle, CONTROL_EXPOSURE);
   char buf[1024];
   uint8_t st[1024];
   // Not implemented in QHY Library

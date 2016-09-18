@@ -6,6 +6,7 @@ function(define_driver include class)
 endfunction(define_driver)
 
  set(UDEVRULES_INSTALL_DIR "/lib/udev/rules.d" CACHE STRING "Base directory for udev rules")
+ set(FIRMWARE_INSTALL_BASEDIR "/lib/firmware/" CACHE STRING "Base directory for firmware files")
 option(enable_qhy "Enable QHY Driver (default: ON)" ON)
 if(enable_qhy)
   message("qhyccd input module enabled")
