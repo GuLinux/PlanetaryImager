@@ -18,9 +18,7 @@
 #include "filewriter.h"
 
 #include "serwriter.h"
-#ifdef HAVE_CV_VIDEO
 #include "cvvideowriter.h"
-#endif
 
 using namespace std;
 QMap< Configuration::SaveFormat, FileWriter::Factory > FileWriter::factories()
