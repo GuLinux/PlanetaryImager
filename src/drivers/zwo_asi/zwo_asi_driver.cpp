@@ -69,7 +69,7 @@ Driver::Cameras ZWO_ASI_Driver::cameras() const
   int index=0;
   for(int index=0; index<ncams; index++) {
     ASI_CAMERA_INFO info;
-    ASI_CHECK << ASIGetCameraProperty(&info, index++) << "Get Camera Property";
+    ASI_CHECK << ASIGetCameraProperty(&info, index++) << string{"Get Camera Property"};
     cameras.push_back(make_shared<ZWO_ASI_Camera>(info));
   }
   return cameras;

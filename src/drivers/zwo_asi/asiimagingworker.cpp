@@ -71,7 +71,7 @@ Frame::ptr ASIImagingWorker::shoot()
     ASI_CHECK << ASIGetVideoData(d->info.CameraID, d->buffer.data(), d->buffer.size(), 100000) << "Capture frame";
         cv::Mat image( {d->roi.width(), d->roi.height()}, d->getCVImageType(), d->buffer.data());
         cv::Mat copy;
-        image.copyTo(copy);
+        image.copyTo(copy); // TODO: is copy necessary?
         return Frame::create(copy, d->colorFormat() );
   }
    catch(ZWOException &e) {

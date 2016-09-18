@@ -253,6 +253,7 @@ void ImagingWorker::start_live()
   }
   
   auto size = GetQHYCCDMemLength(handle);
+  
   qDebug() << "size: " << static_cast<double>(size)/1024. << "kb, required for 8bit: " << (1280.*960.)/1024 << "kb, for 16bit: " << (1280.*960.*2.)/1024. << "kb";
   auto result =  SetQHYCCDStreamMode(handle,1);
   if(result != QHYCCD_SUCCESS) {
