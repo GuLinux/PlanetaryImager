@@ -20,6 +20,7 @@
 #include "version.h"
 #include <iostream>
 #include <iomanip>
+#include <QDebug>
 using namespace std;
 
 void log_handler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
@@ -41,6 +42,7 @@ void log_handler(QtMsgType type, const QMessageLogContext &context, const QStrin
 
 int main(int argc, char** argv)
 {
+    cerr << "Starting PlanetaryImager - version " << PLANETARY_IMAGER_VERSION << endl;
     QApplication app(argc, argv);
     qInstallMessageHandler(log_handler);
     app.setApplicationName("PlanetaryImager");
