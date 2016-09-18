@@ -80,7 +80,7 @@ Frame::ptr QHYImagingWorker::shoot()
     cv::Mat image({static_cast<int>(d->w), static_cast<int>(d->h)}, type, d->buffer.data());
     cv::Mat copy;
     image.copyTo(copy); // TODO: is copy necessary?
-    return Frame::create(copy, d->color_format);
+    return make_shared<Frame>(d->color_format, copy); //TODO port to new constructor
      // TODO: Properly handle with debayer setting, I guess... find a tester!
   }
   } catch(const QHYException &e) {

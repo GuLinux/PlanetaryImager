@@ -267,7 +267,9 @@ Frame::ptr SimulatorImager::Worker::shoot()
   if(bpp.value == 16)
       result.convertTo(result, result.channels() == 1 ? CV_16UC1 : CV_16UC3, BITS_8_TO_16);
   GuLinux::Scope sleep{[=]{ QThread::usleep(exposure.value * 1000); } };
-  return Frame::create(result, formats[static_cast<Worker::ImageType>(format.value)]);
+  auto frame_format = formats[static_cast<Worker::ImageType>(format.value)];
+  auto frame = make_shared<Frame>( bpp.value, frame_format, QSize{result.cols, result.rows} );
+  return make_shared<Frame>(frame_format, result);
 }
 
 void SimulatorImager::clearROI()

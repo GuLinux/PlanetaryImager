@@ -38,17 +38,18 @@ public:
       Bayer_GBRG,
       Bayer_BGGR,
     };
-    static ptr create(const cv::Mat &mat, ColorFormat colorFormat);
-    ~Frame();
-    std::size_t size() const;
-    QSize resolution() const;
-    cv::Mat mat() const;
-    uint8_t channels() const;
-    uint8_t bpp() const;
-    QDateTime created_utc() const;
-    ColorFormat colorFormat() const;
+  Frame(ColorFormat colorFormat, const cv::Mat &image);
+  Frame(uint8_t bpp, ColorFormat colorFormat, const QSize &resolution);
+  ~Frame();
+  std::size_t size() const;
+  uint8_t *data();
+  QSize resolution() const;
+  cv::Mat mat() const;
+  uint8_t channels() const;
+  uint8_t bpp() const;
+  QDateTime created_utc() const;
+  ColorFormat colorFormat() const;
 private:
-  Frame();
   DPTR
 };
 

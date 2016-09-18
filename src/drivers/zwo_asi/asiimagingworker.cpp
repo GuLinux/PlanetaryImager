@@ -68,11 +68,9 @@ void ASIImagingWorker::start()
 Frame::ptr ASIImagingWorker::shoot()
 {
   try {
-    ASI_CHECK << ASIGetVideoData(d->info.CameraID, d->buffer.data(), d->buffer.size(), 100000) << "Capture frame";
-        cv::Mat image( {d->roi.width(), d->roi.height()}, d->getCVImageType(), d->buffer.data());
-        cv::Mat copy;
-        image.copyTo(copy); // TODO: is copy necessary?
-        return Frame::create(image, d->colorFormat() );
+    auto frame = make_shared<Frame>( d->format == ASI_IMG_RAW16 ? 16 : 8,  d->colorFormat(), QSize{d->roi.width(), d->roi.height()});
+    ASI_CHECK << ASIGetVideoData(d->info.CameraID, frame->data(), frame->size(), 100000) << "Capture frame";
+        return frame;
   }
    catch(ZWOException &e) {
       qDebug() << QString::fromStdString(e.what());

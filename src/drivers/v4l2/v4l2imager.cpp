@@ -347,7 +347,7 @@ Frame::ptr V4L2Imager::Private::Worker::shoot()
     }
     BENCH_END(decode_image);
     buffer->queue(); // TODO: other types?
-    return Frame::create(image, color_format);
+    return make_shared<Frame>(color_format, image);
   } catch(V4L2Device::exception &e) {
     qWarning() << e;
   }

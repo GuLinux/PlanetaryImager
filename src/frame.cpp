@@ -21,26 +21,63 @@
 using namespace std;
 
 DPTR_IMPL(Frame) {
-  QDateTime created_utc;
+  Private(uint8_t bpp, ColorFormat colorFormat, const QSize &resolution);
+  Private(ColorFormat colorFormat, const cv::Mat &image);
+  const QDateTime created_utc;
+  const ColorFormat color_format;
+  const uint8_t bpp;
+  const QSize resolution;
   cv::Mat mat;
-  ColorFormat color_format;
+  
+  static int cv_type(uint8_t bpp, ColorFormat format);
 };
 
-Frame::Frame() : dptr(QDateTime::currentDateTimeUtc())
+
+int Frame::Private::cv_type(uint8_t bpp, Frame::ColorFormat format)
+{
+  return CV_MAKETYPE( bpp == 8 ? CV_8U : CV_16U, format == RGB || format == BGR ? 3 : 1);
+}
+
+
+
+Frame::Private::Private(uint8_t bpp, Frame::ColorFormat colorFormat, const QSize &resolution)
+  : created_utc{QDateTime::currentDateTimeUtc()},
+  color_format{colorFormat},
+  bpp{bpp},
+  resolution{resolution},
+  mat{resolution.height(), resolution.width(), Private::cv_type(bpp, colorFormat)}
 {
 }
+
+Frame::Private::Private(Frame::ColorFormat colorFormat, const cv::Mat& image)
+  : created_utc{QDateTime::currentDateTimeUtc()},
+  color_format{colorFormat},
+  bpp{image.depth() == CV_8U || image.depth() == CV_8S ? uint8_t{8} : uint8_t{16}},
+  resolution{image.cols, image.rows},
+  mat{image}
+{
+}
+
+
+
+Frame::Frame(uint8_t bpp, Frame::ColorFormat colorFormat, const QSize& resolution) : dptr(bpp, colorFormat, resolution)
+{
+}
+
+Frame::Frame(Frame::ColorFormat colorFormat, const cv::Mat& image) : dptr(colorFormat, image)
+{
+}
+
 
 Frame::~Frame()
 {
 }
 
-Frame::ptr Frame::create(const cv::Mat &mat, ColorFormat colorFormat)
+uint8_t * Frame::data()
 {
-  ptr frame{new Frame};
-  frame->d->mat = mat;
-  frame->d->color_format = colorFormat;
-  return frame;
+  return d->mat.data;
 }
+
 
 cv::Mat Frame::mat() const
 {
@@ -49,7 +86,7 @@ cv::Mat Frame::mat() const
 
 QSize Frame::resolution() const
 {
-  return QSize{d->mat.cols, d->mat.rows};
+  return d->resolution;
 }
 
 std::size_t Frame::size() const
@@ -59,7 +96,7 @@ std::size_t Frame::size() const
 
 uint8_t Frame::bpp() const
 {
-  return d->mat.depth() == CV_8U || d->mat.depth() == CV_8S ? 8 : 16;
+  return d->bpp;
 }
 
 uint8_t Frame::channels() const
