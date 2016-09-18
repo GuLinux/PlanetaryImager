@@ -269,7 +269,8 @@ Frame::ptr SimulatorImager::Worker::shoot()
   GuLinux::Scope sleep{[=]{ QThread::usleep(exposure.value * 1000); } };
   auto frame_format = formats[static_cast<Worker::ImageType>(format.value)];
   auto frame = make_shared<Frame>( bpp.value, frame_format, QSize{result.cols, result.rows} );
-  return make_shared<Frame>(frame_format, result);
+  move(result.data, result.data + frame->size(), frame->data());
+  return frame;
 }
 
 void SimulatorImager::clearROI()
