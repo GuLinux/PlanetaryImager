@@ -42,7 +42,7 @@ template<typename FailCondition, typename ExceptionClass>
 class Imager::exception::check {
 public:
   check(const std::string &file, int line, int ok_code = 0) : file{file}, line{line}, code{ok_code}, ok_code{ok_code}, fail_condition{} {}
-  ~check() {
+  ~check() noexcept(false) {
         if( fail_condition(code, ok_code)) {
             std::string where = operation.empty()
                 ? (GuLinux::stringbuilder() << file << ":" << line)
