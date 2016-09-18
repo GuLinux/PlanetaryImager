@@ -72,7 +72,7 @@ Frame::ptr ASIImagingWorker::shoot()
         cv::Mat image( {d->roi.width(), d->roi.height()}, d->getCVImageType(), d->buffer.data());
         cv::Mat copy;
         image.copyTo(copy); // TODO: is copy necessary?
-        return Frame::create(copy, d->colorFormat() );
+        return Frame::create(image, d->colorFormat() );
   }
    catch(ZWOException &e) {
       qDebug() << QString::fromStdString(e.what());

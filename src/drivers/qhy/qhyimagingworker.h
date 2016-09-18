@@ -33,6 +33,7 @@ public:
   virtual Frame::ptr shoot();
   virtual void start();
   virtual void stop();
+  typedef std::shared_ptr<QHYImagingWorker> ptr;
 private:
   DPTR
 };

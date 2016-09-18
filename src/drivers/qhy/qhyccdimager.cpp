@@ -30,29 +30,11 @@
 #include <chrono>
 #include "Qt/strings.h"
 #include "qhyexception.h"
-#include <boost/lockfree/spsc_queue.hpp>
-
-
+#include "qhyimagingworker.h"
+#include <chrono>
 using namespace std;
 using namespace std::placeholders;
 using namespace std::chrono_literals;
-
-
-class ImagingWorker : public QObject {
-  Q_OBJECT
-public:
-  ImagingWorker(qhyccd_handle *handle, QHYCCDImager *imager, const ImageHandlerPtr imageHandler, QObject* parent = 0);
-public slots:
-  void start_live();
-  void stop();
-  void queue(std::function<void()> f);
-private:
-  boost::lockfree::spsc_queue<std::function<void()>> jobs_queue;
-  qhyccd_handle *handle;
-  bool enabled = true;
-  QHYCCDImager *imager;
-  ImageHandlerPtr imageHandler;
-};
 
 DPTR_IMPL(QHYCCDImager) {
   QString name;
@@ -62,10 +44,11 @@ DPTR_IMPL(QHYCCDImager) {
   qhyccd_handle *handle;
     Properties chip;
   Controls settings;
+  ImagerThread::ptr imager_thread;
+  QHYImagingWorker::ptr imaging_worker;
   void load_settings();
-  QThread imaging_thread;
-  ImagingWorker *worker;
   void load(Control &setting);
+  void start_imaging();
 };
 
 
@@ -100,10 +83,6 @@ QHYCCDImager::~QHYCCDImager()
 {
   stopLive();
   qDebug() << "Closing QHYCCD";
-  if(d->imaging_thread.isRunning()) {
-    d->worker->stop();
-    d->imaging_thread.wait();
-  }
   QHY_CHECK << CloseQHYCCD(d->handle) << "CloseQHYCCD result: ";
   emit disconnected();
 }
@@ -202,7 +181,7 @@ void QHYCCDImager::Private::load ( QHYCCDImager::Control& setting )
 
 void QHYCCDImager::setControl(const QHYCCDImager::Control& setting)
 {
-  d->worker->queue([=]{
+  d->imager_thread->push_job([=]{
     auto result = SetQHYCCDParam(d->handle, static_cast<CONTROL_ID>(setting.id), setting.value);
     if(result != QHYCCD_SUCCESS) {
       qCritical() << "error setting" << setting.name << ":" << QHYDriver::error_name(result) << "(" << result << ")";
@@ -215,97 +194,24 @@ void QHYCCDImager::setControl(const QHYCCDImager::Control& setting)
   });
 }
 
-void ImagingWorker::queue(std::function< void()> f)
+void QHYCCDImager::Private::start_imaging()
 {
-  jobs_queue.push(f);
+  imaging_worker.reset();
+  imager_thread.reset();
+  imaging_worker = make_shared<QHYImagingWorker>(handle);
+  imager_thread = make_shared<ImagerThread>(imaging_worker, q, imageHandler);
+  imager_thread->start();
 }
+
 
 void QHYCCDImager::startLive()
 {
-  d->worker = new ImagingWorker{d->handle, this, d->imageHandler};
-  d->worker->moveToThread(&d->imaging_thread);
-  connect(&d->imaging_thread, SIGNAL(started()), d->worker, SLOT(start_live()));
-  connect(&d->imaging_thread, SIGNAL(finished()), d->worker, SLOT(deleteLater()));
-  d->imaging_thread.start();
-  qDebug() << "Live started correctly";
+  d->start_imaging();
 }
-
-ImagingWorker::ImagingWorker(qhyccd_handle* handle, QHYCCDImager* imager, const ImageHandlerPtr imageHandler, QObject* parent)
-  : QObject(parent), handle(handle), imager{imager}, imageHandler{imageHandler}, jobs_queue(10)
-{
-}
-
-void ImagingWorker::start_live()
-{
-  static map<int, Frame::ColorFormat> color_formats {
-    {BAYER_GB, Frame::Bayer_GBRG},
-    {BAYER_GR, Frame::Bayer_GRBG},
-    {BAYER_BG, Frame::Bayer_BGGR},
-    {BAYER_RG, Frame::Bayer_RGGB},
-  };
-  int colorret = IsQHYCCDControlAvailable(handle,CAM_COLOR);
-  Frame::ColorFormat color_format;
-  if(color_formats.count(colorret)) {
-    color_format = color_formats[colorret];
-    SetQHYCCDDebayerOnOff(handle, false);
-  } else {
-    color_format = Frame::Mono;
-  }
-  
-  auto size = GetQHYCCDMemLength(handle);
-  
-  qDebug() << "size: " << static_cast<double>(size)/1024. << "kb, required for 8bit: " << (1280.*960.)/1024 << "kb, for 16bit: " << (1280.*960.*2.)/1024. << "kb";
-  auto result =  SetQHYCCDStreamMode(handle,1);
-  if(result != QHYCCD_SUCCESS) {
-    qCritical() << "Unable to set live mode stream";
-    return;
-  }
-  result = BeginQHYCCDLive(handle);
-  if(result != QHYCCD_SUCCESS) {
-    qCritical() << "Unable to start live mode";
-    return;
-  }
-
-  fps_counter _fps([=](double rate){ emit imager->fps(rate); }, fps_counter::Elapsed);
-  uint8_t buffer[size];
-  qDebug() << "capturing thread started, image size: " << size;
-  uint32_t w, h, bpp, channels;
-  auto buffer_real_size = [&] { return w*h*channels*(bpp<=8?1:2); };
-  auto is_zero = [](uint8_t v) { return v==0; };
-  while(enabled){
-    std::function<void()> f;
-    while(jobs_queue.pop(f))
-      f();
-    result = GetQHYCCDLiveFrame(handle,&w,&h,&bpp,&channels,buffer);
-    if(result != QHYCCD_SUCCESS || all_of(buffer, &buffer[buffer_real_size()], is_zero )) {
-      qWarning() << "Error capturing live frame: " << result;
-//       QThread::msleep(1);
-    } else {
-      int type = bpp==8 ? CV_8UC1 : CV_16UC1;
-      if(channels == 3)
-        type = bpp==8 ? CV_8UC3 : CV_16UC3;
-      cv::Mat image({static_cast<int>(w), static_cast<int>(h)}, type, buffer);
-      ++_fps;
-      cv::Mat copy;
-      image.copyTo(copy);
-      imageHandler->handle(Frame::create(copy, color_format)); // TODO: Properly handle with debayer setting, I guess... find a tester!
-    }
-  }
-  result = StopQHYCCDLive(handle);
-  qDebug() << "Stop live capture result: " << result;
-  QThread::currentThread()->quit();
-}
-
-
-void ImagingWorker::stop()
-{
-  enabled = false;
-}
-
 
 void QHYCCDImager::stopLive()
 {
-  d->worker->stop();
+  d->imager_thread.reset();
 }
 
 bool QHYCCDImager::supportsROI()
