@@ -23,6 +23,7 @@ Requirements
  * OpenCV
  * QCustomPlot (libqcustomplot-dev)
  * boost (libboost-all-dev)
+ * fxload (to load firmware on QHY cameras)
 
 Source download
 ---------------
