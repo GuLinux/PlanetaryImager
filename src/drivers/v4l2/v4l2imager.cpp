@@ -22,6 +22,7 @@
 #include "commons/utils.h"
 
 #include "v4ldevice.h"
+#include "v4l2exception.h"
 
 using namespace std;
 using namespace GuLinux;
@@ -235,9 +236,7 @@ V4LBuffer::V4LBuffer(int index, const shared_ptr<V4L2Device> &v4ldevice) : v4lde
   v4ldevice->ioctl(VIDIOC_QUERYBUF, &bufferinfo, "allocating buffers");
 
   memory = (char*) mmap(NULL, bufferinfo.length, PROT_READ | PROT_WRITE, MAP_SHARED, v4ldevice->descriptor(), bufferinfo.m.offset);
-  if(memory == MAP_FAILED){
-    throw V4L2Device::exception("mapping memory");
-  }
+  V4L2_CHECK << ( memory==MAP_FAILED ? -1 : 0 )<< "mapping memory";
   memset(memory, 0, bufferinfo.length);
 }
 
@@ -261,7 +260,10 @@ std::shared_ptr< V4LBuffer > V4LBuffer::List::dequeue(const shared_ptr<V4L2Devic
 
 V4LBuffer::~V4LBuffer()
 {
-  if(-1 == munmap(memory, bufferinfo.length)) {
+  try {
+  V4L2_CHECK << munmap(memory, bufferinfo.length) << "unmapping memory";
+  }
+  catch(const V4L2Exception &e) {
     qWarning() << "error unmapping memory: " << strerror(errno);
     return;
   }
@@ -277,30 +279,26 @@ V4L2Imager::Private::Worker::Worker(V4L2Imager::Private* d) : d{d}
 
 Frame::ptr V4L2Imager::Private::Worker::shoot()
 {
-  try {
-    Frame::ColorFormat color_format = Frame::RGB;
-    QBENCH(dequeue_buffer)->every(100)->ms();
-    auto buffer = buffers.dequeue(d->device);
-    BENCH_END(dequeue_buffer);
-    QBENCH(decode_image)->every(100)->ms();
-    cv::Mat image{static_cast<int>(format.fmt.pix.height), static_cast<int>(format.fmt.pix.width), CV_8UC3};
-    if(format.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG) {
-        color_format = Frame::BGR;
-        cv::InputArray inputArray{buffer->memory,  buffer->bufferinfo.bytesused};
-        image = cv::imdecode(inputArray, -1);
-    } else if(format.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
-        cv::Mat source{static_cast<int>(format.fmt.pix.height), static_cast<int>(format.fmt.pix.width), CV_8UC2, buffer->memory };
-        cv::cvtColor(source, image, CV_YUV2RGB_YVYU);
-    } else {
-        qCritical() << "Unsupported image format: " << FOURCC2QS(format.fmt.pix.pixelformat);
-        return {}; // TODO: throw exception?
-    }
-    BENCH_END(decode_image);
-    buffer->queue(); // TODO: other types?
-    return make_shared<Frame>(color_format, image);
-  } catch(V4L2Device::exception &e) {
-    qWarning() << e.what();
+  Frame::ColorFormat color_format = Frame::RGB;
+  QBENCH(dequeue_buffer)->every(100)->ms();
+  auto buffer = buffers.dequeue(d->device);
+  BENCH_END(dequeue_buffer);
+  QBENCH(decode_image)->every(100)->ms();
+  cv::Mat image{static_cast<int>(format.fmt.pix.height), static_cast<int>(format.fmt.pix.width), CV_8UC3};
+  if(format.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG) {
+      color_format = Frame::BGR;
+      cv::InputArray inputArray{buffer->memory,  buffer->bufferinfo.bytesused};
+      image = cv::imdecode(inputArray, -1);
+  } else if(format.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
+      cv::Mat source{static_cast<int>(format.fmt.pix.height), static_cast<int>(format.fmt.pix.width), CV_8UC2, buffer->memory };
+      cv::cvtColor(source, image, CV_YUV2RGB_YVYU);
+  } else {
+      qCritical() << "Unsupported image format: " << FOURCC2QS(format.fmt.pix.pixelformat);
+      return {}; // TODO: throw exception?
   }
+  BENCH_END(decode_image);
+  buffer->queue(); // TODO: other types?
+  return make_shared<Frame>(color_format, image);
 }
 
 void V4L2Imager::Private::Worker::start()

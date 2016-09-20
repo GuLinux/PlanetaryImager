@@ -29,15 +29,6 @@ public:
   int descriptor() const { return fd; }
   template<typename T> void ioctl(uint64_t ctl, T *data, const QString &errorLabel = {}) const { return __ioctl(ctl, reinterpret_cast<void*>(data), errorLabel); }
   template<typename T> int xioctl(uint64_t ctl, T *data, const QString &errorLabel = {}) const { return __xioctl(ctl, reinterpret_cast<void*>(data), errorLabel); }
-  class exception : public std::exception {
-  public:
-     exception(const QString &label = {}) : label{label}, _error_code{errno} {}
-     virtual const char* what() const noexcept;
-     int error_code() const { return _error_code; }
-  private:
-    const QString label;
-    int _error_code;
-  };
 private:
   int fd = -1;
   const QString _path;

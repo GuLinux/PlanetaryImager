@@ -33,6 +33,17 @@ Imager::exception::exception(int code, const unordered_map<int, string> codes_ma
   d->what = message.str();
 }
 
+Imager::exception::exception(int code, const std::string& message, const std::string& message_prefix, const std::string& where)
+  : dptr(code)
+{
+  ostringstream _what;
+  _what << message_prefix << message << " (code: " << code << ")";
+  if(!where.empty())
+    _what << " on " << where;
+  d->what = _what.str();
+}
+
+
 Imager::exception::exception(const Imager::exception& other) : dptr(other.d->code, other.d->what)
 {
 }

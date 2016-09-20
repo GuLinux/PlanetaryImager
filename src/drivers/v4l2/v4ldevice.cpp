@@ -29,15 +29,14 @@
 #include "Qt/strings.h"
 #include <QDebug>
 #include "c++/stringbuilder.h"
+#include "v4l2exception.h"
 
 using namespace std;
 
 V4L2Device::V4L2Device(const QString& path) : _path{path}
 {
     fd = ::open(path.toLatin1(), O_RDWR, O_NONBLOCK, 0);
-    if (-1 == fd) {
-      throw V4L2Device::exception("opening device '%1'"_q % path);
-    }
+    V4L2_CHECK << fd << "opening device '%1'"_q % path;
 }
 
 V4L2Device::~V4L2Device()
@@ -52,8 +51,7 @@ void V4L2Device::__ioctl(uint64_t ctl, void* data, const QString& errorLabel) co
     do {
         r = ::ioctl(fd, ctl, data);
     } while (-1 == r && EINTR == errno);
-    if(r == -1)
-      throw V4L2Device::exception(errorLabel.isEmpty() ? "ioctl %1"_q % ctl : errorLabel);
+    V4L2_CHECK << r << (errorLabel.isEmpty() ? "ioctl %1"_q % ctl : errorLabel);
 }
 
 int V4L2Device::__xioctl(uint64_t ctl, void* data, const QString& errorLabel) const
@@ -61,18 +59,9 @@ int V4L2Device::__xioctl(uint64_t ctl, void* data, const QString& errorLabel) co
   try {
     this->ioctl(ctl, data, errorLabel);
     return 0;
-  } catch(V4L2Device::exception &e) {
+  } catch(const V4L2Exception &e) {
     qWarning() << e.what();
     return -1;
   }
 }
-
-
-
-const char* V4L2Device::exception::what() const noexcept
-{
-  string _what = GuLinux::stringbuilder() << "V4LDevice::exception at " << label.toStdString() << ": " << strerror(_error_code);
-  return _what.c_str();
-}
-
 
