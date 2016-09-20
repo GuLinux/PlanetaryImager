@@ -23,7 +23,6 @@
 #include <functional>
 #include "utils.h"
 #include "widgets/statusbarinfowidget.h"
-#include "saveimages.h"
 #include <QLabel>
 #include <QDoubleSpinBox>
 #include <QThread>
@@ -36,9 +35,7 @@
 #include "configuration.h"
 #include <QMutex>
 #include <QMessageBox>
-#include "displayimage.h"
 #include "widgets/recordingpanel.h"
-#include "histogram.h"
 #include "widgets/camerainfowidget.h"
 #include "widgets/histogramwidget.h"
 #include "Qt/zoomableimage.h"
@@ -47,7 +44,7 @@
 #include <QWhatsThis>
 #include "Qt/strings.h"
 #include <Qt/functional.h>
-#include "threadimagehandler.h"
+#include "image_handlers/all_handlers.h"
 
 using namespace GuLinux;
 using namespace std;
@@ -368,4 +365,3 @@ void PlanetaryImagerMainWindow::Private::enableUIWidgets(bool cameraConnected)
 }
 
 #include "planetaryimager_mainwindow.moc"
-#include "threadimagehandler.h"

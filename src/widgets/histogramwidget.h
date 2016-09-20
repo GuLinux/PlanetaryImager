@@ -21,7 +21,7 @@
 
 #include <QWidget>
 #include "c++/dptr.h"
-#include <histogram.h>
+#include "image_handlers/histogram.h"
 #include "configuration.h"
 
 class HistogramWidget : public QWidget

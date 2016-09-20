@@ -1,0 +1,7 @@
+file(GLOB all_image_handlers *.h)
+foreach(filename ${all_image_handlers})
+    file(APPEND "${CMAKE_CURRENT_BINARY_DIR}/all_handlers.h" "#include \"${filename}\"\n")
+endforeach()
+add_library(image_handlers STATIC displayimage.cpp histogram.cpp recordinginformation.cpp threadimagehandler.cpp saveimages.cpp)
+add_imager_dependencies(image_handlers)
+add_subdirectory(output_writers)

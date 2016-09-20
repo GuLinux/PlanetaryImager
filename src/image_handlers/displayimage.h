@@ -15,23 +15,34 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef FILE_WRITER_H
-#define FILE_WRITER_H
-#include "imagehandler.h"
-#include <QMap>
-#include <memory>
-#include <functional>
-#include <QString>
-#include "configuration.h"
 
-class FileWriter : public ImageHandler {
+#ifndef DISPLAYIMAGE_H
+#define DISPLAYIMAGE_H
+
+#include <QObject>
+#include "dptr.h"
+#include "image_handlers/imagehandler.h"
+
+class Configuration;
+class DisplayImage : public QObject, public ImageHandler
+{
+Q_OBJECT
 public:
-  typedef std::shared_ptr<FileWriter> Ptr;
-  typedef std::function<Ptr(const QString &deviceName, Configuration &configuration)> Factory;
-  virtual void handle(const Frame::ptr &frame) = 0;
-  virtual QString filename() const = 0;
-  static QMap<Configuration::SaveFormat, Factory> factories();
+    ~DisplayImage();
+    DisplayImage(Configuration &configuration, QObject* parent = 0);
+    virtual void handle(const Frame::ptr &frame);
+    void setRecording(bool recording);
+    QRect imageRect() const;
+signals:
+  void gotImage(const QImage &);
+  void displayFPS(double fps);
+public slots:
+  void create_qimages();
+  void detectEdges(bool detect);
+  void quit();
+  void read_settings();
+private:
+  DPTR
 };
 
-
-#endif
+#endif // DISPLAYIMAGE_H

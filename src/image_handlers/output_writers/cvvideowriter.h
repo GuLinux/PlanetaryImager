@@ -19,7 +19,7 @@
 #ifndef CVVIDEOWRITER_H
 #define CVVIDEOWRITER_H
 
-#include "output_writers/filewriter.h"
+#include "filewriter.h"
 #include "c++/dptr.h"
 
 class cvVideoWriter : public FileWriter

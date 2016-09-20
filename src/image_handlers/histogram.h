@@ -16,34 +16,30 @@
  *
  */
 
-#ifndef SAVEIMAGE_H
-#define SAVEIMAGE_H
+#ifndef HISTOGRAM_H
+#define HISTOGRAM_H
 
-#include "imagehandler.h"
-#include "drivers/imager.h"
-#include <QObject>
+#include <QtCore>
+#include "image_handlers/imagehandler.h"
 #include "dptr.h"
-
 class Configuration;
-class SaveImages : public QObject, public ImageHandler
+class Histogram : public QObject, public ImageHandler
 {
   Q_OBJECT
 public:
-    SaveImages(Configuration &configuration, QObject *parent = 0);
-    ~SaveImages();
-    virtual void handle(const Frame::ptr &frame);
+  typedef std::shared_ptr<Histogram> ptr;
+  ~Histogram();
+  Histogram(Configuration &configuration, QObject* parent = 0);
+  virtual void handle(const Frame::ptr &frame);
+  void set_bins(std::size_t bins_size);
+  void setEnabled(bool enabled);
+  void setRecording(bool recording);
 public slots:
-  void startRecording(Imager *imager);
-  void endRecording();
+  void read_settings();
+signals:
+  void histogram(const std::vector<double> &);
 private:
   DPTR
-signals:
-  void saveFPS(double fps);
-  void meanFPS(double fps);
-  void savedFrames(uint64_t frames);
-  void droppedFrames(uint64_t frames);
-  void recording(const QString &filename);
-  void finished();
 };
 
-#endif // SAVEIMAGE_H
+#endif // HISTOGRAM_H

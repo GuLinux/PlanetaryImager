@@ -23,7 +23,7 @@
 #include <chrono>
 #include <QObject>
 #include <QDebug>
-#include "imagehandler.h"
+#include "image_handlers/imagehandler.h"
 
 class Imager : public QObject {
   Q_OBJECT

@@ -16,30 +16,22 @@
  *
  */
 
-#ifndef HISTOGRAM_H
-#define HISTOGRAM_H
+#ifndef SERWRITER_H
+#define SERWRITER_H
 
-#include <QtCore>
-#include "imagehandler.h"
-#include "dptr.h"
-class Configuration;
-class Histogram : public QObject, public ImageHandler
+#include "filewriter.h"
+#include "c++/dptr.h"
+
+class SERWriter : public FileWriter
 {
-  Q_OBJECT
 public:
-  typedef std::shared_ptr<Histogram> ptr;
-  ~Histogram();
-  Histogram(Configuration &configuration, QObject* parent = 0);
-  virtual void handle(const Frame::ptr &frame);
-  void set_bins(std::size_t bins_size);
-  void setEnabled(bool enabled);
-  void setRecording(bool recording);
-public slots:
-  void read_settings();
-signals:
-  void histogram(const std::vector<double> &);
+ SERWriter(const QString &deviceName, Configuration &configuration);
+ ~SERWriter();
+ virtual QString filename() const;
+ virtual void handle(const Frame::ptr &frame);
+
 private:
-  DPTR
+   DPTR
 };
 
-#endif // HISTOGRAM_H
+#endif // SERWRITER_H

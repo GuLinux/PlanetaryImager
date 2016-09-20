@@ -16,33 +16,20 @@
  *
  */
 
-#ifndef DISPLAYIMAGE_H
-#define DISPLAYIMAGE_H
-
+#ifndef THREADIMAGEHANDLER_H
+#define THREADIMAGEHANDLER_H
 #include <QObject>
-#include "dptr.h"
-#include "imagehandler.h"
+#include "c++/dptr.h"
+#include "image_handlers/imagehandler.h"
 
-class Configuration;
-class DisplayImage : public QObject, public ImageHandler
+class ThreadImageHandler : public ImageHandler
 {
-Q_OBJECT
 public:
-    ~DisplayImage();
-    DisplayImage(Configuration &configuration, QObject* parent = 0);
-    virtual void handle(const Frame::ptr &frame);
-    void setRecording(bool recording);
-    QRect imageRect() const;
-signals:
-  void gotImage(const QImage &);
-  void displayFPS(double fps);
-public slots:
-  void create_qimages();
-  void detectEdges(bool detect);
-  void quit();
-  void read_settings();
+  ThreadImageHandler(const  ImageHandlerPtr &imageHandler);
+  virtual ~ThreadImageHandler();
+  virtual void handle(const Frame::ptr &frame);
 private:
   DPTR
 };
 
-#endif // DISPLAYIMAGE_H
+#endif // THREADIMAGEHANDLER_H

@@ -15,3 +15,4 @@ add_library(planetaryimager-widgets STATIC
     controls/menucontrolwidget.cpp
     controls/durationcontrolwidget.cpp
 )
+add_imager_dependencies(planetaryimager-widgets)

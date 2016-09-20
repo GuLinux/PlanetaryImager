@@ -15,23 +15,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#ifndef FILE_WRITER_H
+#define FILE_WRITER_H
+#include "image_handlers/imagehandler.h"
+#include <QMap>
+#include <memory>
+#include <functional>
+#include <QString>
+#include "configuration.h"
 
-#ifndef SERWRITER_H
-#define SERWRITER_H
-
-#include "output_writers/filewriter.h"
-#include "c++/dptr.h"
-
-class SERWriter : public FileWriter
-{
+class FileWriter : public ImageHandler {
 public:
- SERWriter(const QString &deviceName, Configuration &configuration);
- ~SERWriter();
- virtual QString filename() const;
- virtual void handle(const Frame::ptr &frame);
-
-private:
-   DPTR
+  typedef std::shared_ptr<FileWriter> Ptr;
+  typedef std::function<Ptr(const QString &deviceName, Configuration &configuration)> Factory;
+  virtual void handle(const Frame::ptr &frame) = 0;
+  virtual QString filename() const = 0;
+  static QMap<Configuration::SaveFormat, Factory> factories();
 };
 
-#endif // SERWRITER_H
+
+#endif

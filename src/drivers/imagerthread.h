@@ -19,7 +19,7 @@
 #ifndef IMAGERTHREAD_H
 #define IMAGERTHREAD_H
 #include <functional>
-#include <imagehandler.h>
+#include "image_handlers/imagehandler.h"
 #include "dptr.h"
 class Imager;
 class ImagerThread
