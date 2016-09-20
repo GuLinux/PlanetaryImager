@@ -24,18 +24,9 @@
 
 using namespace std;
 
-class V4L2Driver::Private
-{
-public:
-  Private ( V4L2Driver *q );
-
-private:
+DPTR_IMPL(V4L2Driver) {
   V4L2Driver *q;
 };
-
-V4L2Driver::Private::Private ( V4L2Driver* q ) : q ( q )
-{
-}
 
 V4L2Driver::V4L2Driver()
   : dptr ( this )
@@ -60,7 +51,6 @@ private:
 Driver::Cameras V4L2Driver::cameras() const
 {
   QList<CameraPtr> _cameras;
-#ifdef Q_OS_LINUX
   auto entries = QDir("/sys/class/video4linux").entryInfoList();
   for(auto entry: entries) {
     QFile name_file(entry.absoluteFilePath() + "/" + "name");
@@ -72,7 +62,6 @@ Driver::Cameras V4L2Driver::cameras() const
     qDebug() << entry.baseName() << name  << index;
     _cameras.push_back(make_shared<V4L2DeviceInfo>(index, "%1 (v4l2)"_q % name));
   }
-#endif
   return _cameras;
 }
 

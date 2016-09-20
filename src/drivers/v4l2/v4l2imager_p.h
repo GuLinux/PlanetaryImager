@@ -20,9 +20,9 @@
 
 
 #include "v4l2imager.h"
-#include <linux/videodev2.h>
 #include <QDebug>
 #include "commons/fps_counter.h"
+#include <linux/videodev2.h>
 #include <cstdio>
 #include <cstdlib>
 #include <sys/types.h>
@@ -101,31 +101,6 @@ public:
   v4l2_format format;
   int bufferinfo_type;
 };
-
-class V4L2Device {
-public:
-  V4L2Device(const QString &path);
-  ~V4L2Device();
-  inline QString path() const { return _path; }
-  inline operator bool() const { return fd != -1; }
-  int descriptor() const { return fd; }
-  template<typename T> void ioctl(uint64_t ctl, T *data, const QString &errorLabel = {}) const;
-  template<typename T> int xioctl(uint64_t ctl, T *data, const QString &errorLabel = {}) const;
-  class exception : public std::exception {
-  public:
-     exception(const QString &label = {}) : label{label}, _error_code{errno} {}
-     virtual const char* what() const noexcept;
-     int error_code() const { return _error_code; }
-  private:
-    const QString label;
-    int _error_code;
-  };
-private:
-  int fd = -1;
-  const QString _path;
-};
-
-
 
 inline QString FOURCC2QS(int32_t _4cc)
 {

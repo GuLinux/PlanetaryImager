@@ -20,6 +20,9 @@
 #include "c++/stlutils.h"
 #include "Qt/benchmark.h"
 #include "commons/utils.h"
+
+#include "v4ldevice.h"
+
 using namespace std;
 using namespace GuLinux;
 
@@ -51,59 +54,6 @@ V4L2Imager::V4L2Imager(const QString &name, int index, const ImageHandlerPtr &ha
   d->adjust_framerate(d->query_format());
 }
 
-
-
-V4L2Device::V4L2Device(const QString& path) : _path{path}
-{
-    fd = ::open(path.toLatin1(), O_RDWR, O_NONBLOCK, 0);
-    if (-1 == fd) {
-      throw V4L2Device::exception("opening device '%1'"_q % path);
-    }
-}
-
-V4L2Device::~V4L2Device()
-{
-  if(-1 != fd)
-    ::close(fd);
-}
-
-QDebug operator<<(QDebug dbg, const V4L2Device::exception &e) {
-  dbg.nospace().noquote() << QString{e.what()};
-  return dbg.space().maybeQuote();
-}
-
-template<typename T>
-void V4L2Device::ioctl(uint64_t ctl, T* data, const QString& errorLabel) const
-{
-    int r;
-    do {
-        r = ::ioctl(fd, ctl, data);
-    } while (-1 == r && EINTR == errno);
-    if(r == -1)
-      throw V4L2Device::exception(errorLabel.isEmpty() ? "ioctl %1"_q % ctl : errorLabel);
-}
-
-
-template<typename T>
-int V4L2Device::xioctl(uint64_t ctl, T* data, const QString& errorLabel) const
-{
-  try {
-    this->ioctl(ctl, data, errorLabel);
-    return 0;
-  } catch(V4L2Device::exception &e) {
-    qWarning() << e;
-    return -1;
-  }
-}
-
-
-
-const char* V4L2Device::exception::what() const noexcept
-{
-  stringstream s;
-  s << "V4LDevice::exception at " << label.toStdString() << ": " << strerror(_error_code);
-  return s.str().c_str();
-}
 
 
 
@@ -349,7 +299,7 @@ Frame::ptr V4L2Imager::Private::Worker::shoot()
     buffer->queue(); // TODO: other types?
     return make_shared<Frame>(color_format, image);
   } catch(V4L2Device::exception &e) {
-    qWarning() << e;
+    qWarning() << e.what();
   }
 }
 
