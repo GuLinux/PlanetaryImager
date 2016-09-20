@@ -55,24 +55,23 @@ DPTR_IMPL(QHYCCDImager) {
 QHYCCDImager::QHYCCDImager(const QString &cameraName, const char *id, const ImageHandlerPtr &imageHandler) : dptr(cameraName, id, imageHandler, this)
 {
   d->handle = OpenQHYCCD(const_cast<char*>(id));
-  QHY_CHECK << reinterpret_cast<long>(d->handle) << "Initializing Camera %1"_q % id;
-  QHY_CHECK << InitQHYCCD(d->handle) << "Initializing Camera %1"_q % id;
-  char buf[1024];
-  uint8_t st[1024];
+  QHY_CHECK << reinterpret_cast<long>(d->handle) << "Opening Camera %1"_q % cameraName;
+  QHY_CHECK << InitQHYCCD(d->handle) << "Initializing Camera %1"_q % cameraName;
+  uint8_t buffer[1024];
   // Not implemented in QHY Library
 //   GetQHYCCDCFWStatus(d->handle, buf);
 //   qDebug() << "firmware status: " << QByteArray{buf};
-  GetQHYCCDFWVersion(d->handle, st);
-  copy(begin(st), end(st), begin(buf));
-  qDebug() << "firmware version: " << QByteArray{buf};
+  QHY_CHECK << GetQHYCCDFWVersion(d->handle, buffer) << "Getting firmware version";
+  qDebug() << "firmware version: " << QString::fromLocal8Bit(reinterpret_cast<const char*>(buffer));
   double chipwidth, chipheight, pixelwidth, pixelheight;
   uint32_t width, height, bpp;
-  GetQHYCCDChipInfo(d->handle, &chipwidth, &chipheight, &width, &height, &pixelwidth, &pixelheight, &bpp);
+  QHY_CHECK << GetQHYCCDChipInfo(d->handle, &chipwidth, &chipheight, &width, &height, &pixelwidth, &pixelheight, &bpp) << "Getting chip information for %1" << id;
   d->chip.set_chip_size(chipwidth, chipheight).set_pixel_size(pixelwidth, pixelheight).set_resolution({static_cast<int>(width), static_cast<int>(height)});
   d->chip << Properties::Property{"bpp", bpp};
   qDebug() << d->chip;
   d->load_settings();
   qDebug() << d->settings;
+  qDebug() << "Finished initializing QHY camera" << d->name;
 //   GetQHYCCDCameraStatus(d->handle, st); // NOT IMPLEMENTED IN QHY Library
 }
 
