@@ -167,6 +167,7 @@ V4L2Imager::Private::V4lSetting V4L2Imager::Private::setting(uint32_t id)
     setting.setting = Imager::Control{ctrl.id, reinterpret_cast<char*>(ctrl.name), static_cast<double>(ctrl.minimum), static_cast<double>(ctrl.maximum), 
       static_cast<double>(ctrl.step), static_cast<double>(control.value), static_cast<double>(ctrl.default_value)};
     setting.setting.type = types[ctrl.type];
+    setting.setting.readonly = (ctrl.flags & V4L2_CTRL_FLAG_READ_ONLY);
     if(ctrl.type == V4L2_CTRL_TYPE_MENU) {
         v4l2_querymenu menu{ctrl.id};
         for(menu.index = ctrl.minimum; menu.index <= ctrl.maximum; menu.index++) {
