@@ -9,9 +9,10 @@ execute_process(COMMAND ${CMAKE_SOURCE_DIR}/scripts/qhy_fix_libusb_include ${CMA
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 configure_file(qhyexception.cpp.in qhyexception.cpp)
-set(qhy_SOURCES qhydriver.cpp qhyccdimager.cpp ${CMAKE_CURRENT_BINARY_DIR}/qhyexception.cpp qhyimagingworker.cpp)
+set(qhy_GENERATED_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/qhyexception.cpp)
+file(GLOB qhy_SOURCES *.cpp)
 
-add_library(qhy_driver STATIC ${qhy_SOURCES})
+add_library(qhy_driver STATIC ${qhy_SOURCES} ${qhy_GENERATED_SOURCES})
 
 set(QHY_LIBRARY_armv6 ${CMAKE_CURRENT_SOURCE_DIR}/QHYCCD_Linux/libqhy_arm_v6.a)
 set(QHY_LIBRARY_armv7 ${CMAKE_CURRENT_SOURCE_DIR}/QHYCCD_Linux/libqhy_arm_v7.a)

@@ -29,5 +29,6 @@ endif(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 
 add_subdirectory(zwo_asi)
 configure_file(available_drivers.h.in available_drivers.h)
-add_library(drivers STATIC driver.cpp imager.cpp imagerthread.cpp imagerexception.cpp)
+file(GLOB drivers_SRCS *.cpp)
+add_library(drivers STATIC ${drivers_SRCS})
 add_imager_dependencies(drivers)

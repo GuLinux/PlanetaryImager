@@ -1,4 +1,4 @@
-add_library(zwo_asi_imager STATIC zwo_asi_driver.cpp zwo_asi_imager.cpp zwoexception.cpp asiimagingworker.cpp asicontrol.cpp)
+file(GLOB asi_imager_SRCS *.cpp)
 set(ASI_SDK_MAJOR 0)
 set(ASI_SDK_MINOR 3)
 set(ASI_SDK_PATCH 0920)
@@ -20,4 +20,5 @@ include_directories(${ASI_SDK_DIR}/include)
 add_imager_dependencies(zwo_asi_imager ${ASI_SDK_DIR}/lib/${ASI_TARGET_ARCH}/libASICamera2.a -lusb-1.0)
 define_driver(drivers/zwo_asi/zwo_asi_driver.h ZWO_ASI_Driver)
 
+add_library(zwo_asi_imager STATIC ${asi_imager_SRCS})
 install(FILES ${ASI_SDK_DIR}/lib/asi.rules DESTINATION ${UDEVRULES_INSTALL_DIR})
