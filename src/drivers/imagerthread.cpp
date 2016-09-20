@@ -30,7 +30,7 @@
 
 using namespace std;
 
-class ImagerThread::Private : public QObject {
+DPTR_IMPL(ImagerThread) : public QObject {
   Q_OBJECT
 public:
   Private(const ImagerThread::Worker::ptr& worker, Imager* imager, const ImageHandlerPtr& imageHandler);
@@ -42,7 +42,6 @@ public:
   atomic_bool running;  
   QThread thread;
   boost::lockfree::spsc_queue<Job> jobs_queue;
-private slots:
   void thread_started();
 };
 
