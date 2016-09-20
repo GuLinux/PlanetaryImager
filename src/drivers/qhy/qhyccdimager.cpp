@@ -54,9 +54,12 @@ DPTR_IMPL(QHYCCDImager) {
 
 QHYCCDImager::QHYCCDImager(const QString &cameraName, const char *id, const ImageHandlerPtr &imageHandler) : dptr(cameraName, id, imageHandler, this)
 {
+  qDebug() << "Opening QHY camera " << cameraName << ", id=" << id;
   d->handle = OpenQHYCCD(const_cast<char*>(id));
   QHY_CHECK << reinterpret_cast<long>(d->handle) << "Opening Camera %1"_q % cameraName;
+  qDebug() << "initializing camera...";
   QHY_CHECK << InitQHYCCD(d->handle) << "Initializing Camera %1"_q % cameraName;
+  qDebug() << "camera initialized";
   uint8_t buffer[1024];
   // Not implemented in QHY Library
 //   GetQHYCCDCFWStatus(d->handle, buf);
