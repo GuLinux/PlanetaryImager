@@ -145,11 +145,13 @@ V4L2Imager::Private::V4lSetting V4L2Imager::Private::setting(uint32_t id)
     if (0 != setting.querycode) {
         return setting;
     }
+    qDebug() << "Found v4l2 control: id=" << id << ", name=" << reinterpret_cast<const char*>(ctrl.name )<< ", flags=" << ctrl.flags << ", type=" << ctrl.type << ", range=" << ctrl.minimum << "-" << ctrl.maximum << ", step=" << ctrl.step << ", default value=" << ctrl.default_value;
     setting.disabled = (ctrl.flags & V4L2_CTRL_FLAG_DISABLED);
     if (setting.disabled)
         return setting;
     static QMap<int, Control::Type> types {
         {V4L2_CTRL_TYPE_INTEGER, Control::Number},
+        {V4L2_CTRL_TYPE_INTEGER64, Control::Number},
         {V4L2_CTRL_TYPE_BOOLEAN, Control::Bool},
         {V4L2_CTRL_TYPE_MENU, Control::Combo},
     };
