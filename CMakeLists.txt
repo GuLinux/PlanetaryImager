@@ -48,6 +48,7 @@ set(VERSION_SUFFIX "" CACHE INTERNAL "")
   set(PlanetaryImager_ARCH i686)
  endif (CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "armv6l")
 
+ add_definitions(-DHOST_PROCESSOR="${CMAKE_HOST_SYSTEM_PROCESSOR}" -DARCHITECTURE="${PlanetaryImager_ARCH}")
  message("Detected architecture: ${PlanetaryImager_ARCH}")
 SET(EXTRA_LIBRARIES "" CACHE STRING "Extra libraries for linking")
 add_subdirectory(GuLinux-Commons/Qt)

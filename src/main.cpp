@@ -42,7 +42,7 @@ void log_handler(QtMsgType type, const QMessageLogContext &context, const QStrin
 
 int main(int argc, char** argv)
 {
-    cerr << "Starting PlanetaryImager - version " << PLANETARY_IMAGER_VERSION << endl;
+    cerr << "Starting PlanetaryImager - version " << PLANETARY_IMAGER_VERSION << " (" << HOST_PROCESSOR << ")" << endl;
     QApplication app(argc, argv);
     qInstallMessageHandler(log_handler);
     app.setApplicationName("PlanetaryImager");
