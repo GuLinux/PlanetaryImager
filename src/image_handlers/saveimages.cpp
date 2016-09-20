@@ -21,15 +21,15 @@
 #include <QThread>
 #include <QDebug>
 #include <functional>
-#include "utils.h"
+#include "commons/utils.h"
 
 #include <QtConcurrent/QtConcurrent>
 #include <functional>
 #include <cstring>
-#include "fps_counter.h"
-#include "configuration.h"
+#include "commons/fps_counter.h"
+#include "commons/configuration.h"
 #include <boost/lockfree/spsc_queue.hpp>
-#include "opencv_utils.h"
+#include "commons/opencv_utils.h"
 #include <Qt/strings.h>
 #include "output_writers/filewriter.h"
 #include "recordinginformation.h"

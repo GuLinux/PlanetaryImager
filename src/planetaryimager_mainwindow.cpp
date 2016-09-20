@@ -21,7 +21,7 @@
 #include "drivers/imager.h"
 #include "ui_planetaryimager_mainwindow.h"
 #include <functional>
-#include "utils.h"
+#include "commons/utils.h"
 #include "widgets/statusbarinfowidget.h"
 #include <QLabel>
 #include <QDoubleSpinBox>
@@ -29,10 +29,10 @@
 #include <QFileDialog>
 #include <QDateTime>
 #include <QtConcurrent/QtConcurrent>
-#include "fps_counter.h"
+#include "commons/fps_counter.h"
 #include "widgets/cameracontrolswidget.h"
-#include "configurationdialog.h"
-#include "configuration.h"
+#include "commons/configurationdialog.h"
+#include "commons/configuration.h"
 #include <QMutex>
 #include <QMessageBox>
 #include "widgets/recordingpanel.h"

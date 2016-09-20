@@ -17,8 +17,8 @@
  */
 
 #include "displayimage.h"
-#include "configuration.h"
-#include <fps_counter.h>
+#include "commons/configuration.h"
+#include "commons/fps_counter.h"
 #include <QThread>
 #include <QElapsedTimer>
 #include <QRect>
@@ -26,14 +26,14 @@
 #include <boost/lockfree/spsc_queue.hpp>
 #include <QDebug>
 #include "Qt/strings.h"
-#include "utils.h"
+#include "commons/utils.h"
 #include <opencv2/opencv.hpp>
-#include "opencv_utils.h"
+#include "commons/opencv_utils.h"
 #include "c++/stlutils.h"
 #include <atomic>
 #include "Qt/benchmark.h"
 #include <atomic>
-#include "utils.h"
+#include "commons/utils.h"
 
 using namespace std;
 using namespace std::placeholders;

@@ -15,7 +15,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#include "fps_counter.h"
+#include "commons/fps_counter.h"
 #include <QDebug>
 #include <QTimer>
 #include <QElapsedTimer>

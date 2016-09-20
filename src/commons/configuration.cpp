@@ -16,9 +16,9 @@
  *
  */
 
-#include "configuration.h"
+#include "commons/configuration.h"
 #include <QSettings>
-#include "utils.h"
+#include "commons/utils.h"
 #include <QMetaType>
 #include "Qt/strings.h"
 #include <QDir>

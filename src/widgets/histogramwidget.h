@@ -22,7 +22,7 @@
 #include <QWidget>
 #include "c++/dptr.h"
 #include "image_handlers/histogram.h"
-#include "configuration.h"
+#include "commons/configuration.h"
 
 class HistogramWidget : public QWidget
 {

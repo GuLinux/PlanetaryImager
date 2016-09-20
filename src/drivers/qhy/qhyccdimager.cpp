@@ -22,11 +22,11 @@
 #include <QDebug>
 
 #include <QThread>
-#include "utils.h"
+#include "commons/utils.h"
 #include <QImage>
 #include <QElapsedTimer>
 #include <QtConcurrent/QtConcurrent>
-#include <fps_counter.h>
+#include "commons/fps_counter.h"
 #include <chrono>
 #include "Qt/strings.h"
 #include "qhyexception.h"

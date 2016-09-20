@@ -22,7 +22,7 @@
 #include <QDateTime>
 #include "drivers/imager.h"
 #include <QJsonDocument>
-#include "configuration.h"
+#include "commons/configuration.h"
 #include <QFile>
 
 using namespace std;

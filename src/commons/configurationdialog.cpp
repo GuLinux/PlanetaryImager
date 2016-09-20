@@ -17,9 +17,9 @@
  */
 
 #include "configurationdialog.h"
-#include "configuration.h"
+#include "commons/configuration.h"
 #include "ui_configurationdialog.h"
-#include "utils.h"
+#include "commons/utils.h"
 #include <functional>
 #include <QSpinBox>
 #include "Qt/strings.h"

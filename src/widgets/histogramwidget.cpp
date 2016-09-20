@@ -18,7 +18,7 @@
 
 #include "histogramwidget.h"
 #include "ui_histogramwidget.h"
-#include "configuration.h"
+#include "commons/configuration.h"
 #include "Qt/functional.h"
 
 using namespace std;

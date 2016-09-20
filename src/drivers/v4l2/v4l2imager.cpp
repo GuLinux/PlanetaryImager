@@ -19,7 +19,7 @@
 #include "v4l2imager_p.h"
 #include "c++/stlutils.h"
 #include "Qt/benchmark.h"
-#include "utils.h"
+#include "commons/utils.h"
 using namespace std;
 using namespace GuLinux;
 

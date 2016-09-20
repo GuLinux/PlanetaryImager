@@ -22,12 +22,12 @@
 #include <QObject>
 #include <set>
 #include <QThread>
-#include <fps_counter.h>
+#include "commons/fps_counter.h"
 #include <QRect>
 #include <atomic>
 #include <ratio>
 #include "Qt/strings.h"
-#include "utils.h"
+#include "commons/utils.h"
 #include "zwoexception.h"
 #include "asiimagingworker.h"
 #include <QTimer>

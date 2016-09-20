@@ -18,7 +18,7 @@
 
 #include "recordingpanel.h"
 #include "ui_recordingpanel.h"
-#include "configuration.h"
+#include "commons/configuration.h"
 #include "savefileconfiguration.h"
 #include <QFileDialog>
 #include <Qt/functional.h>

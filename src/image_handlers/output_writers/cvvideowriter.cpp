@@ -19,7 +19,7 @@
 #include <QDebug>
 #include "Qt/strings.h"
 #include "cvvideowriter.h"
-#include "opencv_utils.h"
+#include "commons/opencv_utils.h"
 using namespace std;
 
 class cvVideoWriter::Private

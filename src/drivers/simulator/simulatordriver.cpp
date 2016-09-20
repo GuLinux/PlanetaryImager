@@ -27,9 +27,9 @@
 #include <QMutex>
 #include <QMutexLocker>
 #include <opencv2/opencv.hpp>
-#include "opencv_utils.h"
-#include "fps_counter.h"
-#include "utils.h"
+#include "commons/opencv_utils.h"
+#include "commons/fps_counter.h"
+#include "commons/utils.h"
 #include "Qt/functional.h"
 #include <atomic>
 #include <chrono>

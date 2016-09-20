@@ -18,7 +18,7 @@
 
 #include "savefileconfiguration.h"
 #include "ui_savefileconfiguration.h"
-#include "configuration.h"
+#include "commons/configuration.h"
 #include <QStringListModel>
 #include <QDebug>
 

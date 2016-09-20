@@ -19,8 +19,8 @@
 #include <QSpinBox>
 #include <QBoxLayout>
 #include <QLabel>
-#include "utils.h"
-#include "configuration.h"
+#include "commons/utils.h"
+#include "commons/configuration.h"
 #include <QSettings>
 #include "Qt/functional.h"
 #include <QLayout>

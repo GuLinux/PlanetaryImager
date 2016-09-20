@@ -20,8 +20,8 @@
 #include <QObject>
 #include <QThread>
 #include "imager.h"
-#include "utils.h"
-#include "fps_counter.h"
+#include "commons/utils.h"
+#include "commons/fps_counter.h"
 #include <atomic>
 #include <boost/lockfree/spsc_queue.hpp>
 #include "stlutils.h"

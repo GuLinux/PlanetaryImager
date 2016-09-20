@@ -19,7 +19,7 @@
 #include "qhyccdimager.h"
 #include "qhyccd.h"
 #include <map>
-#include "utils.h"
+#include "commons/utils.h"
 #include <QDebug>
 #include <QString>
 #include <QRegularExpression>

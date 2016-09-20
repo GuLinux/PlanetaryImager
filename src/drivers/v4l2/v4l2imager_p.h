@@ -22,7 +22,7 @@
 #include "v4l2imager.h"
 #include <linux/videodev2.h>
 #include <QDebug>
-#include "fps_counter.h"
+#include "commons/fps_counter.h"
 #include <cstdio>
 #include <cstdlib>
 #include <sys/types.h>

@@ -21,7 +21,7 @@
 #include <opencv2/opencv.hpp>
 
 #include <QtConcurrent/QtConcurrent>
-#include "configuration.h"
+#include "commons/configuration.h"
 #include <atomic>
 #include "c++/stringbuilder.h"
 

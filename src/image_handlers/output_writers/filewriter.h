@@ -22,7 +22,7 @@
 #include <memory>
 #include <functional>
 #include <QString>
-#include "configuration.h"
+#include "commons/configuration.h"
 
 class FileWriter : public ImageHandler {
 public:

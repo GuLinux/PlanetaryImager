@@ -1,17 +1,4 @@
-configure_file(version.h.in version.h)
-
-set(PlanetaryImager_SRCS
-  main.cpp 
-  planetaryimager_mainwindow.cpp 
-  planetaryimager_mainwindow.ui 
-  resources/resources.qrc
-  fps_counter.cpp
-  configurationdialog.cpp
-  configurationdialog.ui
-  configuration.cpp
-  frame.cpp
-)
-
+file(GLOB PlanetaryImager_SRCS *.cpp *.ui)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 unset(planetary_imager_DEPS CACHE)
@@ -22,6 +9,7 @@ endfunction(add_imager_dependencies)
 add_subdirectory(drivers)
 add_subdirectory(image_handlers)
 add_subdirectory(widgets)
+add_subdirectory(commons)
 add_executable(planetary_imager ${PlanetaryImager_SRCS})
 
 message("dependencies: ${planetary_imager_DEPS}")
