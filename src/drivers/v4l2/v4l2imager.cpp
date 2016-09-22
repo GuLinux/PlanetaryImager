@@ -32,6 +32,7 @@ V4L2Imager::V4L2Imager(const QString &name, int index, const ImageHandlerPtr &ha
 {
   d->populate_control_fixes();
   d->open_camera();
+  d->find_controls();
   auto settings = this->controls();
   auto formats = find_if(begin(settings), end(settings), [](const Control &s) { return s.id == PIXEL_FORMAT_CONTROL_ID; });
   if(formats != end(settings)) {
@@ -41,7 +42,6 @@ V4L2Imager::V4L2Imager(const QString &name, int index, const ImageHandlerPtr &ha
           setControl(*formats);
       };
   }
-  settings = this->controls();
   auto resolutions = find_if(begin(settings), end(settings), [](const Control &s) { return s.id == RESOLUTIONS_CONTROL_ID; });
   if(resolutions != end(settings)) {
       auto v4l_resolutions = d->resolutions(d->query_format());
@@ -85,34 +85,48 @@ QString V4L2Imager::name() const
     return d->cameraname;
 }
 
+void V4L2Imager::Private::find_controls()
+{
+  controls.clear();
+  for (int ctrlid = V4L2_CID_BASE; ctrlid < V4L2_CID_LASTP1; ctrlid++) {
+    try {
+      controls.push_back(make_shared<V4L2Control>(ctrlid, device, control_fixes));
+    } catch(const V4L2Exception &e) {
+//       if(e.type() == V4L2Exception::v4l2_error && e.code() == EINVAL)
+//         break;
+      qDebug() << e.what();
+    }
+  }
+
+  for (int ctrlid = V4L2_CID_PRIVATE_BASE;; ctrlid++) {
+    try {
+      controls.push_back(make_shared<V4L2Control>(ctrlid, device, control_fixes));
+    } catch(const V4L2Exception &e) {
+      if(e.type() == V4L2Exception::v4l2_error && e.code() == EINVAL)
+        break;
+      qDebug() << e.what();
+    }
+  }
+
+  int ctrlid = V4L2_CTRL_FLAG_NEXT_CTRL;
+  while(true) {
+    V4L2Control::ptr control;
+    try {
+      controls.push_back(control = make_shared<V4L2Control>(ctrlid, device, control_fixes));
+    } catch(const V4L2Exception &e) {
+      if(e.type() == V4L2Exception::v4l2_error && e.code() == EINVAL)
+        break;
+      qDebug() << e.what();
+    }
+    ctrlid = static_cast<uint32_t>(control->control().id) | V4L2_CTRL_FLAG_NEXT_CTRL;
+  }
+}
+
 
 Imager::Controls V4L2Imager::controls() const
 {
     Imager::Controls _settings;
-
-    for (int ctrlid = V4L2_CID_BASE; ctrlid < V4L2_CID_LASTP1; ctrlid++) {
-        auto v4lsetting = d->setting(ctrlid);
-        if(!v4lsetting)
-            continue;
-        _settings.push_back(v4lsetting.setting);
-    }
-    
-    for (int ctrlid = V4L2_CID_PRIVATE_BASE;; ctrlid++) {
-        auto v4lsetting = d->setting(ctrlid);
-        if (!v4lsetting && errno == EINVAL)
-                break;
-        _settings.push_back(v4lsetting.setting);
-    }
-    
-    int ctrlid = V4L2_CTRL_FLAG_NEXT_CTRL;
-    Private::V4lSetting v4lsetting;
-    do {
-        v4lsetting = d->setting(ctrlid);
-        if(v4lsetting)
-            _settings.push_back(v4lsetting.setting);
-        ctrlid = v4lsetting.setting.id | V4L2_CTRL_FLAG_NEXT_CTRL;
-    } while (v4lsetting.querycode != -1);
-    
+    transform(begin(d->controls), end(d->controls), back_inserter(_settings), [](const V4L2Control::ptr &c) { return c->control(); } );
     auto current_format = d->query_format();
     auto formats = d->formats();
     Control formats_setting{PIXEL_FORMAT_CONTROL_ID, "Format", 0, formats.size()-1., 1, 0, 0, Control::Combo};
@@ -137,55 +151,10 @@ Imager::Controls V4L2Imager::controls() const
 }
 
 
-V4L2Imager::Private::V4lSetting V4L2Imager::Private::setting(uint32_t id)
-{
-    V4lSetting setting;
-    v4l2_queryctrl ctrl{id};
-    setting.querycode =device->xioctl(VIDIOC_QUERYCTRL, &ctrl);
-    if (0 != setting.querycode) {
-        return setting;
-    }
-    qDebug() << "Found v4l2 control: id=" << id << ", name=" << reinterpret_cast<const char*>(ctrl.name )<< ", flags=" << ctrl.flags << ", type=" << ctrl.type << ", range=" << ctrl.minimum << "-" << ctrl.maximum << ", step=" << ctrl.step << ", default value=" << ctrl.default_value;
-    setting.disabled = (ctrl.flags & V4L2_CTRL_FLAG_DISABLED);
-    if (setting.disabled)
-        return setting;
-    static QMap<int, Control::Type> types {
-        {V4L2_CTRL_TYPE_INTEGER, Control::Number},
-        {V4L2_CTRL_TYPE_INTEGER64, Control::Number},
-        {V4L2_CTRL_TYPE_BOOLEAN, Control::Bool},
-        {V4L2_CTRL_TYPE_MENU, Control::Combo},
-    };
-    setting.unknown_type = types.count(ctrl.type) == 0;
-    if(setting.unknown_type)
-        return setting;
-    
-    v4l2_control control{ctrl.id};
-    setting.valuecode = device->xioctl(VIDIOC_G_CTRL, &control, "getting control value");
-    if (-1 == setting.valuecode) {
-        return setting;
-    }
-    setting.setting = Imager::Control{ctrl.id, reinterpret_cast<char*>(ctrl.name), static_cast<double>(ctrl.minimum), static_cast<double>(ctrl.maximum), 
-      static_cast<double>(ctrl.step), static_cast<double>(control.value), static_cast<double>(ctrl.default_value)};
-    setting.setting.type = types[ctrl.type];
-    setting.setting.readonly = (ctrl.flags & V4L2_CTRL_FLAG_READ_ONLY);
-    if(ctrl.type == V4L2_CTRL_TYPE_MENU) {
-        v4l2_querymenu menu{ctrl.id};
-        for(menu.index = ctrl.minimum; menu.index <= ctrl.maximum; menu.index++) {
-            QString value;
-            if (0 == device->xioctl (VIDIOC_QUERYMENU, &menu)) {
-                value = {(char*)menu.name};
-            }
-            setting.setting.choices.push_back({value, static_cast<double>(menu.index)});
-        }
-    }
-    qDebug() << "setting: " << setting.setting << "(exposure: " << V4L2_CID_EXPOSURE_ABSOLUTE << ")";
-    for(auto rule: control_fixes)
-        rule(setting.setting);
-    return setting;
-}
 
 void V4L2Imager::setControl(const Control &setting)
 {
+  // TODO: huge refactoring needed here...
   auto restart_camera = [=](function<void()> on_restart) {
     bool live_was_started = d->imager_thread.operator bool();
     stopLive();
@@ -202,8 +171,20 @@ void V4L2Imager::setControl(const Control &setting)
       auto current_format = d->query_format();
       qDebug() << "setting format: old=" << FOURCC2QS(current_format.fmt.pix.pixelformat) << ", new=" << FOURCC2QS(setting_format.pixelformat);
       current_format.fmt.pix.pixelformat = setting_format.pixelformat;
-      if(-1 == d->device->xioctl(VIDIOC_S_FMT , &current_format, "setting webcam format")) {
-	  return;
+      try {
+        d->device->ioctl(VIDIOC_S_FMT , &current_format, "setting webcam format");
+      }
+      catch(const V4L2Exception &e) {
+        qWarning() << e.what();
+      }
+      auto format = d->query_format();
+      for(auto avail_format: d->formats()) {
+        if(avail_format.pixelformat == format.fmt.pix.pixelformat) {
+          auto changed_setting = setting;
+          changed_setting.value = avail_format.index;
+          emit changed(changed_setting);
+          return;
+        }
       }
     });
     return;
@@ -216,15 +197,33 @@ void V4L2Imager::setControl(const Control &setting)
       qDebug() << "setting resolution: old=" << current_format.fmt.pix.width << "x" << current_format.fmt.pix.height << ", new=" << setting_resolution.discrete.width << "x" << setting_resolution.discrete.height;
       current_format.fmt.pix.width = setting_resolution.discrete.width;
       current_format.fmt.pix.height = setting_resolution.discrete.height;
-      if(-1 == d->device->xioctl(VIDIOC_S_FMT , &current_format, "setting resolution")) {
-	  return;
+      try {
+        d->device->ioctl(VIDIOC_S_FMT , &current_format, "setting resolution");
+      } catch(const V4L2Exception &e) {
+        qWarning() << e.what();
+      }
+      auto format = d->query_format();
+      for(auto resolution: d->resolutions(format)) {
+        if(resolution.discrete.width == format.fmt.pix.width && resolution.discrete.height == format.fmt.pix.height) {
+          auto changed_setting = setting;
+          changed_setting.value = resolution.index;
+          emit changed(changed_setting);
+          return;
+        }
       }
     });
     return;
   }
-  
-  v4l2_control control{static_cast<uint32_t>(setting.id), static_cast<int>(setting.value)};
-  if (-1 == d->device->xioctl (VIDIOC_S_CTRL, &control, "setting control %1-%2 value to %3"_q % setting.id % setting.name % setting.value)) {
+  auto control = find_if(begin(d->controls), end(d->controls), [=](const V4L2Control::ptr &c) { return setting.id == c->control().id; });
+  if(control != end(d->controls)) {
+    d->imager_thread->push_job([=]{
+      try {
+        (*control)->set(setting);
+      } catch(const V4L2Exception &e) {
+        qWarning() << e.what();
+      }
+      emit changed((*control)->update());
+    });
   }
 }
 
@@ -320,6 +319,7 @@ QList< v4l2_frmsizeenum > V4L2Imager::Private::resolutions(const v4l2_format& fo
     frmsize.index = 0;
     while (device->xioctl(VIDIOC_ENUM_FRAMESIZES, &frmsize, "querying resolutions") >= 0) {
         values.push_back(frmsize);
+        qDebug() << "Found resolution: " << frmsize.discrete.width << "x" << frmsize.discrete.height;
         frmsize.index++;
     }
     return values;

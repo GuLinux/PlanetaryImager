@@ -73,8 +73,13 @@ V4L2Control::V4L2Control(uint32_t control_id, const V4L2Device::ptr& camera, con
     }
   for(auto fix: fixes)
     fix(d->control);
-    d->read();
+  d->read();
 }
+
+V4L2Control::~V4L2Control()
+{
+}
+
 
 Imager::Control V4L2Control::control() const
 {
@@ -90,8 +95,8 @@ void V4L2Control::set(const Imager::Control& control)
 void V4L2Control::Private::read()
 {
   v4l2_control control;
-  control.id = static_cast<uint32_t>(control.id);
-  camera->ioctl(VIDIOC_G_CTRL, &control, "getting control value");
+  control.id = static_cast<uint32_t>(this->control.id);
+  camera->ioctl(VIDIOC_G_CTRL, &control, "getting control value for control %1 (id=%2)"_q % this->control.name % control.id );
   this->control.value = static_cast<double>(control.value);
 }
 

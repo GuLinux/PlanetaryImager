@@ -10,7 +10,7 @@ add_subdirectory(drivers)
 add_subdirectory(image_handlers)
 add_subdirectory(widgets)
 add_subdirectory(commons)
-add_executable(planetary_imager ${PlanetaryImager_SRCS})
+add_executable(planetary_imager ${PlanetaryImager_SRCS} resources/resources.qrc)
 
 message("dependencies: ${planetary_imager_DEPS}")
   

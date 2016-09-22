@@ -25,11 +25,14 @@
 
 class V4L2Exception : public Imager::exception {
 public:
-  enum ErrorCode { v4l2_error = -1, control_disabled = 1, control_type_unknown = 2 };
-  V4L2Exception(ErrorCode code, const std::string &message, const std::string &where = {});
+  enum ErrorType { v4l2_error, control_disabled, control_type_unknown };
+  V4L2Exception(ErrorType type, const std::string &message, const std::string &where = {});
   V4L2Exception(int retcode, const std::string &where = {});
+  ErrorType type() const;
+private:
+  const ErrorType m_type;
 };
 
-#define V4L2_CHECK C_ERROR_CHECK(std::equal_to<int>, V4L2Exception, V4L2Exception::v4l2_error)
+#define V4L2_CHECK C_ERROR_CHECK(std::equal_to<int>, V4L2Exception, -1)
 
 #endif // ZWOEXCEPTION_H

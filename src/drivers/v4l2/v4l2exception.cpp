@@ -30,12 +30,18 @@ V4L2Exception::V4L2Exception(int retcode, const string &where)
       string{strerror(errno)}, 
     GuLinux::stringbuilder() << "V4L2 error (" << retcode << ") ",
     where
-  }
+  }, m_type{v4l2_error}
 {
 }
 
-V4L2Exception::V4L2Exception(ErrorCode code, const std::string& message, const std::string& where)
-  : Imager::exception{code, message, "V4L2 Error ", where}
+V4L2Exception::V4L2Exception(ErrorType type, const std::string& message, const std::string& where)
+  : Imager::exception{0, message, "V4L2 Error ", where}, m_type{type}
 {
+}
+
+
+V4L2Exception::ErrorType V4L2Exception::type() const
+{
+  return m_type;
 }
 

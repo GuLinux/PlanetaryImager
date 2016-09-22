@@ -58,21 +58,13 @@ DPTR_IMPL(V4L2Imager)
     v4l2_format query_format() const;
     QList<v4l2_frmsizeenum> resolutions(const v4l2_format &format) const;
     void adjust_framerate(const v4l2_format &format) const;
-    
-    struct V4lSetting {
-      Imager::Control setting;
-      int querycode;
-      int valuecode;
-      bool disabled;
-      bool unknown_type;
-      operator bool() const { return querycode != -1 && valuecode != -1 && !disabled && !unknown_type; }
-    };
-    V4lSetting setting(uint32_t id);
     void open_camera();
+    QList<V4L2Control::ptr> controls;
     QString driver, bus, cameraname;
     QString dev_name;
     QList<V4L2Control::Fix> control_fixes;
     void populate_control_fixes();
+    void find_controls();
 };
 
 class V4L2Imager::Private::Worker : public ImagerThread::Worker {

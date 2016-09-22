@@ -31,6 +31,7 @@ public:
   typedef std::function<void(Imager::Control &)> Fix;
   
   V4L2Control(uint32_t control_id, const V4L2Device::ptr &camera, const QList<Fix> &fixes);
+  ~V4L2Control();
   void set(const Imager::Control &control);
   Imager::Control control() const;
   Imager::Control update();
