@@ -42,7 +42,7 @@ QDebug operator<<(QDebug dbg, const Imager::Control& setting)
     {Imager::Control::Bool, "Bool"},
   };
   dbg.nospace() << "{ id:" << setting.id << ", name: " << setting.name << ", min: " << setting.min << ", max: " << setting.max << ", step: " << setting.step << ", value: " << setting.value 
-  << ", type: " << types_map[setting.type] << ", choices: " << setting.choices << ", default: " << setting.defaut_value << " }";
+  << ", type: " << types_map[setting.type] << ", choices: " << setting.choices << ", default: " << setting.default_value << " }";
   return dbg.space();
 }
 

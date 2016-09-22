@@ -16,20 +16,23 @@
  *
  */
 
-#ifndef V4L2_EXCEPTION_H
-#define V4L2_EXCEPTION_H
+#ifndef V4L2CONTROL_H
+#define V4L2CONTROL_H
 
-#include <stdexcept>
 #include "c++/dptr.h"
-#include "drivers/imagerexception.h"
+#include "drivers/imager.h"
+#include "v4ldevice.h"
 
-class V4L2Exception : public Imager::exception {
+class V4L2Control
+{
 public:
-  enum ErrorCode { v4l2_error = -1, control_disabled = 1, control_type_unknown = 2 };
-  V4L2Exception(ErrorCode code, const std::string &message, const std::string &where = {});
-  V4L2Exception(int retcode, const std::string &where = {});
+  typedef std::shared_ptr<V4L2Control> ptr;
+  V4L2Control(uint32_t control_id, const V4L2Device::ptr &camera);
+  void set(const Imager::Control &control);
+  Imager::Control control() const;
+  Imager::Control update();
+private:
+  DPTR
 };
 
-#define V4L2_CHECK C_ERROR_CHECK(std::equal_to<int>, V4L2Exception, V4L2Exception::v4l2_error)
-
-#endif // ZWOEXCEPTION_H
+#endif // V4L2CONTROL_H

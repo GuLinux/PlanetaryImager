@@ -56,7 +56,7 @@ signals:
 struct Imager::Control {
   int64_t id;
   QString name;
-  double min, max, step, value, defaut_value;
+  double min, max, step, value, default_value;
   enum Type { Number, Combo, Bool } type;
   struct Choice {
     QString label;

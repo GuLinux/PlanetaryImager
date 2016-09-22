@@ -34,3 +34,8 @@ V4L2Exception::V4L2Exception(int retcode, const string &where)
 {
 }
 
+V4L2Exception::V4L2Exception(ErrorCode code, const std::string& message, const std::string& where)
+  : Imager::exception{code, message, "V4L2 Error ", where}
+{
+}
+
