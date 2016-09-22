@@ -205,7 +205,7 @@ void QHYCCDImager::stopLive()
   d->imager_thread.reset();
 }
 
-bool QHYCCDImager::supportsROI()
+bool QHYCCDImager::supportsROI() const
 {
   return false; // TODO
 }

@@ -23,6 +23,7 @@
 
 #include "v4l2device.h"
 #include "v4l2exception.h"
+#include "v4l2imagingworker.h"
 
 using namespace std;
 using namespace GuLinux;
@@ -227,69 +228,9 @@ void V4L2Imager::setControl(const Control &setting)
   }
 }
 
-
-
-
-V4L2Imager::Private::Worker::Worker(V4L2Imager::Private* d) : d{d}
-{
-
-}
-
-Frame::ptr V4L2Imager::Private::Worker::shoot()
-{
-  Frame::ColorFormat color_format = Frame::RGB;
-  QBENCH(dequeue_buffer)->every(100)->ms();
-  auto buffer = buffers.dequeue(d->device);
-  BENCH_END(dequeue_buffer);
-  QBENCH(decode_image)->every(100)->ms();
-  cv::Mat image{static_cast<int>(format.fmt.pix.height), static_cast<int>(format.fmt.pix.width), CV_8UC3};
-  if(format.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG) {
-      color_format = Frame::BGR;
-      cv::InputArray inputArray{buffer->bytes(),  static_cast<int>(buffer->size())};
-      image = cv::imdecode(inputArray, -1);
-  } else if(format.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
-      cv::Mat source{static_cast<int>(format.fmt.pix.height), static_cast<int>(format.fmt.pix.width), CV_8UC2, buffer->bytes() };
-      cv::cvtColor(source, image, CV_YUV2RGB_YVYU);
-  } else {
-      qCritical() << "Unsupported image format: " << FOURCC2QS(format.fmt.pix.pixelformat);
-      return {}; // TODO: throw exception?
-  }
-  BENCH_END(decode_image);
-  buffer->queue(); // TODO: other types?
-  return make_shared<Frame>(color_format, image);
-}
-
-void V4L2Imager::Private::Worker::start()
-{
-  format = d->query_format();
-  qDebug() << "format: " << FOURCC2QS(format.fmt.pix.pixelformat) << ", " << format.fmt.pix.width << "x" << format.fmt.pix.height;
-  
-  v4l2_requestbuffers bufrequest;
-  bufrequest.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-  bufrequest.memory = V4L2_MEMORY_MMAP;
-  bufrequest.count = 4;
-  d->device->ioctl(VIDIOC_REQBUFS, &bufrequest, "requesting buffers");
-  
-  for(uint32_t i=0; i<bufrequest.count; i++) {
-    buffers.push_back( make_shared<V4LBuffer>(i, d->device));
-    buffers[i]->queue();
-  }
-                                  
-  bufferinfo_type = buffers[0]->type();
-  d->device->ioctl(VIDIOC_STREAMON, &bufferinfo_type, "starting streaming");
-}
-
-void V4L2Imager::Private::Worker::stop()
-{
-  buffers.clear();
-  d->device->ioctl(VIDIOC_STREAMOFF, &bufferinfo_type, "stopping live");
-  qDebug() << "live stopped";
-}
-
-
 void V4L2Imager::startLive()
 {
-  d->imager_thread = make_shared<ImagerThread>(make_shared<Private::Worker>(d.get()), this, d->handler);
+  d->imager_thread = make_shared<ImagerThread>(make_shared<V4L2ImagingWorker>(d->device, d->query_format()), this, d->handler);
   d->imager_thread->start();
 }
 

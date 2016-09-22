@@ -206,7 +206,7 @@ void ZWO_ASI_Imager::stopLive()
 }
 
 
-bool ZWO_ASI_Imager::supportsROI()
+bool ZWO_ASI_Imager::supportsROI() const
 {
     return true; // TODO: detection?
 }

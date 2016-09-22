@@ -36,6 +36,7 @@
 #include "drivers/imagerthread.h"
 #include "v4l2buffer.h"
 #include "v4l2control.h"
+#include "v4l2utils.h"
 
 #define PIXEL_FORMAT_CONTROL_ID -10
 #define RESOLUTIONS_CONTROL_ID -9
@@ -51,7 +52,7 @@ DPTR_IMPL(V4L2Imager)
     const QString device_path;
     V4L2Imager *q;
     
-    std::shared_ptr<V4L2Device> device;
+    V4L2Device::ptr device;
     ImagerThread::ptr imager_thread;
 
     QList<v4l2_fmtdesc> formats() const;
@@ -67,24 +68,7 @@ DPTR_IMPL(V4L2Imager)
     void find_controls();
 };
 
-class V4L2Imager::Private::Worker : public ImagerThread::Worker {
-public:
-  Worker(V4L2Imager::Private *d);
-  virtual Frame::ptr shoot();
-  virtual void start();
-  virtual void stop();
-  V4L2Imager::Private *d;
-  V4LBuffer::List buffers;
-  v4l2_format format;
-  int bufferinfo_type;
-};
 
-inline QString FOURCC2QS(int32_t _4cc)
-{
-    auto get_byte = [=](int b) { return static_cast<char>( _4cc >> b & 0xff ); };
-    char data[5] { get_byte(0), get_byte(8), get_byte(0x10), get_byte(0x18), '\0' };
-    return {data};
-}
 
 inline QDebug operator<<(QDebug dbg, v4l2_fract frac) {
     dbg.nospace() << frac.numerator << "/" << frac.denominator;

@@ -52,16 +52,16 @@ class SimulatorImager : public Imager {
 public:
     SimulatorImager(const ImageHandlerPtr &handler);
     virtual ~SimulatorImager();
-    virtual Properties chip() const;
-    virtual QString name() const;
-    virtual void setControl(const Control& setting);
-    virtual Controls controls() const;
-    virtual void startLive();
-    virtual void stopLive();
+    Properties chip() const override;
+    QString name() const override;
+    void setControl(const Control& setting) override;
+    Controls controls() const override;
+    void startLive() override;
+    void stopLive() override;
     static int rand(int a, int b);
     QMap<QString, Imager::Control> _settings;
     QMutex settingsMutex;
-    virtual bool supportsROI() { return true; }
+    bool supportsROI() const override { return true; }
     
     class Worker : public ImagerThread::Worker {
     public:

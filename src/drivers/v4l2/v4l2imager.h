@@ -27,18 +27,16 @@ class V4L2Imager : public Imager
 public:
     V4L2Imager(const QString &name, int index, const ImageHandlerPtr &handler);
     ~V4L2Imager();
-    virtual Imager::Properties chip() const;
-    virtual QString name() const;
-    virtual Imager::Controls controls() const;
-    virtual bool supportsROI() {
-        return false;
-    }
+    Imager::Properties chip() const override;
+    QString name() const override;
+    Imager::Controls controls() const override;
+    bool supportsROI() const override { return false; }
 public slots:
-    virtual void setControl(const Control &setting);
-    virtual void startLive();
-    virtual void stopLive();
-    virtual void setROI(const QRect &) {}
-    virtual void clearROI() {}
+    void setControl(const Control &setting) override;
+    void startLive() override;
+    void stopLive() override;
+    void setROI(const QRect &) override {}
+    void clearROI() override {}
 private:
     DPTR
 };

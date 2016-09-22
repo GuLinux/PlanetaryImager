@@ -16,37 +16,23 @@
  *
  */
 
-#ifndef QHYCCD_H
-#define QHYCCD_H
-#include "qhydriver.h"
-#include <drivers/imager.h>
-#include "dptr.h"
-#include <QObject>
-#include <QList>
+#ifndef V4L2IMAGINGWORKER_H
+#define V4L2IMAGINGWORKER_H
+#include "drivers/imagerthread.h"
+#include "c++/dptr.h"
+#include "v4l2device.h"
 
-class QHYCCDImager : public Imager
+struct v4l2_format;
+class V4L2ImagingWorker : public ImagerThread::Worker
 {
-  Q_OBJECT
 public:
-    QHYCCDImager(const QString &cameraName, const char *id, const ImageHandlerPtr &imageHandler);
-    ~QHYCCDImager();
-
-    QString name() const override;
-    Properties chip() const override;
-
-    Controls controls() const override;  
-    bool supportsROI() const override;
-public slots:
-  void setControl(const Control &setting) override;
-  void startLive() override;
-  void stopLive() override;
-  void setROI(const QRect &) override;
-  void clearROI() override;
+  V4L2ImagingWorker(const V4L2Device::ptr &device, const v4l2_format &format);
+  virtual ~V4L2ImagingWorker();
+  Frame::ptr shoot() override;
+  void start() override;
+  void stop() override;
 private:
   DPTR
 };
 
-
-
-
-#endif // QHYCCD_H
+#endif // V4L2IMAGINGWORKER_H

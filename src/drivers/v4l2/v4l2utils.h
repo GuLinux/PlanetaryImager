@@ -15,38 +15,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
+#ifndef PLANETARYIMAGER_V4L2_UTILS_H
+#define PLANETARYIMAGER_V4L2_UTILS_H
 
-#ifndef QHYCCD_H
-#define QHYCCD_H
-#include "qhydriver.h"
-#include <drivers/imager.h>
-#include "dptr.h"
-#include <QObject>
-#include <QList>
-
-class QHYCCDImager : public Imager
+inline QString FOURCC2QS(int32_t _4cc)
 {
-  Q_OBJECT
-public:
-    QHYCCDImager(const QString &cameraName, const char *id, const ImageHandlerPtr &imageHandler);
-    ~QHYCCDImager();
+    auto get_byte = [=](int b) { return static_cast<char>( _4cc >> b & 0xff ); };
+    char data[5] { get_byte(0), get_byte(8), get_byte(0x10), get_byte(0x18), '\0' };
+    return {data};
+}
 
-    QString name() const override;
-    Properties chip() const override;
-
-    Controls controls() const override;  
-    bool supportsROI() const override;
-public slots:
-  void setControl(const Control &setting) override;
-  void startLive() override;
-  void stopLive() override;
-  void setROI(const QRect &) override;
-  void clearROI() override;
-private:
-  DPTR
-};
-
-
-
-
-#endif // QHYCCD_H
+#endif

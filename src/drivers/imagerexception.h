@@ -27,8 +27,8 @@
 class Imager::exception : public std::exception {
 public:
     int code() const;
-    virtual const char* what() const noexcept;
-    virtual ~exception();
+    const char* what() const noexcept override;
+    ~exception() override;
     exception(const exception &other);
     template<typename A, typename B> class check;
 protected:
