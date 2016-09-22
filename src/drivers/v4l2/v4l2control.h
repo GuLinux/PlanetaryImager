@@ -22,12 +22,15 @@
 #include "c++/dptr.h"
 #include "drivers/imager.h"
 #include "v4l2device.h"
-
+#include <functional>
+#include <QList>
 class V4L2Control
 {
 public:
   typedef std::shared_ptr<V4L2Control> ptr;
-  V4L2Control(uint32_t control_id, const V4L2Device::ptr &camera);
+  typedef std::function<void(Imager::Control &)> Fix;
+  
+  V4L2Control(uint32_t control_id, const V4L2Device::ptr &camera, const QList<Fix> &fixes);
   void set(const Imager::Control &control);
   Imager::Control control() const;
   Imager::Control update();

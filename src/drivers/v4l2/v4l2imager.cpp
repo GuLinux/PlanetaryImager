@@ -30,7 +30,7 @@ using namespace GuLinux;
 V4L2Imager::V4L2Imager(const QString &name, int index, const ImageHandlerPtr &handler)
     : dptr(handler, "/dev/video%1"_q % index, this)
 {
-  d->populate_rules();
+  d->populate_control_fixes();
   d->open_camera();
   auto settings = this->controls();
   auto formats = find_if(begin(settings), end(settings), [](const Control &s) { return s.id == PIXEL_FORMAT_CONTROL_ID; });
@@ -179,7 +179,7 @@ V4L2Imager::Private::V4lSetting V4L2Imager::Private::setting(uint32_t id)
         }
     }
     qDebug() << "setting: " << setting.setting << "(exposure: " << V4L2_CID_EXPOSURE_ABSOLUTE << ")";
-    for(auto rule: setting_rules)
+    for(auto rule: control_fixes)
         rule(setting.setting);
     return setting;
 }

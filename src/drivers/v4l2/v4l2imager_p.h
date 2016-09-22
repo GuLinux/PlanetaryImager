@@ -35,6 +35,7 @@
 #include <sys/mman.h>
 #include "drivers/imagerthread.h"
 #include "v4l2buffer.h"
+#include "v4l2control.h"
 
 #define PIXEL_FORMAT_CONTROL_ID -10
 #define RESOLUTIONS_CONTROL_ID -9
@@ -70,9 +71,8 @@ DPTR_IMPL(V4L2Imager)
     void open_camera();
     QString driver, bus, cameraname;
     QString dev_name;
-    typedef std::function<void(Control &)> SettingRule;
-    QList<SettingRule> setting_rules;
-    void populate_rules();
+    QList<V4L2Control::Fix> control_fixes;
+    void populate_control_fixes();
 };
 
 class V4L2Imager::Private::Worker : public ImagerThread::Worker {

@@ -32,7 +32,7 @@ DPTR_IMPL(V4L2Control) {
   void read();
 };
 
-V4L2Control::V4L2Control(uint32_t control_id, const V4L2Device::ptr& camera) : dptr(camera)
+V4L2Control::V4L2Control(uint32_t control_id, const V4L2Device::ptr& camera, const QList<Fix> &fixes) : dptr(camera)
 { 
   v4l2_queryctrl v4l2control{control_id};
   camera->ioctl(VIDIOC_QUERYCTRL, &v4l2control);
@@ -71,11 +71,9 @@ V4L2Control::V4L2Control(uint32_t control_id, const V4L2Device::ptr& camera) : d
             d->control.choices.push_back({value, static_cast<double>(menu.index)});
         }
     }
-    
+  for(auto fix: fixes)
+    fix(d->control);
     d->read();
-    // TODO: rules
-  //     for(auto rule: setting_rules)
-   //     rule(setting.setting);
 }
 
 Imager::Control V4L2Control::control() const
