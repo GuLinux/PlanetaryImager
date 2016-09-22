@@ -229,50 +229,6 @@ void V4L2Imager::setControl(const Control &setting)
 }
 
 
-V4LBuffer::V4LBuffer(int index, const shared_ptr<V4L2Device> &v4ldevice) : v4ldevice {v4ldevice}
-{
-  memset(&bufferinfo, 0, sizeof(v4l2_buffer));
-  bufferinfo.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-  bufferinfo.memory = V4L2_MEMORY_MMAP;
-  bufferinfo.index = index;
-  
-  v4ldevice->ioctl(VIDIOC_QUERYBUF, &bufferinfo, "allocating buffers");
-
-  memory = (char*) mmap(NULL, bufferinfo.length, PROT_READ | PROT_WRITE, MAP_SHARED, v4ldevice->descriptor(), bufferinfo.m.offset);
-  V4L2_CHECK << ( memory==MAP_FAILED ? -1 : 0 )<< "mapping memory";
-  memset(memory, 0, bufferinfo.length);
-}
-
-void V4LBuffer::queue()
-{
-  v4ldevice->ioctl(VIDIOC_QBUF, &bufferinfo, "queuing buffer");
-}
-
-std::shared_ptr< V4LBuffer > V4LBuffer::List::dequeue(const shared_ptr<V4L2Device> &device) const
-{
-    v4l2_buffer bufferinfo;
-    memset(&bufferinfo, 0, sizeof(bufferinfo));
-    bufferinfo.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    bufferinfo.memory = V4L2_MEMORY_MMAP;
-    device->ioctl(VIDIOC_DQBUF, &bufferinfo, "dequeuing buffer");
-    auto buffer = this->at(bufferinfo.index);
-    buffer->bufferinfo = bufferinfo;
-    return buffer;
-}
-
-
-V4LBuffer::~V4LBuffer()
-{
-  try {
-  V4L2_CHECK << munmap(memory, bufferinfo.length) << "unmapping memory";
-  }
-  catch(const V4L2Exception &e) {
-    qWarning() << "error unmapping memory: " << strerror(errno);
-    return;
-  }
-  qDebug() << "memory map deleted";
-}
-
 
 
 V4L2Imager::Private::Worker::Worker(V4L2Imager::Private* d) : d{d}
@@ -290,10 +246,10 @@ Frame::ptr V4L2Imager::Private::Worker::shoot()
   cv::Mat image{static_cast<int>(format.fmt.pix.height), static_cast<int>(format.fmt.pix.width), CV_8UC3};
   if(format.fmt.pix.pixelformat == V4L2_PIX_FMT_MJPEG) {
       color_format = Frame::BGR;
-      cv::InputArray inputArray{buffer->memory,  buffer->bufferinfo.bytesused};
+      cv::InputArray inputArray{buffer->bytes(),  static_cast<int>(buffer->size())};
       image = cv::imdecode(inputArray, -1);
   } else if(format.fmt.pix.pixelformat == V4L2_PIX_FMT_YUYV) {
-      cv::Mat source{static_cast<int>(format.fmt.pix.height), static_cast<int>(format.fmt.pix.width), CV_8UC2, buffer->memory };
+      cv::Mat source{static_cast<int>(format.fmt.pix.height), static_cast<int>(format.fmt.pix.width), CV_8UC2, buffer->bytes() };
       cv::cvtColor(source, image, CV_YUV2RGB_YVYU);
   } else {
       qCritical() << "Unsupported image format: " << FOURCC2QS(format.fmt.pix.pixelformat);
@@ -315,12 +271,12 @@ void V4L2Imager::Private::Worker::start()
   bufrequest.count = 4;
   d->device->ioctl(VIDIOC_REQBUFS, &bufrequest, "requesting buffers");
   
-  for(int i=0; i<bufrequest.count; i++) {
+  for(uint32_t i=0; i<bufrequest.count; i++) {
     buffers.push_back( make_shared<V4LBuffer>(i, d->device));
     buffers[i]->queue();
   }
                                   
-  bufferinfo_type = buffers[0]->bufferinfo.type;
+  bufferinfo_type = buffers[0]->type();
   d->device->ioctl(VIDIOC_STREAMON, &bufferinfo_type, "starting streaming");
 }
 

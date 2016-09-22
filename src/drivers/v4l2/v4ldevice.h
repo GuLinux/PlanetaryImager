@@ -19,21 +19,24 @@
 #ifndef V4LDEVICE_H
 #define V4LDEVICE_H
 #include <QString>
+#include "c++/dptr.h"
 
 class V4L2Device {
 public:
+  typedef std::shared_ptr<V4L2Device> ptr;
   V4L2Device(const QString &path);
   ~V4L2Device();
-  inline QString path() const { return _path; }
-  inline operator bool() const { return fd != -1; }
-  int descriptor() const { return fd; }
+  
+  inline QString path() const;
+  inline operator bool() const;
+  int descriptor() const;
+  
   template<typename T> void ioctl(uint64_t ctl, T *data, const QString &errorLabel = {}) const { return __ioctl(ctl, reinterpret_cast<void*>(data), errorLabel); }
   template<typename T> int xioctl(uint64_t ctl, T *data, const QString &errorLabel = {}) const { return __xioctl(ctl, reinterpret_cast<void*>(data), errorLabel); }
 private:
-  int fd = -1;
-  const QString _path;
   void __ioctl(uint64_t ctl, void *data, const QString &errorLabel) const;
   int __xioctl(uint64_t ctl, void *data, const QString &errorLabel) const;
+  DPTR
 };
 
 

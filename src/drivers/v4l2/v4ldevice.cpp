@@ -18,11 +18,6 @@
 
 #include "v4ldevice.h"
 
-#include <linux/videodev2.h>
-#include <cstdio>
-#include <cstdlib>
-#include <sys/types.h>
-#include <sys/stat.h>
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <unistd.h>
@@ -33,23 +28,44 @@
 
 using namespace std;
 
-V4L2Device::V4L2Device(const QString& path) : _path{path}
+DPTR_IMPL(V4L2Device) {
+  const QString path;
+  int fd;
+};
+
+V4L2Device::V4L2Device(const QString& path) : dptr(path)
 {
-    fd = ::open(path.toLatin1(), O_RDWR, O_NONBLOCK, 0);
-    V4L2_CHECK << fd << "opening device '%1'"_q % path;
+    d->fd = ::open(path.toLatin1(), O_RDWR, O_NONBLOCK, 0);
+    V4L2_CHECK << d->fd << "opening device '%1'"_q % d->path;
 }
 
 V4L2Device::~V4L2Device()
 {
-  if(-1 != fd)
-    ::close(fd);
+  if(-1 != d->fd)
+    ::close(d->fd);
 }
+
+int V4L2Device::descriptor() const
+{
+  return d->fd;
+}
+
+V4L2Device::operator bool() const
+{
+   return d->fd != -1;
+}
+
+QString V4L2Device::path() const
+{
+  return d->path;
+}
+
 
 void V4L2Device::__ioctl(uint64_t ctl, void* data, const QString& errorLabel) const
 {
     int r;
     do {
-        r = ::ioctl(fd, ctl, data);
+        r = ::ioctl(d->fd, ctl, data);
     } while (-1 == r && EINTR == errno);
     V4L2_CHECK << r << (errorLabel.isEmpty() ? "ioctl %1"_q % ctl : errorLabel);
 }
