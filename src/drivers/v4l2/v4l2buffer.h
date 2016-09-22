@@ -20,7 +20,7 @@
 #define V4LBUFFER_H
 #include "c++/dptr.h"
 #include <linux/videodev2.h>
-#include "v4ldevice.h"
+#include "v4l2device.h"
 #include <QList>
 
 class V4LBuffer

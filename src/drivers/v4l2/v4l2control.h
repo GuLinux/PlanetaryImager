@@ -21,7 +21,7 @@
 
 #include "c++/dptr.h"
 #include "drivers/imager.h"
-#include "v4ldevice.h"
+#include "v4l2device.h"
 
 class V4L2Control
 {

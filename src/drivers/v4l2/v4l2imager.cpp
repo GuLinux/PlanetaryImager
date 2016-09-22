@@ -21,7 +21,7 @@
 #include "Qt/benchmark.h"
 #include "commons/utils.h"
 
-#include "v4ldevice.h"
+#include "v4l2device.h"
 #include "v4l2exception.h"
 
 using namespace std;

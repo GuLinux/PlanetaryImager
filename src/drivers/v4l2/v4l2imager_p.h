@@ -34,7 +34,7 @@
 #include "Qt/functional.h"
 #include <sys/mman.h>
 #include "drivers/imagerthread.h"
-#include "v4lbuffer.h"
+#include "v4l2buffer.h"
 
 #define PIXEL_FORMAT_CONTROL_ID -10
 #define RESOLUTIONS_CONTROL_ID -9

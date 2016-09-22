@@ -16,7 +16,7 @@
  *
  */
 
-#include "v4lbuffer.h"
+#include "v4l2buffer.h"
 #include "v4l2exception.h"
 #include <sys/mman.h>
 

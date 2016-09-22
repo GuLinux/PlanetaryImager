@@ -16,7 +16,7 @@
  *
  */
 
-#include "v4ldevice.h"
+#include "v4l2device.h"
 
 #include <sys/ioctl.h>
 #include <fcntl.h>
