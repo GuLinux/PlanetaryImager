@@ -66,9 +66,9 @@ void V4L2Imager::Private::open_camera() {
   if(-1 == device->xioctl(VIDIOC_QUERYCAP, &cap, "query cam capabilities")) {
       return;
   }
-  driver = {(char*) cap.driver};
-  bus = {(char*) cap.bus_info};
-  cameraname = {(char*) cap.card};
+  driver = QString::fromLocal8Bit(reinterpret_cast<char*>(cap.driver));
+  bus = QString::fromLocal8Bit(reinterpret_cast<char*>(cap.bus_info));
+  cameraname = QString::fromLocal8Bit(reinterpret_cast<char*>(cap.card));
 }
 
 V4L2Imager::~V4L2Imager()
