@@ -20,6 +20,7 @@
 #include "ui_histogramwidget.h"
 #include "commons/configuration.h"
 #include "Qt/functional.h"
+#include <opencv2/opencv.hpp>
 
 using namespace std;
 using namespace std::placeholders;
@@ -29,14 +30,11 @@ DPTR_IMPL(HistogramWidget) {
   Configuration &configuration;
   HistogramWidget *q;
   std::unique_ptr<Ui::HistogramWidget> ui;
-  QCPBars *histogram_plot;
-  void got_histogram(const vector< double >& histogram);
+  void got_histogram(const QImage& histogram);
   void toggle_histogram(bool enabled);
 };
 HistogramWidget::~HistogramWidget()
 {
-  d->ui->histogram_plot->clearItems();
-  d->ui->histogram_plot->clearGraphs();
 }
 
 HistogramWidget::HistogramWidget(const Histogram::ptr &histogram, Configuration &configuration, QWidget* parent) : dptr(histogram, configuration, this)
@@ -51,8 +49,6 @@ HistogramWidget::HistogramWidget(const Histogram::ptr &histogram, Configuration 
       d->configuration.set_histogram_bins(value);
     };
     update_bins();
-    d->histogram_plot = new QCPBars(d->ui->histogram_plot->xAxis, d->ui->histogram_plot->yAxis);
-    d->ui->histogram_plot->addPlottable(d->histogram_plot);
     connect(d->ui->histogram_bins, F_PTR(QSpinBox, valueChanged, int), update_bins);
     connect(d->histogram.get(), &Histogram::histogram, this, bind(&Private::got_histogram, d.get(), _1), Qt::QueuedConnection);
     connect(d->ui->enable_histogram, &QCheckBox::toggled, this, bind(&Private::toggle_histogram, d.get(), _1));
@@ -66,24 +62,14 @@ void HistogramWidget::Private::toggle_histogram(bool enabled)
   ui->histogram_plot->setEnabled(enabled);
   histogram->setEnabled(enabled);
   if(!enabled) {
-    histogram_plot->clearData();
-    ui->histogram_plot->replot();
+    ui->histogram_plot->clear();
   }
   configuration.set_histogram_enabled(enabled);
 }
 
 
-void HistogramWidget::Private::got_histogram(const vector<double>& histogram)
+void HistogramWidget::Private::got_histogram(const QImage& histogram)
 {
-//   ui->histogram_plot->graph(0)->clearData();
-  QVector<double> x(histogram.size());
-  QVector<double> y(histogram.size());
-  std::iota(x.begin(), x.end(), 0);
-
-  copy(histogram.begin(), histogram.end(), y.begin());
-  histogram_plot->clearData();
-  histogram_plot->setData(x, y);
-  histogram_plot->rescaleAxes();
-  ui->histogram_plot->replot();
+  ui->histogram_plot->setPixmap(QPixmap::fromImage(histogram));
 } 
 

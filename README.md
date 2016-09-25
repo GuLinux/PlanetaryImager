@@ -21,7 +21,6 @@ Requirements
  * A recent boost library version (tested with 1.55 and above).
  * c++14 compliant compiler (tested with gcc >= 5)
  * OpenCV
- * QCustomPlot (libqcustomplot-dev)
  * boost (libboost-all-dev)
  * fxload (to load firmware on QHY cameras)
 
