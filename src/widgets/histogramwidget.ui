@@ -111,25 +111,23 @@
     </widget>
    </item>
    <item row="1" column="0" colspan="2">
-    <widget class="QCustomPlot" name="histogram_plot" native="true">
+    <widget class="QLabel" name="histogram_plot">
      <property name="sizePolicy">
-      <sizepolicy hsizetype="Preferred" vsizetype="Preferred">
+      <sizepolicy hsizetype="Preferred" vsizetype="MinimumExpanding">
        <horstretch>0</horstretch>
-       <verstretch>1</verstretch>
+       <verstretch>0</verstretch>
       </sizepolicy>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+     <property name="scaledContents">
+      <bool>true</bool>
      </property>
     </widget>
    </item>
   </layout>
  </widget>
- <customwidgets>
-  <customwidget>
-   <class>QCustomPlot</class>
-   <extends>QWidget</extends>
-   <header location="global">qcustomplot.h</header>
-   <container>1</container>
-  </customwidget>
- </customwidgets>
  <resources/>
  <connections/>
 </ui>

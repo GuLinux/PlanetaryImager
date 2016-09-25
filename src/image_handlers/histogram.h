@@ -37,7 +37,7 @@ public:
 public slots:
   void read_settings();
 signals:
-  void histogram(const std::vector<double> &);
+  void histogram(const QImage &);
 private:
   DPTR
 };

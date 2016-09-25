@@ -26,7 +26,7 @@
 #include "c++/stringbuilder.h"
 
 #include <opencv2/opencv.hpp>
-
+#include <QImage>
 using namespace std;
 
 DPTR_IMPL(Histogram) {
@@ -75,10 +75,25 @@ void Histogram::handle(const Frame::ptr &frame)
   const float *ranges[]{range};
   
   cv::calcHist(&source, nimages, channels, cv::Mat{}, hist, dims, bins, ranges);
-  vector<double> hist_data;
-  normalize(hist, hist, 0, hist.rows, cv::NORM_MINMAX, -1, cv::Mat() );
-  copy(hist.begin<double>(), hist.end<double>(), back_inserter(hist_data));
-  emit histogram(hist_data);
+  
+  int hist_w = 512; int hist_h = 400;
+  int bin_w = cvRound( (double) hist_w/d->bins_size );
+  
+  cv::Mat histImage( hist_h, hist_w, CV_8UC3, cv::Scalar( 0,0,0) );
+  
+  normalize(hist, hist, 0, histImage.rows, cv::NORM_MINMAX, -1, cv::Mat() );
+  /// Draw for each channel
+  for(int i = 1; i <= d->bins_size; i++)
+  cv::line( histImage, cv::Point(bin_w*(i), 0), cv::Point(bin_w*(i), hist_h), cv::Scalar(50, 50, 50), 1, CV_AA);
+  for( int i = 1; i < d->bins_size; i++ )
+  {
+    cv::line( histImage, cv::Point( bin_w*(i-1), hist_h - cvRound(hist.at<float>(i-1)) ) ,
+              cv::Point( bin_w*(i), hist_h - cvRound(hist.at<float>(i)) ),
+          cv::Scalar( 255, 255, 255), 1, 8, 0  );
+  }
+  QImage hist_qimage(histImage.data, hist_w, hist_h, static_cast<int>(histImage.step), QImage::Format_RGB888);
+  
+  emit histogram(hist_qimage.rgbSwapped());
 }
 
 void Histogram::setEnabled(bool enabled)
