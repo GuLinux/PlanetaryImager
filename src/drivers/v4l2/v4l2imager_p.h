@@ -58,7 +58,6 @@ DPTR_IMPL(V4L2Imager)
     QList<v4l2_fmtdesc> formats() const;
     v4l2_format query_format() const;
     QList<v4l2_frmsizeenum> resolutions(const v4l2_format &format) const;
-    void adjust_framerate(const v4l2_format &format) const;
     void open_camera();
     QList<V4L2Control::ptr> controls;
     QString driver, bus, cameraname;
@@ -69,26 +68,5 @@ DPTR_IMPL(V4L2Imager)
 };
 
 
-
-inline QDebug operator<<(QDebug dbg, v4l2_fract frac) {
-    dbg.nospace() << frac.numerator << "/" << frac.denominator;
-    return dbg.space();
-};
-
-
-inline QDebug operator<<(QDebug dbg, const v4l2_frmivalenum &fps_s) {
-    dbg.nospace() << "v4l2_frmivalenum{ index=" << fps_s.index << ", " << fps_s.width << "x" << fps_s.height << ", 4cc=" << FOURCC2QS(fps_s.pixel_format);
-    if(fps_s.type == V4L2_FRMIVAL_TYPE_DISCRETE) {
-        dbg << "discrete: " << fps_s.discrete;
-    }
-    if(fps_s.type == V4L2_FRMIVAL_TYPE_STEPWISE) {
-        dbg << "stepwise: min=" << fps_s.stepwise.min << ", max=" << fps_s.stepwise.max << ", step=" << fps_s.stepwise.step;
-    }
-    if(fps_s.type == V4L2_FRMIVAL_TYPE_CONTINUOUS) {
-        dbg << "continuous" << fps_s.stepwise.min << ", max=" << fps_s.stepwise.max << ", step=" << fps_s.stepwise.step;
-    }
-    dbg << " }";
-    return dbg.space();
-}
 
 #endif

@@ -53,7 +53,6 @@ V4L2Imager::V4L2Imager(const QString &name, int index, const ImageHandler::ptr &
     setControl(*resolutions);
   }
   
-  d->adjust_framerate(d->query_format());
 }
 
 
@@ -166,7 +165,6 @@ void V4L2Imager::setControl(const Control &setting)
     d->device.reset();
     d->open_camera();
     on_restart();
-    d->adjust_framerate(d->query_format());
     if(live_was_started)
       startLive();
   };
@@ -283,35 +281,6 @@ QList< v4l2_fmtdesc > V4L2Imager::Private::formats() const
         formats.index++;
     }
     return formats_list;
-}
-
-void V4L2Imager::Private::adjust_framerate(const v4l2_format& format) const
-{
-    v4l2_frmivalenum fps_s;
-    QList<v4l2_frmivalenum> rates;
-    fps_s.index = 0;
-    fps_s.width = format.fmt.pix.width;
-    fps_s.height = format.fmt.pix.height;
-    fps_s.pixel_format = format.fmt.pix.pixelformat;
-    qDebug() << "scanning for fps with pixel format " << FOURCC2QS(fps_s.pixel_format);
-    while (device->xioctl(VIDIOC_ENUM_FRAMEINTERVALS, &fps_s) >= 0) {
-        qDebug() << "found fps: " << fps_s;
-	rates.push_back(fps_s);
-        fps_s.index++;
-    }
-    auto ratio = [=](const v4l2_frmivalenum &a) { return static_cast<double>(a.discrete.numerator)/static_cast<double>(a.discrete.denominator); };
-    sort(begin(rates), end(rates), [&](const v4l2_frmivalenum &a, const v4l2_frmivalenum &b){ return ratio(a) < ratio(b);} );
-    v4l2_streamparm streamparam;
-    streamparam.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-    if(0 != device->xioctl(VIDIOC_G_PARM, &streamparam, "getting stream parameters")) {
-      return;
-    }
-    qDebug() << "current frame rate: " << streamparam.parm.capture.timeperframe;
-    streamparam.parm.capture.timeperframe = rates[0].discrete;
-    if(0 != device->xioctl(VIDIOC_S_PARM, &streamparam, "setting stream parameters")) {
-      return;
-    }
-    qDebug() << "current frame rate: " << streamparam.parm.capture.timeperframe;
 }
 
 

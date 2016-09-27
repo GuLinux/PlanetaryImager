@@ -21,6 +21,7 @@
 #include "Qt/benchmark.h"
 #include "v4l2buffer.h"
 #include "v4l2utils.h"
+#include <QDebug>
 
 using namespace std;
 
@@ -31,15 +32,47 @@ DPTR_IMPL(V4L2ImagingWorker) {
   v4l2_format format;
   V4LBuffer::List buffers;
   uint32_t bufferinfo_type;
+  void adjust_framerate();
 };
 
 V4L2ImagingWorker::V4L2ImagingWorker(const V4L2Device::ptr& device, const v4l2_format& format) : dptr(device, format)
 {
+  d->adjust_framerate();
 }
 
 V4L2ImagingWorker::~V4L2ImagingWorker()
 {
 }
+
+void V4L2ImagingWorker::Private::adjust_framerate()
+{
+    v4l2_frmivalenum fps_s;
+    QList<v4l2_frmivalenum> rates;
+    fps_s.index = 0;
+    fps_s.width = format.fmt.pix.width;
+    fps_s.height = format.fmt.pix.height;
+    fps_s.pixel_format = format.fmt.pix.pixelformat;
+    qDebug() << "scanning for fps with pixel format " << FOURCC2QS(fps_s.pixel_format);
+    while (device->xioctl(VIDIOC_ENUM_FRAMEINTERVALS, &fps_s) >= 0) {
+        qDebug() << "found fps: " << fps_s;
+	rates.push_back(fps_s);
+        fps_s.index++;
+    }
+    auto ratio = [=](const v4l2_frmivalenum &a) { return static_cast<double>(a.discrete.numerator)/static_cast<double>(a.discrete.denominator); };
+    sort(begin(rates), end(rates), [&](const v4l2_frmivalenum &a, const v4l2_frmivalenum &b){ return ratio(a) < ratio(b);} );
+    v4l2_streamparm streamparam;
+    streamparam.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    if(0 != device->xioctl(VIDIOC_G_PARM, &streamparam, "getting stream parameters")) {
+      return;
+    }
+    qDebug() << "current frame rate: " << streamparam.parm.capture.timeperframe;
+    streamparam.parm.capture.timeperframe = rates[0].discrete;
+    if(0 != device->xioctl(VIDIOC_S_PARM, &streamparam, "setting stream parameters")) {
+      return;
+    }
+    qDebug() << "current frame rate: " << streamparam.parm.capture.timeperframe;
+}
+
 
 
 void V4L2ImagingWorker::start()
