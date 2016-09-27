@@ -162,7 +162,6 @@ void V4L2Imager::setControl(const Control &setting)
   auto restart_camera = [=](function<void()> on_restart) {
     bool live_was_started = d->imager_thread.operator bool();
     stopLive();
-    d->device.reset();
     d->open_camera();
     on_restart();
     if(live_was_started)
@@ -242,7 +241,7 @@ void V4L2Imager::stopLive()
 }
 
 
-
+// TODO: move formats and resolutions in a separate class
 v4l2_format V4L2Imager::Private::query_format() const
 {
     v4l2_format format;

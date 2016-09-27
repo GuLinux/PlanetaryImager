@@ -45,7 +45,7 @@ public:
   
   void aboutToQuit();
 protected:
-  void restart(const ImagerThread::Worker::factory &worker);
+  void restart(const ImagerThread::Worker::factory &worker, std::function<void()> run_while_stopped = {});
   void push_job_on_thread(const ImagerThread::Job &job);
 private:
   DPTR
