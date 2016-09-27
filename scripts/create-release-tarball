@@ -1,6 +1,17 @@
 #!/bin/bash
 version="$1"
 outdir="${2:-$PWD}"
+
+cleanup_unused_files() {
+    rm -rf .git
+    find src/drivers/qhy/QHYCCD_Linux/ -name "*.bin" -or -name "*.dylib" -or -name "*osx*" -or -name "sample" -or -name "doc"| while read f; do 
+      rm -vrf "$f"
+    done
+    find src/drivers/zwo_asi/ -name "doc" -or -name "armv5" -or -name "armv8" -or -name "mac" -or -name "demo"| while read f; do
+      rm -vrf "$f"
+    done
+}
+
 if [[ -z "$version" ]] || ! [[ -d "$outdir" ]]; then
 	echo "Usage: $0 version [output-directory]" >&2
 	exit 1
@@ -13,7 +24,8 @@ git clone "https://github.com/GuLinux/PlanetaryImager.git" PlanetaryImager-$vers
 cd PlanetaryImager-$version
 git checkout v$version
 git submodule init && git submodule update --recursive
-rm -rf .git 
+
+cleanup_unused_files
 cd ..
 tar cf "$outdir/PlanetaryImager-$version.tar" PlanetaryImager-$version
 bzip2 -9 "$outdir/PlanetaryImager-$version.tar"
