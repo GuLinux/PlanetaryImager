@@ -1,6 +1,11 @@
 #!/bin/bash
 version="$1"
 outdir="${2:-$PWD}"
+if [[ -z "$version" ]] || ! [[ -d "$outdir" ]]; then
+	echo "Usage: $0 version [output-directory]" >&2
+	exit 1
+fi
+outdir="$( readlink -f "$outdir")"
 tmpdir="/tmp/planetary-imager-release-creator-$RANDOM"
 mkdir -p "$tmpdir"
 cd "$tmpdir"
@@ -10,7 +15,8 @@ git checkout v$version
 git submodule init && git submodule update --recursive
 rm -rf .git 
 cd ..
-tar czf "$outdir/PlanetaryImager-$version.tar.gz" PlanetaryImager-$version
+tar cf "$outdir/PlanetaryImager-$version.tar" PlanetaryImager-$version
+bzip2 -9 "$outdir/PlanetaryImager-$version.tar"
 cd $outdir
 rm -rf "$tmpdir"
 
