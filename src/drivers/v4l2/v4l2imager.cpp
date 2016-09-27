@@ -28,7 +28,7 @@
 using namespace std;
 using namespace GuLinux;
 
-V4L2Imager::V4L2Imager(const QString &name, int index, const ImageHandlerPtr &handler)
+V4L2Imager::V4L2Imager(const QString &name, int index, const ImageHandler::ptr &handler)
     : dptr(handler, "/dev/video%1"_q % index, this)
 {
   d->populate_control_fixes();

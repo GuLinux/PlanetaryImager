@@ -33,12 +33,11 @@ using namespace GuLinux;
 typedef QMap<QString, Imager::Control> SimulatorSettings;
 class SimulatorImagerWorker;
 DPTR_IMPL(SimulatorImager) {
-  ImageHandlerPtr imageHandler;
   SimulatorSettings settings;
-  ImagerThread::ptr imager_thread;
   shared_ptr<SimulatorImagerWorker> worker;
   QTimer refresh_temperature;
   QMutex settingsMutex;
+  LOG_C_SCOPE(SimulatorImager);
 };
 
 class SimulatorImagerWorker : public ImagerThread::Worker {
@@ -55,9 +54,10 @@ private:
   QMutex &settingsMutex;
   QHash<int, cv::Mat> images;
   QRect roi;
+  LOG_C_SCOPE(SimulatorImagerWorker);
 };
 
-SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : dptr(handler)
+SimulatorImager::SimulatorImager(const ImageHandler::ptr& handler) : Imager(handler), dptr()
 {
   d->settings = {
     {"exposure",    {1, "exposure", 0.1, 1000, 0.1, 19.5}},
@@ -73,9 +73,7 @@ SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : dptr(handler)
   d->settings["seeing"].supports_auto = true;
   
   connect(&d->refresh_temperature, &QTimer::timeout, this, [this]{
-    if(!d->imager_thread)
-      return; // TODO: ugly fix
-    d->imager_thread->push_job([&]{
+   push_job_on_thread([&]{
       double celsius = SimulatorImager::rand(200, 500) / 10.;
       emit temperature(celsius);
     });
@@ -242,12 +240,9 @@ void SimulatorImagerWorker::setROI(const QRect& roi)
 
 void SimulatorImager::startLive()
 {
-  d->worker = make_shared<SimulatorImagerWorker>(d->settings, d->settingsMutex);
-  d->imager_thread = make_shared<ImagerThread>(d->worker, this, d->imageHandler);
-  d->imager_thread->start();
+  restart([&] { return d->worker = make_shared<SimulatorImagerWorker>(d->settings, d->settingsMutex); });
 }
 
 void SimulatorImager::stopLive()
 {
-  d->imager_thread.reset();
 }

@@ -41,7 +41,7 @@ DPTR_IMPL(QHYDriver) {
 class QHYCamera : public Driver::Camera {
 public:
   QHYCamera(int index) : index{index} {}
-  virtual Imager *imager(const ImageHandlerPtr& imageHandler) const { return new QHYCCDImager(name(), id, imageHandler); }
+  virtual Imager *imager(const ImageHandler::ptr& imageHandler) const { return new QHYCCDImager(name(), id, imageHandler); }
   virtual QString name() const {   return QString(id).remove(QRegularExpression{"-[\\da-f]+$"}); }
   char id[255];
   int index;

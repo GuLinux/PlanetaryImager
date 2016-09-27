@@ -32,7 +32,7 @@ namespace {
   public:
     typedef shared_ptr<ZWO_ASI_Camera> ptr;
     ZWO_ASI_Camera(const ASI_CAMERA_INFO &info) : info{info} {}
-    virtual Imager * imager(const ImageHandlerPtr& imageHandler) const;
+    virtual Imager * imager(const ImageHandler::ptr& imageHandler) const;
     virtual QString name() const { return {info.Name};}
   private:
     const ASI_CAMERA_INFO info;
@@ -42,7 +42,7 @@ namespace {
 
 
 
-Imager * ZWO_ASI_Camera::imager(const ImageHandlerPtr& imageHandler) const
+Imager * ZWO_ASI_Camera::imager(const ImageHandler::ptr& imageHandler) const
 {
   return new ZWO_ASI_Imager(info, imageHandler);
 }

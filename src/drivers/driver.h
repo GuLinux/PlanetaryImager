@@ -28,7 +28,7 @@ public:
   public:
     typedef std::shared_ptr<Camera> ptr;
     virtual QString name() const = 0;
-    virtual Imager *imager(const ImageHandlerPtr &imageHandler) const = 0;
+    virtual Imager *imager(const ImageHandler::ptr &imageHandler) const = 0;
   };
   typedef QList<Camera::ptr> Cameras; 
   

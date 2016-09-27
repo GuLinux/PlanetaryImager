@@ -25,19 +25,18 @@
 
 class ImageHandler {
 public:
+  typedef std::shared_ptr<ImageHandler> ptr;
   virtual void handle(const Frame::ptr &frame) = 0;
 };
 
-typedef std::shared_ptr<ImageHandler> ImageHandlerPtr;
-
 class ImageHandlers : public ImageHandler {
 public:
-  ImageHandlers(std::initializer_list<ImageHandlerPtr> handlers) : handlers{handlers} {}
+  ImageHandlers(std::initializer_list<ImageHandler::ptr> handlers) : handlers{handlers} {}
   virtual void handle(const Frame::ptr &frame) {
     for(auto handler: handlers)
       handler->handle(frame);
   }
 private:
-  QList<ImageHandlerPtr> handlers;
+  QList<ImageHandler::ptr> handlers;
 };
 #endif

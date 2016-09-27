@@ -39,7 +39,7 @@ using namespace std::chrono_literals;
 DPTR_IMPL(QHYCCDImager) {
   QString name;
   QString id;
-  ImageHandlerPtr imageHandler;
+  ImageHandler::ptr imageHandler;
   QHYCCDImager *q;
   qhyccd_handle *handle;
     Properties chip;
@@ -52,7 +52,7 @@ DPTR_IMPL(QHYCCDImager) {
 };
 
 
-QHYCCDImager::QHYCCDImager(const QString &cameraName, const char *id, const ImageHandlerPtr &imageHandler) : dptr(cameraName, id, imageHandler, this)
+QHYCCDImager::QHYCCDImager(const QString &cameraName, const char *id, const ImageHandler::ptr &imageHandler) : dptr(cameraName, id, imageHandler, this)
 {
   qDebug() << "Opening QHY camera " << cameraName << ", id=" << id;
   d->handle = OpenQHYCCD(const_cast<char*>(id));

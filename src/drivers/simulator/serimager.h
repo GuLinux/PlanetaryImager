@@ -24,7 +24,7 @@ class SERImager : public Imager
 {
   Q_OBJECT
 public:
-    SERImager(const ImageHandlerPtr &handler);
+    SERImager(const ImageHandler::ptr &handler);
     virtual ~SERImager();
     Properties properties() const override;
     QString name() const override;

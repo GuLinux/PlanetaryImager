@@ -48,7 +48,7 @@ const int64_t BinControlID = 10001;
 
 DPTR_IMPL(ZWO_ASI_Imager) {
     ASI_CAMERA_INFO info;
-    ImageHandlerPtr imageHandler;
+    ImageHandler::ptr imageHandler;
     shared_ptr<QTimer> reload_temperature_timer;
     ZWO_ASI_Imager *q;
 
@@ -73,7 +73,7 @@ void ZWO_ASI_Imager::Private::read_temperature() {
 }
 
 
-ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandlerPtr &imageHandler) : dptr(info, imageHandler, make_shared<QTimer>(), this)
+ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandler::ptr &imageHandler) : dptr(info, imageHandler, make_shared<QTimer>(), this)
 {
     d->properties.set_resolution_pixelsize({static_cast<int>(info.MaxWidth), static_cast<int>(info.MaxHeight)}, info.PixelSize, info.PixelSize);
     d->properties << Properties::Property{"Camera Speed", info.IsUSB3Camera ? "USB3" : "USB2"}
@@ -111,15 +111,6 @@ Imager::Properties ZWO_ASI_Imager::properties() const
 QString ZWO_ASI_Imager::name() const
 {
     return d->info.Name;
-}
-
-void ZWO_ASI_Imager::Private::start_thread(int bin, const QRect& roi, ASI_IMG_TYPE format)
-{
-    worker.reset();
-    imager_thread.reset();
-    worker = make_shared<ASIImagingWorker>(roi, bin, info, format);
-    imager_thread = make_shared<ImagerThread>(worker, q, imageHandler);
-    imager_thread->start();
 }
 
 
@@ -191,6 +182,16 @@ void ZWO_ASI_Imager::setControl(const Control& control)
     qDebug() << "Changed control " << camera_control->control();
     emit changed(*camera_control);
   });
+}
+
+
+void ZWO_ASI_Imager::Private::start_thread(int bin, const QRect& roi, ASI_IMG_TYPE format)
+{
+    worker.reset();
+    imager_thread.reset();
+    worker = make_shared<ASIImagingWorker>(roi, bin, info, format);
+    imager_thread = make_shared<ImagerThread>(worker, q, imageHandler);
+    imager_thread->start();
 }
 
 void ZWO_ASI_Imager::startLive()

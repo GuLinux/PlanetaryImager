@@ -18,6 +18,33 @@
 
 #include "imager.h"
 #include "Qt/strings.h"
+#include "commons/utils.h"
+#include <QCoreApplication>
+using namespace std;
+
+DPTR_IMPL(Imager) {
+  const ImageHandler::ptr image_handler;
+  ImagerThread::ptr imager_thread;
+  LOG_C_SCOPE(Imager);
+};
+
+Imager::Imager()  : QObject(nullptr), dptr()
+{
+}
+
+Imager::Imager(const ImageHandler::ptr& image_handler) : QObject(nullptr), dptr(image_handler)
+{
+}
+
+void Imager::aboutToQuit()
+{
+  d->imager_thread.reset();
+}
+
+
+Imager::~Imager()
+{
+}
 
 
 void Imager::destroy()
@@ -27,4 +54,19 @@ void Imager::destroy()
   this->deleteLater();
 }
 
+void Imager::restart(const ImagerThread::Worker::factory& worker)
+{
+  d->imager_thread.reset();
+  d->imager_thread = make_shared<ImagerThread>(worker(), this, d->image_handler);
+  d->imager_thread->start();
+}
 
+
+void Imager::push_job_on_thread(const ImagerThread::Job& job)
+{
+  if(! d->imager_thread) {
+    qWarning() << "Requested job without imager thread started";
+    return;
+  }
+  d->imager_thread->push_job(job);
+}

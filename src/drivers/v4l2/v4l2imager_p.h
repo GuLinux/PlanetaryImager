@@ -48,7 +48,7 @@ class V4L2Device;
 DPTR_IMPL(V4L2Imager)
 {
     class Worker;
-    ImageHandlerPtr handler;
+    ImageHandler::ptr handler;
     const QString device_path;
     V4L2Imager *q;
     

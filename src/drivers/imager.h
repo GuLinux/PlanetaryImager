@@ -24,13 +24,16 @@
 #include <QObject>
 #include <QDebug>
 #include "image_handlers/imagehandler.h"
+#include "imagerthread.h"
+#include "c++/dptr.h"
 
 class Imager : public QObject {
   Q_OBJECT
 public:
   class exception;
-  Imager() : QObject(nullptr) {}
-  virtual ~Imager() {}
+  Imager(const ImageHandler::ptr &image_handler);
+  [[ deprecated ]] Imager();
+  virtual ~Imager();
   struct Control;
   struct Properties;
   typedef QList<Control> Controls;
@@ -39,6 +42,14 @@ public:
   virtual QString name() const = 0;
   virtual Properties properties() const = 0;
   virtual bool supportsROI() const = 0;
+  
+  void aboutToQuit();
+protected:
+  void restart(const ImagerThread::Worker::factory &worker);
+  void push_job_on_thread(const ImagerThread::Job &job);
+private:
+  DPTR
+  
 public slots:
   virtual void setROI(const QRect &) = 0;
   virtual void clearROI() = 0;

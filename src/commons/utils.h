@@ -45,8 +45,12 @@ private:
   const QString fname;
   const QString exit;
 };
+  template<typename T> class LogClassScope : public LogScope {
+  public:
+    LogClassScope() : LogScope(typeid(T).name(), "Create Object", "Delete Object") {}
+  };
 
 #define LOG_F_SCOPE LogScope log_current_scope(__PRETTY_FUNCTION__);
-#define LOG_C_SCOPE log_current_class( typeid(*this).name(), "Create Object", "Delete Object" )
+#define LOG_C_SCOPE(Class) LogClassScope<Class> log_current_class
   
 #endif

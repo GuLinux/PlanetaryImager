@@ -31,14 +31,14 @@ DPTR_IMPL(ThreadImageHandler) {
 class ThreadImageHandler::Private::Worker : public QObject, public ImageHandler {
   Q_OBJECT
 public:
-  Worker(const ImageHandlerPtr &imageHandler, QObject *parent = nullptr);
+  Worker(const ImageHandler::ptr &imageHandler, QObject *parent = nullptr);
 public slots:
   virtual void handle(const Frame::ptr &frame);
 private:
-  ImageHandlerPtr imageHandler;
+  ImageHandler::ptr imageHandler;
 };
 
-ThreadImageHandler::Private::Worker::Worker(const ImageHandlerPtr& imageHandler, QObject* parent) 
+ThreadImageHandler::Private::Worker::Worker(const ImageHandler::ptr& imageHandler, QObject* parent) 
   : QObject{parent}, imageHandler{imageHandler}
 {
 }
@@ -50,7 +50,7 @@ void ThreadImageHandler::Private::Worker::handle(const Frame::ptr& frame)
 }
 
 
-ThreadImageHandler::ThreadImageHandler(const ImageHandlerPtr &imageHandler) : dptr(this)
+ThreadImageHandler::ThreadImageHandler(const ImageHandler::ptr &imageHandler) : dptr(this)
 {
   d->worker = make_unique<Private::Worker>(imageHandler);
   d->worker->moveToThread(&d->thread);

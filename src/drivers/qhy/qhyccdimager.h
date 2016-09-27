@@ -28,7 +28,7 @@ class QHYCCDImager : public Imager
 {
   Q_OBJECT
 public:
-    QHYCCDImager(const QString &cameraName, const char *id, const ImageHandlerPtr &imageHandler);
+    QHYCCDImager(const QString &cameraName, const char *id, const ImageHandler::ptr &imageHandler);
     ~QHYCCDImager();
 
     QString name() const override;
