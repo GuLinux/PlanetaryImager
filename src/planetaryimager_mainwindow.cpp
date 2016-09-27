@@ -79,9 +79,11 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   void cameraDisconnected();
   void enableUIWidgets(bool cameraConnected);
     void init_devices_watcher();
-  ZoomableImage *image;
+  ZoomableImage *image_widget;
   
   void onImagerInitialized(Imager *imager);
+  
+  enum SelectionMode { NoSelection, ROI, Guide } selection_mode = NoSelection;
 };
 
 class CreateImagerWorker : public QObject {
@@ -159,24 +161,24 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     d->ui->image->setLayout(new QGridLayout);
     d->ui->image->layout()->setMargin(0);
     d->ui->image->layout()->setSpacing(0);
-    d->ui->image->layout()->addWidget(d->image = new ZoomableImage(false));
-    connect(d->image, &ZoomableImage::zoomLevelChanged, d->statusbar_info_widget, &StatusBarInfoWidget::zoom);
-    d->statusbar_info_widget->zoom(d->image->zoomLevel());
-    for(auto item: d->image->actions())
+    d->ui->image->layout()->addWidget(d->image_widget = new ZoomableImage(false));
+    connect(d->image_widget, &ZoomableImage::zoomLevelChanged, d->statusbar_info_widget, &StatusBarInfoWidget::zoom);
+    d->statusbar_info_widget->zoom(d->image_widget->zoomLevel());
+    for(auto item: d->image_widget->actions())
       d->ui->menuView->insertAction(d->ui->actionEdges_Detection, item);
     d->ui->menuView->insertSeparator(d->ui->actionEdges_Detection);
     
-    d->image->actions()[ZoomableImage::Actions::ZoomIn]->setShortcut({Qt::CTRL + Qt::Key_Plus});
-    d->image->actions()[ZoomableImage::Actions::ZoomOut]->setShortcut({Qt::CTRL + Qt::Key_Minus});
-    d->image->actions()[ZoomableImage::Actions::ZoomFit]->setShortcut({Qt::CTRL + Qt::Key_Space});
-    d->image->actions()[ZoomableImage::Actions::ZoomRealSize]->setShortcut({Qt::CTRL + Qt::Key_Backspace});
+    d->image_widget->actions()[ZoomableImage::Actions::ZoomIn]->setShortcut({Qt::CTRL + Qt::Key_Plus});
+    d->image_widget->actions()[ZoomableImage::Actions::ZoomOut]->setShortcut({Qt::CTRL + Qt::Key_Minus});
+    d->image_widget->actions()[ZoomableImage::Actions::ZoomFit]->setShortcut({Qt::CTRL + Qt::Key_Space});
+    d->image_widget->actions()[ZoomableImage::Actions::ZoomRealSize]->setShortcut({Qt::CTRL + Qt::Key_Backspace});
     
-    addToolBar(d->image->toolbar());
+    addToolBar(d->image_widget->toolbar());
     QToolBar *helpToolBar = new QToolBar;
     helpToolBar->addAction(QWhatsThis::createAction());
     addToolBar(helpToolBar);
-    d->image->toolbar()->setFloatable(true);
-    d->image->toolbar()->setMovable(true);
+    d->image_widget->toolbar()->setFloatable(true);
+    d->image_widget->toolbar()->setMovable(true);
     
     restoreGeometry(d->configuration.main_window_geometry());
     restoreState(d->configuration.dock_status());
@@ -227,7 +229,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     connect(d->ui->actionShow_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::show, _1) ); });
     
     d->rescan_devices();
-    connect(d->displayImage.get(), &DisplayImage::gotImage, this, bind(&ZoomableImage::setImage, d->image, _1), Qt::QueuedConnection);
+    connect(d->displayImage.get(), &DisplayImage::gotImage, this, bind(&ZoomableImage::setImage, d->image_widget, _1), Qt::QueuedConnection);
 
     
     connect(d->displayImage.get(), &DisplayImage::displayFPS, d->statusbar_info_widget, &StatusBarInfoWidget::displayFPS, Qt::QueuedConnection);
@@ -261,10 +263,16 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     });
     d->init_devices_watcher();
     connect(d->ui->actionClear_ROI, &QAction::triggered, [&] { d->imager->clearROI(); });
-    connect(d->ui->actionSelect_ROI, &QAction::triggered, [&] { d->image->startSelectionMode(); });
-    connect(d->image, &ZoomableImage::selectedROI, [&](const QRectF &rect) {  // TODO: safety check if we add more selection modes other than ROI
+    connect(d->ui->actionSelect_ROI, &QAction::triggered, [&] { 
+      d->selection_mode = Private::ROI;
+      d->image_widget->startSelectionMode();
+    });
+    connect(d->image_widget, &ZoomableImage::selectedROI, [&](const QRectF &rect) {
+      if(d->selection_mode != Private::ROI)
+        return;
+      d->selection_mode = Private::NoSelection;
       d->imager->setROI(rect.toRect());
-      d->image->clearROI();
+      d->image_widget->clearROI();
     });
 }
 
@@ -351,7 +359,7 @@ void PlanetaryImagerMainWindow::Private::cameraDisconnected()
   cameraSettingsWidget = nullptr;
   delete cameraInfoWidget;
   cameraInfoWidget = nullptr;
-  image->setImage({});
+                                               image_widget->setImage({});
   statusbar_info_widget->captureFPS(0);
   statusbar_info_widget->temperature(0, true);
 }
