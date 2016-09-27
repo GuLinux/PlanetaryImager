@@ -17,7 +17,7 @@
  */
 #include <QApplication>
 #include "planetaryimager_mainwindow.h"
-#include "version.h"
+#include "commons/version.h"
 #include <iostream>
 #include <iomanip>
 #include <QDebug>
