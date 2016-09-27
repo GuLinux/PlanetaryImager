@@ -50,7 +50,7 @@ private:
 
 Driver::Cameras V4L2Driver::cameras() const
 {
-  QList<CameraPtr> _cameras;
+  Cameras _cameras;
   auto entries = QDir("/sys/class/video4linux").entryInfoList();
   for(auto entry: entries) {
     QFile name_file(entry.absoluteFilePath() + "/" + "name");

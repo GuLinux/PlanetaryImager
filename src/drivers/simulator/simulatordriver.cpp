@@ -25,21 +25,34 @@ using namespace std;
 
 class SimulatorCamera : public Driver::Camera {
 public:
+  typedef function<Imager *(const ImageHandlerPtr& imageHandler)> ImageHandlerFactory;
+  typedef shared_ptr<SimulatorCamera> ptr;
+  SimulatorCamera(const QString &name, const ImageHandlerFactory &factory);
   virtual Imager * imager ( const ImageHandlerPtr& imageHandler) const;
-  virtual QString name() const { return "Simulator Camera"; }
+  virtual QString name() const { return m_name; }
+private:
+  const QString m_name;
+  const ImageHandlerFactory factory;
 };
+
+SimulatorCamera::SimulatorCamera(const QString& name, const ImageHandlerFactory& factory) : m_name{name}, factory{factory}
+{
+}
+
 
 
 
 Imager * SimulatorCamera::imager ( const ImageHandlerPtr& imageHandler ) const
 {
-  return new SimulatorImager(imageHandler);
+  return factory(imageHandler);
 }
 
 Driver::Cameras SimulatorDriver::cameras() const
 {
-  static shared_ptr<SimulatorCamera> simulatorCamera = make_shared<SimulatorCamera>();
-  return {simulatorCamera};
+  static Cameras _cameras {
+    make_shared<SimulatorCamera>("Simulator: Planet", [](const ImageHandlerPtr& imageHandler){ return new SimulatorImager(imageHandler); }),
+  };
+  return _cameras;
 }
 
 

@@ -26,11 +26,11 @@ class Driver {
 public:
   class Camera {
   public:
+    typedef std::shared_ptr<Camera> ptr;
     virtual QString name() const = 0;
     virtual Imager *imager(const ImageHandlerPtr &imageHandler) const = 0;
   };
-  typedef std::shared_ptr<Camera> CameraPtr;
-  typedef QList<CameraPtr> Cameras; 
+  typedef QList<Camera::ptr> Cameras; 
   
   virtual Cameras cameras() const = 0;
 };
