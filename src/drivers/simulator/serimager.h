@@ -26,7 +26,7 @@ class SERImager : public Imager
 public:
     SERImager(const ImageHandlerPtr &handler);
     virtual ~SERImager();
-    Properties chip() const override;
+    Properties properties() const override;
     QString name() const override;
     void setControl(const Control& setting) override;
     Controls controls() const override;

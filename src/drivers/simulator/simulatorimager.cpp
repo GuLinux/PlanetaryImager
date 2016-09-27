@@ -88,7 +88,7 @@ SimulatorImager::~SimulatorImager()
 }
 
 
-Imager::Properties SimulatorImager::chip() const
+Imager::Properties SimulatorImager::properties() const
 {
     // Simulating ASI 178mm chip: 2.4x2.4 um pixels, sensor size 7.4x5mm, resolution 3096x2080
   // return Imager::Chip().set_pixelsize_chipsize(2.4, 2.4, 7.4, 5);

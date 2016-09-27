@@ -37,7 +37,7 @@ public:
 
   virtual Controls controls() const = 0;  
   virtual QString name() const = 0;
-  virtual Properties chip() const = 0;
+  virtual Properties properties() const = 0;
   virtual bool supportsROI() const = 0;
 public slots:
   virtual void setROI(const QRect &) = 0;

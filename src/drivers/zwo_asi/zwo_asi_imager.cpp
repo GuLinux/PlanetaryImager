@@ -52,7 +52,7 @@ DPTR_IMPL(ZWO_ASI_Imager) {
     shared_ptr<QTimer> reload_temperature_timer;
     ZWO_ASI_Imager *q;
 
-    Properties chip;
+    Properties properties;
 
     ASIControl::vector controls;
     ASIControl::ptr temperature_control;
@@ -75,19 +75,19 @@ void ZWO_ASI_Imager::Private::read_temperature() {
 
 ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandlerPtr &imageHandler) : dptr(info, imageHandler, make_shared<QTimer>(), this)
 {
-    d->chip.set_resolution_pixelsize({static_cast<int>(info.MaxWidth), static_cast<int>(info.MaxHeight)}, info.PixelSize, info.PixelSize);
-    d->chip << Properties::Property{"Camera Speed", info.IsUSB3Camera ? "USB3" : "USB2"}
+    d->properties.set_resolution_pixelsize({static_cast<int>(info.MaxWidth), static_cast<int>(info.MaxHeight)}, info.PixelSize, info.PixelSize);
+    d->properties << Properties::Property{"Camera Speed", info.IsUSB3Camera ? "USB3" : "USB2"}
                   << Properties::Property{"Host Speed", info.IsUSB3Host ? "USB3" : "USB2"}
                   << Properties::Property{"Camera Type", info.IsColorCam ? "colour" : "mono"};
     if(info.IsColorCam) {
         static map<ASI_BAYER_PATTERN, QString> patterns {
             {ASI_BAYER_RG, "RGGB"}, {ASI_BAYER_BG, "BGGR"}, {ASI_BAYER_GR, "GRBG"}, {ASI_BAYER_GB, "GBRG"}
         };
-        d->chip << Properties::Property{"Bayer pattern", patterns[info.BayerPattern]};
+        d->properties << Properties::Property{"Bayer pattern", patterns[info.BayerPattern]};
     }
     
-    d->chip << Properties::Property{"ElecPerADU", info.ElecPerADU};
-    d->chip << Properties::Property{"ASI SDK Version", ASI_SDK_VERSION};
+    d->properties << Properties::Property{"ElecPerADU", info.ElecPerADU};
+    d->properties << Properties::Property{"ASI SDK Version", ASI_SDK_VERSION};
     ASI_CHECK << ASIOpenCamera(info.CameraID) << "Open Camera";
 #ifdef ASI_CAMERA_REQUIRES_INIT
     ASI_CHECK << ASIInitCamera(info.CameraID) << "Init Camera";
@@ -103,9 +103,9 @@ ZWO_ASI_Imager::~ZWO_ASI_Imager()
     ASI_CHECK << ASICloseCamera(d->info.CameraID) << "Close Camera";
 }
 
-Imager::Properties ZWO_ASI_Imager::chip() const
+Imager::Properties ZWO_ASI_Imager::properties() const
 {
-    return d->chip;
+    return d->properties;
 }
 
 QString ZWO_ASI_Imager::name() const

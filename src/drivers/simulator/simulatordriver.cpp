@@ -20,6 +20,7 @@
 #include <QDebug>
 #include <QMutexLocker>
 #include "simulatorimager.h"
+#include "serimager.h"
 
 using namespace std;
 
@@ -51,6 +52,7 @@ Driver::Cameras SimulatorDriver::cameras() const
 {
   static Cameras _cameras {
     make_shared<SimulatorCamera>("Simulator: Planet", [](const ImageHandlerPtr& imageHandler){ return new SimulatorImager(imageHandler); }),
+    make_shared<SimulatorCamera>("Simulator: SER file", [](const ImageHandlerPtr& imageHandler){ return new SERImager(imageHandler); }),
   };
   return _cameras;
 }

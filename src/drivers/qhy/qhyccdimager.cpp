@@ -87,7 +87,7 @@ QHYCCDImager::~QHYCCDImager()
   emit disconnected();
 }
 
-QHYCCDImager::Properties QHYCCDImager::chip() const
+QHYCCDImager::Properties QHYCCDImager::properties() const
 {
   return d->chip;
 }

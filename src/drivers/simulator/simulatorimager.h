@@ -29,7 +29,7 @@ class SimulatorImager : public Imager {
 public:
     SimulatorImager(const ImageHandlerPtr &handler);
     virtual ~SimulatorImager();
-    Properties chip() const override;
+    Properties properties() const override;
     QString name() const override;
     void setControl(const Control& setting) override;
     Controls controls() const override;

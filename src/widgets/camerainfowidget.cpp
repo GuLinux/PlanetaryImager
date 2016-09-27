@@ -37,7 +37,7 @@ CameraInfoWidget::CameraInfoWidget(Imager *imager, QWidget* parent): QWidget(par
   d->layout = new QGridLayout(this);
   setLayout(d->layout);
   d->addProperty({"Name", QVariant{imager->name()}});
-  auto properties = imager->chip().properties;
+  auto properties = imager->properties().properties;
   properties.erase(remove_if(properties.begin(), properties.end(), [](const auto &p){ return p.hidden; }), properties.end());
   std::for_each(properties.begin(), properties.end(), bind(&Private::addProperty, d.get(), _1));
   d->layout->setRowStretch(d->layout->rowCount(), 1);

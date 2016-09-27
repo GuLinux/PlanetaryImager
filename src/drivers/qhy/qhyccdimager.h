@@ -32,7 +32,7 @@ public:
     ~QHYCCDImager();
 
     QString name() const override;
-    Properties chip() const override;
+    Properties properties() const override;
 
     Controls controls() const override;  
     bool supportsROI() const override;

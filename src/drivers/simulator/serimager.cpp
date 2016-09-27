@@ -30,7 +30,7 @@ SERImager::~SERImager()
 {
 }
 
-Imager::Properties SERImager::chip() const
+Imager::Properties SERImager::properties() const
 {
   return {};
 }

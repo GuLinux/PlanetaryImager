@@ -28,7 +28,7 @@ class ZWO_ASI_Imager : public Imager
 public:
     ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandlerPtr &imageHandler);
     ~ZWO_ASI_Imager();
-    Imager::Properties chip() const override;
+    Imager::Properties properties() const override;
     QString name() const override;
     Imager::Controls controls() const override;
     bool supportsROI() const override;
