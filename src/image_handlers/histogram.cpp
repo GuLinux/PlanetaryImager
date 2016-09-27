@@ -76,7 +76,7 @@ void Histogram::handle(const Frame::ptr &frame)
   
   cv::calcHist(&source, nimages, channels, cv::Mat{}, hist, dims, bins, ranges);
   
-  int hist_w = 512; int hist_h = 400;
+  int hist_w = 300; int hist_h = 150;
   int bin_w = cvRound( (double) hist_w/d->bins_size );
   
   cv::Mat histImage( hist_h, hist_w, CV_8UC3, cv::Scalar( 0,0,0) );
