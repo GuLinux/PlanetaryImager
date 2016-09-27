@@ -32,7 +32,6 @@ using namespace std;
 DPTR_IMPL(Histogram) {
   Configuration &configuration;
   Histogram *q;
-  atomic_bool enabled;
   atomic_bool recording;
   atomic_bool histogram_disable_on_recording;
   atomic_long histogram_timeout;
@@ -40,6 +39,7 @@ DPTR_IMPL(Histogram) {
   QElapsedTimer last;
   size_t bins_size;
   bool should_read_frame() const;
+  bool logarithmic = false;
 };
 
 
@@ -50,7 +50,6 @@ Histogram::~Histogram()
 Histogram::Histogram(Configuration &configuration, QObject* parent) : QObject(parent), dptr(configuration, this)
 {
   d->last.start();
-  d->enabled = true;
   d->recording = false;
   read_settings();
 }
@@ -76,8 +75,8 @@ void Histogram::handle(const Frame::ptr &frame)
   const float *ranges[]{range};
   
   cv::calcHist(&source, nimages, channels, cv::Mat{}, hist, dims, bins, ranges);
-  // TODO: option for logaritmic/linear histogram
-  transform(hist.begin<float>(), hist.end<float>(), hist.begin<float>(), [](float n){ return n==0?0:log10(n); });
+  if(d->logarithmic)
+    transform(hist.begin<float>(), hist.end<float>(), hist.begin<float>(), [](float n){ return n==0?0:log10(n); });
   
   int hist_w = 1024; int hist_h = 600;
   int bin_w = cvRound( (double) hist_w/d->bins_size );
@@ -97,11 +96,6 @@ void Histogram::handle(const Frame::ptr &frame)
   QImage hist_qimage(histImage.data, hist_w, hist_h, static_cast<int>(histImage.step), QImage::Format_RGB888);
   cv::imwrite("/tmp/data-img.png", histImage);
   emit histogram(hist_qimage.rgbSwapped());
-}
-
-void Histogram::setEnabled(bool enabled)
-{
-  d->enabled = enabled;
 }
 
 
@@ -125,10 +119,16 @@ void Histogram::read_settings()
 
 bool Histogram::Private::should_read_frame() const // TODO read limits only once, when changed
 {
-  if( ! enabled || ( recording && histogram_disable_on_recording ) )
+  if( recording && histogram_disable_on_recording  )
     return false;
   return last.elapsed() >= (recording ? histogram_timeout_recording : histogram_timeout );
 }
+
+void Histogram::setLogarithmic(bool logarithmic)
+{
+  d->logarithmic = logarithmic;
+}
+
 
 
 #include "histogram.moc"

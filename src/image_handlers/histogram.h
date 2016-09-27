@@ -32,8 +32,8 @@ public:
   Histogram(Configuration &configuration, QObject* parent = 0);
   virtual void handle(const Frame::ptr &frame);
   void set_bins(std::size_t bins_size);
-  void setEnabled(bool enabled);
   void setRecording(bool recording);
+  void setLogarithmic(bool logarithmic);
 public slots:
   void read_settings();
 signals:

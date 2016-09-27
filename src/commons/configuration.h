@@ -81,7 +81,7 @@ public:
     declare_setting(save_info_file, bool)
     declare_setting(widgets_setup_first_run, bool)
     declare_setting(histogram_bins, int)
-    declare_setting(histogram_enabled, bool)
+    declare_setting(histogram_logarithmic, bool)
     declare_setting(histogram_disable_on_recording, bool)
     declare_setting(histogram_timeout, long long)
     declare_setting(histogram_timeout_recording, long long)

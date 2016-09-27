@@ -31,7 +31,7 @@ DPTR_IMPL(HistogramWidget) {
   HistogramWidget *q;
   std::unique_ptr<Ui::HistogramWidget> ui;
   void got_histogram(const QImage& histogram);
-  void toggle_histogram(bool enabled);
+  void toggle_histogram_logarithmic(bool logarithmic);
 };
 HistogramWidget::~HistogramWidget()
 {
@@ -51,20 +51,15 @@ HistogramWidget::HistogramWidget(const Histogram::ptr &histogram, Configuration 
     update_bins();
     connect(d->ui->histogram_bins, F_PTR(QSpinBox, valueChanged, int), update_bins);
     connect(d->histogram.get(), &Histogram::histogram, this, bind(&Private::got_histogram, d.get(), _1), Qt::QueuedConnection);
-    connect(d->ui->enable_histogram, &QCheckBox::toggled, this, bind(&Private::toggle_histogram, d.get(), _1));
-    d->toggle_histogram(configuration.histogram_enabled());
+    connect(d->ui->histogram_logarithmic, &QCheckBox::toggled, this, bind(&Private::toggle_histogram_logarithmic, d.get(), _1));
+    d->toggle_histogram_logarithmic(configuration.histogram_logarithmic());
 }
 
-void HistogramWidget::Private::toggle_histogram(bool enabled)
+void HistogramWidget::Private::toggle_histogram_logarithmic(bool logarithmic)
 {
-  ui->enable_histogram->setChecked(enabled);
-  ui->histogram_bins->setEnabled(enabled);
-  ui->histogram_plot->setEnabled(enabled);
-  histogram->setEnabled(enabled);
-  if(!enabled) {
-    ui->histogram_plot->clear();
-  }
-  configuration.set_histogram_enabled(enabled);
+  ui->histogram_logarithmic->setChecked(logarithmic);
+  configuration.set_histogram_logarithmic(logarithmic);
+  histogram->setLogarithmic(logarithmic);
 }
 
 
