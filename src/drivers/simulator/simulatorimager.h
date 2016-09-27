@@ -16,38 +16,33 @@
  *
  */
 
-#include "simulatordriver.h"
-#include <QDebug>
-#include <QMutexLocker>
-#include "simulatorimager.h"
+#ifndef SIMULATORIMAGER_H
+#define SIMULATORIMAGER_H
 
-using namespace std;
+#include "drivers/imager.h"
+#include "c++/dptr.h"
 
-class SimulatorCamera : public Driver::Camera {
+
+class QRect;
+class SimulatorImager : public Imager {
+  Q_OBJECT
 public:
-  virtual Imager * imager ( const ImageHandlerPtr& imageHandler) const;
-  virtual QString name() const { return "Simulator Camera"; }
+    SimulatorImager(const ImageHandlerPtr &handler);
+    virtual ~SimulatorImager();
+    Properties chip() const override;
+    QString name() const override;
+    void setControl(const Control& setting) override;
+    Controls controls() const override;
+    void startLive() override;
+    void stopLive() override;
+    static int rand(int a, int b);
+    bool supportsROI() const override { return true; }
+public slots:
+    void setROI(const QRect &) override;
+    void clearROI() override;
+private:
+  DPTR
 };
 
 
-
-Imager * SimulatorCamera::imager ( const ImageHandlerPtr& imageHandler ) const
-{
-  return new SimulatorImager(imageHandler);
-}
-
-Driver::Cameras SimulatorDriver::cameras() const
-{
-  static shared_ptr<SimulatorCamera> simulatorCamera = make_shared<SimulatorCamera>();
-  return {simulatorCamera};
-}
-
-
-SimulatorDriver::SimulatorDriver()
-{
-  Q_INIT_RESOURCE(simulator);
-}
-
-
-
-#include "simulatordriver.moc"
+#endif // SIMULATORIMAGER_H
