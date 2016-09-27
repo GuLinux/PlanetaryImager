@@ -1,19 +1,20 @@
-## 0.6.0 2016-09-xx
+## 0.6.0 2016-09-27
  - Improved colour camera support: display and save both bayer and debayered image, along with RGB formats
  - Optional debayer filter for display configurable in the main settings
  - Allow to choose recording duration based on frames number or seconds
  - Removed deprecated edge detection algorithm, using only OpenCV provided canny and sobel. This allows compilation in other platforms (for instance, arm)
- - ASI: Updated ASI SDK to v0.3.908, with great speed improvements for USB3 cameras, and fixing long exposures bug
+ - ASI: Updated ASI SDK to v0.3.920, with great speed improvements for USB3 cameras, and fixing long exposures bug
  - QHY: use static libraries instead of installing dynamic libraries to the system
  - Improved threading for cameras: a lot of infrastructure refactoring to improve both performances and stability
  - Temperature polling in statusbar
- - Histogram: allow to toggle on/off to reduce CPU usage
- - Histogram: configurable interval, with different values while recording, to reduce CPU usage
+ - Histogram: allow to toggle on/off and to configure interval to reduce CPU usage
+ - Histogram: simplified draw to remove dependencies and solve plotting bugs
  - Lots of more configurable options
  - More reliable frame creation timestamp
  - Window size is now saved and restored during sessions
  - Notify user of controls accepted/rejected from camera, also disable "apply" button when no controls have pending changes
  - Fixes to QHY driver
+ - Fixes to V4L2 driver
  
 ## 0.5.0 2016-08-21
  - Fix ASI controls issue
