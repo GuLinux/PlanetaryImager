@@ -39,20 +39,17 @@ using namespace std::chrono_literals;
 DPTR_IMPL(QHYCCDImager) {
   QString name;
   QString id;
-  ImageHandler::ptr imageHandler;
   QHYCCDImager *q;
   qhyccd_handle *handle;
     Properties chip;
   Controls settings;
-  ImagerThread::ptr imager_thread;
   QHYImagingWorker::ptr imaging_worker;
   void load_settings();
   void load(Control &setting);
-  void start_imaging();
 };
 
 
-QHYCCDImager::QHYCCDImager(const QString &cameraName, const char *id, const ImageHandler::ptr &imageHandler) : dptr(cameraName, id, imageHandler, this)
+QHYCCDImager::QHYCCDImager(const QString &cameraName, const char *id, const ImageHandler::ptr &imageHandler) : Imager{imageHandler}, dptr(cameraName, id, this)
 {
   qDebug() << "Opening QHY camera " << cameraName << ", id=" << id;
   d->handle = OpenQHYCCD(const_cast<char*>(id));
@@ -176,7 +173,7 @@ void QHYCCDImager::Private::load ( QHYCCDImager::Control& setting )
 
 void QHYCCDImager::setControl(const QHYCCDImager::Control& setting)
 {
-  d->imager_thread->push_job([=]{
+  push_job_on_thread([=]{
     QHY_CHECK << SetQHYCCDParam(d->handle, static_cast<CONTROL_ID>(setting.id), setting.value) << "Setting control " << setting.name << " to value " << setting.value;
     Control &setting_ref = *find_if(begin(d->settings), end(d->settings), [setting](const Control &s) { return s.id == setting.id; });
     d->load(setting_ref);
@@ -185,24 +182,14 @@ void QHYCCDImager::setControl(const QHYCCDImager::Control& setting)
   });
 }
 
-void QHYCCDImager::Private::start_imaging()
-{
-  imaging_worker.reset();
-  imager_thread.reset();
-  imaging_worker = make_shared<QHYImagingWorker>(handle);
-  imager_thread = make_shared<ImagerThread>(imaging_worker, q, imageHandler);
-  imager_thread->start();
-}
-
 
 void QHYCCDImager::startLive()
 {
-  d->start_imaging();
+  restart([=] { return d->imaging_worker = make_shared<QHYImagingWorker>(d->handle); });
 }
 
 void QHYCCDImager::stopLive()
 {
-  d->imager_thread.reset();
 }
 
 bool QHYCCDImager::supportsROI() const
