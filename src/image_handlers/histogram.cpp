@@ -55,6 +55,7 @@ Histogram::Histogram(Configuration &configuration, QObject* parent) : QObject(pa
   read_settings();
 }
 
+#include <fstream>
 void Histogram::handle(const Frame::ptr &frame)
 {
   
@@ -75,12 +76,14 @@ void Histogram::handle(const Frame::ptr &frame)
   const float *ranges[]{range};
   
   cv::calcHist(&source, nimages, channels, cv::Mat{}, hist, dims, bins, ranges);
+  // TODO: option for logaritmic/linear histogram
+  transform(hist.begin<float>(), hist.end<float>(), hist.begin<float>(), [](float n){ return n==0?0:log10(n); });
   
   int hist_w = 300; int hist_h = 150;
   int bin_w = cvRound( (double) hist_w/d->bins_size );
   
   cv::Mat histImage( hist_h, hist_w, CV_8UC3, cv::Scalar( 0,0,0) );
-  
+
   normalize(hist, hist, 0, histImage.rows, cv::NORM_MINMAX, -1, cv::Mat() );
   /// Draw for each channel
   for(int i = 1; i <= d->bins_size; i++)
@@ -92,7 +95,7 @@ void Histogram::handle(const Frame::ptr &frame)
           cv::Scalar( 255, 255, 255), 1, 8, 0  );
   }
   QImage hist_qimage(histImage.data, hist_w, hist_h, static_cast<int>(histImage.step), QImage::Format_RGB888);
-  
+  cv::imwrite("/tmp/data-img.png", histImage);
   emit histogram(hist_qimage.rgbSwapped());
 }
 
