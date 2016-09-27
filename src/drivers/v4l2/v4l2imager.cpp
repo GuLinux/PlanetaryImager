@@ -89,9 +89,12 @@ QString V4L2Imager::name() const
 void V4L2Imager::Private::find_controls()
 {
   controls.clear();
+  V4L2Control::ptr control;
+  // TODO: should we really add controls, even if we cannot read values?
   for (int ctrlid = V4L2_CID_BASE; ctrlid < V4L2_CID_LASTP1; ctrlid++) {
     try {
-      controls.push_back(make_shared<V4L2Control>(ctrlid, device, control_fixes));
+      controls.push_back(control = make_shared<V4L2Control>(ctrlid, device, control_fixes));
+      control->update();
     } catch(const V4L2Exception &e) {
 //       if(e.type() == V4L2Exception::v4l2_error && e.code() == EINVAL)
 //         break;
@@ -101,7 +104,8 @@ void V4L2Imager::Private::find_controls()
 
   for (int ctrlid = V4L2_CID_PRIVATE_BASE;; ctrlid++) {
     try {
-      controls.push_back(make_shared<V4L2Control>(ctrlid, device, control_fixes));
+      controls.push_back(control = make_shared<V4L2Control>(ctrlid, device, control_fixes));
+      control->update();
     } catch(const V4L2Exception &e) {
       if(e.type() == V4L2Exception::v4l2_error && e.code() == EINVAL)
         break;
@@ -111,9 +115,9 @@ void V4L2Imager::Private::find_controls()
 
   int ctrlid = V4L2_CTRL_FLAG_NEXT_CTRL;
   while(true) {
-    V4L2Control::ptr control;
     try {
       controls.push_back(control = make_shared<V4L2Control>(ctrlid, device, control_fixes));
+      control->update();
     } catch(const V4L2Exception &e) {
       if(e.type() == V4L2Exception::v4l2_error && e.code() == EINVAL)
         break;

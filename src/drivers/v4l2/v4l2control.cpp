@@ -73,7 +73,6 @@ V4L2Control::V4L2Control(uint32_t control_id, const V4L2Device::ptr& camera, con
     }
   for(auto fix: fixes)
     fix(d->control);
-  d->read();
 }
 
 V4L2Control::~V4L2Control()
