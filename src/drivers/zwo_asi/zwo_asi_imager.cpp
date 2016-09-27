@@ -48,7 +48,6 @@ const int64_t BinControlID = 10001;
 
 DPTR_IMPL(ZWO_ASI_Imager) {
     ASI_CAMERA_INFO info;
-    ImageHandler::ptr imageHandler;
     shared_ptr<QTimer> reload_temperature_timer;
     ZWO_ASI_Imager *q;
 
@@ -57,23 +56,22 @@ DPTR_IMPL(ZWO_ASI_Imager) {
     ASIControl::vector controls;
     ASIControl::ptr temperature_control;
     
-    ImagerThread::ptr imager_thread;
-    shared_ptr<ASIImagingWorker> worker;
+    ASIImagingWorker::ptr worker;
     QRect maxROI(int bin) const;
-    void start_thread(int bin, const QRect& roi, ASI_IMG_TYPE format);
+    ImagerThread::Worker::factory create_worker(int bin, const QRect &roi, ASI_IMG_TYPE format);
     void read_temperature();
 };
 
 void ZWO_ASI_Imager::Private::read_temperature() {
   qDebug() << "Refreshing ASI_TEMPERATURE if found..";
-  if(temperature_control && imager_thread)
-    imager_thread->push_job([=]{
+  if(temperature_control)
+    q->push_job_on_thread([=]{
       emit q->temperature(temperature_control->reload().control().value);
     });
 }
 
 
-ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandler::ptr &imageHandler) : dptr(info, imageHandler, make_shared<QTimer>(), this)
+ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandler::ptr &imageHandler) : Imager{imageHandler}, dptr(info, make_shared<QTimer>(), this)
 {
     d->properties.set_resolution_pixelsize({static_cast<int>(info.MaxWidth), static_cast<int>(info.MaxHeight)}, info.PixelSize, info.PixelSize);
     d->properties << Properties::Property{"Camera Speed", info.IsUSB3Camera ? "USB3" : "USB2"}
@@ -163,13 +161,13 @@ Imager::Controls ZWO_ASI_Imager::controls() const
 void ZWO_ASI_Imager::setControl(const Control& control)
 {
   if(control.id == ImgTypeControlID) {
-      d->start_thread(d->worker->bin(), d->worker->roi(), static_cast<ASI_IMG_TYPE>(control.value));
+      restart(d->create_worker(d->worker->bin(), d->worker->roi(), static_cast<ASI_IMG_TYPE>(control.value)));
       emit changed(control);
       return;
   }
   if(control.id == BinControlID) {
       auto bin = static_cast<int>(control.value);
-      d->start_thread(bin, d->maxROI(bin), d->worker->format());
+      restart(d->create_worker(bin, d->maxROI(bin), d->worker->format()));
       emit changed(control);
       return;
   }
@@ -177,33 +175,30 @@ void ZWO_ASI_Imager::setControl(const Control& control)
   auto camera_control = *find_if(d->controls.begin(), d->controls.end(),
 			  [&](const ASIControl::ptr &c){ return c->caps.ControlType == static_cast<ASI_CONTROL_TYPE>(control.id); });
   qDebug() << "Changing control " << camera_control->control();
-  d->imager_thread->push_job([=]{
+  push_job_on_thread([=]{
     camera_control->set(control.value, control.value_auto);
     qDebug() << "Changed control " << camera_control->control();
     emit changed(*camera_control);
   });
 }
 
-
-void ZWO_ASI_Imager::Private::start_thread(int bin, const QRect& roi, ASI_IMG_TYPE format)
+ImagerThread::Worker::factory ZWO_ASI_Imager::Private::create_worker(int bin, const QRect& roi, ASI_IMG_TYPE format)
 {
-    worker.reset();
-    imager_thread.reset();
-    worker = make_shared<ASIImagingWorker>(roi, bin, info, format);
-    imager_thread = make_shared<ImagerThread>(worker, q, imageHandler);
-    imager_thread->start();
+  return [&] {
+    return worker = make_shared<ASIImagingWorker>(roi, bin, info, format);
+  };
 }
+
 
 void ZWO_ASI_Imager::startLive()
 {
     LOG_F_SCOPE
-    d->start_thread(1, d->maxROI(1), d->info.SupportedVideoFormat[0]);
+    restart(d->create_worker(1, d->maxROI(1), d->info.SupportedVideoFormat[0]));
     qDebug() << "Live started correctly";
 }
 
 void ZWO_ASI_Imager::stopLive()
 {
-    d->imager_thread.reset();
 }
 
 
@@ -214,12 +209,12 @@ bool ZWO_ASI_Imager::supportsROI() const
 
 void ZWO_ASI_Imager::clearROI()
 {
-    d->start_thread(d->worker->bin(), d->maxROI(d->worker->bin()), d->worker->format());
+  restart(d->create_worker(d->worker->bin(), d->maxROI(d->worker->bin()), d->worker->format()) );
 }
 
 void ZWO_ASI_Imager::setROI(const QRect& roi)
 {
-    d->start_thread(d->worker->bin(), roi, d->worker->format());
+    restart(d->create_worker(d->worker->bin(), roi, d->worker->format()));
 }
 
 QRect ZWO_ASI_Imager::Private::maxROI(int bin) const
