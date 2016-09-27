@@ -27,8 +27,11 @@ git submodule init && git submodule update --recursive
 
 cleanup_unused_files
 cd ..
-tar cf "$outdir/PlanetaryImager-$version.tar" PlanetaryImager-$version
-bzip2 -9 "$outdir/PlanetaryImager-$version.tar"
+7z a "$outdir/PlanetaryImager-$version.7z" "PlanetaryImager-$version"
+7z a "$outdir/PlanetaryImager-$version.zip" "PlanetaryImager-$version"
+tar cf "$outdir/PlanetaryImager-$version.tar" "PlanetaryImager-$version"
+gzip -k -9 "$outdir/PlanetaryImager-$version.tar"
+bzip2 -k -9 "$outdir/PlanetaryImager-$version.tar"
 cd $outdir
-rm -rf "$tmpdir"
+rm -rf "$tmpdir" "$outdir/PlanetaryImager-$version.tar"
 
