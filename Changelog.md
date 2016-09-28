@@ -1,3 +1,8 @@
+## 0.6.1 2016-09-28
+ - Histogram: allow to freely resize widget
+ - Histogram: replaced "enable" checkbox with toggle logarithmic mode
+ - Histogram: better resolution for plot image
+
 ## 0.6.0 2016-09-27
  - Improved colour camera support: display and save both bayer and debayered image, along with RGB formats
  - Optional debayer filter for display configurable in the main settings
