@@ -42,7 +42,6 @@ public:
   virtual Properties properties() const = 0;
   virtual bool supportsROI() const = 0;
   
-  void aboutToQuit();
 protected:
   void restart(const ImagerThread::Worker::factory &worker);
   void push_job_on_thread(const ImagerThread::Job &job);
@@ -54,7 +53,6 @@ public slots:
   virtual void clearROI() = 0;
   virtual void setControl(const Control &control) = 0;
   virtual void startLive() = 0;
-  virtual void stopLive() = 0;
   virtual void destroy();
 signals:
   void fps(double rate);

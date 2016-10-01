@@ -83,7 +83,6 @@ void V4L2Imager::Private::open_camera() {
 
 V4L2Imager::~V4L2Imager()
 {
-    stopLive();
 }
 
 Imager::Properties V4L2Imager::properties() const
@@ -196,12 +195,3 @@ void V4L2Imager::startLive()
 {
   restart([=]{ return make_shared<V4L2ImagingWorker>(d->device, d->v4l2formats->current_v4l2_format()); });
 }
-
-
-void V4L2Imager::stopLive()
-{
-}
-
-
-
-

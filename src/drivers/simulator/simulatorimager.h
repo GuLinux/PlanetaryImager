@@ -34,7 +34,6 @@ public:
     void setControl(const Control& setting) override;
     Controls controls() const override;
     void startLive() override;
-    void stopLive() override;
     static int rand(int a, int b);
     bool supportsROI() const override { return true; }
 public slots:

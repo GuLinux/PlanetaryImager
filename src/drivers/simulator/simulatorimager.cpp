@@ -242,7 +242,3 @@ void SimulatorImager::startLive()
 {
   restart([&] { return d->worker = make_shared<SimulatorImagerWorker>(d->settings, d->settingsMutex); });
 }
-
-void SimulatorImager::stopLive()
-{
-}

@@ -61,9 +61,5 @@ void SERImager::startLive()
 {
 }
 
-void SERImager::stopLive()
-{
-}
-
 
 

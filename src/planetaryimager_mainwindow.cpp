@@ -128,8 +128,7 @@ PlanetaryImagerMainWindow::~PlanetaryImagerMainWindow()
   LOG_F_SCOPE
   d->saveState();
   if(d->imager) {
-      d->imager->aboutToQuit();
-      d->imager->stopLive();
+      d->imager->destroy();
   }
   d->imagerThread.quit();
   d->imagerThread.wait();
@@ -251,7 +250,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     d->imagerThread.start();
     connect(qApp, &QApplication::aboutToQuit, this, [=]{
       if(d->imager)
-        d->imager->stopLive();
+        d->imager->destroy();
     }, Qt::QueuedConnection);
     connect(qApp, &QApplication::aboutToQuit, this, [&] {
       d->displayImage->quit();

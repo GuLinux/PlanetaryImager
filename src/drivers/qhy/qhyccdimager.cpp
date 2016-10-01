@@ -78,7 +78,6 @@ QHYCCDImager::QHYCCDImager(const QString &cameraName, const char *id, const Imag
 
 QHYCCDImager::~QHYCCDImager()
 {
-  stopLive();
   qDebug() << "Closing QHYCCD";
   QHY_CHECK << CloseQHYCCD(d->handle) << "CloseQHYCCD result: ";
   emit disconnected();
@@ -186,10 +185,6 @@ void QHYCCDImager::setControl(const QHYCCDImager::Control& setting)
 void QHYCCDImager::startLive()
 {
   restart([=] { return d->imaging_worker = make_shared<QHYImagingWorker>(d->handle); });
-}
-
-void QHYCCDImager::stopLive()
-{
 }
 
 bool QHYCCDImager::supportsROI() const

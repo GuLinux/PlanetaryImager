@@ -97,7 +97,6 @@ ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandler::
 ZWO_ASI_Imager::~ZWO_ASI_Imager()
 {
     d->reload_temperature_timer->stop();
-    stopLive();
     ASI_CHECK << ASICloseCamera(d->info.CameraID) << "Close Camera";
 }
 
@@ -195,10 +194,6 @@ void ZWO_ASI_Imager::startLive()
     LOG_F_SCOPE
     restart(d->create_worker(1, d->maxROI(1), d->info.SupportedVideoFormat[0]));
     qDebug() << "Live started correctly";
-}
-
-void ZWO_ASI_Imager::stopLive()
-{
 }
 
 

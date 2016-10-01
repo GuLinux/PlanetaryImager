@@ -31,7 +31,6 @@ public:
     void setControl(const Control& setting) override;
     Controls controls() const override;
     void startLive() override;
-    void stopLive() override;
     bool supportsROI() const override { return false; }
 public slots:
     void setROI(const QRect &) override;

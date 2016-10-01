@@ -35,7 +35,6 @@ public:
 public slots:
     void setControl(const Imager::Control& control) override;
     void startLive() override;
-    void stopLive() override;
     void setROI(const QRect &) override;
     void clearROI() override;
 private:

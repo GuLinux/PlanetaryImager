@@ -32,12 +32,6 @@ Imager::Imager(const ImageHandler::ptr& image_handler) : QObject(nullptr), dptr(
 {
 }
 
-void Imager::aboutToQuit()
-{
-  d->imager_thread.reset();
-}
-
-
 Imager::~Imager()
 {
   destroy();
