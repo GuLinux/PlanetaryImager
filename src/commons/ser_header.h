@@ -19,6 +19,7 @@
 #define _SER_HEADER_H
 #include <stdint.h>
 #include "frame.h"
+#include <QDateTime>
 
 typedef uint64_t SER_Timestamp;
 struct __attribute__ ((__packed__)) SER_Header {
@@ -54,6 +55,8 @@ struct __attribute__ ((__packed__)) SER_Header {
     int bytesPerPixel() const;
     Frame::ColorFormat frame_color_format() const;
     void set_color_format(const Frame::ColorFormat &format);
+    static SER_Timestamp timestamp(const QDateTime &datetime);
+    static QDateTime qdatetime(const SER_Timestamp &timestamp);
 };
 
 

@@ -24,6 +24,7 @@
 #include <QDebug>
 #include <QThread>
 #include <QElapsedTimer>
+#include <QFileInfo>
 
 using namespace std;
 
@@ -45,6 +46,7 @@ private:
   int pixel_depth;
   int current_frame = 0;
   double fps = 30;
+  vector<SER_Timestamp> timestamps;
 };
 
 SERImagerWorker::SERImagerWorker(const QString& file) : file{file}
@@ -55,6 +57,17 @@ SERImagerWorker::SERImagerWorker(const QString& file) : file{file}
   color_format = header.frame_color_format();
   resolution = {static_cast<int>(header.imageWidth), static_cast<int>(header.imageHeight)};
   pixel_depth = header.pixelDepth;
+  size_t trailer_start = sizeof(SER_Header) + header.frames * frame_size;
+  if(this->file.size() == trailer_start + sizeof(SER_Timestamp) * header.frames) {
+    this->file.seek(trailer_start);
+    timestamps.resize(header.frames);
+    for(auto &timestamp: timestamps) {
+      this->file.read(reinterpret_cast<char*>(&timestamp), sizeof(SER_Timestamp));
+    }
+    auto timestamps_diff = static_cast<double>(*timestamps.rbegin() - *timestamps.begin()) / 10000.;
+    fps = 1000. /  (timestamps_diff / static_cast<double>(timestamps.size()) );
+    qDebug() << "Have timestamps: duration in msecs=" << timestamps_diff << ", fps: " << fps;
+  }
   qDebug() << "Opened SER file: " << header.frames << " frames";
 }
 
