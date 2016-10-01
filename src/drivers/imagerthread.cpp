@@ -84,7 +84,6 @@ void ImagerThread::stop()
 void ImagerThread::Private::thread_started()
 {
   running = true;
-  worker->start();
   while(running) {
     Job queued_job;
     while(jobs_queue.pop(queued_job)) {
@@ -105,7 +104,6 @@ void ImagerThread::Private::thread_started()
       qWarning() << e.what();
     }
   }
-  worker->stop();
 }
 
 void ImagerThread::push_job(const Job& job)

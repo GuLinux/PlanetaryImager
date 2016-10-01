@@ -30,9 +30,7 @@ class QHYImagingWorker : public ImagerThread::Worker
 public:
   QHYImagingWorker(qhyccd_handle *handle);
   ~QHYImagingWorker();
-  virtual Frame::ptr shoot();
-  virtual void start();
-  virtual void stop();
+  Frame::ptr shoot() override;
   typedef std::shared_ptr<QHYImagingWorker> ptr;
 private:
   DPTR

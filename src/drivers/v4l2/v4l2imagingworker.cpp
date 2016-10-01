@@ -40,10 +40,22 @@ V4L2ImagingWorker::V4L2ImagingWorker(const V4L2Device::ptr& device, const v4l2_f
 {
   qDebug() << "Starting v4l2 worker with format=" << FOURCC2QS(format.fmt.pix.pixelformat) << ", res=" << "%1x%2"_q % format.fmt.pix.width % format.fmt.pix.height;
   d->adjust_framerate();
+  int buffers = d->request_buffers(4);
+  for(uint32_t i=0; i< buffers; i++) {
+    d->buffers.push_back( make_shared<V4LBuffer>(i, d->device));
+    d->buffers[i]->queue();
+  }
+  d->bufferinfo_type = d->buffers[0]->type();
+  d->device->ioctl(VIDIOC_STREAMON, &d->bufferinfo_type, "starting streaming");
 }
 
 V4L2ImagingWorker::~V4L2ImagingWorker()
 {
+  d->device->ioctl(VIDIOC_STREAMOFF, &d->bufferinfo_type, "stopping live");
+  d->buffers.clear();
+  qDebug() << "live stopped";
+  d->request_buffers(0);
+  qDebug() << "requested  0 buffers";
 }
 
 void V4L2ImagingWorker::Private::adjust_framerate()
@@ -83,20 +95,6 @@ int V4L2ImagingWorker::Private::request_buffers(int count)
 }
 
 
-
-void V4L2ImagingWorker::start()
-{
-  qDebug() << "format: " << FOURCC2QS(d->format.fmt.pix.pixelformat) << ", " << d->format.fmt.pix.width << "x" << d->format.fmt.pix.height;
-  
-  int buffers = d->request_buffers(4);
-  for(uint32_t i=0; i< buffers; i++) {
-    d->buffers.push_back( make_shared<V4LBuffer>(i, d->device));
-    d->buffers[i]->queue();
-  }
-  d->bufferinfo_type = d->buffers[0]->type();
-  d->device->ioctl(VIDIOC_STREAMON, &d->bufferinfo_type, "starting streaming");
-}
-
 Frame::ptr V4L2ImagingWorker::shoot()
 {
   Frame::ColorFormat color_format = Frame::RGB;
@@ -121,11 +119,3 @@ Frame::ptr V4L2ImagingWorker::shoot()
   return make_shared<Frame>(color_format, image);
 }
 
-void V4L2ImagingWorker::stop()
-{
-  d->device->ioctl(VIDIOC_STREAMOFF, &d->bufferinfo_type, "stopping live");
-  d->buffers.clear();
-  qDebug() << "live stopped";
-  d->request_buffers(0);
-  qDebug() << "requested  0 buffers";
-}

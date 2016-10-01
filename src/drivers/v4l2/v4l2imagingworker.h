@@ -29,8 +29,6 @@ public:
   V4L2ImagingWorker(const V4L2Device::ptr &device, const v4l2_format &format);
   virtual ~V4L2ImagingWorker();
   Frame::ptr shoot() override;
-  void start() override;
-  void stop() override;
 private:
   DPTR
 };

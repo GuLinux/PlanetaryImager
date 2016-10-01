@@ -60,11 +60,6 @@ QHYImagingWorker::~QHYImagingWorker()
 }
 
 
-void QHYImagingWorker::start()
-{
-
-}
-
 Frame::ptr QHYImagingWorker::shoot()
 {
   QHY_CHECK << GetQHYCCDLiveFrame(d->handle,&d->w,&d->h,&d->bpp,&d->channels,d->buffer.data()) << "Capturing live frame";
@@ -82,10 +77,6 @@ Frame::ptr QHYImagingWorker::shoot()
     return make_shared<Frame>(d->color_format, copy); //TODO port to new constructor
      // TODO: Properly handle with debayer setting, I guess... find a tester!
   }
-}
-
-void QHYImagingWorker::stop()
-{
 }
 
 bool QHYImagingWorker::Private::is_zero(uint8_t b)

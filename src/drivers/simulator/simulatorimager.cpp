@@ -45,8 +45,6 @@ public:
   SimulatorImagerWorker(SimulatorSettings &settings, QMutex &settingsMutex);
   
   Frame::ptr shoot() override;
-  void start() override;
-  void stop() override;
   void setROI(const QRect &roi);
   enum ImageType{ BGR = 0, Mono = 10, Bayer = 20};
 private:
@@ -123,15 +121,6 @@ Imager::Controls SimulatorImager::controls() const
 int SimulatorImager::rand(int a, int b)
 {
    return qrand() % ((b + 1) - a) + a;
-}
-
-
-void SimulatorImagerWorker::start()
-{
-}
-
-void SimulatorImagerWorker::stop()
-{
 }
 
 SimulatorImagerWorker::SimulatorImagerWorker(SimulatorSettings &settings, QMutex &settingsMutex) : settings{settings}, settingsMutex{settingsMutex}

@@ -58,10 +58,8 @@ ASIImagingWorker::ASIImagingWorker(const QRect& requestedROI, int bin, const ASI
 
 ASIImagingWorker::~ASIImagingWorker()
 {
-}
-
-void ASIImagingWorker::start()
-{
+    ASI_CHECK << ASIStopVideoCapture(d->info.CameraID) << "Stop capture";
+    qDebug() << "Imaging stopped.";
 }
 
 
@@ -70,12 +68,6 @@ Frame::ptr ASIImagingWorker::shoot()
   auto frame = make_shared<Frame>( d->format == ASI_IMG_RAW16 ? 16 : 8,  d->colorFormat(), QSize{d->roi.width(), d->roi.height()});
   ASI_CHECK << ASIGetVideoData(d->info.CameraID, frame->data(), frame->size(), 100000) << "Capture frame";
   return frame;
-}
-
-void ASIImagingWorker::stop()
-{
-    ASI_CHECK << ASIStopVideoCapture(d->info.CameraID) << "Stop capture";
-    qDebug() << "Imaging stopped.";
 }
 
 size_t ASIImagingWorker::Private::calcBufferSize()

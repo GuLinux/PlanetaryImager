@@ -29,9 +29,7 @@ class ImagerThread
   typedef std::function<void()> Job;
   class Worker {
   public:
-    virtual void start() = 0;
     virtual Frame::ptr shoot() = 0;
-    virtual void stop() = 0;
     typedef std::shared_ptr<Worker> ptr;
     typedef std::function<ptr()> factory;
   };
