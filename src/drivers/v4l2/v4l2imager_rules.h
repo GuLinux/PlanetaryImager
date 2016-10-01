@@ -16,21 +16,14 @@
  *
  */
 
-
-#include "v4l2imager_rules.h"
-#include "v4l2imager.h"
-#include <linux/videodev2.h>
-using namespace std;
-
-Drivers::V4L2::ControlFixes Drivers::V4L2::controlFixes(V4L2Imager *imager)
-{
-  return {
-     // Exposure to combo in Microsoft Lifecam 3000
-    [=](Imager::Control &s){
-      if(s.id != V4L2_CID_EXPOSURE_ABSOLUTE || (imager->name() != "Microsoft\u00AE LifeCam HD-3000" && imager->name() != "Microsoft\u00AE LifeCam HD-5000"))
-          return;
-      s.type = Imager::Control::Combo;
-      s.choices = {{"5", 5}, {"9", 9}, {"10", 10}, {"19", 19}, {"20", 20}, {"39", 39}, {"78", 78}, {"156", 156}, {"312", 312}, {"625", 625}, {"1250", 1250}, {"2500", 2500}, {"5000", 5000}, {"10000", 10000}};
-    }
-  };
+#include <functional>
+#include "drivers/imager.h"
+#include <QList>
+class V4L2Imager;
+namespace Drivers {
+  namespace V4L2 {
+      typedef std::function<void(Imager::Control &)> ControlFix;
+      typedef QList<ControlFix> ControlFixes;
+      ControlFixes controlFixes(V4L2Imager *imager);
+  }
 }
