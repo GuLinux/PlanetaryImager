@@ -22,7 +22,7 @@ using namespace std;
 DPTR_IMPL(SERImager) {
 };
 
-SERImager::SERImager(const ImageHandler::ptr& handler)
+SERImager::SERImager(const ImageHandler::ptr& handler) : Imager{handler}, dptr()
 {
 }
 

@@ -32,7 +32,6 @@ class Imager : public QObject {
 public:
   class exception;
   Imager(const ImageHandler::ptr &image_handler);
-  [[ deprecated ]] Imager();
   virtual ~Imager();
   struct Control;
   struct Properties;

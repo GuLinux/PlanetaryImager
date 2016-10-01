@@ -28,10 +28,6 @@ DPTR_IMPL(Imager) {
   LOG_C_SCOPE(Imager);
 };
 
-Imager::Imager()  : QObject(nullptr), dptr()
-{
-}
-
 Imager::Imager(const ImageHandler::ptr& image_handler) : QObject(nullptr), dptr(image_handler)
 {
 }
@@ -44,12 +40,13 @@ void Imager::aboutToQuit()
 
 Imager::~Imager()
 {
+  destroy();
 }
 
 
 void Imager::destroy()
 {
-  stopLive();
+  d->imager_thread.reset();
   emit disconnected();
   this->deleteLater();
 }
