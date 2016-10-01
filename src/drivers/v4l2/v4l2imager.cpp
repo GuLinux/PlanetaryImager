@@ -16,18 +16,60 @@
  *
  */
 
-#include "v4l2imager_p.h"
 #include "c++/stlutils.h"
 #include "Qt/benchmark.h"
 #include "commons/utils.h"
 
+#include "v4l2imager.h"
 #include "v4l2device.h"
 #include "v4l2exception.h"
 #include "v4l2imagingworker.h"
 #include "v4l2formats.h"
+#include "v4l2control.h"
 
 using namespace std;
 using namespace GuLinux;
+
+
+#define PIXEL_FORMAT_CONTROL_ID -10
+#define RESOLUTIONS_CONTROL_ID -9
+#define FPS_CONTROL_ID -8
+
+
+DPTR_IMPL(V4L2Imager)
+{
+    class Worker;
+    ImageHandler::ptr handler;
+    const QString device_path;
+    V4L2Imager *q;
+    
+    V4L2Device::ptr device;
+    ImagerThread::ptr imager_thread;
+    
+    V4L2Formats::ptr v4l2formats;
+    QList<V4L2Formats::Resolution::ptr> resolutions;
+
+    void open_camera();
+    QList<V4L2Control::ptr> controls;
+    QString driver, bus, cameraname;
+    QString dev_name;
+    QList<V4L2Control::Fix> control_fixes;
+    void populate_control_fixes();
+    void find_controls();
+};
+
+void V4L2Imager::Private::populate_control_fixes()
+{
+ // Exposure to combo in Microsoft Lifecam 3000
+  control_fixes.push_back( [=](Control &s){
+   if(s.id != V4L2_CID_EXPOSURE_ABSOLUTE || (cameraname != "Microsoft\u00AE LifeCam HD-3000" && cameraname != "Microsoft\u00AE LifeCam HD-5000"))
+      return;
+   s.type = Control::Combo;
+   s.choices = {{"5", 5}, {"9", 9}, {"10", 10}, {"19", 19}, {"20", 20}, {"39", 39}, {"78", 78}, {"156", 156}, {"312", 312}, {"625", 625}, {"1250", 1250}, {"2500", 2500}, {"5000", 5000}, {"10000", 10000}};
+  });
+}
+
+
 
 V4L2Imager::V4L2Imager(const QString &name, int index, const ImageHandler::ptr &handler)
     : dptr(handler, "/dev/video%1"_q % index, this)
