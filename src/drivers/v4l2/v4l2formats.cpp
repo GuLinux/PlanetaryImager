@@ -68,6 +68,8 @@ V4L2Formats::V4L2Formats(const V4L2Device::ptr& device) : dptr(device)
     qDebug() << "Current format: " << resolution->format().name() << ", resolution: " << *resolution;
 }
 
+
+
 namespace {
   v4l2_format v4l2_query_format(const V4L2Device::ptr &device) {
     v4l2_format current_format;
@@ -75,6 +77,10 @@ namespace {
     device->ioctl(VIDIOC_G_FMT , &current_format, "querying webcam format");
     return current_format;
   }
+}
+v4l2_format V4L2Formats::current_v4l2_format() const
+{
+  return v4l2_query_format(d->device);
 }
 
 V4L2Formats::Resolution::ptr V4L2Formats::current_resolution() const
@@ -157,7 +163,7 @@ void V4L2Formats::Format::set(Resolution *resolution)
   QSize max_resolution_size = resolution == nullptr ? max_resolution()->size() : resolution->size();
   current_format.fmt.pix.width = max_resolution_size.width();
   current_format.fmt.pix.height = max_resolution_size.height();
-  d->device->ioctl(VIDIOC_S_FMT , &current_format, "setting webcam format");
+  d->device->ioctl(VIDIOC_S_FMT , &current_format, "setting webcam format/resolution");
 }
 
 V4L2Formats::Resolution::ptr V4L2Formats::Format::max_resolution() const
@@ -170,7 +176,9 @@ void V4L2Formats::Resolution::set()
   d->format.set(this);
 }
 
-
+uint32_t V4L2Formats::Resolution::index() const {
+  return d->frmsizeenum.index;
+}
 
 V4L2Formats::~V4L2Formats()
 {

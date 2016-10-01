@@ -24,9 +24,8 @@
 #include "c++/dptr.h"
 #include <QSize>
 #include <QList>
+#include <linux/videodev2.h>
 
-struct v4l2_fmtdesc;
-struct v4l2_frmsizeenum;
 
 class V4L2Formats
 {
@@ -38,6 +37,7 @@ public:
   class Resolution;
   QList<std::shared_ptr<Format>> formats() const;
   std::shared_ptr<Resolution> current_resolution() const;
+  v4l2_format current_v4l2_format() const;
 private:
   DPTR
 };
@@ -51,6 +51,7 @@ public:
   std::size_t area() const;
   Format &format();
   void set();
+  uint32_t index() const;
 private:
   DPTR
 };

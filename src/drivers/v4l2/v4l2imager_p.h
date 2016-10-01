@@ -37,6 +37,7 @@
 #include "v4l2buffer.h"
 #include "v4l2control.h"
 #include "v4l2utils.h"
+#include "v4l2formats.h"
 
 #define PIXEL_FORMAT_CONTROL_ID -10
 #define RESOLUTIONS_CONTROL_ID -9
@@ -54,10 +55,10 @@ DPTR_IMPL(V4L2Imager)
     
     V4L2Device::ptr device;
     ImagerThread::ptr imager_thread;
+    
+    V4L2Formats::ptr v4l2formats;
+    QList<V4L2Formats::Resolution::ptr> resolutions;
 
-    QList<v4l2_fmtdesc> formats() const;
-    v4l2_format query_format() const;
-    QList<v4l2_frmsizeenum> resolutions(const v4l2_format &format) const;
     void open_camera();
     QList<V4L2Control::ptr> controls;
     QString driver, bus, cameraname;
