@@ -1,4 +1,4 @@
-#include "src/image_handlers/output_writers/ser_header.h"
+#include "src/commons/ser_header.h"
 #include "GuLinux-Commons/Qt/strings.h"
 
 #include <iostream>
