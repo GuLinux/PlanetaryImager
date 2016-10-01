@@ -54,11 +54,9 @@ void Imager::destroy()
   this->deleteLater();
 }
 
-void Imager::restart(const ImagerThread::Worker::factory& worker, function<void()> run_while_stopped)
+void Imager::restart(const ImagerThread::Worker::factory& worker)
 {
   d->imager_thread.reset();
-  if(run_while_stopped)
-    run_while_stopped();
   d->imager_thread = make_shared<ImagerThread>(worker(), this, d->image_handler);
   d->imager_thread->start();
 }

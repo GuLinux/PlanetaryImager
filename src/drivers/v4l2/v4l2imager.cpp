@@ -46,7 +46,6 @@ DPTR_IMPL(V4L2Imager)
     V4L2Imager *q;
     
     V4L2Device::ptr device;
-    ImagerThread::ptr imager_thread;
     
     V4L2Formats::ptr v4l2formats;
     QList<V4L2Formats::Resolution::ptr> resolutions;
@@ -182,7 +181,7 @@ void V4L2Imager::setControl(const Control &setting)
   }
   auto control = find_if(begin(d->controls), end(d->controls), [=](const V4L2Control::ptr &c) { return setting.id == c->control().id; });
   if(control != end(d->controls)) {
-    d->imager_thread->push_job([=]{
+    push_job_on_thread([=]{
       try {
         (*control)->set(setting);
       } catch(const V4L2Exception &e) {
