@@ -41,7 +41,6 @@ using namespace GuLinux;
 DPTR_IMPL(V4L2Imager)
 {
     class Worker;
-    ImageHandler::ptr handler;
     const QString device_path;
     Drivers::V4L2::ControlFixes control_fixes;
     V4L2Imager *q;
@@ -61,7 +60,7 @@ DPTR_IMPL(V4L2Imager)
 
 
 V4L2Imager::V4L2Imager(const QString &name, int index, const ImageHandler::ptr &handler)
-    : dptr(handler, "/dev/video%1"_q % index, Drivers::V4L2::controlFixes(this), this)
+    : Imager{handler}, dptr("/dev/video%1"_q % index, Drivers::V4L2::controlFixes(this), this)
 {
   d->open_camera();
   d->v4l2formats = make_shared<V4L2Formats>(d->device);
@@ -166,13 +165,15 @@ Imager::Controls V4L2Imager::controls() const
 void V4L2Imager::setControl(const Control &setting)
 {
   if(setting.id == RESOLUTIONS_CONTROL_ID) {
-    stopLive();
-    try {
-      d->resolutions[setting.value]->set();
-    } catch(const V4L2Exception &e) {
-      qWarning() << "Unable to set resolution: " << e.what();
-    }
-    startLive();
+    restart([=]{
+      try {
+        d->resolutions[setting.value]->set();
+      } catch(const V4L2Exception &e) {
+        qWarning() << "Unable to set resolution: " << e.what();
+      }
+      return make_shared<V4L2ImagingWorker>(d->device, d->v4l2formats->current_v4l2_format());
+    });
+
     auto current = d->v4l2formats->current_resolution();
     Control new_value = setting;
     new_value.value = find_if( d->resolutions.begin(), d->resolutions.end(), [&](const V4L2Formats::Resolution::ptr &r){ return *r == *current; } ) - d->resolutions.begin();
@@ -194,13 +195,12 @@ void V4L2Imager::setControl(const Control &setting)
 
 void V4L2Imager::startLive()
 {
-  d->imager_thread = make_shared<ImagerThread>(make_shared<V4L2ImagingWorker>(d->device, d->v4l2formats->current_v4l2_format()), this, d->handler);
-  d->imager_thread->start();
+  restart([=]{ return make_shared<V4L2ImagingWorker>(d->device, d->v4l2formats->current_v4l2_format()); });
 }
+
 
 void V4L2Imager::stopLive()
 {
-  d->imager_thread.reset();
 }
 
 
