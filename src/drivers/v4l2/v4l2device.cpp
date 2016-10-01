@@ -25,18 +25,40 @@
 #include <QDebug>
 #include "c++/stringbuilder.h"
 #include "v4l2exception.h"
+#include <linux/videodev2.h>
 
 using namespace std;
 
 DPTR_IMPL(V4L2Device) {
   const QString path;
+  QMap<int, QString> ioctl_names;
   int fd;
 };
+
+#define DESCRIBE_IOCTL(name) d->ioctl_names[name] = #name;
 
 V4L2Device::V4L2Device(const QString& path) : dptr(path)
 {
     d->fd = ::open(path.toLatin1(), O_RDWR, O_NONBLOCK, 0);
     V4L2_CHECK << d->fd << "opening device '%1'"_q % d->path;
+    DESCRIBE_IOCTL(VIDIOC_DQBUF)
+    DESCRIBE_IOCTL(VIDIOC_ENUM_FMT)
+    DESCRIBE_IOCTL(VIDIOC_ENUM_FRAMEINTERVALS)
+    DESCRIBE_IOCTL(VIDIOC_ENUM_FRAMESIZES)
+    DESCRIBE_IOCTL(VIDIOC_G_CTRL)
+    DESCRIBE_IOCTL(VIDIOC_G_FMT)
+    DESCRIBE_IOCTL(VIDIOC_G_PARM)
+    DESCRIBE_IOCTL(VIDIOC_QBUF)
+    DESCRIBE_IOCTL(VIDIOC_QUERYBUF)
+    DESCRIBE_IOCTL(VIDIOC_QUERYCAP)
+    DESCRIBE_IOCTL(VIDIOC_QUERYCTRL)
+    DESCRIBE_IOCTL(VIDIOC_QUERYMENU)
+    DESCRIBE_IOCTL(VIDIOC_REQBUFS)
+    DESCRIBE_IOCTL(VIDIOC_S_CTRL)
+    DESCRIBE_IOCTL(VIDIOC_S_FMT)
+    DESCRIBE_IOCTL(VIDIOC_S_PARM)
+    DESCRIBE_IOCTL(VIDIOC_STREAMOFF)
+    DESCRIBE_IOCTL(VIDIOC_STREAMON)
 }
 
 V4L2Device::~V4L2Device()
@@ -67,7 +89,8 @@ void V4L2Device::__ioctl(uint64_t ctl, void* data, const QString& errorLabel) co
     do {
         r = ::ioctl(d->fd, ctl, data);
     } while (-1 == r && EINTR == errno);
-    V4L2_CHECK << r << (errorLabel.isEmpty() ? "ioctl %1"_q % ctl : errorLabel);
+    V4L2_CHECK << r << (errorLabel.isEmpty() ? "ioctl %1"_q % d->ioctl_names.value(ctl, "%1"_q % ctl) : errorLabel);
+    //qDebug() << "IOCTL RUN: %1 with result %2"_q % d->ioctl_names.value(ctl, "%1"_q % ctl) % r;
 }
 
 int V4L2Device::__xioctl(uint64_t ctl, void* data, const QString& errorLabel) const

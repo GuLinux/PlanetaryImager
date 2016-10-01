@@ -191,3 +191,13 @@ V4L2Formats::Format::~Format()
 V4L2Formats::Resolution::~Resolution()
 {
 }
+
+bool V4L2Formats::Format::operator==(const V4L2Formats::Format& other) const
+{
+  return other.fourcc() == fourcc();
+}
+
+bool V4L2Formats::Resolution::operator==(const V4L2Formats::Resolution& other) const
+{
+  return other.d->format == d->format && other.size() == size();
+}

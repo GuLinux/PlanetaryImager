@@ -52,6 +52,7 @@ public:
   Format &format();
   void set();
   uint32_t index() const;
+  bool operator==(const Resolution &other) const;
 private:
   DPTR
 };
@@ -66,6 +67,7 @@ public:
   QList<Resolution::ptr> resolutions() const;
   Resolution::ptr max_resolution() const;
   void set(Resolution *resolution = nullptr);
+  bool operator==(const Format &other) const;
   uint32_t fourcc() const;
 private:
   DPTR

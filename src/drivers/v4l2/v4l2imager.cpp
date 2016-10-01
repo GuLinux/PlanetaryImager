@@ -27,6 +27,7 @@
 #include "v4l2formats.h"
 #include "v4l2control.h"
 #include "v4l2imager_rules.h"
+#include <QThread>
 
 using namespace std;
 using namespace GuLinux;
@@ -166,9 +167,16 @@ void V4L2Imager::setControl(const Control &setting)
 {
   if(setting.id == RESOLUTIONS_CONTROL_ID) {
     stopLive();
-    d->open_camera();
-    d->resolutions[setting.value]->set();
+    try {
+      d->resolutions[setting.value]->set();
+    } catch(const V4L2Exception &e) {
+      qWarning() << "Unable to set resolution: " << e.what();
+    }
     startLive();
+    auto current = d->v4l2formats->current_resolution();
+    Control new_value = setting;
+    new_value.value = find_if( d->resolutions.begin(), d->resolutions.end(), [&](const V4L2Formats::Resolution::ptr &r){ return *r == *current; } ) - d->resolutions.begin();
+    emit changed(new_value);
     return;
   }
   auto control = find_if(begin(d->controls), end(d->controls), [=](const V4L2Control::ptr &c) { return setting.id == c->control().id; });
