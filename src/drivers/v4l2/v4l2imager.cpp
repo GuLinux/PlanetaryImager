@@ -24,6 +24,7 @@
 #include "v4l2device.h"
 #include "v4l2exception.h"
 #include "v4l2imagingworker.h"
+#include "v4l2formats.h"
 
 using namespace std;
 using namespace GuLinux;
@@ -52,7 +53,7 @@ V4L2Imager::V4L2Imager(const QString &name, int index, const ImageHandler::ptr &
     (*resolutions).value = (*max_resolution).index;
     setControl(*resolutions);
   }
-  
+  auto new_formats = make_shared<V4L2Formats>(d->device);
 }
 
 
