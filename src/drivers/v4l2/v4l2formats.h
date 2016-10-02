@@ -50,6 +50,7 @@ public:
   QSize size() const;
   std::size_t area() const;
   Format &format();
+  void set();
 private:
   DPTR
 };
@@ -62,6 +63,8 @@ public:
   QString name() const;
   QString description() const;
   QList<Resolution::ptr> resolutions() const;
+  Resolution::ptr max_resolution() const;
+  void set(Resolution *resolution = nullptr);
   uint32_t fourcc() const;
 private:
   DPTR

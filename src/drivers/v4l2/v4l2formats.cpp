@@ -50,7 +50,6 @@ QDebug operator<<(QDebug dbg, const V4L2Formats::Format &format) {
   dbg.nospace().noquote() << format.name() << "(" << format.description() << ")" << ": ";
   for(auto resolution: format.resolutions())
     dbg << *resolution << ", ";
-  
   return dbg.space().quote();
 }
 
@@ -69,13 +68,19 @@ V4L2Formats::V4L2Formats(const V4L2Device::ptr& device) : dptr(device)
     qDebug() << "Current format: " << resolution->format().name() << ", resolution: " << *resolution;
 }
 
+namespace {
+  v4l2_format v4l2_query_format(const V4L2Device::ptr &device) {
+    v4l2_format current_format;
+    current_format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
+    device->ioctl(VIDIOC_G_FMT , &current_format, "querying webcam format");
+    return current_format;
+  }
+}
 
 V4L2Formats::Resolution::ptr V4L2Formats::current_resolution() const
 {
   // TODO: throw exception if unable to find current format/resolution?
-  v4l2_format current_format;
-  current_format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-  d->device->ioctl(VIDIOC_G_FMT , &current_format, "querying webcam format");
+  auto current_format = v4l2_query_format(d->device);
   auto format = find_if(d->formats.begin(), d->formats.end(), [&](const Format::ptr &f) { return current_format.fmt.pix.pixelformat == f->fourcc(); });
   if(format == d->formats.end())
     return {};
@@ -134,6 +139,7 @@ V4L2Formats::Format & V4L2Formats::Resolution::format()
 {
   return d->format;
 }
+
 QSize V4L2Formats::Resolution::size() const
 {
   return {static_cast<int>(d->frmsizeenum.discrete.width), static_cast<int>(d->frmsizeenum.discrete.height)};
@@ -143,6 +149,27 @@ std::size_t V4L2Formats::Resolution::area() const
 {
   return size().width() * size().height();
 }
+
+void V4L2Formats::Format::set(Resolution *resolution)
+{
+  auto current_format = v4l2_query_format(d->device);
+  current_format.fmt.pix.pixelformat = d->fmtdesc.pixelformat;
+  QSize max_resolution_size = resolution == nullptr ? max_resolution()->size() : resolution->size();
+  current_format.fmt.pix.width = max_resolution_size.width();
+  current_format.fmt.pix.height = max_resolution_size.height();
+  d->device->ioctl(VIDIOC_S_FMT , &current_format, "setting webcam format");
+}
+
+V4L2Formats::Resolution::ptr V4L2Formats::Format::max_resolution() const
+{
+  return *max_element(d->resolutions.begin(), d->resolutions.end(), [](const Resolution::ptr &r1, const Resolution::ptr &r2) { return r1->area() < r2->area(); });
+}
+
+void V4L2Formats::Resolution::set()
+{
+  d->format.set(this);
+}
+
 
 
 V4L2Formats::~V4L2Formats()
