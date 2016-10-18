@@ -25,12 +25,15 @@
 class ROIValidator {
 public:
   typedef std::function<void(QRect &)> Rule;
+  typedef std::shared_ptr<ROIValidator> ptr;
   ROIValidator(const std::initializer_list<Rule> &rules);
   ~ROIValidator();
   QRect validate(const QRect & original) const;
   static Rule max_resolution(const QRect &max);
   static Rule width_multiple(int factor);
   static Rule height_multiple(int factor);
+  static Rule x_multiple(int factor);
+  static Rule y_multiple(int factor);
 private:
   DPTR
 };

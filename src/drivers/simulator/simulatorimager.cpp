@@ -25,6 +25,7 @@
 #include <QMutex>
 #include <QRect>
 #include "drivers/imagerthread.h"
+#include "drivers/roi.h"
 
 using namespace std;
 using namespace std::chrono_literals;
@@ -38,6 +39,7 @@ DPTR_IMPL(SimulatorImager) {
   QTimer refresh_temperature;
   QMutex settingsMutex;
   LOG_C_SCOPE(SimulatorImager);
+  ROIValidator::ptr roi_validator;
 };
 
 class SimulatorImagerWorker : public ImagerThread::Worker {
@@ -57,6 +59,12 @@ private:
 
 SimulatorImager::SimulatorImager(const ImageHandler::ptr& handler) : Imager(handler), dptr()
 {
+  d->roi_validator.reset(new ROIValidator{
+    ROIValidator::width_multiple(4),
+    ROIValidator::height_multiple(2),
+    ROIValidator::x_multiple(2),
+    ROIValidator::y_multiple(2)
+    });
   d->settings = {
     {"exposure",    {1, "exposure", 0.1, 1000, 0.1, 19.5}},
     {"movement", {2, "movement", 0, 5, 1, 1}},
@@ -182,7 +190,7 @@ Frame::ptr SimulatorImagerWorker::shoot()
   crop_rect -= cv::Size{crop_factor, crop_factor};
   crop_rect += cv::Point{pix_w, pix_h};
   cropped = is_bayer ? image : image(crop_rect);
-  if(roi.isValid() && ! is_bayer) {
+  if(roi.isValid()) {
     cropped = cropped(cv::Rect{roi.x(), roi.y(), roi.width(), roi.height()});
   }
   if(! is_bayer && (rand(0, seeing.max) > (seeing.value_auto ? 3 : seeing.value) ) ) {
@@ -217,7 +225,7 @@ void SimulatorImager::clearROI()
 
 void SimulatorImager::setROI(const QRect &roi)
 {
-  d->worker->setROI(roi);
+  d->worker->setROI(d->roi_validator->validate(roi));
 }
 
 void SimulatorImagerWorker::setROI(const QRect& roi)

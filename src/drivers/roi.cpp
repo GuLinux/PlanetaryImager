@@ -70,3 +70,17 @@ ROIValidator::Rule ROIValidator::width_multiple(int factor)
     roi.setWidth( Private::closest_multiple(roi.width(), factor) );
   };
 }
+
+ROIValidator::Rule ROIValidator::x_multiple(int factor)
+{
+  return [factor](QRect &roi){
+    roi.setX( Private::closest_multiple(roi.x(), factor) );
+  };
+}
+
+ROIValidator::Rule ROIValidator::y_multiple(int factor)
+{
+  return [factor](QRect &roi){
+    roi.setY( Private::closest_multiple(roi.y(), factor) );
+  };
+}

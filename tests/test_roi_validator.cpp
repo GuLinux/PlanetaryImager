@@ -41,3 +41,13 @@ TEST_F(ROIValidatorTest, test_height_multiple) {
   ROIValidator::height_multiple(8)(rect);
   ASSERT_EQ( (QRect{0, 0, 1089,1080}), rect);
 }
+
+TEST_F(ROIValidatorTest, sequence_test) {
+  rect = QRect{10, 20, 1245, 421};
+  ROIValidator validator{ROIValidator::width_multiple(8), ROIValidator::height_multiple(2)};
+  auto new_rect = validator.validate(rect);
+  ASSERT_EQ(0, new_rect.width() % 8);
+  ASSERT_EQ(0, new_rect.height() % 2);
+  ASSERT_EQ(10, new_rect.x());
+  ASSERT_EQ(20, new_rect.y());
+}
