@@ -268,6 +268,13 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     });
 }
 
+void PlanetaryImagerMainWindow::closeEvent(QCloseEvent* event)
+{
+  QMainWindow::closeEvent(event);
+  qApp->quit();
+}
+
+
 #include <iostream>
 
 void PlanetaryImagerMainWindow::Private::init_devices_watcher()
