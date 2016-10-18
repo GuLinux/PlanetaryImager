@@ -3,7 +3,7 @@ set(CMAKE_CXX_STANDARD 14)
 
 enable_testing()
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${CMAKE_SOURCE_DIR}/GuLinux-Commons/cmake)
-include_directories(GuLinux-Commons GuLinux-Commons/c++)
+include_directories(GuLinux-Commons GuLinux-Commons/c++ src)
 project(PlanetaryImager)
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 set(CMAKE_AUTOMOC ON)
@@ -55,7 +55,11 @@ SET(EXTRA_LIBRARIES "" CACHE STRING "Extra libraries for linking")
 add_subdirectory(GuLinux-Commons/Qt)
 
 add_subdirectory(src)
-add_subdirectory(tests)
+option(ENABLE_PLANETARYIMAGER_TESTING "Enable Planetary Imager unit tests" Off)
+if(ENABLE_PLANETARYIMAGER_TESTING)
+  add_subdirectory(tests)
+endif()
+
 add_subdirectory(files)
 add_subdirectory(support)
 

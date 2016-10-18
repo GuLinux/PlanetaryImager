@@ -1,5 +1,4 @@
 file(GLOB PlanetaryImager_SRCS *.cpp *.ui)
-include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 
 unset(planetary_imager_DEPS CACHE)
 function(add_imager_dependencies)
