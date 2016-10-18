@@ -35,6 +35,7 @@
 #include <chrono>
 #include <unordered_map>
 #include "c++/stlutils.h"
+#include "drivers/roi.h"
 
 using namespace GuLinux;
 using namespace std;
@@ -85,6 +86,7 @@ private:
   ImageHandlerPtr imageHandler;
   ImagerThread::ptr imager_thread;
   shared_ptr<Worker> worker;
+  ROIValidator::ptr roi_validator;
 };
 
 Imager * SimulatorCamera::imager ( const ImageHandlerPtr& imageHandler ) const
@@ -114,6 +116,12 @@ SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{
     {"reject",	 {7, "reject", 0, 10, 1, 0, 0, Control::Combo, { {"Never", 0}, {"1 out of 10", 10}, {"1 out of 5", 5}, {"1 out of 3", 3}, {"1 out of 2", 2} } }}, 
   }
 {
+  roi_validator.reset(new ROIValidator{
+        ROIValidator::width_multiple(4),
+        ROIValidator::height_multiple(2),
+        ROIValidator::x_multiple(2),
+        ROIValidator::y_multiple(2)
+        });
   qDebug() << "Creating simulator imager: current owning thread: " << thread() << ", qApp thread: " << qApp->thread();
   _settings["exposure"].is_duration = true;
   _settings["exposure"].duration_unit = 1ms;
@@ -245,7 +253,7 @@ Frame::ptr SimulatorImager::Worker::shoot()
   crop_rect -= cv::Size{crop_factor, crop_factor};
   crop_rect += cv::Point{pix_w, pix_h};
   cropped = is_bayer ? image : image(crop_rect);
-  if(roi.isValid() && ! is_bayer) {
+  if(roi.isValid()) {
     cropped = cropped(cv::Rect{roi.x(), roi.y(), roi.width(), roi.height()});
   }
   if(! is_bayer && (rand(0, seeing.max) > (seeing.value_auto ? 3 : seeing.value) ) ) {
@@ -280,7 +288,7 @@ void SimulatorImager::clearROI()
 
 void SimulatorImager::setROI(const QRect &roi)
 {
-  worker->setROI(roi);
+  worker->setROI(roi_validator->validate(roi));
 }
 
 void SimulatorImager::Worker::setROI(const QRect& roi)
