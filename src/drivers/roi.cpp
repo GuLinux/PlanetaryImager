@@ -84,3 +84,18 @@ ROIValidator::Rule ROIValidator::y_multiple(int factor)
     roi.setY( Private::closest_multiple(roi.y(), factor) );
   };
 }
+
+ROIValidator::Rule ROIValidator::area_multiple(int factor, int width_step, int height_step, const QRect &fallback)
+{
+  return [=](QRect &roi) {
+    while(width_step > 0 && (roi.width() * roi.height()) % factor != 0 && roi.width() > 0) {
+      roi.setWidth(roi.width() - width_step);
+    }
+    while(height_step > 0 && (roi.width() * roi.height()) % factor != 0 && roi.height() > 0) {
+      roi.setHeight(roi.height() - height_step);
+    }
+    if(roi.width() <= 0 || roi.height() <= 0)
+      roi = fallback;
+  };
+}
+
