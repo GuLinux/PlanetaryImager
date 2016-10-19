@@ -1,3 +1,7 @@
+## 0.6.2 2016-10-xx
+ - Fix ASI ROI validation, particularly with USB2 cameras
+ - Fix ASI SDK version number
+
 ## 0.6.1 2016-09-28
  - Histogram: allow to freely resize widget
  - Histogram: replaced "enable" checkbox with toggle logarithmic mode
