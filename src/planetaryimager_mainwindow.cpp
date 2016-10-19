@@ -163,6 +163,9 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     d->ui->image->layout()->setMargin(0);
     d->ui->image->layout()->setSpacing(0);
     d->ui->image->layout()->addWidget(d->image_widget = new ZoomableImage(false));
+#ifdef HAVE_QT5_OPENGL // TODO: make configuration item
+    d->image_widget->setOpenGL();
+#endif
     connect(d->image_widget, &ZoomableImage::zoomLevelChanged, d->statusbar_info_widget, &StatusBarInfoWidget::zoom);
     d->statusbar_info_widget->zoom(d->image_widget->zoomLevel());
     for(auto item: d->image_widget->actions())

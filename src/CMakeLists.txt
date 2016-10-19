@@ -19,9 +19,8 @@ target_link_libraries(planetary_imager
     ${planetary_imager_DEPS}
     ${Boost_LIBRARIES}
     ${OpenCV_LIBS}
-    #${QCustomPlot_LIBRARIES}
     Qt5::Widgets
-    #Qt5::OpenGL
+    ${Qt5_OpenGL_LIBRARIES}
     pthread
     ${EXTRA_LIBRARIES}
 )
