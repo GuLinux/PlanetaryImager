@@ -1,16 +1,11 @@
-#include <QTest>
+#include "gtest/gtest.h"
 #include <QImage>
 #include <QDebug>
 #include <memory>
 
-class TestQImageDestructor : public QObject {
-  Q_OBJECT
-private slots:
-  void init();
-  void testPlainStruct();
-  void testSharedPointerStruct();
-private:
-  bool destroyed;
+class TestQImageDestructor : public ::testing::Test {
+public:
+  bool destroyed = false;
   uchar image_data[4*4];
 };
 
@@ -22,36 +17,27 @@ struct Foo {
   ~Foo() { destroyed = true; }
 };
 
-void TestQImageDestructor::init()
-{
-  destroyed = false;
-}
 
-
-void TestQImageDestructor::testPlainStruct()
+TEST_F(TestQImageDestructor, testPlainStruct)
 {
   Foo *foo = new Foo{destroyed};
   {
     QImage image(image_data, 2, 2, QImage::Format_RGBX8888, [](void *mem){ Foo *foo = (Foo*) mem; delete foo; }, foo);
-    QVERIFY(!image.isNull());
+    ASSERT_FALSE(image.isNull());
   }
-  QVERIFY(destroyed);
+  ASSERT_TRUE(destroyed);
 }
 
-void TestQImageDestructor::testSharedPointerStruct()
+TEST_F(TestQImageDestructor, testSharedPointerStruct)
 {
   {
     auto foo = make_shared<Foo>(destroyed);
     auto bla = new shared_ptr<Foo>(foo);
     {
       QImage image(image_data, 2, 2, QImage::Format_RGBX8888, [](void *mem){ shared_ptr<Foo> *foo = (shared_ptr<Foo>*) mem; delete foo; }, bla);
-      QVERIFY(!image.isNull());
+      ASSERT_FALSE(image.isNull());
     }
-    QVERIFY(!destroyed);
+    ASSERT_FALSE(destroyed);
   }
-  QVERIFY(destroyed);
+  ASSERT_TRUE(destroyed);
 }
-
-
-QTEST_GUILESS_MAIN(TestQImageDestructor);
-#include "test_qimage_destructor.moc"
