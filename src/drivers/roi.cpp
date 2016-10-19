@@ -23,13 +23,17 @@ using namespace std;
 
 DPTR_IMPL(ROIValidator) {
   list<Rule> rules;
-  Private(const initializer_list<Rule>& rules) : rules{rules} {}
   static int closest_multiple(int dimension, int factor);
 };
 
-ROIValidator::ROIValidator(const initializer_list<Rule>& rules) : dptr(rules)
+ROIValidator::ROIValidator(const initializer_list<Rule>& rules) : ROIValidator(list<Rule>{rules})
 {
 }
+
+ROIValidator::ROIValidator(const list<Rule> &rules) : dptr(rules)
+{
+}
+
 
 ROIValidator::~ROIValidator()
 {
@@ -40,6 +44,7 @@ QRect ROIValidator::validate(const QRect& original) const
   QRect result = original;
   for(auto rule: d->rules)
     rule(result);
+  qDebug() << "Initial: " << original << ", validated: " << result;
   return result;
 }
 

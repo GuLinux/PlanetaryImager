@@ -21,11 +21,13 @@
 #include "c++/dptr.h"
 #include <QRect>
 #include <functional>
+#include <list>
 
 class ROIValidator {
 public:
   typedef std::function<void(QRect &)> Rule;
   typedef std::shared_ptr<ROIValidator> ptr;
+  ROIValidator(const std::list<Rule> &rules);
   ROIValidator(const std::initializer_list<Rule> &rules);
   ~ROIValidator();
   QRect validate(const QRect & original) const;

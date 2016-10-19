@@ -33,6 +33,7 @@
 #include <QTimer>
 #include "asicontrol.h"
 #include <QCoreApplication>
+#include "drivers/roi.h"
 
 using namespace std;
 using namespace std::chrono_literals;
@@ -57,6 +58,7 @@ DPTR_IMPL(ZWO_ASI_Imager) {
     ASIControl::ptr temperature_control;
     
     ASIImagingWorker::ptr worker;
+    ROIValidator::ptr roi_validator;
     QRect maxROI(int bin) const;
     ImagerThread::Worker::factory create_worker(int bin, const QRect &roi, ASI_IMG_TYPE format);
     void read_temperature();
@@ -73,6 +75,18 @@ void ZWO_ASI_Imager::Private::read_temperature() {
 
 ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandler::ptr &imageHandler) : Imager{imageHandler}, dptr(info, make_shared<QTimer>(), this)
 {
+    d->roi_validator = make_shared<ROIValidator>(initializer_list<ROIValidator::Rule>{
+      ROIValidator::width_multiple(8),
+      ROIValidator::height_multiple(2),
+      ROIValidator::x_multiple(2),
+      ROIValidator::y_multiple(2),
+      [=](QRect &roi) {
+        if(info.IsUSB3Camera == ASI_FALSE && QString{info.Name}.contains("120")) {
+          ROIValidator::area_multiple(1024, 0, 2, QRect{0, 0, static_cast<int>(info.MaxWidth), static_cast<int>(info.MaxHeight)})(roi);
+          qDebug() << "Using ASI 120MM rect roi definition: " << roi;
+        }
+      }
+    });
     d->properties.set_resolution_pixelsize({static_cast<int>(info.MaxWidth), static_cast<int>(info.MaxHeight)}, info.PixelSize, info.PixelSize);
     d->properties << Properties::Property{"Camera Speed", info.IsUSB3Camera ? "USB3" : "USB2"}
                   << Properties::Property{"Host Speed", info.IsUSB3Host ? "USB3" : "USB2"}
@@ -209,7 +223,7 @@ void ZWO_ASI_Imager::clearROI()
 
 void ZWO_ASI_Imager::setROI(const QRect& roi)
 {
-    restart(d->create_worker(d->worker->bin(), roi, d->worker->format()));
+    restart(d->create_worker(d->worker->bin(), d->roi_validator->validate(roi), d->worker->format()));
 }
 
 QRect ZWO_ASI_Imager::Private::maxROI(int bin) const

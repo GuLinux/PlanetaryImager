@@ -33,8 +33,8 @@ DPTR_IMPL(ASIImagingWorker) {
   Frame::ColorFormat colorFormat() const;
 };
 
-ASIImagingWorker::ASIImagingWorker(const QRect& requestedROI, int bin, const ASI_CAMERA_INFO& info, ASI_IMG_TYPE format)
-    : dptr(format, info, bin, QRect{requestedROI.x(), requestedROI.y(), (requestedROI.width() / 4) * 4, (requestedROI.height()/4) * 4 })
+ASIImagingWorker::ASIImagingWorker(const QRect& roi, int bin, const ASI_CAMERA_INFO& info, ASI_IMG_TYPE format)
+    : dptr(format, info, bin, roi)
 {
     qDebug() << "Starting imaging: imageFormat=" << d->format << ", d->roi: " << d->roi << ", bin: " << d->bin;
     ASI_CHECK << ASISetROIFormat(d->info.CameraID, d->roi.width(), d->roi.height(), d->bin, d->format) << "Set d->format";

@@ -20,6 +20,7 @@ target_link_libraries(planetary_imager
     ${OpenCV_LIBS}
     #${QCustomPlot_LIBRARIES}
     Qt5::Widgets
+    #Qt5::OpenGL
     pthread
     ${EXTRA_LIBRARIES}
 )
