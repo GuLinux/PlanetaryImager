@@ -111,7 +111,7 @@ Frame::ptr V4L2ImagingWorker::shoot()
       cv::Mat source{static_cast<int>(d->format.fmt.pix.height), static_cast<int>(d->format.fmt.pix.width), CV_8UC2, buffer->bytes() };
       cv::cvtColor(source, image, CV_YUV2RGB_YUYV);
   } else if(d->format.fmt.pix.pixelformat == V4L2_PIX_FMT_GREY) {
-    cv::Mat image{static_cast<int>(d->format.fmt.pix.height), static_cast<int>(d->format.fmt.pix.width), CV_8UC1};
+    image = cv::Mat{static_cast<int>(d->format.fmt.pix.height), static_cast<int>(d->format.fmt.pix.width), CV_8UC1};
     copy(buffer->bytes(), buffer->bytes() + buffer->size(), image.begin<uint8_t>());
     color_format = Frame::Mono;
   } else {
