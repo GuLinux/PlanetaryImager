@@ -32,6 +32,7 @@
 #include "asiimagingworker.h"
 #include <QTimer>
 #include "asicontrol.h"
+#include "drivers/roi.h"
 #include <QCoreApplication>
 
 using namespace std;
@@ -59,6 +60,7 @@ DPTR_IMPL(ZWO_ASI_Imager) {
     
     ImagerThread::ptr imager_thread;
     shared_ptr<ASIImagingWorker> worker;
+    ROIValidator::ptr roi_validator;
     QRect maxROI(int bin) const;
     void start_thread(int bin, const QRect& roi, ASI_IMG_TYPE format);
     void read_temperature();
@@ -75,6 +77,18 @@ void ZWO_ASI_Imager::Private::read_temperature() {
 
 ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandlerPtr &imageHandler) : dptr(info, imageHandler, make_shared<QTimer>(), this)
 {
+    d->roi_validator = make_shared<ROIValidator>(initializer_list<ROIValidator::Rule>{
+      ROIValidator::x_multiple(2),
+                                                ROIValidator::y_multiple(2),
+                                                ROIValidator::width_multiple(8),
+                                                ROIValidator::height_multiple(2),
+                                                [=](QRect &roi) {
+                                                  if(info.IsUSB3Camera == ASI_FALSE && QString{info.Name}.contains("120")) {
+                                                    ROIValidator::area_multiple(1024, 0, 2, QRect{0, 0, static_cast<int>(info.MaxWidth), static_cast<int>(info.MaxHeight)})(roi);
+                                                    qDebug() << "Using ASI 120MM rect roi definition: " << roi;
+                                                  }
+                                                }
+    });
     d->chip.set_resolution_pixelsize({static_cast<int>(info.MaxWidth), static_cast<int>(info.MaxHeight)}, info.PixelSize, info.PixelSize);
     d->chip << Properties::Property{"Camera Speed", info.IsUSB3Camera ? "USB3" : "USB2"}
                   << Properties::Property{"Host Speed", info.IsUSB3Host ? "USB3" : "USB2"}
@@ -117,7 +131,7 @@ void ZWO_ASI_Imager::Private::start_thread(int bin, const QRect& roi, ASI_IMG_TY
 {
     worker.reset();
     imager_thread.reset();
-    worker = make_shared<ASIImagingWorker>(roi, bin, info, format);
+    worker = make_shared<ASIImagingWorker>(roi_validator->validate(roi), bin, info, format);
     imager_thread = make_shared<ImagerThread>(worker, q, imageHandler);
     imager_thread->start();
 }

@@ -117,10 +117,10 @@ SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : imageHandler{
   }
 {
   roi_validator.reset(new ROIValidator{
+        ROIValidator::x_multiple(2),
+        ROIValidator::y_multiple(2),
         ROIValidator::width_multiple(4),
         ROIValidator::height_multiple(2),
-        ROIValidator::x_multiple(2),
-        ROIValidator::y_multiple(2)
         });
   qDebug() << "Creating simulator imager: current owning thread: " << thread() << ", qApp thread: " << qApp->thread();
   _settings["exposure"].is_duration = true;
