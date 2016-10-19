@@ -1,3 +1,7 @@
+## 0.6.1 2016-10-xx
+ - Fix ASI ROI validation, particularly with USB2 cameras
+ - Fix ASI SDK version number
+
 ## 0.6.0 2016-09-27
  - Improved colour camera support: display and save both bayer and debayered image, along with RGB formats
  - Optional debayer filter for display configurable in the main settings
