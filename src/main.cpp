@@ -52,8 +52,8 @@ void log_handler(QtMsgType type, const QMessageLogContext &context, const QStrin
 
 int main(int argc, char** argv)
 {
-    cerr << "Installing signal SIGSEGV: " << signal(SIGSEGV, crash_handler) << endl;
-    cerr << "Installing signal SIGABRT: " << signal(SIGABRT, crash_handler) << endl;
+    signal(SIGSEGV, crash_handler);
+    signal(SIGABRT, crash_handler);
     cerr << "Starting PlanetaryImager - version " << PLANETARY_IMAGER_VERSION << " (" << HOST_PROCESSOR << ")" << endl;
     QApplication app(argc, argv);
     qInstallMessageHandler(log_handler);

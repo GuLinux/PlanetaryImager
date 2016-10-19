@@ -20,27 +20,29 @@
 #include <stdlib.h>
 #include <execinfo.h>
 #include <cxxabi.h>
-
+#include <mutex>
 using namespace std;
 StackFrame::vector StackFrame::trace(uint32_t max_frames, uint32_t skip)
 {
-    skip++; // we have to skip current frame, at least
-    std::vector<void*> addresses(max_frames + skip);
-    int num_addresses = backtrace(addresses.data(), addresses.size());
+  static mutex _mutex;
+  unique_lock<mutex> lock(mutex);
+  skip++; // we have to skip current frame, at least
+  std::vector<void*> addresses(max_frames + skip);
+  int num_addresses = backtrace(addresses.data(), addresses.size());
 
-    if(num_addresses == 0)
-      return {};
-    vector frames(num_addresses);
-    char** symbols = backtrace_symbols(addresses.data(), addresses.size());
-    int current_frame = 0;
-    for(auto &frame: frames) {
-      frame.address = addresses[current_frame];
-      frame.symbol = string{symbols[current_frame++]};
-    }
-    free(symbols);
-    vector filtered_frames(frames.size() - skip);
-    move(frames.begin() + skip, frames.end(), filtered_frames.begin());
-    return filtered_frames;
+  if(num_addresses == 0)
+    return {};
+  vector frames(num_addresses);
+  char** symbols = backtrace_symbols(addresses.data(), addresses.size());
+  int current_frame = 0;
+  for(auto &frame: frames) {
+    frame.address = addresses[current_frame];
+    frame.symbol = string{symbols[current_frame++]};
+  }
+  free(symbols);
+  vector filtered_frames(frames.size() - skip);
+  move(frames.begin() + skip, frames.end(), filtered_frames.begin());
+  return filtered_frames;
 }
 
 std::string StackFrame::file() const
@@ -68,8 +70,9 @@ std::string StackFrame::function() const
   char *demangled = abi::__cxa_demangle(function_mangled.c_str(), 0, 0, &status);
   if(status == 0) {
     string function_demangled{demangled};
+    auto full_function = function_demangled + offset;
     free(demangled);
-    return function_demangled + offset;
+    return full_function;
   }
   return function_mangled;
   
@@ -78,7 +81,7 @@ std::string StackFrame::function() const
 
 ostream &operator<<(ostream& o, const StackFrame& frame)
 {
-  o << "address: " << frame.address << ", file: " << frame.file() << ", function: " << frame.function() << ", symbol: [[" << frame.symbol << "]]";
+  o << "address: " << frame.address << ", file: " << frame.file() << ", function: " << frame.function() ; //<< ", symbol: [[" << frame.symbol << "]]";
   return o;
 }
 
