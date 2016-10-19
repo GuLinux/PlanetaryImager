@@ -22,7 +22,6 @@
 #include <QFile>
 #include "commons/utils.h"
 #include <QTimer>
-#include <QMutex>
 #include <QRect>
 #include "drivers/imagerthread.h"
 #include "drivers/roi.h"
@@ -37,21 +36,19 @@ DPTR_IMPL(SimulatorImager) {
   SimulatorSettings settings;
   shared_ptr<SimulatorImagerWorker> worker;
   QTimer refresh_temperature;
-  QMutex settingsMutex;
   LOG_C_SCOPE(SimulatorImager);
   ROIValidator::ptr roi_validator;
 };
 
 class SimulatorImagerWorker : public ImagerThread::Worker {
 public:
-  SimulatorImagerWorker(SimulatorSettings &settings, QMutex &settingsMutex);
+  SimulatorImagerWorker(SimulatorSettings &settings);
   
   Frame::ptr shoot() override;
   void setROI(const QRect &roi);
   enum ImageType{ BGR = 0, Mono = 10, Bayer = 20};
 private:
   SimulatorSettings &settings;
-  QMutex &settingsMutex;
   QHash<int, cv::Mat> images;
   QRect roi;
   LOG_C_SCOPE(SimulatorImagerWorker);
@@ -73,6 +70,7 @@ SimulatorImager::SimulatorImager(const ImageHandler::ptr& handler) : Imager(hand
     {"format", {5, "format", 0, 100, 1, SimulatorImagerWorker::BGR, SimulatorImagerWorker::BGR, Control::Combo, { {"Mono", SimulatorImagerWorker::Mono}, {"BGR", SimulatorImagerWorker::BGR},  {"Bayer", SimulatorImagerWorker::Bayer}} }}, 
     {"bpp",	 {6, "bpp", 8, 16, 8, 8, 8, Control::Combo, { {"8", 8}, {"16", 16},  } }}, 
     {"reject",	 {7, "reject", 0, 10, 1, 0, 0, Control::Combo, { {"Never", 0}, {"1 out of 10", 10}, {"1 out of 5", 5}, {"1 out of 3", 3}, {"1 out of 2", 2} } }}, 
+    {"max_speed",	 {8, "Max speed", 0, 1, 1, 0, 0, Control::Bool } }, 
   };
   d->settings["exposure"].is_duration = true;
   d->settings["exposure"].duration_unit = 1ms;
@@ -107,17 +105,18 @@ QString SimulatorImager::name() const
 
 void SimulatorImager::setControl(const Imager::Control& setting)
 {
-  QMutexLocker lock_settings(&d->settingsMutex);
-  static uint64_t controls_changed = 0;
-  qDebug() << "Received control: " << setting << "; saved: " << d->settings[setting.name];
-  int reject_every = static_cast<int>(d->settings["reject"].value);
-  if(reject_every > 0 && controls_changed++ % reject_every == 0) {
-      qDebug() << "Rejecting control (" << reject_every << " reached)";
-      emit changed(d->settings[setting.name]);
-      return;
-  }
-  d->settings[setting.name] = setting;
-  emit changed(setting);
+  push_job_on_thread([=]{
+    static uint64_t controls_changed = 0;
+    qDebug() << "Received control: " << setting << "; saved: " << d->settings[setting.name];
+    int reject_every = static_cast<int>(d->settings["reject"].value);
+    if(reject_every > 0 && controls_changed++ % reject_every == 0) {
+        qDebug() << "Rejecting control (" << reject_every << " reached)";
+        emit changed(d->settings[setting.name]);
+        return;
+    }
+    d->settings[setting.name] = setting;
+    emit changed(setting);
+  });
 }
 
 Imager::Controls SimulatorImager::controls() const
@@ -131,7 +130,7 @@ int SimulatorImager::rand(int a, int b)
    return qrand() % ((b + 1) - a) + a;
 }
 
-SimulatorImagerWorker::SimulatorImagerWorker(SimulatorSettings &settings, QMutex &settingsMutex) : settings{settings}, settingsMutex{settingsMutex}
+SimulatorImagerWorker::SimulatorImagerWorker(SimulatorSettings &settings) : settings{settings}
 {
     QFile file(":/simulator/jupiter_hubble.jpg");
     file.open(QIODevice::ReadOnly);
@@ -168,21 +167,18 @@ Frame::ptr SimulatorImagerWorker::shoot()
   };
   auto rand = [](int a, int b) { return qrand() % ((b + 1) - a) + a; };
   cv::Mat cropped, blurred, result;
-  Imager::Control exposure, seeing, movement, bin, format, bpp;
+  Imager::Control exposure, seeing, format, bpp;
   {
-      QMutexLocker lock_settings(&settingsMutex);
       exposure = settings["exposure"];
-      bin = settings["bin"];
       format = settings["format"];
       seeing = settings["seeing"];
-      movement = settings["movement"];
       bpp = settings["bpp"];
   }
   bool is_bayer = static_cast<ImageType>(format.value) == Bayer;
-  const cv::Mat &image = is_bayer ? images[Bayer] : images[format.value + bin.value];
+  const cv::Mat &image = is_bayer ? images[Bayer] : images[format.value + settings["bin"].value];
   int h = image.rows;
   int w = image.cols;
-  int crop_factor = movement.value;
+  int crop_factor = settings["movement"].value;
   int pix_w = rand(0, crop_factor);
   int pix_h = rand(0, crop_factor);
 
@@ -211,10 +207,14 @@ Frame::ptr SimulatorImagerWorker::shoot()
 
   if(bpp.value == 16)
       result.convertTo(result, result.channels() == 1 ? CV_16UC1 : CV_16UC3, BITS_8_TO_16);
-  Scope sleep{[=]{ QThread::usleep(exposure.value * 1000); } };
   auto frame_format = formats[static_cast<ImageType>(format.value)];
   auto frame = make_shared<Frame>( bpp.value, frame_format, QSize{result.cols, result.rows} );
   move(result.data, result.data + frame->size(), frame->data());
+  if(settings["max_speed"].value == 0)
+    return frame;
+  Scope sleep{[=]{
+    QThread::usleep(exposure.value * 1000.);
+  } };
   return frame;
 }
 
@@ -237,5 +237,5 @@ void SimulatorImagerWorker::setROI(const QRect& roi)
 
 void SimulatorImager::startLive()
 {
-  restart([&] { return d->worker = make_shared<SimulatorImagerWorker>(d->settings, d->settingsMutex); });
+  restart([&] { return d->worker = make_shared<SimulatorImagerWorker>(d->settings); });
 }
