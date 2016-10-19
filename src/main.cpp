@@ -21,7 +21,7 @@
 #include <iostream>
 #include <iomanip>
 #include <QDebug>
-#include "commons/getstacktrace.h"
+#include "c++/backtrace.h"
 #include <unistd.h>
 #include <signal.h>
 using namespace std;
@@ -29,7 +29,7 @@ using namespace std;
 
 void crash_handler(int sig) {
   fprintf(stderr, "Error: signal %d:\n", sig);
-  cerr << StackFrame::trace(50, 1);
+  cerr << GuLinux::Backtrace::backtrace(50, 1);
   exit(1);
 }
 

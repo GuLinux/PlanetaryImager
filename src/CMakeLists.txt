@@ -15,6 +15,7 @@ message("dependencies: ${planetary_imager_DEPS}")
   
 target_link_libraries(planetary_imager
     GuLinux_Qt_Commons
+    GuLinux_c++_Commons
     ${planetary_imager_DEPS}
     ${Boost_LIBRARIES}
     ${OpenCV_LIBS}

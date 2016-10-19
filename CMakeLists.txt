@@ -54,6 +54,7 @@ set(FULL_VERSION ${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}${PACKAGE_VER
  message("Detected architecture: ${PlanetaryImager_ARCH}")
 SET(EXTRA_LIBRARIES "" CACHE STRING "Extra libraries for linking")
 add_subdirectory(GuLinux-Commons/Qt)
+add_subdirectory(GuLinux-Commons/c++)
 
 add_subdirectory(src)
 option(ENABLE_PLANETARYIMAGER_TESTING "Enable Planetary Imager unit tests" Off)
