@@ -76,10 +76,10 @@ void ZWO_ASI_Imager::Private::read_temperature() {
 ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandler::ptr &imageHandler) : Imager{imageHandler}, dptr(info, make_shared<QTimer>(), this)
 {
     d->roi_validator = make_shared<ROIValidator>(initializer_list<ROIValidator::Rule>{
-      ROIValidator::width_multiple(8),
-      ROIValidator::height_multiple(2),
       ROIValidator::x_multiple(2),
       ROIValidator::y_multiple(2),
+      ROIValidator::width_multiple(8),
+      ROIValidator::height_multiple(2),
       [=](QRect &roi) {
         if(info.IsUSB3Camera == ASI_FALSE && QString{info.Name}.contains("120")) {
           ROIValidator::area_multiple(1024, 0, 2, QRect{0, 0, static_cast<int>(info.MaxWidth), static_cast<int>(info.MaxHeight)})(roi);
@@ -197,7 +197,7 @@ void ZWO_ASI_Imager::setControl(const Control& control)
 
 ImagerThread::Worker::factory ZWO_ASI_Imager::Private::create_worker(int bin, const QRect& roi, ASI_IMG_TYPE format)
 {
-  return [&] {
+  return [=] {
     return worker = make_shared<ASIImagingWorker>(roi, bin, info, format);
   };
 }
@@ -218,12 +218,16 @@ bool ZWO_ASI_Imager::supportsROI() const
 
 void ZWO_ASI_Imager::clearROI()
 {
-  restart(d->create_worker(d->worker->bin(), d->maxROI(d->worker->bin()), d->worker->format()) );
+  auto factory = d->create_worker(d->worker->bin(), d->maxROI(d->worker->bin()), d->worker->format());
+  d->worker.reset();
+  restart(factory );
 }
 
 void ZWO_ASI_Imager::setROI(const QRect& roi)
 {
-    restart(d->create_worker(d->worker->bin(), d->roi_validator->validate(roi), d->worker->format()));
+  auto factory = d->create_worker(d->worker->bin(), d->roi_validator->validate(roi), d->worker->format());
+  d->worker.reset();
+  restart(factory);
 }
 
 QRect ZWO_ASI_Imager::Private::maxROI(int bin) const

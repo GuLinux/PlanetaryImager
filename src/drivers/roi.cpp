@@ -42,8 +42,12 @@ ROIValidator::~ROIValidator()
 QRect ROIValidator::validate(const QRect& original) const
 {
   QRect result = original;
-  for(auto rule: d->rules)
+  int rule_number = 0;
+  for(auto rule: d->rules) {
+    qDebug() << "rule " << rule_number << ": before=" << result;
     rule(result);
+    qDebug() << "rule " << rule_number++ << ": after=" << result;
+  }
   qDebug() << "Initial: " << original << ", validated: " << result;
   return result;
 }

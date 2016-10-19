@@ -59,11 +59,11 @@ private:
 
 SimulatorImager::SimulatorImager(const ImageHandler::ptr& handler) : Imager(handler), dptr()
 {
-  d->roi_validator.reset(new ROIValidator{
+  d->roi_validator = make_shared<ROIValidator>(list<ROIValidator::Rule>{
+    ROIValidator::x_multiple(2),
+    ROIValidator::y_multiple(2),
     ROIValidator::width_multiple(4),
     ROIValidator::height_multiple(2),
-    ROIValidator::x_multiple(2),
-    ROIValidator::y_multiple(2)
     });
   d->settings = {
     {"exposure",    {1, "exposure", 0.1, 1000, 0.1, 19.5}},
