@@ -157,8 +157,9 @@ Frame::ptr V4L2ImagingWorker::Private::convert_frame(const V4LBuffer::ptr& buffe
 
 Frame::ptr V4L2ImagingWorker::Private::create_frame(const V4LBuffer::ptr& buffer, int cv_type, Frame::ColorFormat color_format)
 {
-    cv::Mat image = cv::Mat{static_cast<int>(format.fmt.pix.height), static_cast<int>(format.fmt.pix.width), cv_type};
-    copy(buffer->bytes(), buffer->bytes() + buffer->size(), image.begin<uint8_t>());
+    cv::Mat image = cv::Mat{static_cast<int>(format.fmt.pix.height), static_cast<int>(format.fmt.pix.width), cv_type, buffer->bytes()};
+    // copy(buffer->bytes(), buffer->bytes() + buffer->size(), image.begin<uint8_t>());
+    // move(buffer->bytes(), buffer->bytes() + buffer->size(), image.begin<uint8_t>());
     return make_shared<Frame>(color_format, image);
 }
 
