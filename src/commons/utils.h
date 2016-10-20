@@ -23,7 +23,7 @@
 #include <functional>
 #include <QDebug>
 #include <QString>
-
+#include "c++/demangle.h"
 #define dbg_print_thread_id \
   static bool printed = false; \
   if(!printed) { \
@@ -35,19 +35,19 @@ static constexpr double BITS_8_TO_16 = 256.;
 static constexpr double BITS_16_TO_8 = 1./256.;
 class LogScope {
 public:
-  LogScope(const QString &fname, const QString &enter = "ENTER", const QString &exit = "EXIT") : fname{fname}, exit{exit} {
-    qDebug() << enter << " " << fname;
+  LogScope(const QString &fname, const QString &enter = "ENTER", const QString &exit = "EXIT") : _fname{fname}, _exit{exit} {
+    qDebug() << QString{"%1: %2"}.arg(enter).arg(fname);
   }
-  ~LogScope() {
-    qDebug() << exit << " " << fname;
+  virtual ~LogScope() {
+    qDebug() << QString{"%1: %2"}.arg(_exit).arg(_fname);
   }
 private:
-  const QString fname;
-  const QString exit;
+  const QString _fname;
+  const QString _exit;
 };
   template<typename T> class LogClassScope : public LogScope {
   public:
-    LogClassScope() : LogScope(typeid(T).name(), "Create Object", "Delete Object") {}
+    LogClassScope() : LogScope( QString::fromStdString(GuLinux::Demangle(typeid(T).name()).get()), "Create Object", "Delete Object") {}
   };
 
 #define LOG_F_SCOPE LogScope log_current_scope(__PRETTY_FUNCTION__);

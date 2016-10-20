@@ -45,6 +45,7 @@ public:
     declare_setting(max_display_fps_recording, int )
     declare_setting(limit_fps_recording, bool)
     declare_setting(debayer, bool)
+    declare_setting(opengl, bool)
     
     enum RecordingLimit { Infinite = 0, FramesNumber = 1, Duration = 2, FileSize = 3};
     declare_setting(recording_limit_type, RecordingLimit)

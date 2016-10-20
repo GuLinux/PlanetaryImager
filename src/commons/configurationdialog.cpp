@@ -22,6 +22,7 @@
 #include "commons/utils.h"
 #include <functional>
 #include <QSpinBox>
+#include <QMessageBox>
 #include "Qt/strings.h"
 #include "Qt/functional.h"
 
@@ -40,10 +41,16 @@ ConfigurationDialog::~ConfigurationDialog()
 
 ConfigurationDialog::ConfigurationDialog(Configuration& configuration, QWidget* parent) : QDialog(parent), dptr(configuration, this)
 {
-  d->ui.reset(new Ui::ConfigurationDialog);
+    static bool original_opengl_setting = configuration.opengl();
+    d->ui.reset(new Ui::ConfigurationDialog);
     d->ui->setupUi(this);
+#ifndef HAVE_QT5_OPENGL
+    d->ui->opengl->hide();
+#endif
     connect(d->ui->debayer, &QCheckBox::toggled, bind(&Configuration::set_debayer, &configuration, _1));
+    connect(d->ui->opengl, &QCheckBox::toggled, bind(&Configuration::set_opengl, &configuration, _1));
     d->ui->debayer->setChecked(configuration.debayer());
+    d->ui->opengl->setChecked(configuration.opengl());
     
     auto edge_settings = [=] {
       d->ui->cannySettingsBox->setVisible(d->configuration.edge_algorithm() == Configuration::Canny);
@@ -163,4 +170,9 @@ ConfigurationDialog::ConfigurationDialog(Configuration& configuration, QWidget* 
     }
     d->ui->video_codec->setCurrentIndex(d->ui->video_codec->findData(d->configuration.video_codec()));
     connect(d->ui->video_codec, F_PTR(QComboBox, activated, int), [=](int index){ d->configuration.set_video_codec(d->ui->video_codec->itemData(index).toString()); });
+    connect(this, &QDialog::accepted, [&] {
+      if(original_opengl_setting != configuration.opengl()) {
+        QMessageBox::information(this, tr("Restart required"), tr("You changed the OpenGL setting. Please restart PlanetaryImage for this change to take effect"));
+      }
+    });
 }
