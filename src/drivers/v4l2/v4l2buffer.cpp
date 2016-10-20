@@ -48,7 +48,7 @@ void V4LBuffer::queue()
   d->v4ldevice->ioctl(VIDIOC_QBUF, &d->bufferinfo, "queuing buffer");
 }
 
-std::shared_ptr< V4LBuffer > V4LBuffer::List::dequeue(const shared_ptr<V4L2Device> &device) const
+V4LBuffer::ptr V4LBuffer::List::dequeue(const shared_ptr<V4L2Device> &device) const
 {
     v4l2_buffer bufferinfo;
     memset(&bufferinfo, 0, sizeof(bufferinfo));

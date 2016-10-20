@@ -32,7 +32,7 @@ public:
     void queue();
     class List : public QList<ptr> {
     public:
-        std::shared_ptr< V4LBuffer > dequeue(const std::shared_ptr< V4L2Device >& device) const;
+        V4LBuffer::ptr dequeue(const std::shared_ptr< V4L2Device >& device) const;
     };
     char *bytes() const;
     uint32_t type() const;

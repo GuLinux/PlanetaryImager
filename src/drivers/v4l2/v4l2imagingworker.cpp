@@ -31,6 +31,7 @@ DPTR_IMPL(V4L2ImagingWorker) {
   v4l2_format format;
   V4LBuffer::List buffers;
   uint32_t bufferinfo_type;
+  //static Frame::ColorFormat create_frame(const V4L2Buffer::ptr &buffer);
 };
 
 V4L2ImagingWorker::V4L2ImagingWorker(const V4L2Device::ptr& device, const v4l2_format& format) : dptr(device, format)
