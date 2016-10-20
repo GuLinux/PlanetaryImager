@@ -25,7 +25,7 @@
 
 class V4L2Exception : public Imager::exception {
 public:
-  enum ErrorType { v4l2_error, control_disabled, control_type_unknown };
+  enum ErrorType { v4l2_error, control_disabled, control_type_unknown, unimplemented_error };
   V4L2Exception(ErrorType type, const std::string &message, const std::string &where = {});
   V4L2Exception(int retcode, const std::string &where = {});
   ErrorType type() const;
