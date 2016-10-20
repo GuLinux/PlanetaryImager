@@ -44,8 +44,22 @@ DPTR_IMPL(V4L2ImagingWorker) {
 V4L2ImagingWorker::V4L2ImagingWorker(const V4L2Device::ptr& device, const v4l2_format& format) : dptr(device, format)
 {
   QHash<uint32_t, function<Frame::ptr(const V4LBuffer::ptr)>> formats = {
+    // Mono Formats
     {V4L2_PIX_FMT_GREY, bind(&Private::create_frame, d.get(), _1, CV_8UC1, Frame::Mono)},
+    {V4L2_PIX_FMT_Y16, bind(&Private::create_frame, d.get(), _1, CV_16UC1, Frame::Mono)},
+    // RGB/BGR
+    {V4L2_PIX_FMT_BGR24, bind(&Private::create_frame, d.get(), _1, CV_8UC3, Frame::BGR)},
+    {V4L2_PIX_FMT_RGB24, bind(&Private::create_frame, d.get(), _1, CV_8UC3, Frame::RGB)},
+    // Bayer 8bit
+    {V4L2_PIX_FMT_SBGGR8, bind(&Private::create_frame, d.get(), _1, CV_8UC1, Frame::Bayer_BGGR)},
+    {V4L2_PIX_FMT_SGBRG8, bind(&Private::create_frame, d.get(), _1, CV_8UC1, Frame::Bayer_GBRG)},
+    {V4L2_PIX_FMT_SGRBG8, bind(&Private::create_frame, d.get(), _1, CV_8UC1, Frame::Bayer_GRBG)},
+    {V4L2_PIX_FMT_SRGGB8, bind(&Private::create_frame, d.get(), _1, CV_8UC1, Frame::Bayer_RGGB)},
+    // Bayer 16bit
+    {V4L2_PIX_FMT_SBGGR16, bind(&Private::create_frame, d.get(), _1, CV_16UC1, Frame::Bayer_BGGR)},
+    // Compressed formats
     {V4L2_PIX_FMT_MJPEG, bind(&Private::import_frame, d.get(), _1)},
+    // YUV Colorspace
     {V4L2_PIX_FMT_YUYV, bind(&Private::convert_frame, d.get(), _1, CV_8UC2, CV_YUV2RGB_YUYV, Frame::RGB)},
   };
   auto pixelformat = format.fmt.pix.pixelformat;
@@ -80,7 +94,6 @@ void V4L2ImagingWorker::start()
 
 Frame::ptr V4L2ImagingWorker::shoot()
 {
-  Frame::ColorFormat color_format = Frame::RGB;
   QBENCH(dequeue_buffer)->every(100)->ms();
   auto buffer = d->buffers.dequeue(d->device);
   BENCH_END(dequeue_buffer);
