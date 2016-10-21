@@ -1,6 +1,9 @@
 ## 0.6.2 2016-10-xx
  - Fix ASI ROI validation, particularly with USB2 cameras
  - Fix ASI SDK version number
+ - Add OpenGL support in image view, for better performances
+ - Initial support for The Imaging Source cameras (possibly Celestron too)
+ - Fixed crash on camera disconnected right after changing a control
 
 ## 0.6.1 2016-09-28
  - Histogram: allow to freely resize widget

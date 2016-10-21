@@ -113,7 +113,7 @@ void CameraControl::control_updated(const Imager::Control& changed_control)
       control_widget->update(changed_control);
       control_changed_led->setPixmap(is_expected_value ? green_dot : red_dot);
       control_changed_led->show();
-      QTimer::singleShot(5000, [this]{ control_changed_led->hide(); });
+      QTimer::singleShot(5000, this, [this]{ control_changed_led->hide(); });
       emit changed();
 }
 
