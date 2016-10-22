@@ -118,6 +118,7 @@ private:
 ASICamera::ASICamera(const ASI_CAMERA_INFO &info) : info{info}
 {
   CHECK_RESULT( ASIOpenCamera(id()) );
+  CHECK_RESULT( ASIInitCamera(id()) );
   int controls_num;
   CHECK_RESULT(ASIGetNumOfControls(id(),  &controls_num) );
   _controls.resize(controls_num);
