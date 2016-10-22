@@ -44,6 +44,7 @@
 #include <QWhatsThis>
 #include "Qt/strings.h"
 #include <Qt/functional.h>
+#include <QGraphicsScene>
 #include "image_handlers/all_handlers.h"
 
 using namespace GuLinux;
@@ -167,6 +168,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     if(d->configuration.opengl())
       d->image_widget->setOpenGL();
 #endif
+    d->image_widget->scene()->setBackgroundBrush(Qt::black);
     connect(d->image_widget, &ZoomableImage::zoomLevelChanged, d->statusbar_info_widget, &StatusBarInfoWidget::zoom);
     d->statusbar_info_widget->zoom(d->image_widget->zoomLevel());
     for(auto item: d->image_widget->actions())
