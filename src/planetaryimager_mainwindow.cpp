@@ -122,10 +122,7 @@ void CreateImagerWorker::exec()
     if(imager)
       emit this->imager(imager);
   } catch(const std::exception &e) {
-    QMetaObject::invokeMethod(PlanetaryImagerMainWindow::instance(), "notify", Qt::QueuedConnection,
-                              Q_ARG(PlanetaryImagerMainWindow::NotificationType, PlanetaryImagerMainWindow::Error),
-                              Q_ARG(QString, tr("Initialization Error")),  
-                              Q_ARG(QString, tr("Error initializing imager %1: \n%2") % camera->name() % e.what()) );
+    PlanetaryImagerMainWindow::queue_notify(PlanetaryImagerMainWindow::Error, tr("Initialization Error"), tr("Error initializing imager %1: \n%2") % camera->name() % e.what());
   }
   deleteLater();
 }
@@ -398,6 +395,14 @@ void PlanetaryImagerMainWindow::notify(PlanetaryImagerMainWindow::NotificationTy
     {Info, [](const QString &title, const QString &message) { QMessageBox::information(nullptr, title, message); }},
   };
   types_map[notification_type](title, message);
+}
+
+void PlanetaryImagerMainWindow::queue_notify(PlanetaryImagerMainWindow::NotificationType notification_type, const QString& title, const QString& message)
+{
+  QMetaObject::invokeMethod(PlanetaryImagerMainWindow::instance(), "notify", Qt::QueuedConnection,
+                            Q_ARG(PlanetaryImagerMainWindow::NotificationType, notification_type),
+                            Q_ARG(QString, title),  
+                            Q_ARG(QString, message));
 }
 
 
