@@ -26,7 +26,10 @@
 #include <boost/lockfree/spsc_queue.hpp>
 #include "stlutils.h"
 #include "Qt/benchmark.h"
+#include "Qt/strings.h"
 #include "imagerexception.h"
+#include <QElapsedTimer>
+#include "planetaryimager_mainwindow.h"
 
 using namespace std;
 
@@ -83,6 +86,8 @@ void ImagerThread::stop()
 
 void ImagerThread::Private::thread_started()
 {
+  QElapsedTimer last_error_occured;
+  int error_messages_since_last_success = 0;
   running = true;
   while(running) {
     Job queued_job;
@@ -90,7 +95,10 @@ void ImagerThread::Private::thread_started()
       if(queued_job) {
         try {
           queued_job();
-        } catch(const Imager::exception &e) {
+        } catch(const std::exception &e) {
+          PlanetaryImagerMainWindow::queue_notify(PlanetaryImagerMainWindow::Warning, tr("Error on imager task"), tr("An error occured during an imager operation for %1:\n%2") 
+            % imager->name()
+            % e.what());
           qWarning() << e.what();
         }
       }
@@ -99,9 +107,22 @@ void ImagerThread::Private::thread_started()
       if(auto frame = worker->shoot()) {
           imageHandler->handle(frame);
         ++fps;
+        error_messages_since_last_success = 0;
       }
-    } catch(const Imager::exception &e) {
+    } catch(const std::exception &e) {
       qWarning() << e.what();
+      if( (last_error_occured.elapsed() > 3000 || ! last_error_occured.isValid()) && error_messages_since_last_success++ < 4) {
+        if(error_messages_since_last_success == 4) {
+          PlanetaryImagerMainWindow::queue_notify(PlanetaryImagerMainWindow::Warning, tr("Error on frame capture"), tr("An error occured while capturing frame for %1:\n%2\nFollowing errors will be quietly ignored, check the console log for more details.") 
+            % imager->name()
+            % e.what());
+        } else {
+          PlanetaryImagerMainWindow::queue_notify(PlanetaryImagerMainWindow::Warning, tr("Error on frame capture"), tr("An error occured while capturing frame for %1:\n%2") 
+            % imager->name()
+            % e.what());
+        }
+        last_error_occured.restart();
+      }
     }
   }
 }
