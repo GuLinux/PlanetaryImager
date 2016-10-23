@@ -55,7 +55,7 @@ using namespace std::placeholders;
 Q_DECLARE_METATYPE(cv::Mat)
 
 DPTR_IMPL(PlanetaryImagerMainWindow) {
-  PlanetaryImagerMainWindow *q;
+  static PlanetaryImagerMainWindow *q;
   unique_ptr<Ui::PlanetaryImagerMainWindow> ui;
   DriverPtr driver = make_shared<SupportedDrivers>();
   Imager *imager = nullptr;
@@ -84,6 +84,8 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   
   void onImagerInitialized(Imager *imager);
 };
+
+PlanetaryImagerMainWindow *PlanetaryImagerMainWindow::Private::q = nullptr;
 
 class CreateImagerWorker : public QObject {
   Q_OBJECT
@@ -115,9 +117,16 @@ void CreateImagerWorker::create(const Driver::CameraPtr& camera, const ImageHand
 
 void CreateImagerWorker::exec()
 {
-  auto imager = camera->imager(imageHandler);
-  if(imager)
-    emit this->imager(imager);
+  try {
+    auto imager = camera->imager(imageHandler);
+    if(imager)
+      emit this->imager(imager);
+  } catch(const std::exception &e) {
+    QMetaObject::invokeMethod(PlanetaryImagerMainWindow::instance(), "notify", Qt::QueuedConnection,
+                              Q_ARG(PlanetaryImagerMainWindow::NotificationType, PlanetaryImagerMainWindow::Error),
+                              Q_ARG(QString, tr("Initialization Error")),  
+                              Q_ARG(QString, tr("Error initializing imager %1: \n%2") % camera->name() % e.what()) );
+  }
   deleteLater();
 }
 
@@ -138,13 +147,21 @@ void PlanetaryImagerMainWindow::Private::saveState()
   configuration.set_main_window_geometry(q->saveGeometry());
 }
 
-
-PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::WindowFlags flags) : dptr(this)
+PlanetaryImagerMainWindow * PlanetaryImagerMainWindow::instance()
 {
+  return Private::q;
+}
+
+
+
+PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::WindowFlags flags) : dptr()
+{
+    Private::q = this;
     static bool metatypes_registered = false;
     if(!metatypes_registered) {
       metatypes_registered = true;
       qRegisterMetaType<Frame::ptr>("Frame::ptr");
+      qRegisterMetaType<PlanetaryImagerMainWindow::NotificationType>("PlanetaryImagerMainWindow::NotificationType");
     }
     d->ui.reset(new Ui::PlanetaryImagerMainWindow);
     d->ui->setupUi(this);
@@ -372,5 +389,16 @@ void PlanetaryImagerMainWindow::Private::enableUIWidgets(bool cameraConnected)
   ui->chipInfoWidget->setEnabled(cameraConnected);
   ui->camera_settings->setEnabled(cameraConnected);
 }
+
+void PlanetaryImagerMainWindow::notify(PlanetaryImagerMainWindow::NotificationType notification_type, const QString& title, const QString& message)
+{
+  static QHash<NotificationType, function<void(const QString&, const QString&)>> types_map {
+    {Warning, [](const QString &title, const QString &message) { QMessageBox::warning(nullptr, title, message); }},
+    {Error, [](const QString &title, const QString &message) { QMessageBox::critical(nullptr, title, message); }},
+    {Info, [](const QString &title, const QString &message) { QMessageBox::information(nullptr, title, message); }},
+  };
+  types_map[notification_type](title, message);
+}
+
 
 #include "planetaryimager_mainwindow.moc"
