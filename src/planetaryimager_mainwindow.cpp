@@ -182,7 +182,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     if(d->configuration.opengl())
       d->image_widget->setOpenGL();
 #endif
-    d->image_widget->scene()->setBackgroundBrush(Qt::black);
+    d->image_widget->scene()->setBackgroundBrush(QBrush{Qt::black, Qt::Dense4Pattern});
     connect(d->image_widget, &ZoomableImage::zoomLevelChanged, d->statusbar_info_widget, &StatusBarInfoWidget::zoom);
     d->statusbar_info_widget->zoom(d->image_widget->zoomLevel());
     for(auto item: d->image_widget->actions())
