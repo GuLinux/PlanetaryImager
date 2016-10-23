@@ -175,7 +175,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::Window
     d->ui->image->layout()->setMargin(0);
     d->ui->image->layout()->setSpacing(0);
     d->ui->image->layout()->addWidget(d->image = new ZoomableImage(false));
-    d->image->scene()->setBackgroundBrush(Qt::black);
+    d->image->scene()->setBackgroundBrush(QBrush{Qt::black, Qt::Dense4Pattern});
     connect(d->image, &ZoomableImage::zoomLevelChanged, d->statusbar_info_widget, &StatusBarInfoWidget::zoom);
     d->statusbar_info_widget->zoom(d->image->zoomLevel());
     for(auto item: d->image->actions())
