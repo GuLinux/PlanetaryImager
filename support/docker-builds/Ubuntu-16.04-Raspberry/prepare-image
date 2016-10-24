@@ -1,5 +1,5 @@
 #!/bin/bash
-RELEASE="xenial"
+RELEASE="${1:-xenial}"
 root="arm-root"
 if ! hash lsb_release >/dev/null 2>&1; then
 	echo "lsb_release missing: not able to know distribution details" >&2
