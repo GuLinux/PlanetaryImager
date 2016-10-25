@@ -2,7 +2,7 @@
 
 root="arm-root"
 RELEASE="${1:-xenial}"
-base_image_name="planetaryimager-ubuntu-${RELEASE}-arm-base"
+base_image_name="gulinux/planetaryimager_build:ubuntu_${RELEASE}_arm_base"
 
 if docker inspect "$base_image_name" >/dev/null 2>&1 ; then
   echo "Base image $base_image_name already exists; skipping creation." >&2
@@ -60,7 +60,7 @@ mkdir -p base-image
 (
   cd base-image
   set -x
-  docker build -t planetaryimager-ubuntu-${RELEASE}-arm-base .
+  docker build -t $base_image_name .
 )
 #rm -rf "base-image"
 
