@@ -1,12 +1,7 @@
 version: '2'
 services:
     ubuntu-build:
-        build:
-          context: .
-          args:
-            - http_proxy
-            - https_proxy
-        image: planetaryimager-ubuntu32:16.04
+        image: gulinux/planetaryimager_build:ubuntu-16.04-32bit
         volumes:
             - ../../../:/code
             - ${DEST}:/dest

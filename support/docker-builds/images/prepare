@@ -10,7 +10,7 @@ for d in *; do
     if [[ -x prepare-image ]]; then
       ./prepare-image
     fi
-    docker build -t planetaryimager_build_$image_name:$image_version "$@" .
+    docker build -t gulinux/planetaryimager_build:${image_name}-${image_version} "$@" .
     echo "===================================== Finished building $d"
   ) || exit 1
 done 
