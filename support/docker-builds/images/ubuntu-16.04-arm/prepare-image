@@ -1,4 +1,9 @@
 #!/bin/bash
+if [[ "$UID" != "0" ]]; then
+	sudo "$0" "$@"
+	exit $?
+fi
+
 RELEASE="${1:-xenial}"
 root="arm-root"
 if ! hash lsb_release >/dev/null 2>&1; then
@@ -34,19 +39,15 @@ cat >"$root"/etc/apt/sources.list <<EOF
 deb http://ports.ubuntu.com/ubuntu-ports xenial main restricted universe multiverse
 EOF
 
+mkdir -p base-image
 (
   set -x
-  tar --numeric-owner --create --auto-compress --file "image/arm-root.tar" --directory "$root" --transform='s,^./,,' .
+
+  tar --numeric-owner --create --auto-compress --file "base-image/arm-root.tar" --directory "$root" --transform='s,^./,,' .
 )
 
 (
-  cd image
-  docker build -t ubuntu-${RELEASE}-arm .
+  cd base-image
+  docker build -t planetaryimager-ubuntu-${RELEASE}-arm-base .
 )
-
-#rrun apt-get update && rrun apt-get install -y git cmake autoconf libudev-dev qtbase5-dev build-essential libopencv-dev libqcustomplot-dev libboost-all-dev
-#if ! [[ -d "$root"/opt/libusb-git ]]; then
-#  rrun <<EOF
-#cd / && git clone https://github.com/libusb/libusb.git libusb-git && cd libusb-git && ./autogen.sh && ./configure --enable-static=yes --enable-shared=no --prefix=/opt/libusb-git && make all install && cd / && rm -rf /libusb-git
-#EOF
-#fi
+rm -rf "$root"

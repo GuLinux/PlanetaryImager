@@ -6,7 +6,7 @@ services:
           args:
             - http_proxy
             - https_proxy
-        image: planetaryimager-ubuntu:16.04
+        image: planetaryimager-ubuntu:16.04-raspberry
         volumes:
             - ../../../:/code
             - ${DEST}:/dest
