@@ -1,0 +1,3 @@
+UBUNTU_BASE_IMAGE="ubuntu:16.04"
+. ../ubuntu-commons/Dockerfile.in
+

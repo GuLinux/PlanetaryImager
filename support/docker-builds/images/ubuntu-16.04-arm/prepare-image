@@ -1,5 +1,5 @@
 #!/bin/bash
-
+. Dockerfile.in > Dockerfile
 root="arm-root"
 RELEASE="${1:-xenial}"
 base_image_name="gulinux/planetaryimager_build:ubuntu_${RELEASE}_arm_base"
