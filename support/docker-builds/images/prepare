@@ -1,7 +1,7 @@
 #!/bin/bash
 
 for d in *; do
-  [[ -d "$d" ]] && [[ -r "$d/Dockerfile" ]] || continue
+  [[ -d "$d" ]] && ( [[ -r "$d/Dockerfile" ]] || [[ -x "$d/prepare-image" ]] ) || continue
   (
     echo "===================================== Preparing image for $d"
     set -e
