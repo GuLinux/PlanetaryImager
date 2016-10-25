@@ -1,5 +1,0 @@
-#!/bin/bash
-DAILY_TAG_SUFFIX="$(git log --pretty=format:'%h' -n 1)"
-DAILY_TAG="$( date +%Y%m%d )-$DAILY_TAG_SUFFIX"
-CMAKE_OPTS="-DCPACK_GENERATOR=TBZ2 -DPACKAGE_VERSION_SUFFIX=-${DAILY_TAG} -DCPACK_PACKAGE_DIRECTORY=/dest -DVERSION_SUFFIX=-${DAILY_TAG_SUFFIX}" ./compile all package "$@"
-

@@ -1,11 +1,23 @@
 #!/bin/bash
+
+root="arm-root"
+RELEASE="${1:-xenial}"
+base_image_name="planetaryimager-ubuntu-${RELEASE}-arm-base"
+
+if docker inspect "$base_image_name" >/dev/null 2>&1 ; then
+  echo "Base image $base_image_name already exists; skipping creation." >&2
+  echo "If you prefer to rebuild it, please remove it using this command:" >&2
+  echo "docker rmi $base_image_name." >&2
+  exit 0
+fi
+
 if [[ "$UID" != "0" ]]; then
 	sudo "$0" "$@"
 	exit $?
 fi
 
-RELEASE="${1:-xenial}"
-root="arm-root"
+
+
 if ! hash lsb_release >/dev/null 2>&1; then
 	echo "lsb_release missing: not able to know distribution details" >&2
 	exit 1
@@ -42,12 +54,13 @@ EOF
 mkdir -p base-image
 (
   set -x
-
   tar --numeric-owner --create --auto-compress --file "base-image/arm-root.tar" --directory "$root" --transform='s,^./,,' .
 )
-
+#rm -rf "$root"
 (
   cd base-image
+  set -x
   docker build -t planetaryimager-ubuntu-${RELEASE}-arm-base .
 )
-rm -rf "$root"
+#rm -rf "base-image"
+

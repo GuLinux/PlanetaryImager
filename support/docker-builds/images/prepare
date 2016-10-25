@@ -1,0 +1,16 @@
+#!/bin/bash
+
+for d in *; do
+  [[ -d "$d" ]] && [[ -r "$d/Dockerfile" ]] || continue
+  (
+    echo "===================================== Preparing image for $d"
+    set -e
+    cd "$d"
+    . image-env
+    if [[ -x prepare-image ]]; then
+      ./prepare-image
+    fi
+    docker build -t planetaryimager_build_$image_name:$image_version "$@" .
+    echo "===================================== Finished building $d"
+  ) || exit 1
+done 

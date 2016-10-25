@@ -1,3 +1,0 @@
-#!/bin/bash
-CMAKE_OPTS="-DCPACK_GENERATOR=DEB -DPACKAGE_NAME_SUFFIX=_ubuntu-xenial -DCPACK_PACKAGE_DIRECTORY=/dest" ./compile all package "$@"
-
