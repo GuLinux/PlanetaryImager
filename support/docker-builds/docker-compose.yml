@@ -1,18 +1,19 @@
 version: '2'
 services:
     ubuntu-build:
-        image: gulinux/planetaryimager_build:ubuntu-16.04-arm
+        image: ${COMPOSE_IMAGE}
         volumes:
-            - ../../../:/code
+            - ../../:/code
             - ${DEST}:/dest
         command: >
-          bash -c "cmake /code
+          bash -x -c "cmake /code
           -DEXTRA_LIBRARIES=udev
           -DCMAKE_PREFIX_PATH=/opt/libusb-git
           -DCMAKE_INSTALL_PREFIX=/usr
           -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE}
-          -DCPACK_GENERATOR=DEB
-          -DPACKAGE_NAME_SUFFIX=_ubuntu-xenial
+          -DCPACK_GENERATOR=${CPACK_GENERATOR}
+          -DPACKAGE_VERSION_SUFFIX=${PACKAGE_VERSION_SUFFIX}
+          -DPACKAGE_NAME_SUFFIX=${PACKAGE_NAME_SUFFIX}
           -DCPACK_PACKAGE_DIRECTORY=/dest
           ${CMAKE_EXTRA_OPTIONS} &&
           make ${MAKE_OPTS} && make package"
