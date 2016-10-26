@@ -1,6 +1,19 @@
 #!/bin/bash
 
-for d in *; do
+dirs=""
+while [[ -n "$1" ]] && [[ "$1" != "--" ]]; do
+  case "$1" in
+    -d|--dir)
+      dirs="$dirs $2"; shift
+      ;;
+  esac
+  shift
+done
+shift
+
+[[ -z "$dirs" ]] && dirs=*
+
+for d in $dirs; do
   [[ -d "$d" ]] && ( [[ -r "$d/Dockerfile" ]] || [[ -x "$d/prepare-image" ]] ) || continue
   (
     echo "===================================== Preparing image for $d"

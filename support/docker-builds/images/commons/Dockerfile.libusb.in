@@ -1,3 +1,4 @@
 cat <<EOF
 RUN cd / && git clone https://github.com/libusb/libusb.git libusb-git && cd libusb-git && ./autogen.sh && ./configure --enable-static=yes --enable-shared=no --prefix=/opt/libusb-git && make all install && cd / && rm -rf /libusb-git
+ENV CMAKE_PREFIX_PATH="/opt/libusb-git;${CMAKE_PREFIX_PATH}"
 EOF
