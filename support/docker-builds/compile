@@ -2,8 +2,9 @@
 
 
 DAILY_TAG_SUFFIX="$(git log --pretty=format:'%h' -n 1)"
-DEST=/tmp
-COMPILE_DIRS=""
+export DEST=/tmp
+COMPILE_ENVS=""
+export MAKE_OPTS=""
 
 print-help() {
   cat <<EOF
@@ -12,6 +13,7 @@ Options:
     -a|--all                    compile all available targets
     -d|--dest                   destination directory to place archives/packages
     -t|--daily-version-tag      only for daily builds, add a tag version suffix
+    -j|--jobs <number>          number of parallel jobs for make
 EOF
 }
 
@@ -20,36 +22,37 @@ while [ -n "$1" ]; do
     shift
     case "$param" in
         -a|--all)
-            COMPILE_DIRS="$( find -name docker-compose.yml -exec dirname {} \; )"
+            COMPILE_ENVS="$( find -name docker-compose.yml -exec dirname {} \; )"
             ;;
         -d|--dest)
-            DEST="$1"; shift
+            export DEST="$1"; shift
             ;;
         -t|--daily-version-tag)
             DAILY_TAG_SUFFIX="$1"; shift
+            ;;
+        -j|--jobs)
+            export MAKE_OPTS="$MAKE_OPTS -j$1"; shift
             ;;
         -h|--help)
             print-help
             exit 0
             ;;
         *)
-            [ -r "$param/docker-compose.yml" ] && COMPILE_DIRS="$COMPILE_DIRS $param"
+            [ -r "$param" ] && COMPILE_ENVS="$COMPILE_ENVS $param"
             ;;
     esac
 done
 
-echo "Compile dirs: $COMPILE_DIRS"
-DAILY_TAG="$( date +%Y%m%d )-$DAILY_TAG_SUFFIX"
+echo "Compile dirs: $COMPILE_ENVS"
+export DAILY_TAG="$( date +%Y%m%d )-$DAILY_TAG_SUFFIX"
 
 
-compile-dir() {
-    echo "Compiling $@"
-    cd "$@"
-    DEST="$DEST" DAILY_TAG="$DAILY_TAG" DAILY_TAG_SUFFIX="$DAILY_TAG_SUFFIX" docker-compose up
-    cd ..
-}
-
-
-for dir in $COMPILE_DIRS; do
-    compile-dir "$dir"
+for env_file in $COMPILE_ENVS; do
+  (
+    env_name="$( basename "$env_file" .env )"
+    echo "Compiling $env_name"
+    export COMPOSE_PROJECT_NAME="planetaryimager_build_$env_name"
+    . "$env_file"
+    docker-compose up
+  )
 done
