@@ -1,6 +1,15 @@
 cat <<EOF
 FROM ${UBUNTU_BASE_IMAGE}
-RUN apt-get update && apt-get install -y autoconf libusb-1.0-0-dev libudev-dev qtbase5-dev build-essential cmake libopencv-dev libqcustomplot-dev libboost-all-dev git && apt-get clean
+RUN apt-get update && apt-get install -y \
+    autoconf \
+    qtbase5-dev \
+    build-essential \
+    cmake \
+    libopencv-dev \
+    libboost-all-dev \
+    git \
+    libudev-dev \
+    && apt-get clean
 EOF
 . ../commons/Dockerfile.libusb.in
 . ../commons/Dockerfile.workdir.in
