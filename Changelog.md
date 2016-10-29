@@ -1,4 +1,4 @@
-## 0.6.2 2016-10-xx
+## 0.6.2 2016-10-30
  - Fix ASI ROI validation, particularly with USB2 cameras
  - Fix ASI SDK version number
  - Add OpenGL support in image view, for better performances
