@@ -10,6 +10,7 @@ cleanup_unused_files() {
     find src/drivers/zwo_asi/ -name "doc" -or -name "armv5" -or -name "armv8" -or -name "mac" -or -name "demo"| while read f; do
       rm -vrf "$f"
     done
+    rm -rf test
 }
 
 if [[ -z "$version" ]] || ! [[ -d "$outdir" ]]; then
