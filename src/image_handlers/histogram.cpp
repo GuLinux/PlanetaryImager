@@ -94,7 +94,6 @@ void Histogram::handle(const Frame::ptr &frame)
           cv::Scalar( 255, 255, 255), 1, 8, 0  );
   }
   QImage hist_qimage(histImage.data, hist_w, hist_h, static_cast<int>(histImage.step), QImage::Format_RGB888);
-  cv::imwrite("/tmp/data-img.png", histImage);
   emit histogram(hist_qimage.rgbSwapped());
 }
 
