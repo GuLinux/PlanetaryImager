@@ -37,7 +37,7 @@ ASIImagingWorker::ASIImagingWorker(const QRect& roi, int bin, const ASI_CAMERA_I
     : dptr(format, info, bin, roi)
 {
     qDebug() << "Starting imaging: imageFormat=" << d->format << ", d->roi: " << d->roi << ", bin: " << d->bin;
-    ASI_CHECK << ASISetROIFormat(d->info.CameraID, d->roi.width(), d->roi.height(), d->bin, d->format) << "Set d->format";
+    ASI_CHECK << ASISetROIFormat(d->info.CameraID, d->roi.width(), d->roi.height(), d->bin, d->format) << "Set format";
     ASI_CHECK << ASISetStartPos(d->info.CameraID, d->roi.x(), d->roi.y()) << "Set ROI position";
     ASI_CHECK << ASIStartVideoCapture(d->info.CameraID) << "Start video capture";
     d->buffer.resize(d->calcBufferSize());

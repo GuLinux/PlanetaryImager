@@ -233,7 +233,7 @@ void ZWO_ASI_Imager::setROI(const QRect& roi)
 
 QRect ZWO_ASI_Imager::Private::maxROI(int bin) const
 {
-    return {0, 0, static_cast<int>(info.MaxWidth) / bin, static_cast<int>(info.MaxHeight) / bin};
+    return roi_validator->validate({0, 0, static_cast<int>(info.MaxWidth) / bin, static_cast<int>(info.MaxHeight) / bin});
 }
 
 
