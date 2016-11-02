@@ -60,7 +60,7 @@ DPTR_IMPL(ZWO_ASI_Imager) {
     ASIImagingWorker::ptr worker;
     ROIValidator::ptr roi_validator;
     QRect maxROI(int bin) const;
-    ImagerThread::Worker::factory create_worker(int bin, const QRect &roi, ASI_IMG_TYPE format);
+    void restart_worker(int bin, const QRect &roi, ASI_IMG_TYPE format);
     void read_temperature();
 };
 
@@ -174,13 +174,13 @@ Imager::Controls ZWO_ASI_Imager::controls() const
 void ZWO_ASI_Imager::setControl(const Control& control)
 {
   if(control.id == ImgTypeControlID) {
-      restart(d->create_worker(d->worker->bin(), d->worker->roi(), static_cast<ASI_IMG_TYPE>(control.value)));
+      d->restart_worker(d->worker->bin(), d->worker->roi(), static_cast<ASI_IMG_TYPE>(control.value));
       emit changed(control);
       return;
   }
   if(control.id == BinControlID) {
       auto bin = static_cast<int>(control.value);
-      restart(d->create_worker(bin, d->maxROI(bin), d->worker->format()));
+      d->restart_worker(bin, d->maxROI(bin), d->worker->format());
       emit changed(control);
       return;
   }
@@ -195,18 +195,22 @@ void ZWO_ASI_Imager::setControl(const Control& control)
   });
 }
 
-ImagerThread::Worker::factory ZWO_ASI_Imager::Private::create_worker(int bin, const QRect& roi, ASI_IMG_TYPE format)
+
+void ZWO_ASI_Imager::Private::restart_worker(int bin, const QRect& roi, ASI_IMG_TYPE format)
 {
-  return [=] {
+  auto factory = [=] {
     return worker = make_shared<ASIImagingWorker>(roi, bin, info, format);
   };
+  worker.reset();
+  q->restart(factory);
 }
+
 
 
 void ZWO_ASI_Imager::startLive()
 {
     LOG_F_SCOPE
-    restart(d->create_worker(1, d->maxROI(1), d->info.SupportedVideoFormat[0]));
+    d->restart_worker(1, d->maxROI(1), d->info.SupportedVideoFormat[0]);
     qDebug() << "Live started correctly";
 }
 
@@ -218,16 +222,13 @@ bool ZWO_ASI_Imager::supportsROI() const
 
 void ZWO_ASI_Imager::clearROI()
 {
-  auto factory = d->create_worker(d->worker->bin(), d->maxROI(d->worker->bin()), d->worker->format());
-  d->worker.reset();
-  restart(factory );
+  d->restart_worker(d->worker->bin(), d->maxROI(d->worker->bin()), d->worker->format());
 }
 
 void ZWO_ASI_Imager::setROI(const QRect& roi)
 {
-  auto factory = d->create_worker(d->worker->bin(), d->roi_validator->validate(roi), d->worker->format());
-  d->worker.reset();
-  restart(factory);
+  
+  d->restart_worker(d->worker->bin(), d->roi_validator->validate(roi), d->worker->format());
 }
 
 QRect ZWO_ASI_Imager::Private::maxROI(int bin) const
