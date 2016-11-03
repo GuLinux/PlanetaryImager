@@ -19,12 +19,14 @@
 
 #include "serwriter.h"
 #include "cvvideowriter.h"
+#include "imagefilewriter.h"
 
 using namespace std;
 QMap< Configuration::SaveFormat, FileWriter::Factory > FileWriter::factories()
 {
   return {
     {Configuration::SER, [](const QString &deviceName, Configuration &configuration){ return make_shared<SERWriter>(deviceName, configuration); }},
-    {Configuration::Video, [](const QString &deviceName, Configuration &configuration){ return make_shared<cvVideoWriter>(deviceName, configuration); }},
+    {Configuration::Video, [](const QString &, Configuration &configuration){ return make_shared<cvVideoWriter>(configuration); }},
+    {Configuration::PNG, [](const QString &, Configuration &configuration){ return make_shared<ImageFileWriter>(ImageFileWriter::PNG, configuration); }},
   };
 }

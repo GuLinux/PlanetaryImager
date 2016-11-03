@@ -22,23 +22,14 @@
 #include "commons/opencv_utils.h"
 using namespace std;
 
-class cvVideoWriter::Private
-{
-public:
-  Private ( const QString& deviceName, Configuration& configuration, cvVideoWriter* q );
+DPTR_IMPL(cvVideoWriter) {
   QString filename;
   Configuration &configuration;
-  cv::VideoWriter videoWriter;
-private:
   cvVideoWriter *q;
+  cv::VideoWriter videoWriter;
 };
 
-cvVideoWriter::Private::Private ( const QString& deviceName, Configuration& configuration, cvVideoWriter* q ) 
-  : filename(configuration.savefile()), configuration{configuration}, q ( q )
-{
-}
-
-cvVideoWriter::cvVideoWriter( const QString& deviceName, Configuration& configuration ) : dptr(deviceName, configuration, this)
+cvVideoWriter::cvVideoWriter(Configuration& configuration ) : dptr(configuration.savefile(), configuration, this)
 {
   qDebug() << "writing to " << filename();
 }

@@ -27,8 +27,8 @@ class SERWriter : public FileWriter
 public:
  SERWriter(const QString &deviceName, Configuration &configuration);
  ~SERWriter();
- virtual QString filename() const;
- virtual void handle(const Frame::ptr &frame);
+ QString filename() const override;
+ void handle(const Frame::ptr &frame) override;
 
 private:
    DPTR

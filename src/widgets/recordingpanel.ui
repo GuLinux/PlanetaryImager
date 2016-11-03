@@ -314,6 +314,16 @@
          <string>Video File</string>
         </property>
        </item>
+       <item>
+        <property name="text">
+         <string>PNG Images</string>
+        </property>
+       </item>
+       <item>
+        <property name="text">
+         <string>FITS images</string>
+        </property>
+       </item>
       </widget>
      </item>
      <item>

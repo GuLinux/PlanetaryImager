@@ -71,7 +71,7 @@ public:
     void resetCannyAdvancedSettings();
     void resetSobelAdvancedSettings();
 
-    enum SaveFormat { SER, Video };
+    enum SaveFormat { SER, Video, PNG, FITS };
     declare_setting(save_format, SaveFormat)
     declare_setting(video_codec, QString)
     declare_setting(save_json_info_file, bool)

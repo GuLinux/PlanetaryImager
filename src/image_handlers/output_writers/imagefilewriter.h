@@ -16,22 +16,21 @@
  *
  */
 
-#ifndef CVVIDEOWRITER_H
-#define CVVIDEOWRITER_H
-
+#ifndef IMAGEFILEWRITER_H
+#define IMAGEFILEWRITER_H
 #include "filewriter.h"
 #include "c++/dptr.h"
-
-class cvVideoWriter : public FileWriter
+#include "commons/configuration.h"
+class ImageFileWriter : public FileWriter
 {
 public:
- cvVideoWriter(Configuration &configuration);
- ~cvVideoWriter();
- QString filename() const override;
- void handle(const Frame::ptr &frame) override;
-
+  enum Format {PNG, FITS};
+  ImageFileWriter(Format format, Configuration &configuration);
+  QString filename() const override;
+  void handle(const Frame::ptr & frame) override;
+  ~ImageFileWriter();
 private:
-    DPTR
+  DPTR
 };
 
-#endif // CVVIDEOWRITER_H
+#endif // IMAGEFILEWRITER_H

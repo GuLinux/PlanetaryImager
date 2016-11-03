@@ -54,11 +54,14 @@ RecordingPanel::RecordingPanel(Configuration& configuration, QWidget* parent) : 
   d->ui->filePrefix->setCurrentText(configuration.save_file_prefix());
   d->ui->fileSuffix->setCurrentText(configuration.save_file_suffix());
   d->ui->videoOutputType->setCurrentIndex(configuration.save_format() == Configuration::SER ? 0 : 1);
+  static vector<Configuration::SaveFormat> format_combo_index {
+    Configuration::SER,
+    Configuration::Video,
+    Configuration::PNG,
+    Configuration::FITS,
+  };
   connect(d->ui->videoOutputType, F_PTR(QComboBox, activated, int), [&](int index) {
-    if(index == 0)
-      configuration.set_save_format(Configuration::SER);
-    if(index == 1)
-      configuration.set_save_format(Configuration::Video);
+    configuration.set_save_format(format_combo_index[index]);
   });
   connect(d->ui->saveDirectory, &QLineEdit::textChanged, [&configuration](const QString &directory){
     configuration.set_save_directory(directory);
