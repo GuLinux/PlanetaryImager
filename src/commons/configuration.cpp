@@ -43,11 +43,6 @@ Configuration::~Configuration()
 {
 }
 
-std::shared_ptr<QSettings> Configuration::qSettings() const
-{
-  return d->settings;
-}
-
 template<typename T> T Configuration::Private::value(const QString& key, const T& defaultValue) const
 {
   QVariant found_value;

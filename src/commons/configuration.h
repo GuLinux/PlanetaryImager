@@ -27,10 +27,6 @@ class Configuration
 public:
     Configuration();
     ~Configuration();
-
-    // Try avoiding directly accessing QSettings
-    [[deprecated]] std::shared_ptr<QSettings> qSettings() const;
-
 #define declare_setting(name, type) \
     void set_## name(const type &value); \
     void reset_## name(); \
