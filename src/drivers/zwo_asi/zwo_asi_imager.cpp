@@ -100,6 +100,7 @@ ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandler::
     
     d->properties << Properties::Property{"ElecPerADU", info.ElecPerADU};
     d->properties << Properties::Property{"ASI SDK Version", ASI_SDK_VERSION};
+    d->properties << LiveStream << ROI << Temperature;
     ASI_CHECK << ASIOpenCamera(info.CameraID) << "Open Camera";
 #ifdef ASI_CAMERA_REQUIRES_INIT
     ASI_CHECK << ASIInitCamera(info.CameraID) << "Init Camera";
@@ -214,11 +215,6 @@ void ZWO_ASI_Imager::startLive()
     qDebug() << "Live started correctly";
 }
 
-
-bool ZWO_ASI_Imager::supportsROI() const
-{
-    return true; // TODO: detection?
-}
 
 void ZWO_ASI_Imager::clearROI()
 {

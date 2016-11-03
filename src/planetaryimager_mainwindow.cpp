@@ -372,8 +372,8 @@ void PlanetaryImagerMainWindow::Private::onImagerInitialized(Imager * imager)
     ui->settings_container->setWidget(cameraSettingsWidget = new CameraControlsWidget(imager, configuration));
     ui->chipInfoWidget->setWidget(cameraInfoWidget = new CameraInfoWidget(imager));
     enableUIWidgets(true);
-    ui->actionSelect_ROI->setEnabled(imager->supportsROI());
-    ui->actionClear_ROI->setEnabled(imager->supportsROI());
+    ui->actionSelect_ROI->setEnabled(imager->supports(Imager::ROI));
+    ui->actionClear_ROI->setEnabled(imager->supports(Imager::ROI));
 }
 
 

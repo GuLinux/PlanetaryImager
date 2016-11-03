@@ -26,6 +26,7 @@ DPTR_IMPL(Imager) {
   const ImageHandler::ptr image_handler;
   ImagerThread::ptr imager_thread;
   LOG_C_SCOPE(Imager);
+  unique_ptr<QHash<Imager::Capability, bool>> capabilities;
 };
 
 Imager::Imager(const ImageHandler::ptr& image_handler) : QObject(nullptr), dptr(image_handler)
@@ -61,3 +62,14 @@ void Imager::push_job_on_thread(const ImagerThread::Job& job)
   }
   d->imager_thread->push_job(job);
 }
+
+bool Imager::supports(Capability capability) const
+{
+  if(! d->capabilities) {
+    d->capabilities = make_unique<QHash<Capability, bool>>();
+    for(auto capability: properties().capabilities)
+      (*d->capabilities)[capability] = true;
+  }
+  return d->capabilities->value(capability, false);
+}
+

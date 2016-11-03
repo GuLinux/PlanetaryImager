@@ -68,6 +68,7 @@ QHYCCDImager::QHYCCDImager(const QString &cameraName, const char *id, const Imag
   QHY_CHECK << GetQHYCCDChipInfo(d->handle, &chipwidth, &chipheight, &width, &height, &pixelwidth, &pixelheight, &bpp) << "Getting chip information for %1" << id;
   d->chip.set_chip_size(chipwidth, chipheight).set_pixel_size(pixelwidth, pixelheight).set_resolution({static_cast<int>(width), static_cast<int>(height)});
   d->chip << Properties::Property{"bpp", bpp};
+  d->chip << LiveStream;
   qDebug() << d->chip;
   d->load_settings();
   qDebug() << d->settings;
@@ -185,11 +186,6 @@ void QHYCCDImager::setControl(const QHYCCDImager::Control& setting)
 void QHYCCDImager::startLive()
 {
   restart([=] { return d->imaging_worker = make_shared<QHYImagingWorker>(d->handle); });
-}
-
-bool QHYCCDImager::supportsROI() const
-{
-  return false; // TODO
 }
 
 void QHYCCDImager::setROI(const QRect&)

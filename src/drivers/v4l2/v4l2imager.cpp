@@ -87,7 +87,7 @@ V4L2Imager::~V4L2Imager()
 
 Imager::Properties V4L2Imager::properties() const
 {
-    return {};
+    return Properties{} << LiveStream;
 }
 
 QString V4L2Imager::name() const

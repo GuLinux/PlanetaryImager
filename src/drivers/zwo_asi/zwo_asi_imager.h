@@ -31,7 +31,6 @@ public:
     Imager::Properties properties() const override;
     QString name() const override;
     Imager::Controls controls() const override;
-    bool supportsROI() const override;
 public slots:
     void setControl(const Imager::Control& control) override;
     void startLive() override;

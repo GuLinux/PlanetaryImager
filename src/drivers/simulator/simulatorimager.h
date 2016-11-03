@@ -35,7 +35,6 @@ public:
     Controls controls() const override;
     void startLive() override;
     static int rand(int a, int b);
-    bool supportsROI() const override { return true; }
 public slots:
     void setROI(const QRect &) override;
     void clearROI() override;

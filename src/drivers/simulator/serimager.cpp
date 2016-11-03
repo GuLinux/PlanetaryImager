@@ -100,7 +100,7 @@ SERImager::~SERImager()
 
 Imager::Properties SERImager::properties() const
 {
-  return {};
+  return Properties{} << LiveStream;
 }
 
 void SERImager::clearROI()

@@ -35,7 +35,6 @@ public:
     Properties properties() const override;
 
     Controls controls() const override;  
-    bool supportsROI() const override;
 public slots:
   void setControl(const Control &setting) override;
   void startLive() override;

@@ -23,6 +23,7 @@
 #include <chrono>
 #include <QObject>
 #include <QDebug>
+#include <QSet>
 #include "image_handlers/imagehandler.h"
 #include "imagerthread.h"
 #include "c++/dptr.h"
@@ -35,12 +36,13 @@ public:
   virtual ~Imager();
   struct Control;
   struct Properties;
+  enum Capability { ROI, Temperature, LiveStream, StillPicture, };
   typedef QList<Control> Controls;
 
   virtual Controls controls() const = 0;  
   virtual QString name() const = 0;
   virtual Properties properties() const = 0;
-  virtual bool supportsROI() const = 0;
+  bool supports(Capability capability) const;
   
 protected:
   void restart(const ImagerThread::Worker::factory &worker);
@@ -100,8 +102,11 @@ struct Imager::Properties {
     QString displayName() const;
     QString displayValue() const;
   };
-    Properties &operator<<(const Property &property);
+  Properties &operator<<(const Property &property);
   QList<Property> properties;
+  QSet<Capability> capabilities;
+  Properties &operator<<(Capability capability);
+  Properties &support(Capability capability);
 };
 
 QDebug operator<<(QDebug dbg, const Imager::Properties &chip);

@@ -46,6 +46,18 @@ Imager::Properties & Imager::Properties::operator<<(const Imager::Properties::Pr
 }
 
 
+Imager::Properties & Imager::Properties::operator<<(Imager::Capability capability)
+{
+  return support(capability);
+}
+
+Imager::Properties & Imager::Properties::support(Imager::Capability capability)
+{
+  capabilities.insert(capability);
+  return *this;
+}
+
+
 Imager::Properties & Imager::Properties::set_chip_size(double width, double height)
 {
     return *this << Property{"chip_size", QVariantMap{ {"width", width}, {"height", height} },  "Chip size", "%1x%2 mm"_q % width% height };
