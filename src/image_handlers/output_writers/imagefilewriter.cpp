@@ -66,6 +66,6 @@ QString ImageFileWriter::filename() const
 
 QString ImageFileWriter::Private::savename(const Frame::ptr& frame, const QString& extension) const
 {
-  return "%1/%2.%3"_q % filename % frame->created_utc().toString("yyyy-MM-ddTHHmmss.zzz") % extension;
+  return "%1/%2.%3"_q % filename % frame->created_utc().toString("yyyy-MM-ddTHHmmss.zzz-UTC") % extension;
 }
 
