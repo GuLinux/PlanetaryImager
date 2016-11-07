@@ -21,8 +21,10 @@
 #include "Qt/strings.h"
 #include <opencv2/opencv.hpp>
 #include <QDir>
+#include <CCfits/CCfits>
 
 using namespace std;
+using namespace std::placeholders;
 
 DPTR_IMPL(ImageFileWriter) {
   Configuration &configuration;
@@ -31,13 +33,18 @@ DPTR_IMPL(ImageFileWriter) {
   function<void(const Frame::ptr&)> writer;
   QString savename(const Frame::ptr &frame, const QString &extension) const;
   QDir savedir;
+  void saveFITS(const Frame::ptr &frame) const;
 };
 
 ImageFileWriter::ImageFileWriter(ImageFileWriter::Format format, Configuration& configuration) : dptr(configuration, configuration.savefile(), this)
 {
+  qDebug() << "Format: " << format;
   switch(format) {
     case PNG:
       d->writer = [&](const Frame::ptr &frame){ cv::imwrite(d->savename(frame, "png").toStdString(), frame->mat()); };
+      break;
+    case FITS:
+      d->writer = bind(&Private::saveFITS, d.get(), _1);
       break;
   }
   d->savedir.mkpath(d->filename);
@@ -67,5 +74,24 @@ QString ImageFileWriter::filename() const
 QString ImageFileWriter::Private::savename(const Frame::ptr& frame, const QString& extension) const
 {
   return "%1/%2.%3"_q % filename % frame->created_utc().toString("yyyy-MM-ddTHHmmss.zzz-UTC") % extension;
+}
+
+void ImageFileWriter::Private::saveFITS(const Frame::ptr& frame) const
+{
+  if(frame->channels() != 1) {
+    qWarning() << "Colour images are currently unsupported for FITS writer";
+    return;
+  }
+  long naxes[2] = { frame->resolution().width(), frame->resolution().height() };
+  CCfits::FITS fits{savename(frame, "fits").toStdString(), frame->bpp() == 8 ? BYTE_IMG : USHORT_IMG, 2, naxes};
+  valarray<long> data(frame->resolution().width() * frame->resolution().height());
+  auto mat = frame->mat();
+  if(frame->bpp() == 8) {
+    copy(mat.begin<uint8_t>(), mat.end<uint8_t>(), begin(data));
+  } else {
+    copy(mat.begin<uint16_t>(), mat.end<uint16_t>(), begin(data));
+  }
+  fits.pHDU().write(1, data.size(), data);
+  fits.flush();
 }
 

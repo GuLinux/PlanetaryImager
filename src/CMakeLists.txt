@@ -20,6 +20,7 @@ target_link_libraries(planetary_imager
     ${Boost_LIBRARIES}
     ${OpenCV_LIBS}
     Qt5::Widgets
+    CCfits # TODO: find_package
     ${Qt5_OpenGL_LIBRARIES}
     pthread
     ${EXTRA_LIBRARIES}

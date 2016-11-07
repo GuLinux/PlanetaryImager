@@ -28,5 +28,6 @@ QMap< Configuration::SaveFormat, FileWriter::Factory > FileWriter::factories()
     {Configuration::SER, [](const QString &deviceName, Configuration &configuration){ return make_shared<SERWriter>(deviceName, configuration); }},
     {Configuration::Video, [](const QString &, Configuration &configuration){ return make_shared<cvVideoWriter>(configuration); }},
     {Configuration::PNG, [](const QString &, Configuration &configuration){ return make_shared<ImageFileWriter>(ImageFileWriter::PNG, configuration); }},
+    {Configuration::FITS, [](const QString &, Configuration &configuration){ return make_shared<ImageFileWriter>(ImageFileWriter::FITS, configuration); }},
   };
 }
