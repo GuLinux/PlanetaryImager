@@ -24,6 +24,7 @@
 #include "c++/backtrace.h"
 #include <unistd.h>
 #include <signal.h>
+#include "drivers/available_drivers.h"
 using namespace std;
 
 
@@ -60,7 +61,7 @@ int main(int argc, char** argv)
     app.setApplicationName("PlanetaryImager");
     app.setApplicationDisplayName("Planetary Imager");
     app.setApplicationVersion(PLANETARY_IMAGER_VERSION);
-    PlanetaryImagerMainWindow mainWindow;
+    PlanetaryImagerMainWindow mainWindow{make_shared<SupportedDrivers>()};
     mainWindow.show();
     return app.exec();
 }

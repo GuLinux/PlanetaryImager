@@ -21,6 +21,7 @@
 
 #include <QMainWindow>
 #include "dptr.h"
+#include "drivers/driver.h"
 namespace Ui
 {
 class PlanetaryImagerMainWindow;
@@ -31,7 +32,7 @@ class PlanetaryImagerMainWindow : public QMainWindow
   Q_OBJECT
 public:
     ~PlanetaryImagerMainWindow();
-    PlanetaryImagerMainWindow(QWidget* parent = 0, Qt::WindowFlags flags = 0);
+    PlanetaryImagerMainWindow(const Driver::ptr &driver, QWidget* parent = 0, Qt::WindowFlags flags = 0);
     enum NotificationType {Warning, Error, Info, };
     static PlanetaryImagerMainWindow *instance();
     static void queue_notify(PlanetaryImagerMainWindow::NotificationType notification_type, const QString &title, const QString &message);

@@ -55,9 +55,9 @@ using namespace std::placeholders;
 Q_DECLARE_METATYPE(cv::Mat)
 
 DPTR_IMPL(PlanetaryImagerMainWindow) {
+  Driver::ptr driver;
   static PlanetaryImagerMainWindow *q;
   unique_ptr<Ui::PlanetaryImagerMainWindow> ui;
-  Driver::ptr driver = make_shared<SupportedDrivers>();
   Imager *imager = nullptr;
   void rescan_devices();
   Configuration configuration;
@@ -154,7 +154,7 @@ PlanetaryImagerMainWindow * PlanetaryImagerMainWindow::instance()
 
 
 
-PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(QWidget* parent, Qt::WindowFlags flags) : dptr()
+PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, QWidget* parent, Qt::WindowFlags flags) : dptr(driver)
 {
     Private::q = this;
     static bool metatypes_registered = false;
