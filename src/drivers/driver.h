@@ -24,6 +24,7 @@
 
 class Driver {
 public:
+  typedef std::shared_ptr<Driver> ptr;
   class Camera {
   public:
     typedef std::shared_ptr<Camera> ptr;
@@ -34,7 +35,6 @@ public:
   
   virtual Cameras cameras() const = 0;
 };
-typedef std::shared_ptr<Driver> DriverPtr;
 
 class SupportedDrivers : public Driver {
 public:

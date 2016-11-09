@@ -57,7 +57,7 @@ Q_DECLARE_METATYPE(cv::Mat)
 DPTR_IMPL(PlanetaryImagerMainWindow) {
   static PlanetaryImagerMainWindow *q;
   unique_ptr<Ui::PlanetaryImagerMainWindow> ui;
-  DriverPtr driver = make_shared<SupportedDrivers>();
+  Driver::ptr driver = make_shared<SupportedDrivers>();
   Imager *imager = nullptr;
   void rescan_devices();
   Configuration configuration;
