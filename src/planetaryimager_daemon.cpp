@@ -19,11 +19,11 @@
 #include "planetaryimager_mainwindow.h"
 #include "commons/version.h"
 #include <iostream>
-#include <iomanip>
 #include <QDebug>
 #include "c++/backtrace.h"
 #include <unistd.h>
 #include <signal.h>
+#include "commons/loghandler.h"
 using namespace std;
 
 
@@ -33,30 +33,13 @@ void crash_handler(int sig) {
   exit(1);
 }
 
-void log_handler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
-{
-  static map<QtMsgType, string> log_levels {
-    {QtFatalMsg   , "FATAL"},
-    {QtCriticalMsg, "CRITICAL"},
-    {QtWarningMsg , "WARNING"},
-    {QtDebugMsg   , "DEBUG"},
-  };
-  QString position;
-  if(context.file && context.line) {
-    position = QString("%1:%2").arg(context.file).arg(context.line).replace(SRC_DIR, "");
-  }
-  QString function = context.function ? context.function : "";
-  cerr << setw(8) << log_levels[type] << " - " /*<< qPrintable(position) << "@"*/<< qPrintable(function) << " " << qPrintable(msg) << endl;
-  cerr.flush();
-}
-
 int main(int argc, char** argv)
 {
     signal(SIGSEGV, crash_handler);
     signal(SIGABRT, crash_handler);
     cerr << "Starting PlanetaryImager Daemon - version " << PLANETARY_IMAGER_VERSION << " (" << HOST_PROCESSOR << ")" << endl;
     QCoreApplication app(argc, argv);
-    qInstallMessageHandler(log_handler);
+    LogHandler log_handler;
     app.setApplicationName("PlanetaryImager");
     app.setApplicationVersion(PLANETARY_IMAGER_VERSION);
     // TODO: initialize all handlers and drivers here
