@@ -20,23 +20,15 @@
 #include "commons/version.h"
 #include <iostream>
 #include <QDebug>
-#include "c++/backtrace.h"
-#include <unistd.h>
 #include <signal.h>
+#include "commons/crashhandler.h"
 #include "commons/loghandler.h"
 using namespace std;
 
 
-void crash_handler(int sig) {
-  fprintf(stderr, "Error: signal %d:\n", sig);
-  cerr << GuLinux::Backtrace::backtrace(50, 1);
-  exit(1);
-}
-
 int main(int argc, char** argv)
 {
-    signal(SIGSEGV, crash_handler);
-    signal(SIGABRT, crash_handler);
+    CrashHandler crash_handler({SIGSEGV, SIGABRT});
     cerr << "Starting PlanetaryImager Daemon - version " << PLANETARY_IMAGER_VERSION << " (" << HOST_PROCESSOR << ")" << endl;
     QCoreApplication app(argc, argv);
     LogHandler log_handler;

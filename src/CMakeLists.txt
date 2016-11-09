@@ -17,13 +17,13 @@ add_executable(planetary_imager_daemon planetaryimager_daemon.cpp )
 message("dependencies: ${planetary_imager_DEPS}")
   
 target_link_libraries(planetary_imager
+    ${planetary_imager_DEPS}
     GuLinux_Qt_Commons
     GuLinux_c++_Commons
-    ${planetary_imager_DEPS}
     ${Boost_LIBRARIES}
     ${OpenCV_LIBS}
     Qt5::Widgets
-    CCfits # TODO: find_package
+    CCfits cfitsio # TODO: find_package
     ${Qt5_OpenGL_LIBRARIES}
     pthread
     ${EXTRA_LIBRARIES}
@@ -31,13 +31,13 @@ target_link_libraries(planetary_imager
 
   
 target_link_libraries(planetary_imager_daemon
+    ${planetary_imager_DEPS}
     GuLinux_Qt_Commons
     GuLinux_c++_Commons
-    ${planetary_imager_DEPS}
     ${Boost_LIBRARIES}
     ${OpenCV_LIBS}
     Qt5::Core
-    CCfits # TODO: find_package
+    CCfits cfitsio # TODO: find_package
     pthread
     ${EXTRA_LIBRARIES}
 )
