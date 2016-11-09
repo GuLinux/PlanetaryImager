@@ -4,7 +4,7 @@
 #include "drivers/driver.h"
 ${available_drivers_INCLUDES}
 
-typedef QList<DriverPtr> Drivers;
+typedef QList<Driver::ptr> Drivers;
 
 namespace AvailableDrivers {
   static Drivers drivers{${available_drivers_CLASSES}};
