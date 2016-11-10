@@ -19,6 +19,7 @@
 #ifndef CRASHHANDLER_H
 #define CRASHHANDLER_H
 #include <list>
+#include <signal.h>
 
 class CrashHandler {
 public:

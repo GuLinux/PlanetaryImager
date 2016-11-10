@@ -29,7 +29,7 @@
 #include "Qt/strings.h"
 #include "imagerexception.h"
 #include <QElapsedTimer>
-#include "planetaryimager_mainwindow.h"
+#include "commons/messageslogger.h"
 
 using namespace std;
 
@@ -96,7 +96,7 @@ void ImagerThread::Private::thread_started()
         try {
           queued_job();
         } catch(const std::exception &e) {
-          PlanetaryImagerMainWindow::queue_notify(PlanetaryImagerMainWindow::Warning, tr("Error on imager task"), tr("An error occured during an imager operation for %1:\n%2") 
+          MessagesLogger::queue(MessagesLogger::Warning, tr("Error on imager task"), tr("An error occured during an imager operation for %1:\n%2") 
             % imager->name()
             % e.what());
           qWarning() << e.what();
@@ -113,11 +113,11 @@ void ImagerThread::Private::thread_started()
       qWarning() << e.what();
       if( (last_error_occured.elapsed() > 3000 || ! last_error_occured.isValid()) && error_messages_since_last_success++ < 4) {
         if(error_messages_since_last_success == 4) {
-          PlanetaryImagerMainWindow::queue_notify(PlanetaryImagerMainWindow::Warning, tr("Error on frame capture"), tr("An error occured while capturing frame for %1:\n%2\nFollowing errors will be quietly ignored, check the console log for more details.") 
+          MessagesLogger::queue(MessagesLogger::Warning, tr("Error on frame capture"), tr("An error occured while capturing frame for %1:\n%2\nFollowing errors will be quietly ignored, check the console log for more details.") 
             % imager->name()
             % e.what());
         } else {
-          PlanetaryImagerMainWindow::queue_notify(PlanetaryImagerMainWindow::Warning, tr("Error on frame capture"), tr("An error occured while capturing frame for %1:\n%2") 
+          MessagesLogger::queue(MessagesLogger::Warning, tr("Error on frame capture"), tr("An error occured while capturing frame for %1:\n%2") 
             % imager->name()
             % e.what());
         }

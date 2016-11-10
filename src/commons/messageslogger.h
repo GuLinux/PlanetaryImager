@@ -16,30 +16,25 @@
  *
  */
 
-#ifndef QHYMAINWINDOW_H
-#define QHYMAINWINDOW_H
+#ifndef MESSAGESLOGGER_H
+#define MESSAGESLOGGER_H
+#include <QObject>
+#include <QDateTime>
+#include "c++/dptr.h"
 
-#include <QMainWindow>
-#include "dptr.h"
-#include "drivers/driver.h"
-#include "commons/messageslogger.h"
-namespace Ui
+class MessagesLogger : public QObject
 {
-class PlanetaryImagerMainWindow;
-}
-
-class PlanetaryImagerMainWindow : public QMainWindow
-{
-  Q_OBJECT
+    Q_OBJECT
 public:
-    ~PlanetaryImagerMainWindow();
-    PlanetaryImagerMainWindow(const Driver::ptr &driver, QWidget* parent = 0, Qt::WindowFlags flags = 0);
-public slots:
-  void notify(const QDateTime &when, MessagesLogger::Type notification_type, const QString &title, const QString &message);
-protected:
-  void closeEvent(QCloseEvent *event) override;
+  enum Type {Warning, Error, Info, };
+  MessagesLogger(QObject *parent = nullptr);
+  ~MessagesLogger();
+  static void queue(Type type, const QString &title, const QString &message);
+  static MessagesLogger *instance();
+signals:
+  void message(const QDateTime &when, MessagesLogger::Type type, const QString &title, const QString &message);
 private:
   DPTR
 };
 
-#endif // QHYMAINWINDOW_H
+#endif // MESSAGESLOGGER_H

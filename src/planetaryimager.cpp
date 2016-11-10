@@ -23,12 +23,13 @@
 #include "drivers/available_drivers.h"
 #include "commons/loghandler.h"
 #include "commons/crashhandler.h"
-#include <signal.h>
+
 using namespace std;
 
 
 int main(int argc, char** argv)
 {
+    qRegisterMetaType<Frame::ptr>("Frame::ptr");
     CrashHandler crash_handler({SIGSEGV, SIGABRT});
     cerr << "Starting PlanetaryImager - version " << PLANETARY_IMAGER_VERSION << " (" << HOST_PROCESSOR << ")" << endl;
     QApplication app(argc, argv);

@@ -31,7 +31,7 @@
 #include <QtConcurrent/QtConcurrent>
 #include "commons/fps_counter.h"
 #include "widgets/cameracontrolswidget.h"
-#include "commons/configurationdialog.h"
+#include "widgets/configurationdialog.h"
 #include "commons/configuration.h"
 #include <QMutex>
 #include <QMessageBox>
@@ -46,6 +46,7 @@
 #include <Qt/functional.h>
 #include <QGraphicsScene>
 #include "image_handlers/all_handlers.h"
+#include "commons/messageslogger.h"
 
 using namespace GuLinux;
 using namespace std;
@@ -124,7 +125,7 @@ void CreateImagerWorker::exec()
     if(imager)
       emit this->imager(imager);
   } catch(const std::exception &e) {
-    PlanetaryImagerMainWindow::queue_notify(PlanetaryImagerMainWindow::Error, tr("Initialization Error"), tr("Error initializing imager %1: \n%2") % camera->name() % e.what());
+    MessagesLogger::queue(MessagesLogger::Error, tr("Initialization Error"), tr("Error initializing imager %1: \n%2") % camera->name() % e.what());
   }
   deleteLater();
 }
@@ -147,22 +148,10 @@ void PlanetaryImagerMainWindow::Private::saveState()
   configuration.set_main_window_geometry(q->saveGeometry());
 }
 
-PlanetaryImagerMainWindow * PlanetaryImagerMainWindow::instance()
-{
-  return Private::q;
-}
-
-
 
 PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, QWidget* parent, Qt::WindowFlags flags) : dptr(driver)
 {
     Private::q = this;
-    static bool metatypes_registered = false;
-    if(!metatypes_registered) {
-      metatypes_registered = true;
-      qRegisterMetaType<Frame::ptr>("Frame::ptr");
-      qRegisterMetaType<PlanetaryImagerMainWindow::NotificationType>("PlanetaryImagerMainWindow::NotificationType");
-    }
     d->ui.reset(new Ui::PlanetaryImagerMainWindow);
     d->ui->setupUi(this);
     setWindowIcon(QIcon::fromTheme("planetary_imager"));
@@ -248,7 +237,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
     }
     connect(d->ui->actionHide_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::hide, _1) ); });
     connect(d->ui->actionShow_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::show, _1) ); });
-    
+    connect(MessagesLogger::instance(), &MessagesLogger::message, this, bind(&PlanetaryImagerMainWindow::notify, this, _1, _2, _3, _4), Qt::QueuedConnection);
     d->rescan_devices();
     connect(d->displayImage.get(), &DisplayImage::gotImage, this, bind(&ZoomableImage::setImage, d->image_widget, _1), Qt::QueuedConnection);
 
@@ -402,22 +391,14 @@ void PlanetaryImagerMainWindow::Private::enableUIWidgets(bool cameraConnected)
   ui->camera_settings->setEnabled(cameraConnected);
 }
 
-void PlanetaryImagerMainWindow::notify(PlanetaryImagerMainWindow::NotificationType notification_type, const QString& title, const QString& message)
+void PlanetaryImagerMainWindow::notify(const QDateTime &when, MessagesLogger::Type notification_type, const QString& title, const QString& message)
 {
-  static QHash<NotificationType, function<void(const QString&, const QString&)>> types_map {
-    {Warning, [](const QString &title, const QString &message) { QMessageBox::warning(nullptr, title, message); }},
-    {Error, [](const QString &title, const QString &message) { QMessageBox::critical(nullptr, title, message); }},
-    {Info, [](const QString &title, const QString &message) { QMessageBox::information(nullptr, title, message); }},
+  static QHash<MessagesLogger::Type, function<void(const QString&, const QString&)>> types_map {
+    {MessagesLogger::Warning, [](const QString &title, const QString &message) { QMessageBox::warning(nullptr, title, message); }},
+    {MessagesLogger::Error, [](const QString &title, const QString &message) { QMessageBox::critical(nullptr, title, message); }},
+    {MessagesLogger::Info, [](const QString &title, const QString &message) { QMessageBox::information(nullptr, title, message); }},
   };
   types_map[notification_type](title, message);
-}
-
-void PlanetaryImagerMainWindow::queue_notify(PlanetaryImagerMainWindow::NotificationType notification_type, const QString& title, const QString& message)
-{
-  QMetaObject::invokeMethod(PlanetaryImagerMainWindow::instance(), "notify", Qt::QueuedConnection,
-                            Q_ARG(PlanetaryImagerMainWindow::NotificationType, notification_type),
-                            Q_ARG(QString, title),  
-                            Q_ARG(QString, message));
 }
 
 

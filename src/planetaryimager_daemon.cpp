@@ -20,20 +20,27 @@
 #include "commons/version.h"
 #include <iostream>
 #include <QDebug>
-#include <signal.h>
+#include <QCommandLineParser>
 #include "commons/crashhandler.h"
 #include "commons/loghandler.h"
+
 using namespace std;
 
 
 int main(int argc, char** argv)
 {
+    qRegisterMetaType<Frame::ptr>("Frame::ptr");
     CrashHandler crash_handler({SIGSEGV, SIGABRT});
     cerr << "Starting PlanetaryImager Daemon - version " << PLANETARY_IMAGER_VERSION << " (" << HOST_PROCESSOR << ")" << endl;
     QCoreApplication app(argc, argv);
     LogHandler log_handler;
     app.setApplicationName("PlanetaryImager");
     app.setApplicationVersion(PLANETARY_IMAGER_VERSION);
+    auto driver = make_shared<SupportedDrivers>();
+    
+    QCommandLineParser parser;
+    parser.process(app);
+    
     // TODO: initialize all handlers and drivers here
     //PlanetaryImagerMainWindow mainWindow;
     //mainWindow.show();

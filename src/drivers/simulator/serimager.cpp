@@ -17,7 +17,6 @@
  */
 
 #include "serimager.h"
-#include <QFileDialog>
 #include "drivers/imagerthread.h"
 #include <QFile>
 #include "commons/ser_header.h"
@@ -127,8 +126,9 @@ void SERImager::setControl(const Imager::Control& setting)
 
 void SERImager::startLive()
 {
-  QString ser_file = QFileDialog::getOpenFileName(nullptr, "Open SER file", qgetenv("HOME"), "SER Files (*.ser)");
-  restart([=]{ return make_shared<SERImagerWorker>(ser_file); });
+  // TODO: restore, without using GUI classes
+  //QString ser_file = QFileDialog::getOpenFileName(nullptr, "Open SER file", qgetenv("HOME"), "SER Files (*.ser)");
+  //restart([=]{ return make_shared<SERImagerWorker>(ser_file); });
 }
 
 
