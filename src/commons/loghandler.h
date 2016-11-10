@@ -18,12 +18,16 @@
 
 #ifndef LOGHANDLER_H
 #define LOGHANDLER_H
+#include <QDebug>
+#include "c++/dptr.h"
 
 class LogHandler
 {
 public:
-  LogHandler();
+  LogHandler(const QtMsgType &minimumType= QtCriticalMsg);
   ~LogHandler();
+private:
+  DPTR
 };
 
 #endif // LOGHANDLER_H

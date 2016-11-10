@@ -39,6 +39,8 @@ int main(int argc, char** argv)
     auto driver = make_shared<SupportedDrivers>();
     
     QCommandLineParser parser;
+    parser.addHelpOption();
+    parser.addVersionOption();
     parser.process(app);
     
     // TODO: initialize all handlers and drivers here
