@@ -91,7 +91,7 @@ DisplayImage::~DisplayImage()
 DisplayImage::DisplayImage(Configuration& configuration, QObject* parent)
   : QObject(parent), dptr(configuration, this)
 {
-  d->capture_fps.reset(new fps_counter([=](double fps){ emit displayFPS(fps);}) );
+  d->capture_fps.reset(new fps_counter([=](double fps){ emit displayFPS(fps);}, fps_counter::Elapsed) );
   d->running = true;
   d->detectEdges = false;
   setRecording(false);
