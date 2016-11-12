@@ -52,3 +52,36 @@ bool Imager::Control::same_value(const Imager::Control& other) const
     return qFuzzyCompare(value, other.value);
 }
 
+QVariantMap Imager::Control::asMap() const
+{
+    QVariantMap data;
+    data["name"] = name;
+    data["value"] = value;
+    static QMap<Imager::Control::Type, QString> types {
+      {Imager::Control::Number, "number"},
+      {Imager::Control::Combo, "combo"},
+      {Imager::Control::Bool, "bool"}
+    };
+    data["type"] = types[type];
+    data["id"] =static_cast<qlonglong>(id);
+    if(type == Imager::Control::Combo) {
+      QVariantMap choices;
+      for(auto choice: this->choices)
+        choices[choice.label] = choice.value;
+        data["choices"] = choices;
+    }
+    if(type == Imager::Control::Number && is_duration) {
+      data["type"] = "duration";
+      QList<QPair<QString, double>> units { {"seconds", 1}, {"milliseconds", 1000}, {"microseconds", 1000000} };
+      for(auto unit: units) {
+        data["value_%1"_q % unit.first] = value * duration_unit.count() * unit.second;
+      }
+    }
+    return data;
+}
+
+
+void Imager::Control::import(const QVariantMap& data)
+{
+  value = data["value"].toDouble();
+}

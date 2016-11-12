@@ -39,32 +39,9 @@ RecordingInformation::RecordingInformation(Configuration& configuration, Imager 
   d->properties["camera"] = imager->name();
   d->properties["observer"] = configuration.observer();
   d->properties["telescope"] = configuration.telescope();
-  QVariantMap camera_settings;
-  for(auto setting: imager->controls()) {
-    QVariantMap setting_value;
-    setting_value["value"] = setting.value;
-    static QMap<Imager::Control::Type, QString> types {
-      {Imager::Control::Number, "number"},
-      {Imager::Control::Combo, "combo"},
-      {Imager::Control::Bool, "bool"}
-    };
-    setting_value["type"] = types[setting.type];
-    if(setting.type == Imager::Control::Combo) {
-      QVariantMap choices;
-      for(auto choice: setting.choices)
-	choices[choice.label] = choice.value;
-      setting_value["choices"] = choices;
-    }
-    if(setting.type == Imager::Control::Number && setting.is_duration) {
-      setting_value["type"] = "duration";
-      QList<QPair<QString, double>> units {
-	{"seconds", 1}, {"milliseconds", 1000}, {"microseconds", 1000000}
-      };
-      for(auto unit: units) {
-	setting_value["value_%1"_q % unit.first] = setting.value * setting.duration_unit.count() * unit.second;
-      }
-    }
-    camera_settings[setting.name] = setting_value;
+  QVariantList camera_settings;
+  for(auto control: imager->controls()) {
+    camera_settings.push_back(control.asMap());
   }
   d->properties["camera-settings"] = camera_settings;
 }
