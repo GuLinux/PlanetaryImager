@@ -47,7 +47,7 @@ public:
 protected:
   void restart(const ImagerThread::Worker::factory &worker);
   void push_job_on_thread(const ImagerThread::Job &job);
-  void set_exposure(const std::chrono::duration<double> &exposure);
+  void set_exposure(const Control &control);
 private:
   DPTR
   

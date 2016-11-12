@@ -178,6 +178,9 @@ void QHYCCDImager::setControl(const QHYCCDImager::Control& setting)
     Control &setting_ref = *find_if(begin(d->settings), end(d->settings), [setting](const Control &s) { return s.id == setting.id; });
     d->load(setting_ref);
     qDebug() << "setting" << setting.name << "updated to value" << setting_ref.value;
+    if(setting.id == CONTROL_EXPOSURE) {
+      set_exposure(setting_ref);
+    }
     emit changed(setting_ref);
   });
 }

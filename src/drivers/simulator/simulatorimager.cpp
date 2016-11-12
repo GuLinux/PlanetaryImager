@@ -116,7 +116,7 @@ void SimulatorImager::setControl(const Imager::Control& setting)
     }
     d->settings[setting.name] = setting;
     if(setting.name == "exposure")
-      set_exposure(chrono::nanoseconds{static_cast<long>(setting.value*1000)});
+      set_exposure(setting);
     emit changed(setting);
   });
 }

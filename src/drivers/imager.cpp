@@ -53,8 +53,11 @@ void Imager::restart(const ImagerThread::Worker::factory& worker)
   d->imager_thread->start();
 }
 
-void Imager::set_exposure(const chrono::duration<double> &exposure)
+void Imager::set_exposure(const Control &control)
 {
+  if(! control.is_duration)
+    return;
+  const chrono::duration<double> exposure = control.seconds();
   if(d->imager_thread)
     d->imager_thread->set_exposure(exposure);
 }
