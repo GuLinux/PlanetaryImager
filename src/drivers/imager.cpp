@@ -53,7 +53,7 @@ void Imager::restart(const ImagerThread::Worker::factory& worker)
   d->imager_thread->start();
 }
 
-void Imager::set_exposure(const chrono::nanoseconds &exposure)
+void Imager::set_exposure(const chrono::duration<double> &exposure)
 {
   if(d->imager_thread)
     d->imager_thread->set_exposure(exposure);

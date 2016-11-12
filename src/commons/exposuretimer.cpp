@@ -29,8 +29,8 @@ DPTR_IMPL(ExposureTimer) {
   QTimer *timer;
   ExposureTimer *q;
   QElapsedTimer elapsed;
-  long exposure;
-  void started(long exposure);
+  double exposure;
+  void started(double exposure);
   void progress();
   void finished();
 };
@@ -57,11 +57,12 @@ void ExposureTimer::set_imager(Imager* imager)
 
 void ExposureTimer::Private::progress()
 {
-  emit q->progress(exposure, elapsed.elapsed(), exposure - elapsed.elapsed());
+  double elapsed = static_cast<double>(this->elapsed.elapsed()) / 1000.;
+  emit q->progress(exposure, elapsed, exposure - elapsed);
 }
 
 
-void ExposureTimer::Private::started(long exposure)
+void ExposureTimer::Private::started(double exposure)
 {
   this->exposure = exposure;
   elapsed.restart();

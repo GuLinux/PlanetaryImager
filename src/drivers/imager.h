@@ -47,7 +47,7 @@ public:
 protected:
   void restart(const ImagerThread::Worker::factory &worker);
   void push_job_on_thread(const ImagerThread::Job &job);
-  void set_exposure(const std::chrono::nanoseconds &exposure);
+  void set_exposure(const std::chrono::duration<double> &exposure);
 private:
   DPTR
   
@@ -62,7 +62,7 @@ signals:
   void temperature(double celsius);
   void changed(const Control &control);
   void disconnected();
-  void long_exposure_started(long exposure_milliseconds);
+  void long_exposure_started(double exposure_seconds);
   void long_exposure_ended();
 };
 
@@ -80,6 +80,7 @@ struct Imager::Control {
   int decimals = 2;
   bool is_duration = false;
   std::chrono::duration<double> duration_unit;
+  inline std::chrono::duration<double> seconds() const { return duration_unit * value; }
   bool supports_auto = false;
   bool value_auto = false;
   bool readonly = false;

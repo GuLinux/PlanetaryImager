@@ -288,10 +288,8 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
       d->image_widget->clearROI();
       d->selection_mode = Private::NoSelection;
     });
-    connect(&d->exposure_timer, &ExposureTimer::progress, [=](long , long elapsed, long remaining){
-      double elapsed_secs = static_cast<double>(elapsed)/1000.;
-      double remaining_secs = static_cast<double>(remaining)/1000.;
-      d->statusbar_info_widget->showMessage("Exposure: %1s, remaining: %2s"_q % QString::number(elapsed_secs, 'f', 1) % QString::number(remaining_secs, 'f', 1), 1000);
+    connect(&d->exposure_timer, &ExposureTimer::progress, [=](double , double elapsed, double remaining){
+      d->statusbar_info_widget->showMessage("Exposure: %1s, remaining: %2s"_q % QString::number(elapsed, 'f', 1) % QString::number(remaining, 'f', 1), 1000);
     });
     connect(&d->exposure_timer, &ExposureTimer::finished, [=]{ d->statusbar_info_widget->clearMessage(); });
 }

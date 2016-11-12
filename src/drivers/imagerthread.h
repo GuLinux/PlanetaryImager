@@ -39,7 +39,7 @@ class ImagerThread
   void stop();
   void start();
   void push_job(const Job &job);
-  void set_exposure(const std::chrono::nanoseconds &exposure);
+  void set_exposure(const std::chrono::duration<double> &exposure);
 private:
   DPTR
 

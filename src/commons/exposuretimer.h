@@ -32,7 +32,7 @@ public:
   ~ExposureTimer();
   void set_imager(Imager *imager);
 signals:
-  void progress(long total, long elapsed, long remaining);
+  void progress(double total, double elapsed, double remaining);
   void finished();
 private:
   DPTR

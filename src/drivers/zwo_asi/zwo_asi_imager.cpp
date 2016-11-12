@@ -183,7 +183,7 @@ void ZWO_ASI_Imager::setControl(const Control& control)
       camera_control->set(control.value, control.value_auto);
       qDebug() << "Changed control " << camera_control->control();
       if(control.id == ASI_EXPOSURE) {
-        set_exposure(chrono::nanoseconds{static_cast<long>(camera_control->value)});
+        set_exposure(camera_control->control().seconds() );
       }
       emit changed(*camera_control);
     });
