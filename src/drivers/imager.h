@@ -47,6 +47,7 @@ public:
 protected:
   void restart(const ImagerThread::Worker::factory &worker);
   void push_job_on_thread(const ImagerThread::Job &job);
+  void set_exposure(const std::chrono::nanoseconds &exposure);
 private:
   DPTR
   
@@ -61,6 +62,8 @@ signals:
   void temperature(double celsius);
   void changed(const Control &control);
   void disconnected();
+  void long_exposure_started(long exposure_milliseconds);
+  void long_exposure_ended();
 };
 
 struct Imager::Control {

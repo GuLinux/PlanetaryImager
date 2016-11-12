@@ -1,4 +1,5 @@
 /*
+ * GuLinux Planetary Imager - https://github.com/GuLinux/PlanetaryImager
  * Copyright (C) 2016  Marco Gulino <marco@gulinux.net>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -16,18 +17,25 @@
  *
  */
 
-#ifndef LOGHANDLER_H
-#define LOGHANDLER_H
-#include <QDebug>
+#ifndef EXPOSURETIMER_H
+#define EXPOSURETIMER_H
+
+#include <QObject>
+#include "drivers/imager.h"
 #include "c++/dptr.h"
 
-class LogHandler
+class ExposureTimer : public QObject
 {
+    Q_OBJECT
 public:
-  LogHandler(const QtMsgType &minimumType= QtDebugMsg);
-  ~LogHandler();
+  ExposureTimer(QObject *parent = nullptr);
+  ~ExposureTimer();
+  void set_imager(Imager *imager);
+signals:
+  void progress(long total, long elapsed, long remaining);
+  void finished();
 private:
   DPTR
 };
 
-#endif // LOGHANDLER_H
+#endif // EXPOSURETIMER_H

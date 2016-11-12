@@ -31,7 +31,9 @@
 #include <QElapsedTimer>
 #include "commons/messageslogger.h"
 
+
 using namespace std;
+using namespace std::chrono_literals;
 
 DPTR_IMPL(ImagerThread) : public QObject {
   Q_OBJECT
@@ -44,8 +46,9 @@ public:
   atomic_bool running;  
   QThread thread;
   boost::lockfree::spsc_queue<Job> jobs_queue;
+  bool long_exposure_mode = false;
+  chrono::nanoseconds long_exposure_duration;
   void thread_started();
-  
   LOG_C_SCOPE(ImagerThread);
 };
 
@@ -104,6 +107,8 @@ void ImagerThread::Private::thread_started()
       }
     }
     try {
+      if(long_exposure_mode)
+        imager->long_exposure_started(long_exposure_duration.count() / 1000);
       if(auto frame = worker->shoot()) {
           imageHandler->handle(frame);
         ++fps;
@@ -124,12 +129,22 @@ void ImagerThread::Private::thread_started()
         last_error_occured.restart();
       }
     }
+    if(long_exposure_mode)
+      imager->long_exposure_ended();
   }
 }
 
 void ImagerThread::push_job(const Job& job)
 {
   d->jobs_queue.push(job);
+}
+
+
+void ImagerThread::set_exposure(const std::chrono::nanoseconds &exposure)
+{
+  d->long_exposure_mode = (exposure >= 2'000'000ns);
+  d->long_exposure_duration = exposure;
+  qDebug() << "Exposure: " << exposure.count() / 1000 << "ms; long exposure: " << d->long_exposure_mode;
 }
 
 

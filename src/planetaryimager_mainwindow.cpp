@@ -47,6 +47,7 @@
 #include <QGraphicsScene>
 #include "image_handlers/all_handlers.h"
 #include "commons/messageslogger.h"
+#include "commons/exposuretimer.h"
 
 using namespace GuLinux;
 using namespace std;
@@ -76,6 +77,7 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   ConfigurationDialog *configurationDialog;
     
   RecordingPanel* recording_panel;
+  ExposureTimer exposure_timer;
   
   void connectCamera(const Driver::Camera::ptr &camera);
   void cameraDisconnected();
@@ -286,6 +288,12 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
       d->image_widget->clearROI();
       d->selection_mode = Private::NoSelection;
     });
+    connect(&d->exposure_timer, &ExposureTimer::progress, [=](long , long elapsed, long remaining){
+      double elapsed_secs = static_cast<double>(elapsed)/1000.;
+      double remaining_secs = static_cast<double>(remaining)/1000.;
+      d->statusbar_info_widget->showMessage("Exposure: %1s, remaining: %2s"_q % QString::number(elapsed_secs, 'f', 1) % QString::number(remaining_secs, 'f', 1), 1000);
+    });
+    connect(&d->exposure_timer, &ExposureTimer::finished, [=]{ d->statusbar_info_widget->clearMessage(); });
 }
 
 void PlanetaryImagerMainWindow::closeEvent(QCloseEvent* event)
@@ -352,6 +360,7 @@ void PlanetaryImagerMainWindow::Private::onImagerInitialized(Imager * imager)
     }
     cameraDisconnected();
     this->imager = imager;
+    exposure_timer.set_imager(imager);
     imager->startLive();
     statusbar_info_widget->deviceConnected(imager->name());
     connect(imager, &Imager::disconnected, q, bind(&Private::cameraDisconnected, this), Qt::QueuedConnection);

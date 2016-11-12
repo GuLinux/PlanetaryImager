@@ -21,6 +21,7 @@
 #include <functional>
 #include "image_handlers/imagehandler.h"
 #include "dptr.h"
+#include <chrono>
 class Imager;
 class ImagerThread
 {
@@ -38,6 +39,7 @@ class ImagerThread
   void stop();
   void start();
   void push_job(const Job &job);
+  void set_exposure(const std::chrono::nanoseconds &exposure);
 private:
   DPTR
 
