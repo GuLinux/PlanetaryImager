@@ -31,7 +31,7 @@
    </property>
    <widget class="QMenu" name="menuDevice">
     <property name="title">
-     <string>&amp;Device</string>
+     <string>Camera</string>
     </property>
     <widget class="QMenu" name="menu_device_load">
      <property name="title">
@@ -41,6 +41,8 @@
     <addaction name="action_devices_rescan"/>
     <addaction name="menu_device_load"/>
     <addaction name="actionDisconnect"/>
+    <addaction name="actionExport_controls_to_file"/>
+    <addaction name="actionImport_controls_from_file"/>
    </widget>
    <widget class="QMenu" name="menuPanels">
     <property name="title">
@@ -56,7 +58,7 @@
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
-     <string>View</string>
+     <string>V&amp;iew</string>
     </property>
     <addaction name="actionEdges_Detection"/>
    </widget>
@@ -65,13 +67,28 @@
      <string>Config&amp;uration</string>
     </property>
     <addaction name="actionShow_settings"/>
+   </widget>
+   <widget class="QMenu" name="menuROI">
+    <property name="title">
+     <string>ROI</string>
+    </property>
+    <addaction name="actionSelect_ROI"/>
+    <addaction name="actionClear_ROI"/>
+   </widget>
+   <widget class="QMenu" name="menuPlanetary_Imager">
+    <property name="title">
+     <string>P&amp;lanetary Imager</string>
+    </property>
     <addaction name="actionAbout"/>
     <addaction name="actionAbout_Qt"/>
+    <addaction name="actionQuit"/>
    </widget>
    <addaction name="menuDevice"/>
    <addaction name="menuPanels"/>
    <addaction name="menuView"/>
+   <addaction name="menuROI"/>
    <addaction name="menuSettings"/>
+   <addaction name="menuPlanetary_Imager"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QDockWidget" name="chipInfoWidget">
@@ -258,7 +275,7 @@
   </action>
   <action name="actionAbout">
    <property name="text">
-    <string>&amp;About Planetary Imager</string>
+    <string>About</string>
    </property>
   </action>
   <action name="actionAbout_Qt">
@@ -303,6 +320,27 @@
    </property>
    <property name="text">
     <string>Clear ROI</string>
+   </property>
+  </action>
+  <action name="actionQuit">
+   <property name="text">
+    <string>Quit</string>
+   </property>
+  </action>
+  <action name="actionExport_controls_to_file">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Export controls to file</string>
+   </property>
+  </action>
+  <action name="actionImport_controls_from_file">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Import controls from file</string>
    </property>
   </action>
  </widget>

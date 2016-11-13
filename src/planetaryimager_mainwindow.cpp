@@ -253,6 +253,8 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
       QMetaObject::invokeMethod(d->imager, "destroy", Qt::QueuedConnection);
     });
 
+    connect(d->ui->actionQuit, &QAction::triggered, this, &QWidget::close);
+    connect(d->ui->actionQuit, &QAction::triggered, qApp, &QApplication::quit);
     d->enableUIWidgets(false);
 
     d->saveImages->moveToThread(&d->displayImageThread);
