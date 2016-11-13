@@ -158,7 +158,7 @@ Imager::Controls ZWO_ASI_Imager::controls() const
     }
     imageFormat.max = i-1;
 
-    controls.push_back(imageFormat);
+    controls.push_front(imageFormat);
 
     Imager::Control bin {BinControlID, "Bin", 0., 0., 1., static_cast<double>(d->worker->bin()), 1., Control::Combo};
     i = 0;
@@ -167,7 +167,7 @@ Imager::Controls ZWO_ASI_Imager::controls() const
         bin.choices.push_back( {"%1x%1"_q % static_cast<double>(bin_value), static_cast<double>(bin_value) } );
     }
     bin.max = i-1;
-    controls.push_back(bin);
+    controls.push_front(bin);
     return controls;
 }
 

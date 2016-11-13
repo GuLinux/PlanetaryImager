@@ -43,6 +43,7 @@ public:
   virtual QString name() const = 0;
   virtual Properties properties() const = 0;
   bool supports(Capability capability) const;
+  void import_controls(const QVariantList &controls, bool by_id = true);
   
 protected:
   void restart(const ImagerThread::Worker::factory &worker);

@@ -38,6 +38,24 @@ Imager::~Imager()
   destroy();
 }
 
+void Imager::import_controls(const QVariantList& controls, bool by_id)
+{
+  map<QVariant, QVariantMap> controls_mapped;
+  transform(begin(controls), end(controls), inserter(controls_mapped, controls_mapped.begin()), [&](const QVariant &item){
+    QVariantMap map = item.toMap();
+    return make_pair(by_id ? map["id"] : map["name"], map);
+  });
+  auto device_controls = this->controls();
+  for(auto &control: device_controls) {
+    QVariant key = by_id ? QVariant{static_cast<qlonglong>(control.id)} : QVariant{control.name};
+    if(controls_mapped.count(key)) {
+      control.import(controls_mapped[key]);
+      setControl(control);
+    }
+  }
+}
+
+
 
 void Imager::destroy()
 {
