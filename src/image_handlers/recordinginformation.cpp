@@ -39,11 +39,11 @@ RecordingInformation::RecordingInformation(Configuration& configuration, Imager 
   d->properties["camera"] = imager->name();
   d->properties["observer"] = configuration.observer();
   d->properties["telescope"] = configuration.telescope();
-  QVariantList camera_settings;
+  QVariantList controls;
   for(auto control: imager->controls()) {
-    camera_settings.push_back(control.asMap());
+    controls.push_back(control.asMap());
   }
-  d->properties["camera-settings"] = camera_settings;
+  d->properties["controls"] = controls;
 }
 
 void RecordingInformation::set_ended(int total_frames, int width, int height, uint8_t bpp, uint8_t channels)

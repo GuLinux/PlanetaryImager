@@ -21,6 +21,7 @@
 #include "commons/utils.h"
 #include <QCoreApplication>
 using namespace std;
+using namespace std::placeholders;
 
 DPTR_IMPL(Imager) {
   const ImageHandler::ptr image_handler;
@@ -40,11 +41,15 @@ Imager::~Imager()
 
 void Imager::import_controls(const QVariantList& controls, bool by_id)
 {
+  qDebug() << "Importing controls: " << controls << ", by id: " << by_id;
   map<QVariant, QVariantMap> controls_mapped;
   transform(begin(controls), end(controls), inserter(controls_mapped, controls_mapped.begin()), [&](const QVariant &item){
     QVariantMap map = item.toMap();
     return make_pair(by_id ? map["id"] : map["name"], map);
   });
+  for(auto item: controls_mapped) {
+    qDebug() << "Control [[" << item.first << "]]=" << item.second;
+  }
   auto device_controls = this->controls();
   for(auto &control: device_controls) {
     QVariant key = by_id ? QVariant{static_cast<qlonglong>(control.id)} : QVariant{control.name};
@@ -54,6 +59,15 @@ void Imager::import_controls(const QVariantList& controls, bool by_id)
     }
   }
 }
+
+QVariantList Imager::export_controls() const
+{
+  QVariantList controls_qvariant;
+  auto controls = this->controls();
+  transform(controls.begin(), controls.end(), back_inserter(controls_qvariant), bind(&Control::asMap, _1));
+  return controls_qvariant;
+}
+
 
 
 
