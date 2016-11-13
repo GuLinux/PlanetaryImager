@@ -174,6 +174,7 @@ Imager::Controls ZWO_ASI_Imager::controls() const
 
 void ZWO_ASI_Imager::setControl(const Control& control)
 {
+  LOG_F_SCOPE
   auto camera_control_it = find_if(d->controls.begin(), d->controls.end(),
 			  [&](const ASIControl::ptr &c){ return c->caps.ControlType == static_cast<ASI_CONTROL_TYPE>(control.id); });
   if(camera_control_it != d->controls.end()) {

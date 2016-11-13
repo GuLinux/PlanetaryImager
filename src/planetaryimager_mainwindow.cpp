@@ -45,6 +45,7 @@
 #include "Qt/strings.h"
 #include <Qt/functional.h>
 #include <QGraphicsScene>
+#include <QFileInfo>
 #include "image_handlers/all_handlers.h"
 #include "commons/messageslogger.h"
 #include "commons/exposuretimer.h"
@@ -446,18 +447,20 @@ void PlanetaryImagerMainWindow::Private::export_controls(const QString& file_pat
 void PlanetaryImagerMainWindow::Private::pick_controls_file()
 {
   // TODO: last directory used
-  auto filename = QFileDialog::getOpenFileName(q, tr("Select Planetary Imager controls file"), QString{}, tr("Planetary Imager controls file (*.json)") );
+  auto filename = QFileDialog::getOpenFileName(q, tr("Select Planetary Imager controls file"), configuration.last_controls_folder(), tr("Planetary Imager controls file (*.json)") );
   if(filename.isEmpty())
     return;
+  configuration.set_last_controls_folder(QFileInfo{filename}.dir().canonicalPath());
   import_controls(filename);
 }
 
 void PlanetaryImagerMainWindow::Private::pick_controls_save_file()
 {
   // TODO: last directory used
-  auto filename = QFileDialog::getSaveFileName(q, tr("Export Planetary Imager controls file"), QString{}, tr("Planetary Imager controls file (*.json)") );
+  auto filename = QFileDialog::getSaveFileName(q, tr("Export Planetary Imager controls file"), configuration.last_controls_folder(), tr("Planetary Imager controls file (*.json)") );
   if(filename.isEmpty())
     return;
+  configuration.set_last_controls_folder(QFileInfo{filename}.dir().canonicalPath());
   export_controls(filename);
 }
 

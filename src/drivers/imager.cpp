@@ -47,13 +47,11 @@ void Imager::import_controls(const QVariantList& controls, bool by_id)
     QVariantMap map = item.toMap();
     return make_pair(by_id ? map["id"] : map["name"], map);
   });
-  for(auto item: controls_mapped) {
-    qDebug() << "Control [[" << item.first << "]]=" << item.second;
-  }
   auto device_controls = this->controls();
   for(auto &control: device_controls) {
     QVariant key = by_id ? QVariant{static_cast<qlonglong>(control.id)} : QVariant{control.name};
     if(controls_mapped.count(key)) {
+      qDebug() << "Importing control: " << control.id << ", " << control.name;
       control.import(controls_mapped[key]);
       setControl(control);
     }
@@ -80,6 +78,7 @@ void Imager::destroy()
 
 void Imager::restart(const ImagerThread::Worker::factory& worker)
 {
+  LOG_F_SCOPE
   d->imager_thread.reset();
   d->imager_thread = make_shared<ImagerThread>(worker(), this, d->image_handler);
   d->imager_thread->start();

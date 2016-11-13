@@ -131,6 +131,7 @@ define_setting(histogram_logarithmic, bool, true)
 define_setting(histogram_disable_on_recording, bool, true)
 define_setting(histogram_timeout, long long, 3'500)
 define_setting(histogram_timeout_recording, long long, 10'000)
+define_setting(last_controls_folder, QString, QString(qgetenv("HOME")))
 
 
 QString Configuration::savefile() const

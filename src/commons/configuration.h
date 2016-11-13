@@ -83,6 +83,8 @@ public:
     declare_setting(histogram_timeout, long long)
     declare_setting(histogram_timeout_recording, long long)
     
+    declare_setting(last_controls_folder, QString)
+    
     QString savefile() const;
 
 private:
