@@ -428,7 +428,7 @@ void PlanetaryImagerMainWindow::Private::import_controls(const QString& file_pat
   QFile file{file_path};
   file.open(QIODevice::ReadOnly);
   auto json = QJsonDocument::fromJson(file.readAll());
-  imager->import_controls(json.toVariant().toMap()["controls"].toList());
+  QMetaObject::invokeMethod(imager, "import_controls", Qt::QueuedConnection, Q_ARG(QVariantList, json.toVariant().toMap()["controls"].toList()));
 }
 
 void PlanetaryImagerMainWindow::Private::export_controls(const QString& file_path)
