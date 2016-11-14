@@ -18,6 +18,11 @@
 
 #include "imager.h"
 #include "Qt/strings.h"
+#include <QHash>
+#include <functional>
+
+using namespace std;
+using namespace std::placeholders;
 
 QDebug operator<<(QDebug dbg, const Imager::Control& setting)
 {
@@ -81,7 +86,20 @@ QVariantMap Imager::Control::asMap() const
 }
 
 
-void Imager::Control::import(const QVariantMap& data)
+void Imager::Control::import(const QVariantMap& data, bool full_import)
 {
   value = data["value"].toDouble();
+  if(!full_import)
+    return;
+  name = data["name"].toString();
+  id = data["id"].toLongLong();
+  is_duration = false;
+  QHash<QString, function<void()>> types_map {
+    {"number", [&]{ type = Number; } },
+    {"combo", [&]{ type = Combo; } },
+    {"bool", [&]{ type = Bool; } },
+    {"duration", [&]{ type = Number; is_duration = true; } },
+  };
+  types_map[data["type"].toString()]();
+  
 }

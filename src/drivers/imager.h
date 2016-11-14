@@ -88,7 +88,7 @@ struct Imager::Control {
   bool readonly = false;
   bool same_value(const Control &other) const;
   QVariantMap asMap() const;
-  void import(const QVariantMap &data);
+  void import(const QVariantMap &data, bool full_import = false);
 };
 
 struct Imager::Properties {
