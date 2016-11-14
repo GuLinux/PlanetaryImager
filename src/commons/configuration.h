@@ -20,10 +20,12 @@
 #define CONFIGURATION_H
 #include "dptr.h"
 #include <QString>
+#include <QObject>
 
 class QSettings;
-class Configuration
+class Configuration : public QObject
 {
+  Q_OBJECT
 public:
     Configuration();
     ~Configuration();
@@ -86,7 +88,8 @@ public:
     declare_setting(last_controls_folder, QString)
     
     QString savefile() const;
-
+signals:
+  
 private:
     DPTR
 };

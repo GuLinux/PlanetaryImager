@@ -149,3 +149,5 @@ QString Configuration::savefile() const
     % extension[save_format()]
     ;
 }
+
+#include "configuration.moc"
