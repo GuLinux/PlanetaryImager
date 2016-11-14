@@ -32,6 +32,8 @@
 #include "qhyexception.h"
 #include "qhyimagingworker.h"
 #include <chrono>
+#include "c++/stlutils.h"
+
 using namespace std;
 using namespace std::placeholders;
 using namespace std::chrono_literals;
@@ -171,9 +173,11 @@ void QHYCCDImager::Private::load ( QHYCCDImager::Control& setting )
 }
 
 
-void QHYCCDImager::setControl(const QHYCCDImager::Control& setting)
+shared_ptr<QWaitCondition> QHYCCDImager::setControl(const QHYCCDImager::Control& setting)
 {
+  auto wait_condition = make_shared<QWaitCondition>();
   push_job_on_thread([=]{
+    GuLinux::Scope wake{[=]{wait_condition->wakeAll(); }};
     QHY_CHECK << SetQHYCCDParam(d->handle, static_cast<CONTROL_ID>(setting.id), setting.value) << "Setting control " << setting.name << " to value " << setting.value;
     Control &setting_ref = *find_if(begin(d->settings), end(d->settings), [setting](const Control &s) { return s.id == setting.id; });
     d->load(setting_ref);
@@ -183,6 +187,7 @@ void QHYCCDImager::setControl(const QHYCCDImager::Control& setting)
     }
     emit changed(setting_ref);
   });
+  return wait_condition;
 }
 
 

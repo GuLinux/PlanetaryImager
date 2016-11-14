@@ -120,8 +120,9 @@ QString SERImager::name() const
   return "SER Player";
 }
 
-void SERImager::setControl(const Imager::Control& setting)
+shared_ptr<QWaitCondition> SERImager::setControl(const Imager::Control& setting)
 {
+  return {}; // TODO: QWaitCondition
 }
 
 void SERImager::startLive()

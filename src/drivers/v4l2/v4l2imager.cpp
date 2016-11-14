@@ -160,7 +160,7 @@ Imager::Controls V4L2Imager::controls() const
 
 
 
-void V4L2Imager::setControl(const Control &setting)
+shared_ptr<QWaitCondition> V4L2Imager::setControl(const Control &setting)
 {
   if(setting.id == RESOLUTIONS_CONTROL_ID) {
     restart([=]{
@@ -176,11 +176,13 @@ void V4L2Imager::setControl(const Control &setting)
     Control new_value = setting;
     new_value.value = find_if( d->resolutions.begin(), d->resolutions.end(), [&](const V4L2Formats::Resolution::ptr &r){ return *r == *current; } ) - d->resolutions.begin();
     emit changed(new_value);
-    return;
+    return {};
   }
+  auto wait_condition = make_shared<QWaitCondition>();
   auto control = find_if(begin(d->controls), end(d->controls), [=](const V4L2Control::ptr &c) { return setting.id == c->control().id; });
   if(control != end(d->controls)) {
     push_job_on_thread([=]{
+      GuLinux::Scope wake{[=]{wait_condition->wakeAll(); }};
       try {
         (*control)->set(setting);
       } catch(const V4L2Exception &e) {
@@ -189,6 +191,7 @@ void V4L2Imager::setControl(const Control &setting)
       emit changed((*control)->update());
     });
   }
+  return wait_condition;
 }
 
 void V4L2Imager::startLive()

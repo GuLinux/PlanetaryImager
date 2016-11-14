@@ -28,12 +28,12 @@ public:
     virtual ~SERImager();
     Properties properties() const override;
     QString name() const override;
-    void setControl(const Control& setting) override;
     Controls controls() const override;
     void startLive() override;
 public slots:
     void setROI(const QRect &) override;
     void clearROI() override;
+    std::shared_ptr<QWaitCondition> setControl(const Control& setting) override;
 private:
   DPTR
 

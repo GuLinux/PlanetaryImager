@@ -34,6 +34,7 @@
 #include "asicontrol.h"
 #include <QCoreApplication>
 #include "drivers/roi.h"
+#include "c++/stlutils.h"
 
 using namespace std;
 using namespace std::chrono_literals;
@@ -172,15 +173,28 @@ Imager::Controls ZWO_ASI_Imager::controls() const
 }
 
 
-void ZWO_ASI_Imager::setControl(const Control& control)
+shared_ptr<QWaitCondition> ZWO_ASI_Imager::setControl(const Control& control)
 {
   LOG_F_SCOPE
+  if(control.id == ImgTypeControlID) {
+    d->restart_worker(d->worker->bin(), d->worker->roi(), static_cast<ASI_IMG_TYPE>(control.value));
+    emit changed(control);
+    return {};
+  }
+  if(control.id == BinControlID) {
+    auto bin = static_cast<int>(control.value);
+    d->restart_worker(bin, d->maxROI(bin), d->worker->format());
+    emit changed(control);
+    return {};
+  }
+  auto wait_condition = make_shared<QWaitCondition>();
   auto camera_control_it = find_if(d->controls.begin(), d->controls.end(),
 			  [&](const ASIControl::ptr &c){ return c->caps.ControlType == static_cast<ASI_CONTROL_TYPE>(control.id); });
   if(camera_control_it != d->controls.end()) {
     auto camera_control = *camera_control_it;
     qDebug() << "Changing control " << camera_control->control();
     push_job_on_thread([=]{
+      GuLinux::Scope wake{[=]{wait_condition->wakeAll(); }};
       camera_control->set(control.value, control.value_auto);
       qDebug() << "Changed control " << camera_control->control();
       if(control.id == ASI_EXPOSURE) {
@@ -189,17 +203,7 @@ void ZWO_ASI_Imager::setControl(const Control& control)
       emit changed(*camera_control);
     });
   }
-  if(control.id == ImgTypeControlID) {
-    d->restart_worker(d->worker->bin(), d->worker->roi(), static_cast<ASI_IMG_TYPE>(control.value));
-    emit changed(control);
-    return;
-  }
-  if(control.id == BinControlID) {
-    auto bin = static_cast<int>(control.value);
-    d->restart_worker(bin, d->maxROI(bin), d->worker->format());
-    emit changed(control);
-    return;
-  }
+  return wait_condition;
 }
 
 

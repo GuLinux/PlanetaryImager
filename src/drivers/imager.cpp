@@ -20,6 +20,7 @@
 #include "Qt/strings.h"
 #include "commons/utils.h"
 #include <QCoreApplication>
+#include <QMutex>
 using namespace std;
 using namespace std::placeholders;
 
@@ -53,7 +54,11 @@ void Imager::import_controls(const QVariantList& controls, bool by_id)
     if(controls_mapped.count(key)) {
       qDebug() << "Importing control: " << control.id << ", " << control.name;
       control.import(controls_mapped[key]);
-      setControl(control);
+      if(auto wait_condition = setControl(control)) {
+        qDebug() << "Waiting for control to be set in other thread";
+        QMutex wait_condition_mutex;
+        wait_condition->wait(&wait_condition_mutex, 30000);
+      }
     }
   }
 }
