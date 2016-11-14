@@ -163,6 +163,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
     Private::q = this;
     d->ui.reset(new Ui::PlanetaryImagerMainWindow);
     d->ui->setupUi(this);
+    d->ui->actionControlsSection->setSeparator(true);
     setWindowIcon(QIcon::fromTheme("planetary_imager"));
     d->ui->recording->setWidget(d->recording_panel = new RecordingPanel{d->configuration});
     d->configurationDialog = new ConfigurationDialog(d->configuration, this);
