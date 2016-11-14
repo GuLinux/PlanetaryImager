@@ -94,6 +94,7 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   void pick_controls_save_file();
   void import_controls(const QString &file_path);
   void export_controls(const QString &file_path);
+  void populate_recent_control_files();
 };
 
 PlanetaryImagerMainWindow *PlanetaryImagerMainWindow::Private::q = nullptr;
@@ -303,6 +304,8 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
       d->statusbar_info_widget->showMessage("Exposure: %1s, remaining: %2s"_q % QString::number(elapsed, 'f', 1) % QString::number(remaining, 'f', 1), 1000);
     });
     connect(&d->exposure_timer, &ExposureTimer::finished, [=]{ d->statusbar_info_widget->clearMessage(); });
+    connect(&d->configuration, &Configuration::last_control_files_changed, this, bind(&Private::populate_recent_control_files, d.get()));
+    d->populate_recent_control_files();
 }
 
 void PlanetaryImagerMainWindow::closeEvent(QCloseEvent* event)
@@ -409,6 +412,7 @@ void PlanetaryImagerMainWindow::Private::enableUIWidgets(bool cameraConnected)
   ui->camera_settings->setEnabled(cameraConnected);
   ui->actionImport_controls_from_file->setEnabled(cameraConnected);
   ui->actionExport_controls_to_file->setEnabled(cameraConnected);
+  ui->actionRecent_Files->setEnabled(cameraConnected);
 }
 
 void PlanetaryImagerMainWindow::notify(const QDateTime &when, MessagesLogger::Type notification_type, const QString& title, const QString& message)
@@ -452,6 +456,7 @@ void PlanetaryImagerMainWindow::Private::pick_controls_file()
     return;
   configuration.set_last_controls_folder(QFileInfo{filename}.dir().canonicalPath());
   import_controls(filename);
+  configuration.add_last_control_file(filename);
 }
 
 void PlanetaryImagerMainWindow::Private::pick_controls_save_file()
@@ -462,6 +467,16 @@ void PlanetaryImagerMainWindow::Private::pick_controls_save_file()
     return;
   configuration.set_last_controls_folder(QFileInfo{filename}.dir().canonicalPath());
   export_controls(filename);
+  configuration.add_last_control_file(filename);
+}
+
+void PlanetaryImagerMainWindow::Private::populate_recent_control_files()
+{
+  delete ui->actionRecent_Files->menu();
+  ui->actionRecent_Files->setMenu(new QMenu);
+  for(auto file: configuration.last_control_files()) {
+    connect(ui->actionRecent_Files->menu()->addAction(file), &QAction::triggered, q, bind(&Private::import_controls, this, file));
+  }
 }
 
 

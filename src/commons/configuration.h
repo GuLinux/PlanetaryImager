@@ -87,9 +87,12 @@ public:
     
     declare_setting(last_controls_folder, QString)
     
+    QStringList last_control_files() const;
     QString savefile() const;
+public slots:
+    void add_last_control_file(const QString &file);
 signals:
-  
+  void last_control_files_changed();
 private:
     DPTR
 };

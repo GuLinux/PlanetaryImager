@@ -38,11 +38,19 @@
       <string>&amp;Load...</string>
      </property>
     </widget>
+    <widget class="QMenu" name="menuControls">
+     <property name="title">
+      <string>Controls</string>
+     </property>
+     <addaction name="actionExport_controls_to_file"/>
+     <addaction name="actionImport_controls_from_file"/>
+     <addaction name="separator"/>
+     <addaction name="actionRecent_Files"/>
+    </widget>
     <addaction name="action_devices_rescan"/>
     <addaction name="menu_device_load"/>
     <addaction name="actionDisconnect"/>
-    <addaction name="actionExport_controls_to_file"/>
-    <addaction name="actionImport_controls_from_file"/>
+    <addaction name="menuControls"/>
    </widget>
    <widget class="QMenu" name="menuPanels">
     <property name="title">
@@ -275,7 +283,7 @@
   </action>
   <action name="actionAbout">
    <property name="text">
-    <string>About</string>
+    <string>&amp;About</string>
    </property>
   </action>
   <action name="actionAbout_Qt">
@@ -311,7 +319,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Select ROI</string>
+    <string>&amp;Select ROI</string>
    </property>
   </action>
   <action name="actionClear_ROI">
@@ -319,12 +327,12 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Clear ROI</string>
+    <string>&amp;Clear ROI</string>
    </property>
   </action>
   <action name="actionQuit">
    <property name="text">
-    <string>Quit</string>
+    <string>Q&amp;uit</string>
    </property>
   </action>
   <action name="actionExport_controls_to_file">
@@ -332,7 +340,7 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Export controls to file</string>
+    <string>&amp;Export controls to file</string>
    </property>
   </action>
   <action name="actionImport_controls_from_file">
@@ -340,7 +348,12 @@
     <bool>false</bool>
    </property>
    <property name="text">
-    <string>Import controls from file</string>
+    <string>&amp;Import controls from file</string>
+   </property>
+  </action>
+  <action name="actionRecent_Files">
+   <property name="text">
+    <string>Recent Files...</string>
    </property>
   </action>
  </widget>

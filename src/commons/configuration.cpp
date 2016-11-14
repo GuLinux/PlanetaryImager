@@ -150,4 +150,19 @@ QString Configuration::savefile() const
     ;
 }
 
+void Configuration::add_last_control_file(const QString& file)
+{
+  auto saved = last_control_files();
+  saved.removeAll(file);
+  saved.push_front(file);
+  d->settings->setValue("last_control_files", saved);
+  emit last_control_files_changed();
+}
+
+QStringList Configuration::last_control_files() const
+{
+  return d->settings->value("last_control_files").toStringList().mid(0, 10);
+}
+
+
 #include "configuration.moc"
