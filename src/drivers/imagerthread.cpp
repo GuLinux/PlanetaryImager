@@ -134,9 +134,16 @@ void ImagerThread::Private::thread_started()
   }
 }
 
-void ImagerThread::push_job(const Job& job)
+shared_ptr<QWaitCondition> ImagerThread::push_job(const Job& job)
 {
-  d->jobs_queue.push(job);
+  auto wait_condition = make_shared<QWaitCondition>();
+  auto job_sync = [wait_condition, job]{
+    GuLinux::Scope wake{[=]{ wait_condition->wakeAll();}};
+    job();
+  };
+  if(! d->jobs_queue.push(job_sync) )
+    return {};
+  return wait_condition;
 }
 
 

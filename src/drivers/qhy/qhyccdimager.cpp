@@ -173,11 +173,9 @@ void QHYCCDImager::Private::load ( QHYCCDImager::Control& setting )
 }
 
 
-shared_ptr<QWaitCondition> QHYCCDImager::setControl(const QHYCCDImager::Control& setting)
+void QHYCCDImager::setControl(const QHYCCDImager::Control& setting)
 {
-  auto wait_condition = make_shared<QWaitCondition>();
-  push_job_on_thread([=]{
-    GuLinux::Scope wake{[=]{wait_condition->wakeAll(); }};
+  wait_for(push_job_on_thread([=]{
     QHY_CHECK << SetQHYCCDParam(d->handle, static_cast<CONTROL_ID>(setting.id), setting.value) << "Setting control " << setting.name << " to value " << setting.value;
     Control &setting_ref = *find_if(begin(d->settings), end(d->settings), [setting](const Control &s) { return s.id == setting.id; });
     d->load(setting_ref);
@@ -186,8 +184,7 @@ shared_ptr<QWaitCondition> QHYCCDImager::setControl(const QHYCCDImager::Control&
       set_exposure(setting_ref);
     }
     emit changed(setting_ref);
-  });
-  return wait_condition;
+  }));
 }
 
 

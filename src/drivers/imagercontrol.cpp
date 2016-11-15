@@ -82,6 +82,7 @@ QVariantMap Imager::Control::asMap() const
         data["value_%1"_q % unit.first] = value * duration_unit.count() * unit.second;
       }
     }
+    data["auto"] = value_auto;
     return data;
 }
 
@@ -101,5 +102,5 @@ void Imager::Control::import(const QVariantMap& data, bool full_import)
     {"duration", [&]{ type = Number; is_duration = true; } },
   };
   types_map[data["type"].toString()]();
-  
+  value_auto = data["auto"].toBool();
 }

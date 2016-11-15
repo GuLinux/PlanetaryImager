@@ -103,11 +103,9 @@ QString SimulatorImager::name() const
   return "Simulator Imager";
 }
 
-shared_ptr<QWaitCondition> SimulatorImager::setControl(const Imager::Control& setting)
+void SimulatorImager::setControl(const Imager::Control& setting)
 {
-  auto wait_condition = make_shared<QWaitCondition>();
-  push_job_on_thread([=]{
-    GuLinux::Scope wake{[=]{wait_condition->wakeAll(); }};
+  wait_for(push_job_on_thread([=]{
     static uint64_t controls_changed = 0;
     qDebug() << "Received control: " << setting << "; saved: " << d->settings[setting.name];
     int reject_every = static_cast<int>(d->settings["reject"].value);
@@ -120,8 +118,7 @@ shared_ptr<QWaitCondition> SimulatorImager::setControl(const Imager::Control& se
     if(setting.name == "exposure")
       set_exposure(setting);
     emit changed(setting);
-  });
-  return wait_condition;
+  }));
 }
 
 Imager::Controls SimulatorImager::controls() const

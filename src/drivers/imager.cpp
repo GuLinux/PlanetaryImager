@@ -66,11 +66,7 @@ void Imager::import_controls(const QVariantList& controls, bool by_id)
 void Imager::setControls(const Controls& controls)
 {
   for(auto control: controls) {
-    if(auto wait_condition = setControl(control)) {
-      qDebug() << "Waiting for control: " << control;
-      QMutex wait_condition_mutex;
-      wait_condition->wait(&wait_condition_mutex);
-    }
+    setControl(control);
   }
 }
 
@@ -110,15 +106,23 @@ void Imager::set_exposure(const Control &control)
     d->imager_thread->set_exposure(exposure);
 }
 
+void Imager::wait_for(const std::shared_ptr<QWaitCondition>& wait_condition) const
+{
+  if(! wait_condition)
+    return;
+  QMutex wait_mutex;
+  wait_mutex.lock();
+  wait_condition->wait(&wait_mutex);
+}
 
 
-void Imager::push_job_on_thread(const ImagerThread::Job& job)
+shared_ptr<QWaitCondition> Imager::push_job_on_thread(const ImagerThread::Job& job)
 {
   if(! d->imager_thread) {
     qWarning() << "Requested job without imager thread started";
-    return;
+    return {};
   }
-  d->imager_thread->push_job(job);
+  return d->imager_thread->push_job(job);
 }
 
 bool Imager::supports(Capability capability) const

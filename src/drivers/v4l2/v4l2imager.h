@@ -31,7 +31,7 @@ public:
     QString name() const override;
     Imager::Controls controls() const override;
 public slots:
-    std::shared_ptr<QWaitCondition> setControl(const Control &setting) override;
+    void setControl(const Control &setting) override;
     void startLive() override;
     void setROI(const QRect &) override {}
     void clearROI() override {}

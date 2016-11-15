@@ -48,15 +48,16 @@ public:
   
 protected:
   void restart(const ImagerThread::Worker::factory &worker);
-  void push_job_on_thread(const ImagerThread::Job &job);
+  std::shared_ptr<QWaitCondition> push_job_on_thread(const ImagerThread::Job &job);
   void set_exposure(const Control &control);
+  void wait_for(const std::shared_ptr<QWaitCondition> &wait_condition) const;
 private:
   DPTR
   
 public slots:
   virtual void setROI(const QRect &) = 0;
   virtual void clearROI() = 0;
-  virtual std::shared_ptr<QWaitCondition> setControl(const Control &control) = 0;
+  virtual void setControl(const Control &control) = 0;
   virtual void setControls(const Controls &controls);
   void import_controls(const QVariantList &controls, bool by_id = true);
   virtual void startLive() = 0;

@@ -37,7 +37,7 @@ public:
 public slots:
     void setROI(const QRect &) override;
     void clearROI() override;
-    std::shared_ptr<QWaitCondition> setControl(const Control& setting) override;
+    void setControl(const Control& setting) override;
 private:
   DPTR
 };

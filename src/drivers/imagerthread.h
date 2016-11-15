@@ -22,6 +22,8 @@
 #include "image_handlers/imagehandler.h"
 #include "dptr.h"
 #include <chrono>
+#include <QWaitCondition>
+
 class Imager;
 class ImagerThread
 {
@@ -38,7 +40,7 @@ class ImagerThread
   ~ImagerThread();
   void stop();
   void start();
-  void push_job(const Job &job);
+  std::shared_ptr<QWaitCondition> push_job(const Job &job);
   void set_exposure(const std::chrono::duration<double> &exposure);
 private:
   DPTR
