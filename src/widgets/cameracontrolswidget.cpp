@@ -29,6 +29,7 @@
 #include "controls/controls.h"
 #include "ui_cameracontrolswidget.h"
 #include "Qt/strings.h"
+#include <QMetaObject>
 
 using namespace std;
 using namespace std::placeholders;
@@ -141,8 +142,8 @@ void CameraControl::set_value(const Imager::Control &value)
     new_value = value;
     return;
   }
-  qDebug() << "GUI: setting control " << control << " to " << value;;
-  imager->setControl(value);
+  qDebug() << "GUI: setting control " << control << " to " << value;
+  QMetaObject::invokeMethod(imager, "setControl", Qt::QueuedConnection, Q_ARG(Imager::Control, value));
   control_widget->update(value);
 }
 
