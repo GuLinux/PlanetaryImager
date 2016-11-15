@@ -57,6 +57,7 @@ public slots:
   virtual void setROI(const QRect &) = 0;
   virtual void clearROI() = 0;
   virtual std::shared_ptr<QWaitCondition> setControl(const Control &control) = 0;
+  virtual void setControls(const Controls &controls);
   void import_controls(const QVariantList &controls, bool by_id = true);
   virtual void startLive() = 0;
   virtual void destroy();

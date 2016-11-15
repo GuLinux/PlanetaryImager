@@ -49,19 +49,31 @@ void Imager::import_controls(const QVariantList& controls, bool by_id)
     return make_pair(by_id ? map["id"] : map["name"], map);
   });
   auto device_controls = this->controls();
+  Controls changed_controls;
   for(auto &control: device_controls) {
     QVariant key = by_id ? QVariant{static_cast<qlonglong>(control.id)} : QVariant{control.name};
     if(controls_mapped.count(key)) {
+      Control changed = control;
       qDebug() << "Importing control: " << control.id << ", " << control.name;
-      control.import(controls_mapped[key]);
-      if(auto wait_condition = setControl(control)) {
-        qDebug() << "Waiting for control to be set in other thread";
-        QMutex wait_condition_mutex;
-        wait_condition->wait(&wait_condition_mutex, 30000);
-      }
+      changed.import(controls_mapped[key]);
+      if(! changed.same_value(control))
+        changed_controls.push_back(changed);
+    }
+  }
+  setControls(changed_controls);
+}
+
+void Imager::setControls(const Controls& controls)
+{
+  for(auto control: controls) {
+    if(auto wait_condition = setControl(control)) {
+      qDebug() << "Waiting for control: " << control;
+      QMutex wait_condition_mutex;
+      wait_condition->wait(&wait_condition_mutex);
     }
   }
 }
+
 
 QVariantList Imager::export_controls() const
 {
