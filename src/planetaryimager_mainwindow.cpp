@@ -192,9 +192,10 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
     d->image_widget->actions()[ZoomableImage::Actions::ZoomOut]->setShortcut({Qt::CTRL + Qt::Key_Minus});
     d->image_widget->actions()[ZoomableImage::Actions::ZoomFit]->setShortcut({Qt::CTRL + Qt::Key_Space});
     d->image_widget->actions()[ZoomableImage::Actions::ZoomRealSize]->setShortcut({Qt::CTRL + Qt::Key_Backspace});
-    
+    d->image_widget->toolbar()->setWindowTitle("Image Control");
     addToolBar(d->image_widget->toolbar());
     QToolBar *helpToolBar = new QToolBar;
+    helpToolBar->setWindowTitle(tr("Help"));
     helpToolBar->addAction(QWhatsThis::createAction());
     addToolBar(helpToolBar);
     d->image_widget->toolbar()->setFloatable(true);

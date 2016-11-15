@@ -158,7 +158,7 @@
   </widget>
   <widget class="QToolBar" name="imageManipulation">
    <property name="windowTitle">
-    <string>toolBar</string>
+    <string>Main</string>
    </property>
    <attribute name="toolBarArea">
     <enum>TopToolBarArea</enum>
@@ -168,7 +168,17 @@
    </attribute>
    <addaction name="actionEdges_Detection"/>
    <addaction name="actionShow_settings"/>
-   <addaction name="separator"/>
+  </widget>
+  <widget class="QToolBar" name="ROIToolbar">
+   <property name="windowTitle">
+    <string>ROI</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
    <addaction name="actionSelect_ROI"/>
    <addaction name="actionClear_ROI"/>
   </widget>
@@ -355,7 +365,7 @@
   </action>
   <action name="actionControlsSection">
    <property name="text">
-    <string>Controls</string>
+    <string>&amp;Controls</string>
    </property>
   </action>
  </widget>
