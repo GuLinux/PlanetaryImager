@@ -35,7 +35,7 @@
     </property>
     <widget class="QMenu" name="menu_device_load">
      <property name="title">
-      <string>&amp;Load...</string>
+      <string>&amp;Open</string>
      </property>
     </widget>
     <addaction name="action_devices_rescan"/>
@@ -64,12 +64,6 @@
     </property>
     <addaction name="actionEdges_Detection"/>
    </widget>
-   <widget class="QMenu" name="menuSettings">
-    <property name="title">
-     <string>Config&amp;uration</string>
-    </property>
-    <addaction name="actionShow_settings"/>
-   </widget>
    <widget class="QMenu" name="menuROI">
     <property name="title">
      <string>ROI</string>
@@ -81,6 +75,8 @@
     <property name="title">
      <string>P&amp;lanetary Imager</string>
     </property>
+    <addaction name="actionShow_settings"/>
+    <addaction name="separator"/>
     <addaction name="actionAbout"/>
     <addaction name="actionAbout_Qt"/>
     <addaction name="actionQuit"/>
@@ -89,7 +85,6 @@
    <addaction name="menuPanels"/>
    <addaction name="menuView"/>
    <addaction name="menuROI"/>
-   <addaction name="menuSettings"/>
    <addaction name="menuPlanetary_Imager"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
@@ -279,7 +274,7 @@
      <normaloff>.</normaloff>.</iconset>
    </property>
    <property name="text">
-    <string>&amp;Show settings</string>
+    <string>&amp;Configuration</string>
    </property>
    <property name="shortcut">
     <string>Ctrl+E</string>
@@ -287,7 +282,7 @@
   </action>
   <action name="actionAbout">
    <property name="text">
-    <string>&amp;About</string>
+    <string>&amp;About Planetary Imager</string>
    </property>
   </action>
   <action name="actionAbout_Qt">
@@ -365,7 +360,7 @@
   </action>
   <action name="actionControlsSection">
    <property name="text">
-    <string>&amp;Controls</string>
+    <string>Controls</string>
    </property>
   </action>
  </widget>
