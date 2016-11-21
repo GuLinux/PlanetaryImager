@@ -92,7 +92,7 @@ public:
     
     void add_preset(const QString &name, const QVariantMap &preset);
     QStringList list_presets() const;
-    QVariantMap load_preset() const;
+    QVariantMap load_preset(const QString &name) const;
     void remove_preset(const QString &name);
 public slots:
     void add_last_control_file(const QString &file);

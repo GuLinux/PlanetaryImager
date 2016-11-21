@@ -10,9 +10,26 @@
     <height>415</height>
    </rect>
   </property>
+  <property name="windowTitle">
+   <string>Presets</string>
+  </property>
   <layout class="QGridLayout" name="gridLayout">
-   <item row="0" column="0" rowspan="4">
-    <widget class="QListView" name="presets"/>
+   <item row="0" column="0" rowspan="5">
+    <widget class="QListView" name="presets">
+     <property name="editTriggers">
+      <set>QAbstractItemView::NoEditTriggers</set>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1">
+    <widget class="QPushButton" name="load">
+     <property name="enabled">
+      <bool>false</bool>
+     </property>
+     <property name="text">
+      <string>Load</string>
+     </property>
+    </widget>
    </item>
    <item row="0" column="1">
     <widget class="QLabel" name="description">
@@ -29,22 +46,19 @@
     </widget>
    </item>
    <item row="2" column="1">
-    <widget class="QPushButton" name="edit">
-     <property name="enabled">
-      <bool>false</bool>
-     </property>
-     <property name="text">
-      <string>Edit</string>
-     </property>
-    </widget>
-   </item>
-   <item row="3" column="1">
     <widget class="QPushButton" name="remove">
      <property name="enabled">
       <bool>false</bool>
      </property>
      <property name="text">
       <string>Remove</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1">
+    <widget class="Line" name="line">
+     <property name="orientation">
+      <enum>Qt::Horizontal</enum>
      </property>
     </widget>
    </item>

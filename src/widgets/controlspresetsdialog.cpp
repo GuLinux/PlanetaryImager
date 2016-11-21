@@ -20,21 +20,90 @@
 #include "controlspresetsdialog.h"
 #include "ui_controlspresetsdialog.h"
 
+#include <QStringListModel>
+#include <QInputDialog>
+#include <QItemSelectionModel>
 using namespace std;
 
 DPTR_IMPL(ControlsPresetsDialog) {
-  shared_ptr<Ui::ControlsPresetsDialog> ui;
+  unique_ptr<Ui::ControlsPresetsDialog> ui;
   Configuration &configuration;
   Imager *imager;
   ControlsPresetsDialog *q;
+  
+  QStringListModel model;
+  
+  void load_presets();
+  void load_preset();
+  void add_preset();
+  void remove_preset();
+  bool has_selection() const;
+  void selection_changed();
+  QString current_selection() const;
 };
 
 ControlsPresetsDialog::ControlsPresetsDialog(Configuration &configuration, Imager *imager, QWidget* parent)
-  : QDialog{parent}, dptr(make_shared<Ui::ControlsPresetsDialog>(), configuration, imager, this)
+  : QDialog{parent}, dptr(make_unique<Ui::ControlsPresetsDialog>(), configuration, imager, this)
 {
     d->ui->setupUi(this);
+    d->ui->presets->setModel(&d->model);
+    connect(d->ui->add, &QPushButton::clicked, this, bind(&Private::add_preset, d.get()));
+    connect(d->ui->remove, &QPushButton::clicked, this, bind(&Private::remove_preset, d.get()));
+    connect(d->ui->load, &QPushButton::clicked, this, bind(&Private::load_preset, d.get()));
+    connect(d->ui->presets->selectionModel(), &QItemSelectionModel::selectionChanged, this, bind(&Private::selection_changed, d.get()));
+    d->load_presets();
 }
 
 ControlsPresetsDialog::~ControlsPresetsDialog()
 {
+}
+
+void ControlsPresetsDialog::Private::add_preset()
+{
+  auto name = QInputDialog::getText(q, tr("Save preset as..."), tr("Enter preset name to save current controls") );
+  if(name.isEmpty())
+    return;
+  configuration.add_preset(name, QVariantMap{{"controls", imager->export_controls()}});
+  load_presets();
+}
+
+void ControlsPresetsDialog::Private::load_presets()
+{
+  model.setStringList(configuration.list_presets());
+  selection_changed();
+}
+
+void ControlsPresetsDialog::Private::load_preset()
+{
+  if(! has_selection())
+    return;
+  auto preset = configuration.load_preset(current_selection());
+  imager->import_controls(preset["controls"].toList());
+}
+
+void ControlsPresetsDialog::Private::remove_preset()
+{
+  if(! has_selection())
+    return;
+  configuration.remove_preset(current_selection());
+  load_presets();
+}
+
+bool ControlsPresetsDialog::Private::has_selection() const
+{
+  return ui->presets->selectionModel()->hasSelection();
+}
+
+
+QString ControlsPresetsDialog::Private::current_selection() const
+{
+  if(! has_selection() )
+    return {};
+  return model.data(ui->presets->selectionModel()->selectedRows().first(), Qt::DisplayRole).toString();
+}
+
+void ControlsPresetsDialog::Private::selection_changed()
+{
+  ui->remove->setEnabled(has_selection());
+  ui->load->setEnabled(has_selection());
 }

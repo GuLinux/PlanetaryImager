@@ -166,18 +166,26 @@ QStringList Configuration::last_control_files() const
 
 void Configuration::add_preset(const QString& name, const QVariantMap& preset)
 {
+  d->settings->setValue("presets", list_presets() << name);
+  d->settings->setValue("preset_%1"_q % name, preset);
 }
 
 QStringList Configuration::list_presets() const
 {
+  return d->settings->value("presets").toStringList();
 }
 
-QVariantMap Configuration::load_preset() const
+QVariantMap Configuration::load_preset(const QString &name) const
 {
+  return d->settings->value("preset_%1"_q % name).toMap();
 }
 
 void Configuration::remove_preset(const QString& name)
 {
+  auto names = list_presets();
+  names.removeAll(name);
+  d->settings->setValue("presets", names);
+  d->settings->remove("preset_%1"_q % name);
 }
 
 
