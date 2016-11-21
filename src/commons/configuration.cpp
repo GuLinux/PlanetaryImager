@@ -164,5 +164,22 @@ QStringList Configuration::last_control_files() const
   return d->settings->value("last_control_files").toStringList().mid(0, 10);
 }
 
+void Configuration::add_preset(const QString& name, const QVariantMap& preset)
+{
+}
+
+QStringList Configuration::list_presets() const
+{
+}
+
+QVariantMap Configuration::load_preset() const
+{
+}
+
+void Configuration::remove_preset(const QString& name)
+{
+}
+
+
 
 #include "configuration.moc"
