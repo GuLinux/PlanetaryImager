@@ -49,6 +49,7 @@
 #include "image_handlers/all_handlers.h"
 #include "commons/messageslogger.h"
 #include "commons/exposuretimer.h"
+#include "widgets/controlspresetsdialog.h"
 
 using namespace GuLinux;
 using namespace std;
@@ -85,6 +86,7 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   void enableUIWidgets(bool cameraConnected);
     void init_devices_watcher();
   ZoomableImage *image_widget;
+  shared_ptr<ControlsPresetsDialog> controlsPresetsDialog;
   
   void onImagerInitialized(Imager *imager);
   
@@ -293,6 +295,10 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
       d->selection_mode = Private::ROI;
       d->image_widget->startSelectionMode();
     });
+    connect(d->ui->actionControlsPresets, &QAction::triggered, this, [&]{
+      if(d->controlsPresetsDialog)
+        d->controlsPresetsDialog->show();
+    });
     QMap<Private::SelectionMode, function<void(const QRect &)>> handle_selection {
       {Private::NoSelection, [](const QRect&) {}},
       {Private::ROI, [&](const QRect &rect) { d->imager->setROI(rect); }},
@@ -374,6 +380,7 @@ void PlanetaryImagerMainWindow::Private::onImagerInitialized(Imager * imager)
     }
     cameraDisconnected();
     this->imager = imager;
+    controlsPresetsDialog = make_shared<ControlsPresetsDialog>(configuration, imager);
     exposure_timer.set_imager(imager);
     imager->startLive();
     statusbar_info_widget->deviceConnected(imager->name());
@@ -415,6 +422,7 @@ void PlanetaryImagerMainWindow::Private::enableUIWidgets(bool cameraConnected)
   ui->actionImport_controls_from_file->setEnabled(cameraConnected);
   ui->actionExport_controls_to_file->setEnabled(cameraConnected);
   ui->actionRecent_Files->setEnabled(cameraConnected);
+  ui->actionControlsPresets->setEnabled(cameraConnected);
 }
 
 void PlanetaryImagerMainWindow::notify(const QDateTime &when, MessagesLogger::Type notification_type, const QString& title, const QString& message)

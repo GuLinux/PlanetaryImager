@@ -45,6 +45,7 @@
     <addaction name="actionExport_controls_to_file"/>
     <addaction name="actionImport_controls_from_file"/>
     <addaction name="actionRecent_Files"/>
+    <addaction name="actionControlsPresets"/>
    </widget>
    <widget class="QMenu" name="menuPanels">
     <property name="title">
@@ -360,7 +361,15 @@
   </action>
   <action name="actionControlsSection">
    <property name="text">
-    <string>Controls</string>
+    <string>&amp;Controls</string>
+   </property>
+  </action>
+  <action name="actionControlsPresets">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>&amp;Presets</string>
    </property>
   </action>
  </widget>
