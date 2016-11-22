@@ -1,6 +1,7 @@
 #!/bin/bash
+CMAKE_BIN="${CMAKE_BIN:-$( which cmake )}"
 set -x
-cmake /code \
+${CMAKE_BIN} /code \
           -DEXTRA_LIBRARIES=udev \
           -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH} \
           -DCMAKE_INSTALL_PREFIX=/usr \

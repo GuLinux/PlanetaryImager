@@ -15,6 +15,13 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean
 RUN cd / && git clone https://github.com/mxe/mxe.git && cd /mxe && \
     make MXE_TARGETS='x86_64-w64-mingw32.static i686-w64-mingw32.static' \
-        ccfits boost cmake opencv qt5
+        ccfits boost cmake opencv qtbase
+
+RUN make MXE_TARGETS='x86_64-w64-mingw32.static i686-w64-mingw32.static' MXE_PLUGIN_DIRS='/mxe/plugins/gcc5' \
+         ccfits boost cmake opencv qt5
+
+ENV PATH=/mxe/usr/bin:$PATH
+
+
 EOF
 . ../commons/Dockerfile.workdir.in
