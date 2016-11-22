@@ -1,0 +1,26 @@
+#!/bin/bash
+first_container_found="$( docker ps -q )"
+build_container="${1:-$first_container_found}"
+
+download() {
+  curl -L "$1" | docker exec -i $build_container bash -c "cat > $2"
+}
+
+download http://pkgs.fedoraproject.org/repo/pkgs/libcaca/libcaca-0.99.beta19.tar.gz/a3d4441cdef488099f4a92f4c6c1da00/libcaca-0.99.beta19.tar.gz /mxe/pkg/libcaca-0.99.beta19.tar.gz
+
+
+download_opencv() {
+  hash=35fe6ccdda6d7a04e9056b0d73b98e76
+  url=https://raw.githubusercontent.com/Itseez/opencv_3rdparty/$hash/ffmpeg
+  out=/opencv-git/3rdparty/ffmpeg/downloads/$hash
+  file="$1"
+  download $url/$file $out/$file
+
+  echo "include($out/ffmpeg_version.cmake)" | docker exec -i $build_container bash -c "cat > /opencv-git/3rdparty/ffmpeg/ffmpeg.cmake"
+}
+#download_opencv opencv_ffmpeg.dll
+#download_opencv opencv_ffmpeg_64.dll
+#download_opencv ffmpeg_version.cmake
+
+
+

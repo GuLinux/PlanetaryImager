@@ -28,8 +28,10 @@ find_package(OpenCV REQUIRED )
 
 include_directories(${OpenCV_INCLUDE_DIRS})
 include(FindPkgConfig)
-pkg_check_modules(LIBUSB libusb-1.0 REQUIRED)
-link_directories(${LIBUSB_LIBRARY_DIRS})
+if(NOT WIN32)
+  pkg_check_modules(LIBUSB libusb-1.0 REQUIRED)
+  link_directories(${LIBUSB_LIBRARY_DIRS})
+endif()
 include_directories(${LIBUSB_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 
 option(cflags_fpic "Use -fPIC for compilation " on)

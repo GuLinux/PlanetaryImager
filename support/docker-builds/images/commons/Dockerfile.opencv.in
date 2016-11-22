@@ -4,8 +4,30 @@ cat <<EOF
 RUN cd / && git clone https://github.com/opencv/opencv.git opencv-git -b 3.1.0 && \
     mkdir -p opencv-git/build && \
     cd opencv-git/build && \
-    ${CMAKE_BIN} ../ -DCMAKE_INSTALL_PREFIX=/opt/opencv${OPENCV_DIR_SUFFIX} -DCMAKE_BUILD_TYPE=Release -DWITH_WIN32UI=Off -DWITH_QT=Off -DBUILD_SHARED_LIBS=Off -DWITH_FFMPEG=Off && \
-    make all install && \
+    ${CMAKE_BIN} ../ \
+        -DCMAKE_INSTALL_PREFIX=/opt/opencv${OPENCV_DIR_SUFFIX} \
+        -DCMAKE_BUILD_TYPE=Release \
+        -DWITH_WIN32UI=Off \
+        -DWITH_QT=Off \
+        -DBUILD_SHARED_LIBS=Off \
+        -DWITH_FFMPEG=Off \
+        -DWITH_OPENGL=Off \
+        -DDWITH_GSTREAMER=Off \
+        -DDBUILD_opencv_apps=Off \
+        -DDBUILD_DOCS=Off \
+        -DDBUILD_EXAMPLES=Off \
+        -DDBUILD_PACKAGE=Off \
+        -DBUILD_WITH_DEBUG_INFO=OFF \
+        -DBUILD_FAT_JAVA_LIB=OFF \
+        -DBUILD_ZLIB=OFF \
+        -DBUILD_TIFF=OFF \
+        -DBUILD_JASPER=OFF \
+        -DBUILD_JPEG=OFF \
+        -DBUILD_PNG=OFF \
+        -DBUILD_OPENEXR=OFF \
+        -DCMAKE_VERBOSE=ON \
+        -DWITH_GTK=OFF \
+    && make all install && \
     cd / && rm -rf /opencv-git
 ENV CMAKE_PREFIX_PATH="/opt/opencv${OPENCV_DIR_SUFFIX};${CMAKE_PREFIX_PATH}"
 EOF

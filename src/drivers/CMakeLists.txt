@@ -7,14 +7,15 @@ endfunction(define_driver)
 
  set(UDEVRULES_INSTALL_DIR "/lib/udev/rules.d" CACHE STRING "Base directory for udev rules")
  set(FIRMWARE_INSTALL_BASEDIR "/lib/firmware/" CACHE STRING "Base directory for firmware files")
-option(enable_qhy "Enable QHY Driver (default: ON)" ON)
-
 add_imager_dependencies(drivers)
 
-if(enable_qhy)
-  message("qhyccd input module enabled")
-  add_subdirectory(qhy)
-endif(enable_qhy)
+if(NOT WIN32) # QHY currently not supported in Windows
+  option(enable_qhy "Enable QHY Driver (default: ON)" ON)
+  if(enable_qhy)
+    message("qhyccd input module enabled")
+    add_subdirectory(qhy)
+  endif(enable_qhy)
+endif()
 #add_subdirectory(qmultimedia)
 option(enable_simulator "Enable fake driver simulator (default: OFF)" OFF) # TODO restore
 if(enable_simulator)
@@ -27,7 +28,9 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
   add_subdirectory(v4l2)
 endif(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
 
-add_subdirectory(zwo_asi)
+if(NOT WIN32) # Not supported either... but coming soon
+  add_subdirectory(zwo_asi)
+endif()
 configure_file(available_drivers.h.in available_drivers.h)
 file(GLOB drivers_SRCS *.cpp)
 add_library(drivers STATIC ${drivers_SRCS})
