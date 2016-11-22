@@ -1,5 +1,8 @@
 UBUNTU_BASE_IMAGE="ubuntu:16.04"
-. ../ubuntu-commons/Dockerfile.in
+MXE_PARALLEL_JOBS=${MXE_PARALLEL_JOBS:-3}
+MXE_PARALLEL_CPU_JOBS=${MXE_PARALLEL_CPU_JOBS:-6}
+
+[[ "$MXE_ARCH" == x32 ]] && MXE_PREFIX=i686-w64-mingw32.static || MXE_PREFIX=x86_64-w64-mingw32.static
 
 cat <<EOF
 FROM ${UBUNTU_BASE_IMAGE}
@@ -14,11 +17,12 @@ RUN apt-get update && apt-get install -y \
     perl python ruby scons unzip wget xz-utils libtool-bin \
     && apt-get clean
 RUN cd / && git clone https://github.com/mxe/mxe.git && cd /mxe && \
-    make MXE_TARGETS='x86_64-w64-mingw32.static i686-w64-mingw32.static' MXE_PLUGIN_DIRS='/mxe/plugins/gcc5' \
-        ccfits boost cmake opencv qtbase
+    make -j $MXE_PARALLEL_JOBS JOBS=$MXE_PARALLEL_CPU_JOBS MXE_TARGETS='$MXE_PREFIX' MXE_PLUGIN_DIRS='/mxe/plugins/gcc5' \
+        ccfits boost cmake opencv qtbase \
+	clean-junk 
 
-ENV PATH=/mxe/usr/bin:$PATH
 
-
+ENV PATH=/mxe/usr/bin:\$PATH
 EOF
+CMAKE_BIN=${MXE_PREFIX}-cmake . ../commons/Dockerfile.opencv.in  
 . ../commons/Dockerfile.workdir.in

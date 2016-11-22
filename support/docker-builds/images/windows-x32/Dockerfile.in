@@ -1,0 +1,2 @@
+MXE_ARCH=x32 . ../windows-commons/Dockerfile.in
+
