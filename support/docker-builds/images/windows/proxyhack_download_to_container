@@ -18,9 +18,9 @@ download_opencv() {
 
   echo "include($out/ffmpeg_version.cmake)" | docker exec -i $build_container bash -c "cat > /opencv-git/3rdparty/ffmpeg/ffmpeg.cmake"
 }
-download_opencv opencv_ffmpeg.dll
-download_opencv opencv_ffmpeg_64.dll
-download_opencv ffmpeg_version.cmake
+#download_opencv opencv_ffmpeg.dll
+#download_opencv opencv_ffmpeg_64.dll
+#download_opencv ffmpeg_version.cmake
 
 
 
