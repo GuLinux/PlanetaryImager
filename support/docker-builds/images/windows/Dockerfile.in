@@ -8,10 +8,10 @@ RUN apt-get update && apt-get install -y \
     cmake \
     git \
     wget \
-    autoconf automake bash bison bzip2 flex gcc-c++ \
-    gdk-pixbuf2-devel gettext git gperf intltool make \
-    sed libffi-devel libtool openssl-devel p7zip patch \
-    perl pkgconfig python ruby scons unzip wget xz libtool-bin \
+    autopoint autoconf automake bash bison bzip2 flex \
+    libgdk-pixbuf2.0-dev gettext git gperf intltool make \
+    sed libffi-dev libtool p7zip-full patch \
+    perl python ruby scons unzip wget xz-utils libtool-bin \
     && apt-get clean
 RUN cd / && git clone https://github.com/mxe/mxe.git && cd /mxe && \
     make MXE_TARGETS='x86_64-w64-mingw32.static i686-w64-mingw32.static' \
