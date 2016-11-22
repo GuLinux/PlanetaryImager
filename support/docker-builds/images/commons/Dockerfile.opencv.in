@@ -12,7 +12,7 @@ RUN cd / && git clone https://github.com/opencv/opencv.git opencv-git -b 3.1.0 &
         -DBUILD_SHARED_LIBS=Off \
         -DWITH_FFMPEG=Off \
         -DWITH_OPENGL=Off \
-        -DDWITH_GSTREAMER=Off \
+        -DWITH_GSTREAMER=Off \
         -DBUILD_opencv_apps=Off \
         -DBUILD_DOCS=Off \
         -DBUILD_EXAMPLES=Off \
@@ -25,7 +25,6 @@ RUN cd / && git clone https://github.com/opencv/opencv.git opencv-git -b 3.1.0 &
         -DBUILD_JPEG=OFF \
         -DBUILD_PNG=OFF \
         -DBUILD_OPENEXR=OFF \
-        -DCMAKE_VERBOSE=ON \
         -DWITH_GTK=OFF \
         -DBUILD_TESTS=Off \
         -DBUILD_PERF_TESTS=Off \
