@@ -1,0 +1,4 @@
+#!/bin/bash
+first_container_found="$( docker ps -q )"
+$build_container="${1:-$first_container_found}"
+curl http://pkgs.fedoraproject.org/repo/pkgs/libcaca/libcaca-0.99.beta19.tar.gz/a3d4441cdef488099f4a92f4c6c1da00/libcaca-0.99.beta19.tar.gz | docker exec -i $build_container bash -c "cat > /mxe/pkg/libcaca-0.99.beta19.tar.gz"

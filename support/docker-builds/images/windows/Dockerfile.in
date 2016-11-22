@@ -1,0 +1,20 @@
+UBUNTU_BASE_IMAGE="ubuntu:16.04"
+. ../ubuntu-commons/Dockerfile.in
+
+cat <<EOF
+FROM ${UBUNTU_BASE_IMAGE}
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    cmake \
+    git \
+    wget \
+    autoconf automake bash bison bzip2 flex gcc-c++ \
+    gdk-pixbuf2-devel gettext git gperf intltool make \
+    sed libffi-devel libtool openssl-devel p7zip patch \
+    perl pkgconfig python ruby scons unzip wget xz libtool-bin \
+    && apt-get clean
+RUN cd / && git clone https://github.com/mxe/mxe.git && cd /mxe && \
+    make MXE_TARGETS='x86_64-w64-mingw32.static i686-w64-mingw32.static' \
+        ccfits boost cmake opencv qt5
+EOF
+. ../commons/Dockerfile.workdir.in

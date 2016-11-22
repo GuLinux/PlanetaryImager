@@ -12,12 +12,13 @@ Useful Links
 
 Supported Cameras
 -----------------
-Currently this application supports only QHY based cameras, mainly QHY5IIm-L (the one I had until a few months ago).
-It also has support for V4L compliant cameras, and initial support for ZWO ASI cameras.
+
+Mainly ZWO ASI Cameras (my camera is an ASI178mm), v4l2 (including DMK and Celestron Skyris) and QHY
+
 
 Requirements
 ------------
- * Qt version >= 5.4
+ * Qt version >= 5.5
  * A recent boost library version (tested with 1.55 and above).
  * c++14 compliant compiler (tested with gcc >= 5)
  * OpenCV
