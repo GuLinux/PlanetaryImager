@@ -21,15 +21,18 @@
 #include <unistd.h>
 #include <signal.h>
 #include <iostream>
+#include <QtGlobal>
 
 using namespace std;
 
 namespace {
+#ifndef Q_OS_WIN32
 void crash_handler(int sig) {
   fprintf(stderr, "Error: signal %d:\n", sig);
   cerr << GuLinux::Backtrace::backtrace(50, 1);
   exit(1);
 }
+#endif
 }
 
 CrashHandler::CrashHandler(const std::initializer_list<int>& install_signals) : CrashHandler{list<int>(install_signals)}
@@ -38,8 +41,10 @@ CrashHandler::CrashHandler(const std::initializer_list<int>& install_signals) : 
 
 CrashHandler::CrashHandler(const std::list<int> &install_signals)
 {
+#ifndef Q_OS_WIN32
   for(auto sig: install_signals)
     signal(sig, crash_handler);
+#endif
 }
 
 CrashHandler::~CrashHandler()
