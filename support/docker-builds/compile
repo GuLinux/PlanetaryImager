@@ -8,7 +8,7 @@ export MAKE_OPTS=""
 
 print-help() {
   cat <<EOF
-Usage: $0 [options] [directories-to-compile]
+Usage: $0 [options] [targets-to-compile]
 Options:
     -a|--all                    compile all available targets
     -d|--dest                   destination directory to place archives/packages
@@ -22,7 +22,7 @@ while [ -n "$1" ]; do
     shift
     case "$param" in
         -a|--all)
-            COMPILE_ENVS="$( find -name docker-compose.yml -exec dirname {} \; )"
+            COMPILE_ENVS="$( find targets -name "*.env" )"
             ;;
         -d|--dest)
             export DEST="$1"; shift
