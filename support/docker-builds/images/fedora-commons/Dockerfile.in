@@ -1,0 +1,17 @@
+cat <<EOF
+FROM ${FEDORA_BASE_IMAGE}
+RUN yum install -y \
+    autoconf \
+    automake \
+    qt5-qtbase-devel \
+    gcc-c++ \
+    cmake \
+    opencv-devel \
+    boost-devel \
+    git \
+    libusb-devel \
+    CCfits-devel \
+    && yum clean all -y
+EOF
+. ../commons/Dockerfile.libusb.in
+. ../commons/Dockerfile.workdir.in

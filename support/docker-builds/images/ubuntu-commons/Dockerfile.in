@@ -9,6 +9,7 @@ RUN apt-get update && apt-get install -y \
     libboost-all-dev \
     git \
     libudev-dev \
+    libccfits-dev \
     && apt-get clean
 EOF
 . ../commons/Dockerfile.libusb.in

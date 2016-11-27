@@ -24,6 +24,7 @@ Requirements
  * OpenCV
  * boost (libboost-all-dev)
  * fxload (to load firmware on QHY cameras)
+ * ccfits
 
 Source download
 ---------------
