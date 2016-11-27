@@ -1,3 +1,4 @@
+cp "$( dirname "$BASH_SOURCE")/configuration-${UBUNTU_VERSION}.cmake" "$PWD"
 cat <<EOF
 FROM ${UBUNTU_BASE_IMAGE}
 RUN apt-get update && apt-get install -y \
@@ -12,5 +13,11 @@ RUN apt-get update && apt-get install -y \
     libccfits-dev \
     && apt-get clean
 EOF
+
 . ../commons/Dockerfile.libusb.in
 . ../commons/Dockerfile.workdir.in
+
+cat <<EOF
+COPY configuration-${UBUNTU_VERSION}.cmake /
+ENV CMAKE_EXTRA_OPTIONS -DCMAKE_INCLUDE_EXT_FILE=/configuration-${UBUNTU_VERSION}.cmake
+EOF

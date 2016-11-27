@@ -11,9 +11,7 @@ services:
 
         environment:
             - CMAKE_BUILD_TYPE
-            - CPACK_GENERATOR
             - PACKAGE_VERSION_SUFFIX
             - PACKAGE_NAME_SUFFIX
-            - CMAKE_EXTRA_OPTIONS
             - MAKE_OPTS
 

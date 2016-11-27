@@ -13,5 +13,5 @@ RUN yum install -y \
     CCfits-devel \
     && yum clean all -y
 EOF
-. ../commons/Dockerfile.libusb.in
+# . ../commons/Dockerfile.libusb.in
 . ../commons/Dockerfile.workdir.in

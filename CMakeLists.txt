@@ -58,17 +58,6 @@ set(FULL_VERSION ${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}${PACKAGE_VER
  add_definitions(-DHOST_PROCESSOR="${CMAKE_HOST_SYSTEM_PROCESSOR}" -DARCHITECTURE="${PlanetaryImager_ARCH}")
  message("Detected architecture: ${PlanetaryImager_ARCH}")
 SET(EXTRA_LIBRARIES "" CACHE STRING "Extra libraries for linking")
-add_subdirectory(GuLinux-Commons/Qt)
-add_subdirectory(GuLinux-Commons/c++)
-
-add_subdirectory(src)
-option(ENABLE_PLANETARYIMAGER_TESTING "Enable Planetary Imager unit tests" Off)
-if(ENABLE_PLANETARYIMAGER_TESTING)
-  add_subdirectory(tests)
-endif()
-
-add_subdirectory(files)
-add_subdirectory(support)
 
 set(PACKAGE_VERSION_SUFFIX "" CACHE STRING "Suffix package version (default: empty)")
 set(PACKAGE_NAME_SUFFIX "" CACHE STRING "Suffix package name (default: empty)")
@@ -86,20 +75,33 @@ SET(CPACK_PACKAGE_VERSION_PATCH "${PATCH_VERSION}")
 set(CPACK_PACKAGE_FILE_NAME PlanetaryImager-${FULL_VERSION}-${CMAKE_SYSTEM_NAME}-${PlanetaryImager_ARCH}${PACKAGE_NAME_SUFFIX})
 SET(CPACK_PACKAGE_CONTACT "marco@gulinux.net")
 #SET(CPACK_STRIP_FILES "bin/planetary_imager")
-SET(CPACK_GENERATOR DEB CACHE STRING "CPack generator type (default: DEB)")
-set(LIBOPENCV_UBUNTU_VERSION_STR "2.4v5" CACHE INTERNAL "libopencv dependency version for ubuntu")
-set(LIBCCFITS_UBUNTU_VERSION_STR "0v5" CACHE INTERNAL "libccfits dependency version for ubuntu")
-#set(LIBQCUSTOMPLOT_UBUNTU_VERSION_STR "1.3" CACHE INTERNAL "libqcustomplot dependency version for ubuntu")
-# libqcustomplot${LIBQCUSTOMPLOT_UBUNTU_VERSION_STR}
-SET(CPACK_DEBIAN_PACKAGE_DEPENDS "libusb-1.0-0, libqt5gui5 (>= 5.4.0), libqt5network5 (>= 5.4.0), libqt5widgets5 (>= 5.4.0), \
-    libopencv-imgproc${LIBOPENCV_UBUNTU_VERSION_STR},libopencv-core${LIBOPENCV_UBUNTU_VERSION_STR}, libopencv-highgui${LIBOPENCV_UBUNTU_VERSION_STR}, \
-    fxload, libccfits${LIBCCFITS_UBUNTU_VERSION_STR} \
-    ")
+
 set(CPACK_SET_DESTDIR On)
+
+SET(CPACK_GENERATOR TGZ CACHE STRING "CPack generator type (default: TGZ)")
+
+set(CMAKE_INCLUDE_EXT_FILE CACHE INTERNAL "Per-environment include file")
+if(CMAKE_INCLUDE_EXT_FILE)
+  message("Using cmake environment: ${CMAKE_INCLUDE_EXT_FILE}")
+  include(${CMAKE_INCLUDE_EXT_FILE})
+endif()
 
 if( CPACK_GENERATOR STREQUAL "TGZ" OR CPACK_GENERATOR STREQUAL "TBZ2")
   install(PROGRAMS support/install.sh DESTINATION "/")
 endif( CPACK_GENERATOR STREQUAL "TGZ" OR CPACK_GENERATOR STREQUAL "TBZ2")
+
+add_subdirectory(GuLinux-Commons/Qt)
+add_subdirectory(GuLinux-Commons/c++)
+
+add_subdirectory(src)
+option(ENABLE_PLANETARYIMAGER_TESTING "Enable Planetary Imager unit tests" Off)
+if(ENABLE_PLANETARYIMAGER_TESTING)
+  add_subdirectory(tests)
+endif()
+
+add_subdirectory(files)
+add_subdirectory(support)
+
 INCLUDE(CPack)
 
 message("Done configuring PlanetaryImager-${FULL_VERSION}-${PlanetaryImager_ARCH}")
