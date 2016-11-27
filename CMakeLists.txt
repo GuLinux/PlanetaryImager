@@ -28,6 +28,11 @@ find_package(OpenCV REQUIRED )
 
 include_directories(${OpenCV_INCLUDE_DIRS})
 include(FindPkgConfig)
+
+pkg_check_modules(CFITSIO REQUIRED cfitsio)
+
+include_directories(${CFITSIO_INCLUDEDIR})
+
 if(NOT WIN32)
   pkg_check_modules(LIBUSB libusb-1.0 REQUIRED)
   link_directories(${LIBUSB_LIBRARY_DIRS})

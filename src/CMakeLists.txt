@@ -23,7 +23,7 @@ target_link_libraries(planetary_imager
     ${Boost_LIBRARIES}
     ${OpenCV_LIBS}
     Qt5::Widgets
-    CCfits cfitsio # TODO: find_package
+    CCfits ${CFITSIO_LIBRARIES} # TODO: find_package
     ${Qt5_OpenGL_LIBRARIES}
     pthread
     ${EXTRA_LIBRARIES}
@@ -37,7 +37,7 @@ target_link_libraries(planetary_imager_daemon
     ${Boost_LIBRARIES}
     ${OpenCV_LIBS}
     Qt5::Core
-    CCfits cfitsio # TODO: find_package
+    CCfits ${CFITSIO_LIBRARIES} # TODO: find_package
     pthread
     ${EXTRA_LIBRARIES}
 )

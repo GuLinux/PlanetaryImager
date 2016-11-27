@@ -1,6 +1,9 @@
+cp "$( dirname "$BASH_SOURCE")/configuration-${FEDORA_VERSION}.cmake" "$PWD"
+
 cat <<EOF
 FROM ${FEDORA_BASE_IMAGE}
 RUN yum install -y \
+    rpm-build \
     autoconf \
     automake \
     qt5-qtbase-devel \
@@ -15,3 +18,9 @@ RUN yum install -y \
 EOF
 # . ../commons/Dockerfile.libusb.in
 . ../commons/Dockerfile.workdir.in
+
+cat <<EOF
+COPY configuration-${FEDORA_VERSION}.cmake /
+ENV CMAKE_EXTRA_OPTIONS -DCMAKE_INCLUDE_EXT_FILE=/configuration-${FEDORA_VERSION}.cmake
+EOF
+
