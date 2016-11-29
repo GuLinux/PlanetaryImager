@@ -35,6 +35,7 @@ public:
   QRect roi() const;
   ASI_IMG_TYPE format() const;
   int bin() const;
+  void calc_exposure_timeout();
 private:
   DPTR
 };

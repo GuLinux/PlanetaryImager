@@ -197,6 +197,7 @@ void ZWO_ASI_Imager::setControl(const Control& control)
       qDebug() << "Changed control " << camera_control->control();
       if(control.id == ASI_EXPOSURE) {
         set_exposure(camera_control->control() );
+        d->worker->calc_exposure_timeout();
       }
       emit changed(*camera_control);
     }));

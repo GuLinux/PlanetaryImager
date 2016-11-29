@@ -25,6 +25,7 @@ DPTR_IMPL(ASIImagingWorker) {
   ASI_CAMERA_INFO info;
   int bin;
   QRect roi;
+  atomic_long exposure_timeout;
 
   std::vector<uint8_t> buffer;
   size_t calcBufferSize();
@@ -54,6 +55,7 @@ ASIImagingWorker::ASIImagingWorker(const QRect& roi, int bin, const ASI_CAMERA_I
   } else {
     d->color_format = Frame::Mono;
   }
+  calc_exposure_timeout();
 }
 
 ASIImagingWorker::~ASIImagingWorker()
@@ -62,11 +64,21 @@ ASIImagingWorker::~ASIImagingWorker()
     qDebug() << "Imaging stopped.";
 }
 
+void ASIImagingWorker::calc_exposure_timeout()
+{
+  long value;
+  ASI_BOOL isAuto;
+  ASI_CHECK << ASIGetControlValue(d->info.CameraID, ASI_EXPOSURE, &value, &isAuto) << "Getting exposure value";
+  d->exposure_timeout = std::max(value / 100, 100l); // Should be / 1000, but adding some slack
+  qDebug() << "Exposure timeout: " << d->exposure_timeout;
+}
+
+
 
 Frame::ptr ASIImagingWorker::shoot()
 {
   auto frame = make_shared<Frame>( d->format == ASI_IMG_RAW16 ? 16 : 8,  d->colorFormat(), QSize{d->roi.width(), d->roi.height()});
-  ASI_CHECK << ASIGetVideoData(d->info.CameraID, frame->data(), frame->size(), 100000) << "Capture frame";
+  ASI_CHECK << ASIGetVideoData(d->info.CameraID, frame->data(), frame->size(), d->exposure_timeout) << "Capture frame";
   return frame;
 }
 
