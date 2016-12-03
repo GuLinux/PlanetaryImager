@@ -1,4 +1,5 @@
 /*
+ * GuLinux Planetary Imager - https://github.com/GuLinux/PlanetaryImager
  * Copyright (C) 2016  Marco Gulino <marco@gulinux.net>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,36 +16,23 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef PLANETARY_IMAGER_DRIVER_H
-#define PLANETARY_IMAGER_DRIVER_H
-#include <QList>
-#include <QString>
-#include "imager.h"
-#include "dptr.h"
 
-class Driver {
-public:
-  typedef std::shared_ptr<Driver> ptr;
-  class Camera {
-  public:
-    typedef std::shared_ptr<Camera> ptr;
-    virtual QString name() const = 0;
-    virtual Imager *imager(const ImageHandler::ptr &imageHandler) const = 0;
-  };
-  typedef QList<Camera::ptr> Cameras; 
-  
-  virtual Cameras cameras() const = 0;
-};
+#ifndef NETWORKCLIENT_H
+#define NETWORKCLIENT_H
 
-class SupportedDrivers : public Driver {
+#include <QObject>
+#include "c++/dptr.h"
+#include "network/networkdispatcher.h"
+class NetworkClient : public QObject
+{
+    Q_OBJECT
 public:
-  SupportedDrivers();
-  ~SupportedDrivers();
-  virtual Cameras cameras() const;
+  NetworkClient(const NetworkDispatcher::ptr &dispatcher, QObject *parent = nullptr);
+  ~NetworkClient();
+public slots:
+  void connectToHost(const QString &host, int port);
 private:
-  DPTR;
+  DPTR
 };
-typedef QList<Driver::ptr> Drivers;
 
-
-#endif
+#endif // NETWORKCLIENT_H

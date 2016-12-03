@@ -15,15 +15,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#include <QCoreApplication>
+#include <QApplication>
 #include "planetaryimager_mainwindow.h"
 #include "commons/version.h"
 #include <iostream>
 #include <QDebug>
-#include <QCommandLineParser>
-#include "commons/crashhandler.h"
+#include "network/client/remotedriver.h"
+#include "network/client/networkclient.h"
+#include "network/networkdispatcher.h"
 #include "commons/loghandler.h"
-#include "network/server/networkserver.h"
+#include "commons/crashhandler.h"
+#include "drivers/available_drivers.h" // TODO: find out why this is needed..
+#include <QMenuBar>
+#include <QMenu>
+
 using namespace std;
 
 
@@ -31,22 +36,17 @@ int main(int argc, char** argv)
 {
     qRegisterMetaType<Frame::ptr>("Frame::ptr");
     CrashHandler crash_handler({SIGSEGV, SIGABRT});
-    cerr << "Starting PlanetaryImager Daemon - version " << PLANETARY_IMAGER_VERSION << " (" << HOST_PROCESSOR << ")" << endl;
-    QCoreApplication app(argc, argv);
+    cerr << "Starting PlanetaryImager - version " << PLANETARY_IMAGER_VERSION << " (" << HOST_PROCESSOR << ")" << endl;
+    QApplication app(argc, argv);
     LogHandler log_handler;
     app.setApplicationName("PlanetaryImager");
+    app.setApplicationDisplayName("Planetary Imager");
     app.setApplicationVersion(PLANETARY_IMAGER_VERSION);
-    auto driver = make_shared<SupportedDrivers>();
-    auto server = make_shared<NetworkServer>(driver);
-    QMetaObject::invokeMethod(server.get(), "listen", Q_ARG(QString, "0.0.0.0"), Q_ARG(int, 9999));
-    
-    QCommandLineParser parser;
-    parser.addHelpOption();
-    parser.addVersionOption();
-    parser.process(app);
-    
-    // TODO: initialize all handlers and drivers here
-    //PlanetaryImagerMainWindow mainWindow;
-    //mainWindow.show();
+    auto dispatcher = make_shared<NetworkDispatcher>();
+    auto networkClient = make_shared<NetworkClient>(dispatcher);
+    QMetaObject::invokeMethod(networkClient.get(), "connectToHost", Q_ARG(QString, "localhost"), Q_ARG(int, 9999));
+    PlanetaryImagerMainWindow mainWindow{make_shared<RemoteDriver>(dispatcher)};
+    mainWindow.menuBar()->addMenu(QObject::tr("Connection"));
+    mainWindow.show();
     return app.exec();
 }

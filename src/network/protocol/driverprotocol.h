@@ -1,4 +1,5 @@
 /*
+ * GuLinux Planetary Imager - https://github.com/GuLinux/PlanetaryImager
  * Copyright (C) 2016  Marco Gulino <marco@gulinux.net>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -15,36 +16,21 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef PLANETARY_IMAGER_DRIVER_H
-#define PLANETARY_IMAGER_DRIVER_H
-#include <QList>
+
+#ifndef DRIVERPROTOCOL_H
+#define DRIVERPROTOCOL_H
 #include <QString>
-#include "imager.h"
-#include "dptr.h"
-
-class Driver {
+#include "drivers/driver.h"
+#include "network/networkpacket.h"
+#include "network/networkdispatcher.h"
+class DriverProtocol {
 public:
-  typedef std::shared_ptr<Driver> ptr;
-  class Camera {
-  public:
-    typedef std::shared_ptr<Camera> ptr;
-    virtual QString name() const = 0;
-    virtual Imager *imager(const ImageHandler::ptr &imageHandler) const = 0;
-  };
-  typedef QList<Camera::ptr> Cameras; 
-  
-  virtual Cameras cameras() const = 0;
+  static const QString CameraList;
+  static const QString CameraListReply;
+  static const QString CamerasParameter;
+  static const QString ConnectCamera;
+  static void encode(const Driver::Cameras &cameras, const NetworkPacket::ptr &packet);
+  static void decode(Driver::Cameras &cameras, const NetworkPacket::ptr &packet, const NetworkDispatcher::ptr dispatcher);
 };
 
-class SupportedDrivers : public Driver {
-public:
-  SupportedDrivers();
-  ~SupportedDrivers();
-  virtual Cameras cameras() const;
-private:
-  DPTR;
-};
-typedef QList<Driver::ptr> Drivers;
-
-
-#endif
+#endif // DRIVERPROTOCOL_H

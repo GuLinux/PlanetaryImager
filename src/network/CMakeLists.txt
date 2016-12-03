@@ -1,0 +1,6 @@
+file(GLOB NetworkServer_SRCS server/*.cpp)
+file(GLOB NetworkClient_SRCS client/*.cpp)
+file(GLOB NetworkProtocol_SRCS protocol/*.cpp)
+set(Network_Commons_SRCS networkpacket.cpp networkdispatcher.cpp ${NetworkProtocol_SRCS})
+add_library(network_server STATIC ${NetworkServer_SRCS} ${Network_Commons_SRCS})
+add_library(network_client STATIC ${NetworkClient_SRCS} ${Network_Commons_SRCS})
