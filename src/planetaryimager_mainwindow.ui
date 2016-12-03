@@ -361,7 +361,7 @@
   </action>
   <action name="actionControlsSection">
    <property name="text">
-    <string>&amp;Controls</string>
+    <string>Controls</string>
    </property>
   </action>
   <action name="actionControlsPresets">
