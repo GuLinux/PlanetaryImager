@@ -40,6 +40,7 @@ public:
   void attach(NetworkReceiver *receiver);
   void detach(NetworkReceiver *receiver);
   void setSocket(QTcpSocket *socket);
+public slots:
   void send(const NetworkPacket::ptr &packet);
 private:
   DPTR

@@ -32,6 +32,11 @@ DPTR_IMPL(NetworkDispatcher) {
 
 NetworkDispatcher::NetworkDispatcher(QObject* parent) : QObject{parent}, dptr()
 {
+  static bool metatypes_registered = false;
+  if(!metatypes_registered) {
+    metatypes_registered = true;
+    qRegisterMetaType<NetworkPacket::ptr>("NetworkPacket::ptr");
+  }
 }
 
 NetworkDispatcher::~NetworkDispatcher()

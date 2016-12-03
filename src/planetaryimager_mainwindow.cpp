@@ -353,16 +353,15 @@ void PlanetaryImagerMainWindow::Private::init_devices_watcher()
 void PlanetaryImagerMainWindow::Private::rescan_devices()
 {
   ui->menu_device_load->clear();
-  //Thread::Run<Driver::Cameras>([=]{ return driver->cameras(); }, [=]( const Driver::Cameras &cameras){
-  //});
-  auto cameras = driver->cameras();
-  for(auto device: cameras) {
-    auto message = tr("Found %1 devices").arg(cameras.size());
-    qDebug() << message;
-    statusbar_info_widget->showMessage(message, 10'000);
-    QAction *action = ui->menu_device_load->addAction(device->name());
-    QObject::connect(action, &QAction::triggered, bind(&Private::connectCamera, this, device));
-  }
+  Thread::Run<Driver::Cameras>([=]{ return driver->cameras(); }, [=]( const Driver::Cameras &cameras){
+    for(auto device: cameras) {
+      auto message = tr("Found %1 devices").arg(cameras.size());
+      qDebug() << message;
+      statusbar_info_widget->showMessage(message, 10'000);
+      QAction *action = ui->menu_device_load->addAction(device->name());
+      QObject::connect(action, &QAction::triggered, bind(&Private::connectCamera, this, device));
+    }
+  });
 }
 
 void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::Camera::ptr& camera)

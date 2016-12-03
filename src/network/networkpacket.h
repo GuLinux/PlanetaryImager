@@ -46,4 +46,5 @@ private:
 
 QDebug operator<<(QDebug dbg, const NetworkPacket &packet);
 inline QDebug operator<<(QDebug dbg, const NetworkPacket::ptr &packet) { return dbg << *packet; }
+Q_DECLARE_METATYPE(NetworkPacket::ptr)
 #endif // NETWORKPACKET_H

@@ -44,7 +44,7 @@ Driver::Cameras RemoteDriver::cameras() const
   auto packet = make_shared<NetworkPacket>();
   packet->setName(DriverProtocol::CameraList);
   d->cameras_processed = false;
-  d->dispatcher->send(packet);
+  QMetaObject::invokeMethod(d->dispatcher.get(), "send", Q_ARG(NetworkPacket::ptr, packet));
   while(! d->cameras_processed)
     qApp->processEvents();
   return d->cameras;;
