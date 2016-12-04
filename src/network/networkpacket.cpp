@@ -20,6 +20,7 @@
 #include "networkpacket.h"
 #include <QIODevice>
 #include <QDataStream>
+#include <QJsonDocument>
 using namespace std;
 
 DPTR_IMPL(NetworkPacket) {
@@ -42,14 +43,17 @@ NetworkPacket::~NetworkPacket()
 
 void NetworkPacket::sendTo(QIODevice *device) const
 {
+  QByteArray data = QJsonDocument::fromVariant(d->properties).toBinaryData();
   QDataStream s{device};
-  s << d->properties;
+  s << data;
 }
 
 void NetworkPacket::receiveFrom(QIODevice *device)
 {
+  QByteArray data;
   QDataStream s{device};
-  s >> d->properties;
+  s >> data;
+  d->properties = QJsonDocument::fromBinaryData(data).toVariant().toMap();
 }
 
 NetworkPacket * NetworkPacket::setProperty(const KeyType& property, const QVariant& value)
