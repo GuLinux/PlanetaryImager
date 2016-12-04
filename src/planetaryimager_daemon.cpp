@@ -25,6 +25,7 @@
 #include "commons/loghandler.h"
 #include "network/server/networkserver.h"
 #include "image_handlers/all_handlers.h"
+#include "network/server/framesforwarder.h"
 using namespace std;
 
 

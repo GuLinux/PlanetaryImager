@@ -151,3 +151,4 @@ void DriverProtocol::decode(Imager::Controls& controls, const NetworkPacket::ptr
     });
   }
 }
+

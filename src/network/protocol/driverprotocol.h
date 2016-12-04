@@ -40,6 +40,7 @@ public:
   ADD_PROTOCOL_PACKET_NAME(ClearROI)
   ADD_PROTOCOL_PACKET_NAME(GetControls)
   ADD_PROTOCOL_PACKET_NAME(GetControlsReply)
+  ADD_PROTOCOL_PACKET_NAME(SendFrame)
   
   static NetworkPacket::ptr sendCameraListReply(const Driver::Cameras &cameras);
   static NetworkPacket::ptr sendGetPropertiesReply(const Imager::Properties &properties);

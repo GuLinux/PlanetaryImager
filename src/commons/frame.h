@@ -24,7 +24,7 @@
 #include "c++/dptr.h"
 #include <QSize>
 #include <QDateTime>
-
+#include <QVariantMap>
 class Frame
 {
 public:
@@ -49,6 +49,8 @@ public:
   uint8_t bpp() const;
   QDateTime created_utc() const;
   ColorFormat colorFormat() const;
+  
+  QVariantMap const as_variant();
 private:
   DPTR
 };
