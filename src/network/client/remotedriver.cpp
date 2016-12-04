@@ -20,6 +20,7 @@
 #include "remotedriver.h"
 #include "network/protocol/driverprotocol.h"
 #include <QCoreApplication>
+#include "remoteimager.h"
 using namespace std;
 
 DPTR_IMPL(RemoteDriver) {
@@ -41,6 +42,7 @@ private:
 
 Imager * RemoteCamera::imager(const ImageHandler::ptr& imageHandler) const
 {
+  return new RemoteImager{_address, imageHandler, _dispatcher};
 }
 
 
