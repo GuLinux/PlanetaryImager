@@ -93,6 +93,7 @@ void DriverForwarder::Private::GetProperties(const NetworkPacket::ptr& p)
 void DriverForwarder::Private::StartLive(const NetworkPacket::ptr& p)
 {
   imager->startLive();
+  q->dispatcher()->send( DriverProtocol::packetStartLiveReply() );
 }
 
 void DriverForwarder::Private::GetControls(const NetworkPacket::ptr& p)

@@ -60,7 +60,8 @@ RemoteImager::~RemoteImager()
 
 void RemoteImager::startLive()
 {
-  //dispatcher()->queue_send(DriverProtocol::packetStartLive());
+  dispatcher()->queue_send(DriverProtocol::packetStartLive());
+  wait_for_processed(DriverProtocol::StartLiveReply);
 }
 
 void RemoteImager::clearROI()

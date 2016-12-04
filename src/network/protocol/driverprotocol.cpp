@@ -32,6 +32,7 @@ PROTOCOL_NAME_VALUE(Driver, CameraName);
 PROTOCOL_NAME_VALUE(Driver, GetProperties);
 PROTOCOL_NAME_VALUE(Driver, GetPropertiesReply);
 PROTOCOL_NAME_VALUE(Driver, StartLive);
+PROTOCOL_NAME_VALUE(Driver, StartLiveReply);
 PROTOCOL_NAME_VALUE(Driver, ClearROI);
 PROTOCOL_NAME_VALUE(Driver, GetControls);
 PROTOCOL_NAME_VALUE(Driver, GetControlsReply);

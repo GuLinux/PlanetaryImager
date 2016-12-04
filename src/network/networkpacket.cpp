@@ -46,6 +46,7 @@ void NetworkPacket::sendTo(QIODevice *device) const
   QByteArray data = QJsonDocument::fromVariant(d->properties).toBinaryData();
   QDataStream s{device};
   s << data;
+  qDebug() << "Sent data: " << data;
 }
 
 void NetworkPacket::receiveFrom(QIODevice *device)
@@ -53,6 +54,7 @@ void NetworkPacket::receiveFrom(QIODevice *device)
   QByteArray data;
   QDataStream s{device};
   s >> data;
+  qDebug() << "Got data: " << data;
   d->properties = QJsonDocument::fromBinaryData(data).toVariant().toMap();
 }
 
