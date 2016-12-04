@@ -29,6 +29,7 @@ PROTOCOL_NAME_VALUE(Driver, ConnectCameraReply);
 PROTOCOL_NAME_VALUE(Driver, GetCameraName);
 PROTOCOL_NAME_VALUE(Driver, GetCameraNameReply);
 
+
 void DriverProtocol::encode(const Driver::Cameras& cameras, const NetworkPacket::ptr& packet)
 {
   QVariantList v_cameras;

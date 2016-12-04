@@ -58,9 +58,7 @@ RemoteDriver::~RemoteDriver()
 
 Driver::Cameras RemoteDriver::cameras() const
 {
-  auto packet = make_shared<NetworkPacket>();
-  packet->setName(DriverProtocol::CameraList);
-  QMetaObject::invokeMethod(d->dispatcher.get(), "send", Q_ARG(NetworkPacket::ptr, packet));
+  d->dispatcher->queue_send(DriverProtocol::packetCameraList() );
   wait_for_processed(DriverProtocol::CameraListReply);
   return d->cameras;;
 }

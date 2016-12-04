@@ -95,6 +95,12 @@ void NetworkDispatcher::send(const NetworkPacket::ptr &packet) {
   packet->sendTo(d->dataStream);
 }
 
+void NetworkDispatcher::queue_send(const NetworkPacket::ptr& packet)
+{
+  QMetaObject::invokeMethod(this, "send", Q_ARG(NetworkPacket::ptr, packet) );
+}
+
+
 void NetworkDispatcher::Private::readyRead()
 {
   auto packet = make_shared<NetworkPacket>();

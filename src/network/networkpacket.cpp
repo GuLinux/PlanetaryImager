@@ -29,6 +29,12 @@ NetworkPacket::NetworkPacket() : dptr()
 {
 }
 
+NetworkPacket::NetworkPacket(const NameType& name) : NetworkPacket()
+{
+  setName(name);
+}
+
+
 NetworkPacket::~NetworkPacket()
 {
 }
@@ -43,25 +49,31 @@ void NetworkPacket::receiveFrom(QDataStream &stream)
   stream >> d->properties;
 }
 
-NetworkPacket * NetworkPacket::setProperty(const QString& property, const QVariant& value)
+NetworkPacket * NetworkPacket::setProperty(const KeyType& property, const QVariant& value)
 {
   d->properties[property] = value;
   return this;
 }
 
-QVariant NetworkPacket::property(const QString& name) const
+QVariant NetworkPacket::property(const KeyType& name) const
 {
   return d->properties[name];
 }
 
-QString NetworkPacket::name() const
+NetworkPacket::NameType NetworkPacket::name() const
 {
-  return property("name").toString();
+  return property("name").value<NameType>();
 }
 
-NetworkPacket *NetworkPacket::setName(const QString& name)
+NetworkPacket *NetworkPacket::setName(const NameType& name)
 {
   return setProperty("name", name);
+}
+
+NetworkPacket::ptr operator<<(NetworkPacket::ptr packet, const std::pair<NetworkPacket::KeyType, QVariant>& property)
+{
+  packet->setProperty(property.first, property.second);
+  return packet;
 }
 
 

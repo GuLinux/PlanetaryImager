@@ -17,20 +17,13 @@
  *
  */
 
-#ifndef NETWORK_PROTOCOL_H
-#define NETWORK_PROTOCOL_H
+#include "protocol.h"
 
-#include <QString>
-#include "network/networkdispatcher.h"
-#include "network/networkpacket.h"
+using namespace std;
 
-class NetworkProtocol {
-public:
-  static NetworkPacket::ptr packet(const NetworkPacket::NameType &name);
-};
+NetworkPacket::ptr NetworkProtocol::packet(const NetworkPacket::NameType& name)
+{
+  return make_shared<NetworkPacket>(name);
+}
 
-#define ADD_PROTOCOL_NAME(name) static const NetworkPacket::NameType name; \
-static NetworkPacket::ptr packet ## name() { return NetworkProtocol::packet(name); }
-#define PROTOCOL_NAME__CUSTOM_VALUE(Area, name, value) const NetworkPacket::NameType Area ## Protocol::name = value
-#define PROTOCOL_NAME_VALUE(Area, name) PROTOCOL_NAME__CUSTOM_VALUE(Area, name, #Area "_" #name)
-#endif
+
