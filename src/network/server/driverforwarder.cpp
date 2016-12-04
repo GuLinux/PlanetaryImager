@@ -33,6 +33,8 @@ DPTR_IMPL(DriverForwarder) {
   DECLARE_HANDLER(ConnectCamera)
   DECLARE_HANDLER(GetCameraName)
   DECLARE_HANDLER(GetProperties)
+  DECLARE_HANDLER(StartLive)
+  DECLARE_HANDLER(ClearROI)
 };
 
 #define REGISTER_HANDLER(protocol, name) register_handler(protocol::name, bind(&Private::name, d.get(), _1));
@@ -43,6 +45,8 @@ DriverForwarder::DriverForwarder(const NetworkDispatcher::ptr &dispatcher, const
   REGISTER_HANDLER(DriverProtocol, ConnectCamera)
   REGISTER_HANDLER(DriverProtocol, GetCameraName)
   REGISTER_HANDLER(DriverProtocol, GetProperties)
+  REGISTER_HANDLER(DriverProtocol, StartLive)
+  REGISTER_HANDLER(DriverProtocol, ClearROI)
 }
 
 DriverForwarder::~DriverForwarder()
@@ -71,8 +75,19 @@ void DriverForwarder::Private::GetCameraName(const NetworkPacket::ptr& p)
   q->dispatcher()->send(DriverProtocol::packetGetCameraNameReply() << DriverProtocol::propertyCameraName(imager->name()));
 }
 
+void DriverForwarder::Private::ClearROI(const NetworkPacket::ptr& p)
+{
+  imager->clearROI();
+}
+
+
 void DriverForwarder::Private::GetProperties(const NetworkPacket::ptr& p)
 {
   imager->properties();
   q->dispatcher()->send( DriverProtocol::sendGetPropertiesReply(imager->properties() ) );
+}
+
+void DriverForwarder::Private::StartLive(const NetworkPacket::ptr& p)
+{
+  imager->startLive();
 }

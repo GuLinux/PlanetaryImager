@@ -31,6 +31,10 @@ PROTOCOL_NAME_VALUE(Driver, GetCameraNameReply);
 PROTOCOL_NAME_VALUE(Driver, CameraName);
 PROTOCOL_NAME_VALUE(Driver, GetProperties);
 PROTOCOL_NAME_VALUE(Driver, GetPropertiesReply);
+PROTOCOL_NAME_VALUE(Driver, StartLive);
+PROTOCOL_NAME_VALUE(Driver, ClearROI);
+PROTOCOL_NAME_VALUE(Driver, GetControls);
+PROTOCOL_NAME_VALUE(Driver, GetControlsReply);
 
 
 NetworkPacket::ptr DriverProtocol::sendCameraListReply(const Driver::Cameras& cameras)
@@ -86,4 +90,14 @@ void DriverProtocol::decode(Imager::Properties& properties, const NetworkPacket:
   });
   for(auto v: packet->property("caps").toList() )
     properties.capabilities.insert( static_cast<Imager::Capability>(v.toInt()) );
+}
+
+NetworkPacket::ptr DriverProtocol::sendGetControlsReply(const Imager::Controls& controls)
+{
+}
+
+
+void DriverProtocol::decode(Imager::Controls& controls, const NetworkPacket::ptr& packet)
+{
+  controls.clear();
 }

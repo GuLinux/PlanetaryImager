@@ -27,6 +27,7 @@ DPTR_IMPL(RemoteImager) {
   const ImageHandler::ptr image_handler;
   QString name;
   Properties properties;
+  Controls controls;
 };
 
 RemoteImager::RemoteImager(qlonglong id, const ImageHandler::ptr& image_handler, const NetworkDispatcher::ptr &dispatcher) : Imager{image_handler}, NetworkReceiver{dispatcher}, dptr(image_handler)
@@ -37,6 +38,9 @@ RemoteImager::RemoteImager(qlonglong id, const ImageHandler::ptr& image_handler,
   });
   register_handler(DriverProtocol::GetPropertiesReply, [this](const NetworkPacket::ptr &packet) {
     DriverProtocol::decode(d->properties, packet);
+  });
+  register_handler(DriverProtocol::GetControlsReply, [this](const NetworkPacket::ptr &packet) {
+    DriverProtocol::decode(d->controls, packet);
   });
 
   dispatcher->queue_send( DriverProtocol::packetConnectCamera() << DriverProtocol::propertyCameraId(id) );
@@ -56,18 +60,18 @@ RemoteImager::~RemoteImager()
 
 void RemoteImager::startLive()
 {
-  LOG_TO_IMPLEMENT
+  dispatcher()->queue_send(DriverProtocol::packetStartLive());
 }
 
 void RemoteImager::clearROI()
 {
-  LOG_TO_IMPLEMENT
+  dispatcher()->queue_send(DriverProtocol::packetClearROI());
 }
 
-Imager::Controls RemoteImager::controls() const
-{
-  LOG_TO_IMPLEMENT
-  return {};
+Imager::Controls RemoteImager::controls() const {
+  dispatcher()->queue_send(DriverProtocol::packetGetControls() );
+  wait_for_processed(DriverProtocol::GetControlsReply);
+  return d->controls;
 }
 
 QString RemoteImager::name() const
