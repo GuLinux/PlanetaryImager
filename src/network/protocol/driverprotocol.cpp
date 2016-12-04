@@ -36,29 +36,11 @@ void DriverProtocol::encode(const Driver::Cameras& cameras, const NetworkPacket:
   });
   packet->setProperty("cameras", v_cameras);
 }
-namespace {
-class RemoteCamera : public Driver::Camera {
-public:
-  RemoteCamera(const QVariant &data, const NetworkDispatcher::ptr &dispatcher) : data{data.toMap()}, dispatcher{dispatcher} {}
-  Imager * imager(const ImageHandler::ptr & imageHandler) const override;
-  QString name() const override;
-private:
-  const QVariantMap data;
-  const NetworkDispatcher::ptr dispatcher;
-};
-}
 
-Imager *RemoteCamera::imager(const ImageHandler::ptr & imageHandler) const {
-  return nullptr;
-}
-QString RemoteCamera::name() const {
-  return data["n"].toString();
-}
 
-void DriverProtocol::decode(Driver::Cameras& cameras, const NetworkPacket::ptr& packet, const NetworkDispatcher::ptr dispatcher)
+
+void DriverProtocol::decode(Driver::Cameras& cameras, const NetworkPacket::ptr& packet, const CameraFactory& factory)
 {
   auto v_cameras = packet->property("cameras").toList();
-  transform(begin(v_cameras), end(v_cameras), back_inserter(cameras), [&](const QVariant &v) { return make_shared<RemoteCamera>(v, dispatcher); });
+  transform(begin(v_cameras), end(v_cameras), back_inserter(cameras), [&](const QVariant &v) { return factory(v.toMap()["n"].toString(), v.toMap()["a"].toLongLong()); });
 }
-
-

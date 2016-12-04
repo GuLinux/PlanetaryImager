@@ -23,6 +23,7 @@
 #include "drivers/driver.h"
 #include "network/networkpacket.h"
 #include "network/networkdispatcher.h"
+#include <QList>
 class DriverProtocol {
 public:
   static const QString CameraList;
@@ -30,7 +31,8 @@ public:
   static const QString CamerasParameter;
   static const QString ConnectCamera;
   static void encode(const Driver::Cameras &cameras, const NetworkPacket::ptr &packet);
-  static void decode(Driver::Cameras &cameras, const NetworkPacket::ptr &packet, const NetworkDispatcher::ptr dispatcher);
+  typedef std::function<Driver::Camera::ptr(const QString &, qlonglong)> CameraFactory;
+  static void decode(Driver::Cameras &cameras, const NetworkPacket::ptr &packet, const CameraFactory &factory);
 };
 
 #endif // DRIVERPROTOCOL_H

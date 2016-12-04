@@ -28,6 +28,22 @@ DPTR_IMPL(RemoteDriver) {
   bool cameras_processed;
 };
 
+class RemoteCamera : public Driver::Camera {
+public:
+  RemoteCamera(const QString &name, qlonglong address, const NetworkDispatcher::ptr &dispatcher) : _name{name}, _address{address}, _dispatcher{dispatcher} {}
+  Imager * imager(const ImageHandler::ptr & imageHandler) const override;
+  QString name() const override { return _name; }
+private:
+  const QString _name;
+  const qlonglong _address;
+  const NetworkDispatcher::ptr _dispatcher;
+};
+
+Imager * RemoteCamera::imager(const ImageHandler::ptr& imageHandler) const
+{
+}
+
+
 RemoteDriver::RemoteDriver(const NetworkDispatcher::ptr &dispatcher) : dptr(dispatcher)
 {
   dispatcher->attach(this);
@@ -57,6 +73,6 @@ void RemoteDriver::handle(const NetworkPacket::ptr& packet)
     return;
   qDebug() << "Processing cameras: " << packet;
   d->cameras.clear();
-  DriverProtocol::decode(d->cameras, packet, d->dispatcher);
+  DriverProtocol::decode(d->cameras, packet, [&](const QString &name, qlonglong address) { return make_shared<RemoteCamera>(name, address, d->dispatcher); });
   d->cameras_processed = true;
 }
