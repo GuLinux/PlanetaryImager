@@ -72,26 +72,57 @@ signals:
 };
 
 struct Imager::Control {
+  enum Type { Number, Combo, Bool };
   struct Choice {
     QString label;
-    double value;
+    QVariant value;
   };
-  enum Type { Number, Combo, Bool };
-
-  int64_t id;
+  struct Range {
+    QVariant min, max, step;
+  };
+  
+  qlonglong id;
   QString name;
-  double min, max, step, value, default_value;
-  Type type;
+  Type type = Number;
+  QVariant value, default_value;
+  Range range;
   QList<Choice> choices;
-  int decimals = 2;
+  qint16 decimals = 2;
   bool is_duration = false;
-  std::chrono::duration<double> duration_unit;
   bool supports_auto = false;
   bool value_auto = false;
   bool readonly = false;
+  std::chrono::duration<double> duration_unit;
+  
+  Control &set_id(const qlonglong &id) { this->id = id; return *this; }
+  Control &set_name(const QString &name) { this->name= name; return *this; }
+  Control &set_type(const Type &type) { this->type= type; return *this; }
+  template<typename T> Control &set_value(const T &value) { this->value.setValue(value); return *this; }
+  template<typename T> Control &set_default_value(const T &value) { this->default_value.setValue(value); return *this; }
+  template<typename T> Control &set_range(const T &min, const T &max, const T &step) {
+    this->range.min.setValue(min);
+    this->range.max.setValue(max);
+    this->range.step.setValue(step);
+    return *this;
+  }
+  template<typename T> Control &add_choice(const QString &label, const T &value) {
+    Choice choice{label};
+    choice.value.setValue(value);
+    choices.push_back(choice);
+    return *this;
+  }
+  Control &set_decimals(const qint16 &decimals) { this->decimals = decimals; return *this; }
+  Control &set_is_duration(bool is_duration) { this->is_duration= is_duration; return *this; }
+  Control &set_supports_auto(bool supports_auto) { this->supports_auto= supports_auto; return *this; }
+  Control &set_value_auto(bool value_auto) { this->value_auto= value_auto; return *this; }
+  Control &set_readonly(bool readonly) { this->readonly= readonly; return *this; }
+  Control &set_duration_unit(double duration_unit) { this->duration_unit = std::chrono::duration<double>{duration_unit}; return *this; }
+  Control &set_duration_unit(std::chrono::duration<double> duration_unit) { this->duration_unit = duration_unit; return *this; }
+  
+  template<typename T> T get_value() const { return value.value<T>(); }
   
   bool valid() const;
-  inline std::chrono::duration<double> seconds() const { return duration_unit * value; }
+  inline std::chrono::duration<double> seconds() const { return duration_unit * value.toDouble(); }
   bool same_value(const Control &other) const;
   QVariantMap asMap() const;
   void import(const QVariantMap &data, bool full_import = false);

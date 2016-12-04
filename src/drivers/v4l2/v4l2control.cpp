@@ -42,10 +42,8 @@ V4L2Control::V4L2Control(uint32_t control_id, const V4L2Device::ptr& camera, con
   qDebug() << "Found v4l2 control: id=" << control_id << ", name=" << d->control.name << ", flags=" << v4l2control.flags << ", type=" << v4l2control.type << ", range=" << v4l2control.minimum << "-" << v4l2control.maximum << ", step=" << v4l2control.step << ", default value=" << v4l2control.default_value << ", readonly: " << d->control.readonly;
   
   d->control.id = v4l2control.id;
-  d->control.min = v4l2control.minimum;
-  d->control.max = v4l2control.maximum;
-  d->control.default_value = v4l2control.default_value;
-  d->control.step = v4l2control.step;
+  d->control.set_range(v4l2control.minimum, v4l2control.maximum, v4l2control.step);
+  d->control.set_default_value(v4l2control.default_value);
     
   if(v4l2control.flags & V4L2_CTRL_FLAG_DISABLED)
       throw V4L2Exception{ V4L2Exception::control_disabled, stringbuilder() << "Control " << v4l2control.name << " disabled", "V4L2Control()"};
@@ -68,7 +66,7 @@ V4L2Control::V4L2Control(uint32_t control_id, const V4L2Device::ptr& camera, con
             if (0 == camera->xioctl (VIDIOC_QUERYMENU, &menu)) {
                 value = QString::fromLocal8Bit(reinterpret_cast<const char*>(menu.name));
             }
-            d->control.choices.push_back({value, static_cast<double>(menu.index)});
+            d->control.add_choice(value, menu.index);
         }
     }
   for(auto fix: fixes)
@@ -87,8 +85,8 @@ Imager::Control V4L2Control::control() const
 
 void V4L2Control::set(const Imager::Control& control)
 {
-  v4l2_control ctrl{static_cast<uint32_t>(control.id), static_cast<int32_t>(control.value)};
-  d->camera->ioctl (VIDIOC_S_CTRL, &ctrl, "setting control %1-%2 value to %3"_q % control.id % control.name % control.value);
+  v4l2_control ctrl{static_cast<uint32_t>(control.id), control.get_value<int>()};
+  d->camera->ioctl (VIDIOC_S_CTRL, &ctrl, "setting control %1-%2 value to %3"_q % control.id % control.name % control.value.toInt());
 }
 
 void V4L2Control::Private::read()
@@ -96,7 +94,7 @@ void V4L2Control::Private::read()
   v4l2_control control;
   control.id = static_cast<uint32_t>(this->control.id);
   camera->ioctl(VIDIOC_G_CTRL, &control, "getting control value for control %1 (id=%2)"_q % this->control.name % control.id );
-  this->control.value = static_cast<double>(control.value);
+  this->control.set_value(control.value);
 }
 
 Imager::Control V4L2Control::update()

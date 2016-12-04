@@ -58,10 +58,10 @@ void DurationControlWidget::update(const Imager::Control &control)
   d->decimals = control.decimals;
   d->device_unit = control.duration_unit;
   
-  d->min = control.min * d->device_unit;
-  d->max = control.max * d->device_unit;
-  d->step = (control.step != 0 ? control.step : 0.1) * d->device_unit; // TODO: move this
-  d->value = control.value * d->device_unit;
+  d->min = control.range.min.toDouble() * d->device_unit;
+  d->max = control.range.max.toDouble() * d->device_unit;
+  d->step = (control.range.step.toDouble() != 0 ? control.range.step.toDouble() : 0.1) * d->device_unit; // TODO: move this
+  d->value = control.value.toDouble() * d->device_unit;
    
   int unit_index = 0;
   double display_value = d->value.count();
