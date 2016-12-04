@@ -19,21 +19,21 @@
 
 #ifndef DRIVERPROTOCOL_H
 #define DRIVERPROTOCOL_H
-#include <QString>
 #include "drivers/driver.h"
 #include "network/networkpacket.h"
 #include "network/networkdispatcher.h"
+#include "network/protocol/protocol.h"
 #include <QList>
-class DriverProtocol {
+class DriverProtocol : public NetworkProtocol {
 public:
-  static const QString CameraList;
-  static const QString CameraListReply;
-  static const QString CamerasParameter;
-  static const QString ConnectCamera;
-  static const QString CameraId;
-  static const QString ConnectCameraReply;
-  static const QString GetCameraName;
-  static const QString GetCameraNameReply;
+  ADD_PROTOCOL_NAME(CameraList);
+  ADD_PROTOCOL_NAME(CameraListReply);
+  ADD_PROTOCOL_NAME(CamerasParameter);
+  ADD_PROTOCOL_NAME(ConnectCamera);
+  ADD_PROTOCOL_NAME(CameraId);
+  ADD_PROTOCOL_NAME(ConnectCameraReply);
+  ADD_PROTOCOL_NAME(GetCameraName);
+  ADD_PROTOCOL_NAME(GetCameraNameReply);
   static void encode(const Driver::Cameras &cameras, const NetworkPacket::ptr &packet);
   typedef std::function<Driver::Camera::ptr(const QString &, qlonglong)> CameraFactory;
   static void decode(Driver::Cameras &cameras, const NetworkPacket::ptr &packet, const CameraFactory &factory);
