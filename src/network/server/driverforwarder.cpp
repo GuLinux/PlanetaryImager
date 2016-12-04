@@ -24,6 +24,7 @@ using namespace std;
 DPTR_IMPL(DriverForwarder) {
   Driver::ptr driver;
   Driver::Cameras cameras;
+  Imager *imager = nullptr;
 };
 
 DriverForwarder::DriverForwarder(const NetworkDispatcher::ptr &dispatcher, const Driver::ptr& driver) : NetworkReceiver{dispatcher}, dptr(driver)
@@ -31,6 +32,18 @@ DriverForwarder::DriverForwarder(const NetworkDispatcher::ptr &dispatcher, const
   register_handler(DriverProtocol::CameraList, [this, dispatcher](const NetworkPacket::ptr &p) {
       d->cameras = d->driver->cameras();
       dispatcher->send(DriverProtocol::sendCameraListReply(d->cameras));
+  });
+  register_handler(DriverProtocol::ConnectCamera, [this, dispatcher](const NetworkPacket::ptr &p) {
+    delete d->imager;
+    d->imager = nullptr;
+    auto address = reinterpret_cast<Driver::Camera *>(p->property(DriverProtocol::CameraId).toLongLong());
+    if(count_if(begin(d->cameras), end(d->cameras), [address](const Driver::Camera::ptr &p){ return p.get() == address; }) == 1) {
+      d->imager = address->imager({}); // TODO: add handlers
+    }
+    dispatcher->send(DriverProtocol::packetConnectCameraReply()); // TODO: add status
+  });
+  register_handler(DriverProtocol::GetCameraName, [this, dispatcher](const NetworkPacket::ptr &p) {
+   dispatcher->send(DriverProtocol::packetGetCameraNameReply() << DriverProtocol::propertyCameraName(d->imager->name()));
   });
 }
 

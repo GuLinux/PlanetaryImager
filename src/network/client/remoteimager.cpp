@@ -30,10 +30,10 @@ RemoteImager::RemoteImager(qlonglong id, const ImageHandler::ptr& image_handler,
 {
   register_handler(DriverProtocol::ConnectCameraReply, [](const NetworkPacket::ptr &) {});
   register_handler(DriverProtocol::GetCameraNameReply, [this](const NetworkPacket::ptr &packet) {
-    d->name = packet->property("name").toString();
+    d->name = packet->property(DriverProtocol::CameraName).toString();
   });
 
-  dispatcher->queue_send( DriverProtocol::packetConnectCamera() << NetworkPacket::Property{DriverProtocol::CameraId, id} );
+  dispatcher->queue_send( DriverProtocol::packetConnectCamera() << DriverProtocol::propertyCameraId(id) );
   wait_for_processed(DriverProtocol::ConnectCameraReply);
   dispatcher->queue_send(DriverProtocol::packetGetCameraName() );
   wait_for_processed(DriverProtocol::GetCameraNameReply);

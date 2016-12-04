@@ -28,10 +28,11 @@ public:
   ADD_PROTOCOL_PACKET_NAME(CameraListReply)
   ADD_PROTOCOL_PACKET_NAME(CamerasParameter)
   ADD_PROTOCOL_PACKET_NAME(ConnectCamera)
-  ADD_PROTOCOL_NAME(CameraId)
+  ADD_PROTOCOL_PROPERTY(CameraId)
   ADD_PROTOCOL_PACKET_NAME(ConnectCameraReply)
   ADD_PROTOCOL_PACKET_NAME(GetCameraName)
   ADD_PROTOCOL_PACKET_NAME(GetCameraNameReply)
+  ADD_PROTOCOL_PROPERTY(CameraName)
   static NetworkPacket::ptr sendCameraListReply(const Driver::Cameras &cameras);
   typedef std::function<Driver::Camera::ptr(const QString &, qlonglong)> CameraFactory;
   static void decode(Driver::Cameras &cameras, const NetworkPacket::ptr &packet, const CameraFactory &factory);
