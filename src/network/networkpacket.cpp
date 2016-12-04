@@ -18,6 +18,7 @@
  */
 
 #include "networkpacket.h"
+#include <QIODevice>
 #include <QDataStream>
 using namespace std;
 
@@ -39,14 +40,16 @@ NetworkPacket::~NetworkPacket()
 {
 }
 
-void NetworkPacket::sendTo(QDataStream &stream) const
+void NetworkPacket::sendTo(QIODevice *device) const
 {
-  stream << d->properties;
+  QDataStream s{device};
+  s << d->properties;
 }
 
-void NetworkPacket::receiveFrom(QDataStream &stream)
+void NetworkPacket::receiveFrom(QIODevice *device)
 {
-  stream >> d->properties;
+  QDataStream s{device};
+  s >> d->properties;
 }
 
 NetworkPacket * NetworkPacket::setProperty(const KeyType& property, const QVariant& value)

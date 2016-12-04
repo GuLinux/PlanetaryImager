@@ -24,9 +24,8 @@
 #include <QString>
 #include <QVariant>
 #include <QDebug>
-#include <QDataStream>
 
-class QDataStream;
+class QIODevice;
 class NetworkPacket
 {
 public:
@@ -40,8 +39,8 @@ public:
   NetworkPacket();
   NetworkPacket(const NameType &name);
   ~NetworkPacket();
-  void sendTo(QDataStream &stream) const;
-  void receiveFrom(QDataStream &stream);
+  void sendTo(QIODevice *device) const;
+  void receiveFrom(QIODevice *device);
   NetworkPacket *setName(const NameType &name);
   NameType name() const;
   NetworkPacket *setProperty(const KeyType &property, const QVariant &value);

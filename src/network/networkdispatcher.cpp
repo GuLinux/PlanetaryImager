@@ -19,7 +19,6 @@
 
 #include "networkdispatcher.h"
 #include <QHash>
-#include <QDataStream>
 #include <QHash>
 #include <QCoreApplication>
 #include "commons/utils.h"
@@ -28,11 +27,9 @@ using namespace std;
 
 DPTR_IMPL(NetworkDispatcher) {
   QSet<NetworkReceiver *> receivers;
-  QDataStream dataStream;
   QTcpSocket *socket = nullptr;
   void readyRead();
 };
-
 
 
 DPTR_IMPL(NetworkReceiver) {
@@ -113,13 +110,12 @@ void NetworkDispatcher::setSocket(QTcpSocket* socket)
 {
   delete d->socket;
   d->socket = socket;
-  d->dataStream.setDevice(socket);
   connect(socket, &QTcpSocket::readyRead, bind(&Private::readyRead, d.get()));
 }
 
 void NetworkDispatcher::send(const NetworkPacket::ptr &packet) {
   qDebug() << "Sending tcp packet: " << packet;
-  packet->sendTo(d->dataStream);
+  packet->sendTo(d->socket);
 }
 
 void NetworkDispatcher::queue_send(const NetworkPacket::ptr& packet)
@@ -131,9 +127,8 @@ void NetworkDispatcher::queue_send(const NetworkPacket::ptr& packet)
 void NetworkDispatcher::Private::readyRead()
 {
   auto packet = make_shared<NetworkPacket>();
-  packet->receiveFrom(dataStream);
+  packet->receiveFrom(socket);
 
-  qDebug() << "received packet: " << packet << "status: " << dataStream.status();
   for(auto receiver: receivers)
     receiver->handle(packet);
 }
