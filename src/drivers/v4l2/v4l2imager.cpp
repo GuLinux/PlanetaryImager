@@ -143,12 +143,12 @@ Imager::Controls V4L2Imager::controls() const
     transform(begin(d->controls), end(d->controls), back_inserter(_settings), [](const V4L2Control::ptr &c) { return c->control(); } );
     auto current_resolution = d->v4l2formats->current_resolution();
     
-    Control resolutions_setting{RESOLUTIONS_CONTROL_ID, "Resolution", 0, d->resolutions.size()-1., 1, 0, 0, Control::Combo};
+    Control resolutions_setting{RESOLUTIONS_CONTROL_ID, "Resolution", Control::Combo};
     int index = 0;
     for(auto resolution: d->resolutions) {
-      resolutions_setting.choices.push_back({"%1 %2x%3"_q % resolution->format().name() % resolution->size().width() % resolution->size().height(), static_cast<double>(index)});
+      resolutions_setting.add_choice("%1 %2x%3"_q % resolution->format().name() % resolution->size().width() % resolution->size().height(), index);
       if(resolution == current_resolution)
-        resolutions_setting.value = static_cast<double>(index);
+        resolutions_setting.set_value(index);
       index++;
     }
     _settings.push_back(resolutions_setting);
@@ -165,7 +165,7 @@ void V4L2Imager::setControl(const Control &setting)
   if(setting.id == RESOLUTIONS_CONTROL_ID) {
     restart([=]{
       try {
-        d->resolutions[setting.value]->set();
+        d->resolutions[setting.get_value<int>()]->set();
       } catch(const V4L2Exception &e) {
         qWarning() << "Unable to set resolution: " << e.what();
       }

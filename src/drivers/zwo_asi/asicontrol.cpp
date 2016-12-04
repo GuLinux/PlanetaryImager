@@ -70,16 +70,12 @@ ASIControl &ASIControl::set(double new_value, bool write_is_auto)
 
 ASIControl::operator Imager::Control() const
 {
-  Imager::Control control = {
-    static_cast<int64_t>(caps.ControlType),
-    caps.Description,
-    static_cast<double>(caps.MinValue),
-    static_cast<double>(caps.MaxValue),
-    1.0,
-    static_cast<double>(value),
-    static_cast<double>(caps.DefaultValue),
-  };
-  control.decimals = 0;
+  auto control = Imager::Control{ static_cast<qlonglong>(caps.ControlType), caps.Description }
+      .set_range(caps.MinValue, caps.MaxValue, 1l)
+      .set_value(value)
+      .set_default_value(caps.DefaultValue)
+      .set_decimals(0)
+      ;
 
   static std::set<ASI_CONTROL_TYPE> boolean_caps {ASI_HIGH_SPEED_MODE, ASI_HARDWARE_BIN};
   if(boolean_caps.count(caps.ControlType))

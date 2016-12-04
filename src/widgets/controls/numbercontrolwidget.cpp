@@ -34,10 +34,10 @@ NumberControlWidget::~NumberControlWidget()
 void NumberControlWidget::update(const Imager::Control& setting)
 {
   d->edit->setDecimals(setting.decimals);
-  d->edit->setMinimum(setting.min);
-  d->edit->setMaximum(setting.max);
-  d->edit->setSingleStep(setting.step != 0 ? setting.step : 0.1);
-  d->edit->setValue(setting.value);
+  d->edit->setMinimum(setting.range.min.toDouble()); // TODO: depending on type?
+  d->edit->setMaximum(setting.range.max.toDouble());
+  d->edit->setSingleStep(setting.range.step.toDouble() != 0 ? setting.range.step.toDouble() : 0.1);
+  d->edit->setValue(setting.value.toDouble());
 }
 
 double NumberControlWidget::value() const

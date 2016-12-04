@@ -46,7 +46,7 @@ const int64_t ImgTypeControlID = 10000;
 const int64_t BinControlID = 10001;
 }
 
-
+Q_DECLARE_METATYPE(ASI_IMG_TYPE)
 
 DPTR_IMPL(ZWO_ASI_Imager) {
     ASI_CAMERA_INFO info;
@@ -69,7 +69,7 @@ void ZWO_ASI_Imager::Private::read_temperature() {
   qDebug() << "Refreshing ASI_TEMPERATURE if found..";
   if(temperature_control)
     q->push_job_on_thread([=]{
-      emit q->temperature(temperature_control->reload().control().value);
+      emit q->temperature(temperature_control->reload().control().value.toDouble());
     });
 }
 
@@ -149,25 +149,22 @@ Imager::Controls ZWO_ASI_Imager::controls() const
         {ASI_IMG_RAW16, "RAW 16bit"},
         {ASI_IMG_Y8, "Y8 (Bayer)"},
     };
-    Imager::Control imageFormat {ImgTypeControlID, "Image Format", 0., 0., 1., static_cast<double>(d->worker->format()), 0., Control::Combo};
+    auto imageFormat = Control{ImgTypeControlID, "Image Format", Control::Combo}.set_value(d->worker->format());
     int i = 0;
     while(d->info.SupportedVideoFormat[i] != ASI_IMG_END && i < 8) {
         auto format = d->info.SupportedVideoFormat[i];
         qDebug() << "supported format: " << format << ": " << format_names[format];
-        imageFormat.choices.push_back( {format_names[format], static_cast<double>(format)});
+        imageFormat.add_choice(format_names[format], format);
         ++i;
     }
-    imageFormat.max = i-1;
-
     controls.push_front(imageFormat);
 
-    Imager::Control bin {BinControlID, "Bin", 0., 0., 1., static_cast<double>(d->worker->bin()), 1., Control::Combo};
+    auto bin = Control{BinControlID, "Bin", Control::Combo}.set_value(d->worker->bin());
     i = 0;
     while(d->info.SupportedBins[i] != 0) {
         auto bin_value = d->info.SupportedBins[i++];
-        bin.choices.push_back( {"%1x%1"_q % static_cast<double>(bin_value), static_cast<double>(bin_value) } );
+        bin.add_choice("%1x%1"_q % bin_value, bin_value);
     }
-    bin.max = i-1;
     controls.push_front(bin);
     return controls;
 }
@@ -177,12 +174,12 @@ void ZWO_ASI_Imager::setControl(const Control& control)
 {
   LOG_F_SCOPE
   if(control.id == ImgTypeControlID) {
-    d->restart_worker(d->worker->bin(), d->worker->roi(), static_cast<ASI_IMG_TYPE>(control.value));
+    d->restart_worker(d->worker->bin(), d->worker->roi(), control.get_value<ASI_IMG_TYPE>());
     emit changed(control);
     return;
   }
   if(control.id == BinControlID) {
-    auto bin = static_cast<int>(control.value);
+    auto bin =control.get_value<int>();
     d->restart_worker(bin, d->maxROI(bin), d->worker->format());
     emit changed(control);
     return;
@@ -193,7 +190,7 @@ void ZWO_ASI_Imager::setControl(const Control& control)
     auto camera_control = *camera_control_it;
     qDebug() << "Changing control " << camera_control->control();
     wait_for(push_job_on_thread([=]{
-      camera_control->set(control.value, control.value_auto);
+      camera_control->set(control.get_value<qlonglong>(), control.value_auto);
       qDebug() << "Changed control " << camera_control->control();
       if(control.id == ASI_EXPOSURE) {
         set_exposure(camera_control->control() );

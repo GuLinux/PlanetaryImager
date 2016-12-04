@@ -24,6 +24,12 @@
 using namespace std;
 using namespace std::placeholders;
 
+QDebug operator<<(QDebug dbg, const Imager::Control::Range& r)
+{
+  dbg.nospace() << "min=" << r.min << ", max=" << r.max << ", step=" << r.step;
+  return dbg;
+}
+
 QDebug operator<<(QDebug dbg, const Imager::Control& setting)
 {
   static QMap<Imager::Control::Type, QString> types_map {
@@ -31,7 +37,7 @@ QDebug operator<<(QDebug dbg, const Imager::Control& setting)
     {Imager::Control::Combo, "Combo"},
     {Imager::Control::Bool, "Bool"},
   };
-  dbg.nospace() << "{ id:" << setting.id << ", name: " << setting.name << ", min: " << setting.min << ", max: " << setting.max << ", step: " << setting.step << ", value: " << setting.value 
+  dbg.nospace() << "{ id:" << setting.id << ", name: " << setting.name << ", range: " << setting.range << ", value: " << setting.value 
   << ", type: " << types_map[setting.type] << ", choices: " << setting.choices << ", default: " << setting.default_value << " }";
   return dbg.space();
 }
@@ -54,7 +60,7 @@ bool Imager::Control::same_value(const Imager::Control& other) const
       qDebug() << "comparing auto values only";
       return other.value_auto == value_auto;
     }
-    return qFuzzyCompare(value, other.value);
+    return value == other.value;
 }
 
 QVariantMap Imager::Control::asMap() const
@@ -68,7 +74,7 @@ QVariantMap Imager::Control::asMap() const
       {Imager::Control::Bool, "bool"}
     };
     data["type"] = types[type];
-    data["id"] =static_cast<qlonglong>(id);
+    data["id"] = id;
     if(type == Imager::Control::Combo) {
       QVariantMap choices;
       for(auto choice: this->choices)
@@ -79,7 +85,7 @@ QVariantMap Imager::Control::asMap() const
       data["type"] = "duration";
       QList<QPair<QString, double>> units { {"seconds", 1}, {"milliseconds", 1000}, {"microseconds", 1000000} };
       for(auto unit: units) {
-        data["value_%1"_q % unit.first] = value * duration_unit.count() * unit.second;
+        data["value_%1"_q % unit.first] = value.toDouble() * duration_unit.count() * unit.second;
       }
     }
     data["auto"] = value_auto;
@@ -89,7 +95,7 @@ QVariantMap Imager::Control::asMap() const
 
 void Imager::Control::import(const QVariantMap& data, bool full_import)
 {
-  value = data["value"].toDouble();
+  value = data["value"];
   if(!full_import)
     return;
   name = data["name"].toString();
