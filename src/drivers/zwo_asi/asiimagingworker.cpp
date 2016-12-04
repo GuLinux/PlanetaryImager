@@ -18,6 +18,7 @@
 
 #include "asiimagingworker.h"
 #include "zwoexception.h"
+#include <atomic>
 using namespace std;
 
 DPTR_IMPL(ASIImagingWorker) {
