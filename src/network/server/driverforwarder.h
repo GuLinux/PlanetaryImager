@@ -27,7 +27,7 @@
 class DriverForwarder : public NetworkReceiver
 {
 public:
-    DriverForwarder(const NetworkDispatcher::ptr &dispatcher, const Driver::ptr &driver);
+    DriverForwarder(const NetworkDispatcher::ptr &dispatcher, const Driver::ptr &driver, const ImageHandler::ptr &handler);
     ~DriverForwarder();
     typedef std::shared_ptr<DriverForwarder> ptr;
 private:

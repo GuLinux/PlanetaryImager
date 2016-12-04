@@ -22,6 +22,7 @@
 #include <QDataStream>
 #include <QHash>
 #include <QCoreApplication>
+#include "commons/utils.h"
 
 using namespace std;
 
@@ -75,6 +76,8 @@ void NetworkReceiver::register_handler(const NetworkPacket::NameType& name, cons
 
 void NetworkReceiver::handle(const NetworkPacket::ptr& packet)
 {
+  LOG_F_SCOPE
+  qDebug() << "Handling packet " << packet->name();
   auto handler = d->handlers[packet->name()];
   if(handler)
     handler(packet);
@@ -129,7 +132,8 @@ void NetworkDispatcher::Private::readyRead()
 {
   auto packet = make_shared<NetworkPacket>();
   packet->receiveFrom(dataStream);
-  qDebug() << "received packet: " << packet;
+
+  qDebug() << "received packet: " << packet << "status: " << dataStream.status();
   for(auto receiver: receivers)
     receiver->handle(packet);
 }

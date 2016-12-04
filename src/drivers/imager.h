@@ -77,6 +77,7 @@ struct Imager::Control {
     QString label;
     QVariant value;
   };
+  typedef QList<Choice> Choices;
   struct Range {
     QVariant min, max, step;
   };
@@ -86,7 +87,7 @@ struct Imager::Control {
   Type type = Number;
   QVariant value, default_value;
   Range range;
-  QList<Choice> choices;
+  Choices choices;
   qint16 decimals = 2;
   bool is_duration = false;
   bool supports_auto = false;
@@ -127,6 +128,8 @@ struct Imager::Control {
   QVariantMap asMap() const;
   void import(const QVariantMap &data, bool full_import = false);
 };
+
+Q_DECLARE_METATYPE(Imager::Control::Type)
 
 struct Imager::Properties {
     Properties &set_resolution_pixelsize(const QSize &resolution, double pixelwidth, double pixelheight);

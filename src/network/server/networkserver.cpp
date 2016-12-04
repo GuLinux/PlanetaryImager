@@ -26,13 +26,14 @@ using namespace std;
 
 DPTR_IMPL(NetworkServer) {
   Driver::ptr driver;
+  ImageHandler::ptr handler;
   NetworkDispatcher::ptr dispatcher;
   QTcpServer server;
   DriverForwarder::ptr forwarder;
   void new_connection();
 };
 
-NetworkServer::NetworkServer(const Driver::ptr &driver, QObject* parent) : QObject{parent}, dptr(driver, make_shared<NetworkDispatcher>())
+NetworkServer::NetworkServer(const Driver::ptr &driver, const ImageHandler::ptr &handler, QObject* parent) : QObject{parent}, dptr(driver, handler, make_shared<NetworkDispatcher>())
 {
   d->server.setMaxPendingConnections(1);
   connect(&d->server, &QTcpServer::newConnection, bind(&Private::new_connection, d.get()));
@@ -51,7 +52,7 @@ void NetworkServer::listen(const QString& address, int port)
 void NetworkServer::Private::new_connection()
 {
   dispatcher->setSocket(server.nextPendingConnection());
-  forwarder = make_shared<DriverForwarder>(dispatcher, driver);
+  forwarder = make_shared<DriverForwarder>(dispatcher, driver, handler);
 }
 
 

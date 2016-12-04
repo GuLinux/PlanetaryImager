@@ -27,7 +27,7 @@ class NetworkServer : public QObject
 {
     Q_OBJECT
 public:
-  NetworkServer(const Driver::ptr &driver, QObject *parent = nullptr);
+  NetworkServer(const Driver::ptr &driver, const ImageHandler::ptr &handler, QObject *parent = nullptr);
   ~NetworkServer();
 public slots:
   void listen(const QString &address, int port);

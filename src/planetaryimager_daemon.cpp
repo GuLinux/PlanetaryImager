@@ -24,6 +24,7 @@
 #include "commons/crashhandler.h"
 #include "commons/loghandler.h"
 #include "network/server/networkserver.h"
+#include "image_handlers/all_handlers.h"
 using namespace std;
 
 
@@ -37,7 +38,7 @@ int main(int argc, char** argv)
     app.setApplicationName("PlanetaryImager");
     app.setApplicationVersion(PLANETARY_IMAGER_VERSION);
     auto driver = make_shared<SupportedDrivers>();
-    auto server = make_shared<NetworkServer>(driver);
+    auto server = make_shared<NetworkServer>(driver, ImageHandler::ptr{new ImageHandlers{}} ); // TODO: add handlers
     QMetaObject::invokeMethod(server.get(), "listen", Q_ARG(QString, "0.0.0.0"), Q_ARG(int, 9999));
     
     QCommandLineParser parser;

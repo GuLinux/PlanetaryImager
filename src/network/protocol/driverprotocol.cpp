@@ -94,10 +94,59 @@ void DriverProtocol::decode(Imager::Properties& properties, const NetworkPacket:
 
 NetworkPacket::ptr DriverProtocol::sendGetControlsReply(const Imager::Controls& controls)
 {
+  QVariantList v;
+  transform(begin(controls), end(controls), back_inserter(v), [](const Imager::Control &c){
+    QVariantList choices;
+    transform(begin(c.choices), end(c.choices), back_inserter(choices), [](const Imager::Control::Choice c){
+      return QVariantMap{ {"label", c.label}, {"val", c.value} };
+    });
+    return QVariantMap {
+      {"id",  c.id},
+      {"name",  c.name},
+      {"val",  c.value},
+      {"def",  c.default_value},
+      {"type",  c.type},
+      {"min",  c.range.min},
+      {"max",  c.range.max},
+      {"step",  c.range.step},
+      {"choices", choices},
+      {"decimals", c.decimals},
+      {"is_duration", c.is_duration},
+      {"has_auto", c.supports_auto},
+      {"is_auto", c.value_auto},
+      {"ro", c.readonly},
+      {"duration_unit", c.duration_unit.count()},
+    };
+  });
+  return packetGetControlsReply() << NetworkPacket::Property{"controls", v};
 }
 
 
 void DriverProtocol::decode(Imager::Controls& controls, const NetworkPacket::ptr& packet)
 {
   controls.clear();
+  for(auto c: packet->property("controls").toList()) {
+    QVariantMap ctrl = c.toMap();
+    Imager::Control::Choices choices;
+    for(auto c: ctrl["choices"].toList()) {
+      QVariantMap choice = c.toMap();
+      choices.push_back({choice["label"].toString(), choice["val"]});
+    }
+    
+    controls.push_back( {
+      ctrl["id"].toLongLong(),
+      ctrl["name"].toString(),
+      ctrl["type"].value<Imager::Control::Type>(),
+      ctrl["val"],
+      ctrl["def"],
+      { ctrl["min"], ctrl["max"], ctrl["step"] },
+      choices,
+      static_cast<qint16>(ctrl["decimals"].toInt()),
+      ctrl["is_duration"].toBool(),
+      ctrl["has_auto"].toBool(),
+      ctrl["is_auto"].toBool(),
+      ctrl["ro"].toBool(),
+      std::chrono::duration<double>{ctrl["duration_unit"].toDouble()},
+    });
+  }
 }

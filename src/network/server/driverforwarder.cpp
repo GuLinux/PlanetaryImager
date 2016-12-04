@@ -26,6 +26,7 @@ using namespace std::placeholders;
 #define DECLARE_HANDLER(name) void name(const NetworkPacket::ptr &p);
 DPTR_IMPL(DriverForwarder) {
   Driver::ptr driver;
+  ImageHandler::ptr handler;
   DriverForwarder *q;
   Driver::Cameras cameras;
   Imager *imager = nullptr;
@@ -35,11 +36,12 @@ DPTR_IMPL(DriverForwarder) {
   DECLARE_HANDLER(GetProperties)
   DECLARE_HANDLER(StartLive)
   DECLARE_HANDLER(ClearROI)
+  DECLARE_HANDLER(GetControls)
 };
 
 #define REGISTER_HANDLER(protocol, name) register_handler(protocol::name, bind(&Private::name, d.get(), _1));
 
-DriverForwarder::DriverForwarder(const NetworkDispatcher::ptr &dispatcher, const Driver::ptr& driver) : NetworkReceiver{dispatcher}, dptr(driver, this)
+DriverForwarder::DriverForwarder(const NetworkDispatcher::ptr &dispatcher, const Driver::ptr& driver, const ImageHandler::ptr &handler) : NetworkReceiver{dispatcher}, dptr(driver, handler, this)
 {
   REGISTER_HANDLER(DriverProtocol, CameraList)
   REGISTER_HANDLER(DriverProtocol, ConnectCamera)
@@ -47,6 +49,7 @@ DriverForwarder::DriverForwarder(const NetworkDispatcher::ptr &dispatcher, const
   REGISTER_HANDLER(DriverProtocol, GetProperties)
   REGISTER_HANDLER(DriverProtocol, StartLive)
   REGISTER_HANDLER(DriverProtocol, ClearROI)
+  REGISTER_HANDLER(DriverProtocol, GetControls)
 }
 
 DriverForwarder::~DriverForwarder()
@@ -65,7 +68,7 @@ void DriverForwarder::Private::ConnectCamera(const NetworkPacket::ptr& p)
     imager = nullptr;
     auto address = reinterpret_cast<Driver::Camera *>(p->property(DriverProtocol::CameraId).toLongLong());
     if(count_if(begin(cameras), end(cameras), [address](const Driver::Camera::ptr &p){ return p.get() == address; }) == 1) {
-      imager = address->imager({}); // TODO: add handlers
+      imager = address->imager(handler);
     }
     q->dispatcher()->send(DriverProtocol::packetConnectCameraReply()); // TODO: add status
 }
@@ -90,4 +93,9 @@ void DriverForwarder::Private::GetProperties(const NetworkPacket::ptr& p)
 void DriverForwarder::Private::StartLive(const NetworkPacket::ptr& p)
 {
   imager->startLive();
+}
+
+void DriverForwarder::Private::GetControls(const NetworkPacket::ptr& p)
+{
+  q->dispatcher()->send(DriverProtocol::sendGetControlsReply(imager->controls()));
 }
