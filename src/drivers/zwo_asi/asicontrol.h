@@ -35,7 +35,7 @@ struct ASIControl {
   Imager::Control control() const;
   operator Imager::Control() const;
   ASIControl &reload();
-  ASIControl &set(double new_value, bool is_auto);
+  ASIControl &set(qlonglong new_value, bool is_auto);
 };
 
 #endif // ASICONTROL_H

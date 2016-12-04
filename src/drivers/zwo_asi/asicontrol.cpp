@@ -55,14 +55,13 @@ ASIControl &ASIControl::reload()
   return *this;
 }
 
-ASIControl &ASIControl::set(double new_value, bool write_is_auto)
+ASIControl &ASIControl::set(qlonglong new_value, bool write_is_auto)
 {
-  long new_value_l = static_cast<long>(new_value);
   if(write_is_auto) {
-    new_value_l = reload().value;
+    new_value = reload().value;
   }
-  qDebug() << "Setting control " << caps.Name << "(" << caps.ControlType << ") to value " << new_value_l << ", auto=" << write_is_auto;
-  ASI_CHECK << ASISetControlValue(camera_id, caps.ControlType, new_value_l, bool2asi(write_is_auto) )
+  qDebug() << "Setting control " << caps.Name << "(" << caps.ControlType << ") to value " << new_value << ", auto=" << write_is_auto;
+  ASI_CHECK << ASISetControlValue(camera_id, caps.ControlType, new_value, bool2asi(write_is_auto) )
             << (stringbuilder() << "Set new control value: " << caps.Name << " to " << new_value << " (auto: " << write_is_auto << ")");
   reload();
   return *this;
