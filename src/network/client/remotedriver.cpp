@@ -24,7 +24,6 @@
 using namespace std;
 
 DPTR_IMPL(RemoteDriver) {
-  NetworkDispatcher::ptr dispatcher;
   Cameras cameras;
 };
 
@@ -45,31 +44,24 @@ Imager * RemoteCamera::imager(const ImageHandler::ptr& imageHandler) const
 }
 
 
-RemoteDriver::RemoteDriver(const NetworkDispatcher::ptr &dispatcher) : dptr(dispatcher)
+RemoteDriver::RemoteDriver(const NetworkDispatcher::ptr &dispatcher) : NetworkReceiver{dispatcher}, dptr()
 {
-  dispatcher->attach(this);
+  register_handler(DriverProtocol::CameraListReply, [this](const NetworkPacket::ptr &packet){
+    qDebug() << "Processing cameras: " << packet;
+    d->cameras.clear();
+    DriverProtocol::decode(d->cameras, packet, [&](const QString &name, qlonglong address) { return make_shared<RemoteCamera>(name, address, this->dispatcher() ); });
+  });
 }
 
 RemoteDriver::~RemoteDriver()
 {
-  d->dispatcher->detach(this);
 }
 
 
 Driver::Cameras RemoteDriver::cameras() const
 {
-  d->dispatcher->queue_send(DriverProtocol::packetCameraList() );
+  dispatcher()->queue_send(DriverProtocol::packetCameraList() );
   wait_for_processed(DriverProtocol::CameraListReply);
   return d->cameras;;
 }
 
-
-void RemoteDriver::handle(const NetworkPacket::ptr& packet)
-{
-  if(packet->name() != DriverProtocol::CameraListReply)
-    return;
-  qDebug() << "Processing cameras: " << packet;
-  d->cameras.clear();
-  DriverProtocol::decode(d->cameras, packet, [&](const QString &name, qlonglong address) { return make_shared<RemoteCamera>(name, address, d->dispatcher); });
-  set_processed(DriverProtocol::CameraListReply);
-}

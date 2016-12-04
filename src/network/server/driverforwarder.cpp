@@ -22,31 +22,19 @@
 using namespace std;
 
 DPTR_IMPL(DriverForwarder) {
-  NetworkDispatcher::ptr dispatcher;
   Driver::ptr driver;
   Driver::Cameras cameras;
 };
 
-DriverForwarder::DriverForwarder(const NetworkDispatcher::ptr &dispatcher, const Driver::ptr& driver) : dptr(dispatcher, driver)
+DriverForwarder::DriverForwarder(const NetworkDispatcher::ptr &dispatcher, const Driver::ptr& driver) : NetworkReceiver{dispatcher}, dptr(driver)
 {
-  dispatcher->attach(this);
+  register_handler(DriverProtocol::CameraList, [this, dispatcher](const NetworkPacket::ptr &p) {
+      d->cameras = d->driver->cameras();
+      dispatcher->send(DriverProtocol::sendCameraListReply(d->cameras));
+  });
 }
 
 DriverForwarder::~DriverForwarder()
 {
-  d->dispatcher->detach(this);
 }
 
-
-void DriverForwarder::handle(const NetworkPacket::ptr& packet)
-{
-  if(packet->name() != DriverProtocol::CameraList)
-    return;
-  d->cameras = d->driver->cameras();
-  auto reply = make_shared<NetworkPacket>();
-  reply->setName(DriverProtocol::CameraListReply);
-  DriverProtocol::encode(d->cameras, reply);
-
-  d->dispatcher->send(reply);
-  qDebug() << "Got packet: " << packet;
-}

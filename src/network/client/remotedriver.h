@@ -31,7 +31,6 @@ public:
   RemoteDriver(const NetworkDispatcher::ptr &dispatcher);
   ~RemoteDriver();
   Cameras cameras() const override;
-  void handle(const NetworkPacket::ptr &packet) override;
 private:
   DPTR
 };

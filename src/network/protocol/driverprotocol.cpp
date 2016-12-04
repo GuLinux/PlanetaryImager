@@ -30,7 +30,7 @@ PROTOCOL_NAME_VALUE(Driver, GetCameraName);
 PROTOCOL_NAME_VALUE(Driver, GetCameraNameReply);
 
 
-void DriverProtocol::encode(const Driver::Cameras& cameras, const NetworkPacket::ptr& packet)
+NetworkPacket::ptr DriverProtocol::sendCameraListReply(const Driver::Cameras& cameras)
 {
   QVariantList v_cameras;
   transform(begin(cameras), end(cameras), back_inserter(v_cameras), [](const Driver::Camera::ptr &c){
@@ -39,7 +39,7 @@ void DriverProtocol::encode(const Driver::Cameras& cameras, const NetworkPacket:
     p["a"] = reinterpret_cast<long long>(c.get());
     return p;
   });
-  packet->setProperty("cameras", v_cameras);
+  return packetCameraListReply() << NetworkPacket::Property{"cameras", v_cameras};
 }
 
 

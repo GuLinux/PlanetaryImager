@@ -30,7 +30,6 @@ public:
     DriverForwarder(const NetworkDispatcher::ptr &dispatcher, const Driver::ptr &driver);
     ~DriverForwarder();
     typedef std::shared_ptr<DriverForwarder> ptr;
-    void handle(const NetworkPacket::ptr &packet) override;
 private:
   DPTR
 };

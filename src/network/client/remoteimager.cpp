@@ -23,27 +23,24 @@ using namespace std;
 
 DPTR_IMPL(RemoteImager) {
   const ImageHandler::ptr image_handler;
-  const NetworkDispatcher::ptr dispatcher;
   QString name;
 };
 
-RemoteImager::RemoteImager(qlonglong id, const ImageHandler::ptr& image_handler, const NetworkDispatcher::ptr &dispatcher) : Imager{image_handler}, dptr(image_handler, dispatcher)
+RemoteImager::RemoteImager(qlonglong id, const ImageHandler::ptr& image_handler, const NetworkDispatcher::ptr &dispatcher) : Imager{image_handler}, NetworkReceiver{dispatcher}, dptr(image_handler)
 {
-  dispatcher->attach(this);
-  auto packet = make_shared<NetworkPacket>();
-  packet->setName(DriverProtocol::ConnectCamera);
-  packet->setProperty(DriverProtocol::CameraId, id);
-  dispatcher->send(packet);
+  register_handler(DriverProtocol::ConnectCameraReply, [](const NetworkPacket::ptr &) {});
+  register_handler(DriverProtocol::GetCameraNameReply, [this](const NetworkPacket::ptr &packet) {
+    d->name = packet->property("name").toString();
+  });
+
+  dispatcher->queue_send( DriverProtocol::packetConnectCamera() << NetworkPacket::Property{DriverProtocol::CameraId, id} );
   wait_for_processed(DriverProtocol::ConnectCameraReply);
-  packet = make_shared<NetworkPacket>();
-  packet->setName(DriverProtocol::GetCameraName);
-  dispatcher->send(packet);
+  dispatcher->queue_send(DriverProtocol::packetGetCameraName() );
   wait_for_processed(DriverProtocol::GetCameraNameReply);
 }
 
 RemoteImager::~RemoteImager()
 {
-  d->dispatcher->detach(this);
 }
 
 
@@ -76,19 +73,6 @@ void RemoteImager::setControl(const Imager::Control& control)
 
 void RemoteImager::setROI(const QRect&)
 {
-}
-
-void RemoteImager::handle(const NetworkPacket::ptr& packet)
-{
-  auto name = packet->name();
-  if(name == DriverProtocol::ConnectCameraReply) {
-    set_processed(DriverProtocol::ConnectCameraReply);
-  }
-  if(name == DriverProtocol::GetCameraNameReply) {
-    d->name = packet->property("name").toString();
-    set_processed(DriverProtocol::GetCameraNameReply);
-  }
-  
 }
 
 

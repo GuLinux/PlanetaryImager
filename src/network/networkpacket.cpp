@@ -70,9 +70,9 @@ NetworkPacket *NetworkPacket::setName(const NameType& name)
   return setProperty("name", name);
 }
 
-NetworkPacket::ptr operator<<(NetworkPacket::ptr packet, const std::pair<NetworkPacket::KeyType, QVariant>& property)
+NetworkPacket::ptr operator<<(NetworkPacket::ptr packet, const NetworkPacket::Property& property)
 {
-  packet->setProperty(property.first, property.second);
+  packet->setProperty(property.key, property.value);
   return packet;
 }
 

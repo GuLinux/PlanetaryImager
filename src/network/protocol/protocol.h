@@ -29,7 +29,8 @@ public:
   static NetworkPacket::ptr packet(const NetworkPacket::NameType &name);
 };
 
-#define ADD_PROTOCOL_NAME(name) static const NetworkPacket::NameType name; \
+#define ADD_PROTOCOL_NAME(name) static const NetworkPacket::NameType name;
+#define ADD_PROTOCOL_PACKET_NAME(name) ADD_PROTOCOL_NAME(name) \
 static NetworkPacket::ptr packet ## name() { return NetworkProtocol::packet(name); }
 #define PROTOCOL_NAME__CUSTOM_VALUE(Area, name, value) const NetworkPacket::NameType Area ## Protocol::name = value
 #define PROTOCOL_NAME_VALUE(Area, name) PROTOCOL_NAME__CUSTOM_VALUE(Area, name, #Area "_" #name)

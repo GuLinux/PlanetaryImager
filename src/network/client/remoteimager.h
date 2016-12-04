@@ -31,7 +31,6 @@ public:
   Controls controls() const override;  
   QString name() const override;
   Properties properties() const override;
-  void handle(const NetworkPacket::ptr & packet) override;
 public slots:
   void setROI(const QRect &) override;
   void clearROI() override;

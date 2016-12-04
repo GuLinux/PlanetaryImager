@@ -33,6 +33,10 @@ public:
   typedef std::shared_ptr<NetworkPacket> ptr;
   typedef QString NameType;;
   typedef QString KeyType;
+  struct Property {
+    KeyType key;
+    QVariant value;
+  };
   NetworkPacket();
   NetworkPacket(const NameType &name);
   ~NetworkPacket();
@@ -46,7 +50,7 @@ public:
 private:
   DPTR
 };
-NetworkPacket::ptr operator<<(NetworkPacket::ptr packet, const std::pair<NetworkPacket::KeyType, QVariant> &property);
+NetworkPacket::ptr operator<<(NetworkPacket::ptr packet, const NetworkPacket::Property &property);
 
 QDebug operator<<(QDebug dbg, const NetworkPacket &packet);
 inline QDebug operator<<(QDebug dbg, const NetworkPacket::ptr &packet) { return dbg << *packet; }

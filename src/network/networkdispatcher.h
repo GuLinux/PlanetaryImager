@@ -25,14 +25,18 @@
 #include "c++/dptr.h"
 #include "networkpacket.h"
 
+class NetworkDispatcher;
 class NetworkReceiver {
 public:
-  NetworkReceiver();
-  virtual void handle(const NetworkPacket::ptr &packet) = 0;
+  NetworkReceiver(const std::shared_ptr<NetworkDispatcher> &dispatcher);
+  void handle(const NetworkPacket::ptr &packet);
   virtual ~NetworkReceiver();
 protected:
+  typedef std::function<void(const NetworkPacket::ptr &)> HandlePacket;
+  void register_handler(const NetworkPacket::NameType &name, const HandlePacket handler);
   void wait_for_processed(const QString &name) const;
   void set_processed(const QString &name);
+  std::shared_ptr<NetworkDispatcher> dispatcher() const;
 private:
   DPTR
 };
