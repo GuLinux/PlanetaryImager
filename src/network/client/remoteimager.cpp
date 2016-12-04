@@ -18,18 +18,32 @@
  */
 
 #include "remoteimager.h"
-
+#include "network/protocol/driverprotocol.h"
 using namespace std;
 
 DPTR_IMPL(RemoteImager) {
+  const ImageHandler::ptr image_handler;
+  const NetworkDispatcher::ptr dispatcher;
+  QString name;
 };
 
-RemoteImager::RemoteImager(qlonglong id, const ImageHandler::ptr& image_handler, const NetworkDispatcher::ptr &dispatcher) : Imager{image_handler}, dptr()
+RemoteImager::RemoteImager(qlonglong id, const ImageHandler::ptr& image_handler, const NetworkDispatcher::ptr &dispatcher) : Imager{image_handler}, dptr(image_handler, dispatcher)
 {
+  dispatcher->attach(this);
+  auto packet = make_shared<NetworkPacket>();
+  packet->setName(DriverProtocol::ConnectCamera);
+  packet->setProperty(DriverProtocol::CameraId, id);
+  dispatcher->send(packet);
+  wait_for_processed(DriverProtocol::ConnectCameraReply);
+  packet = make_shared<NetworkPacket>();
+  packet->setName(DriverProtocol::GetCameraName);
+  dispatcher->send(packet);
+  wait_for_processed(DriverProtocol::GetCameraNameReply);
 }
 
 RemoteImager::~RemoteImager()
 {
+  d->dispatcher->detach(this);
 }
 
 
@@ -43,14 +57,17 @@ void RemoteImager::clearROI()
 
 Imager::Controls RemoteImager::controls() const
 {
+  return {};
 }
 
 QString RemoteImager::name() const
 {
+  return d->name;
 }
 
 Imager::Properties RemoteImager::properties() const
 {
+  return {};
 }
 
 void RemoteImager::setControl(const Imager::Control& control)
@@ -60,6 +77,20 @@ void RemoteImager::setControl(const Imager::Control& control)
 void RemoteImager::setROI(const QRect&)
 {
 }
+
+void RemoteImager::handle(const NetworkPacket::ptr& packet)
+{
+  auto name = packet->name();
+  if(name == DriverProtocol::ConnectCameraReply) {
+    set_processed(DriverProtocol::ConnectCameraReply);
+  }
+  if(name == DriverProtocol::GetCameraNameReply) {
+    d->name = packet->property("name").toString();
+    set_processed(DriverProtocol::GetCameraNameReply);
+  }
+  
+}
+
 
 
 #include "remoteimager.moc"

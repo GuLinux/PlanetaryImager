@@ -30,6 +30,10 @@ public:
   static const QString CameraListReply;
   static const QString CamerasParameter;
   static const QString ConnectCamera;
+  static const QString CameraId;
+  static const QString ConnectCameraReply;
+  static const QString GetCameraName;
+  static const QString GetCameraNameReply;
   static void encode(const Driver::Cameras &cameras, const NetworkPacket::ptr &packet);
   typedef std::function<Driver::Camera::ptr(const QString &, qlonglong)> CameraFactory;
   static void decode(Driver::Cameras &cameras, const NetworkPacket::ptr &packet, const CameraFactory &factory);

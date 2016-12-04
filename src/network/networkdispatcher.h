@@ -27,7 +27,14 @@
 
 class NetworkReceiver {
 public:
+  NetworkReceiver();
   virtual void handle(const NetworkPacket::ptr &packet) = 0;
+  virtual ~NetworkReceiver();
+protected:
+  void wait_for_processed(const QString &name) const;
+  void set_processed(const QString &name);
+private:
+  DPTR
 };
 
 class NetworkDispatcher : public QObject

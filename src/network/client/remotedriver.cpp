@@ -26,7 +26,6 @@ using namespace std;
 DPTR_IMPL(RemoteDriver) {
   NetworkDispatcher::ptr dispatcher;
   Cameras cameras;
-  bool cameras_processed;
 };
 
 class RemoteCamera : public Driver::Camera {
@@ -61,10 +60,8 @@ Driver::Cameras RemoteDriver::cameras() const
 {
   auto packet = make_shared<NetworkPacket>();
   packet->setName(DriverProtocol::CameraList);
-  d->cameras_processed = false;
   QMetaObject::invokeMethod(d->dispatcher.get(), "send", Q_ARG(NetworkPacket::ptr, packet));
-  while(! d->cameras_processed)
-    qApp->processEvents();
+  wait_for_processed(DriverProtocol::CameraListReply);
   return d->cameras;;
 }
 
@@ -76,5 +73,5 @@ void RemoteDriver::handle(const NetworkPacket::ptr& packet)
   qDebug() << "Processing cameras: " << packet;
   d->cameras.clear();
   DriverProtocol::decode(d->cameras, packet, [&](const QString &name, qlonglong address) { return make_shared<RemoteCamera>(name, address, d->dispatcher); });
-  d->cameras_processed = true;
+  set_processed(DriverProtocol::CameraListReply);
 }

@@ -20,6 +20,8 @@
 #include "networkdispatcher.h"
 #include <QHash>
 #include <QDataStream>
+#include <QHash>
+#include <QCoreApplication>
 
 using namespace std;
 
@@ -29,6 +31,33 @@ DPTR_IMPL(NetworkDispatcher) {
   QTcpSocket *socket = nullptr;
   void readyRead();
 };
+
+
+
+DPTR_IMPL(NetworkReceiver) {
+  QHash<QString, bool> packets_processed;
+};
+
+NetworkReceiver::NetworkReceiver() : dptr()
+{
+}
+
+NetworkReceiver::~NetworkReceiver()
+{
+}
+
+void NetworkReceiver::wait_for_processed(const QString& name) const
+{
+  d->packets_processed[name] = false;
+  while(! d->packets_processed[name])
+    qApp->processEvents();
+}
+
+void NetworkReceiver::set_processed(const QString& name)
+{
+  d->packets_processed[name] = true;
+}
+
 
 NetworkDispatcher::NetworkDispatcher(QObject* parent) : QObject{parent}, dptr()
 {

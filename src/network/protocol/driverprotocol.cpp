@@ -23,7 +23,11 @@ using namespace std;
 const QString DriverProtocol::CameraList = "Driver_CameraList";
 const QString DriverProtocol::CameraListReply = "Driver_CameraList_reply";
 const QString DriverProtocol::CamerasParameter = "Driver_CameraList_param";
-const QString DriverProtocol::ConnectCamera = "Driver_ConnectCamera";
+const QString DriverProtocol::ConnectCamera = "Camera_Connect";
+const QString DriverProtocol::CameraId = "CameraId";
+const QString DriverProtocol::ConnectCameraReply = "Camera_ConnectReply";
+const QString DriverProtocol::GetCameraName = "Camera_GetName";
+const QString DriverProtocol::GetCameraNameReply = "Camera_GetNameReply";
 
 void DriverProtocol::encode(const Driver::Cameras& cameras, const NetworkPacket::ptr& packet)
 {

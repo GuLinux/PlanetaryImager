@@ -22,7 +22,7 @@
 #include "drivers/imager.h"
 #include "c++/dptr.h"
 #include "network/networkdispatcher.h"
-class RemoteImager : public Imager
+class RemoteImager : public Imager, public NetworkReceiver
 {
 Q_OBJECT
 public:
@@ -31,6 +31,7 @@ public:
   Controls controls() const override;  
   QString name() const override;
   Properties properties() const override;
+  void handle(const NetworkPacket::ptr & packet) override;
 public slots:
   void setROI(const QRect &) override;
   void clearROI() override;
