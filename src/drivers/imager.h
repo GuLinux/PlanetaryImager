@@ -72,23 +72,26 @@ signals:
 };
 
 struct Imager::Control {
-  int64_t id;
-  QString name;
-  double min, max, step, value, default_value;
-  enum Type { Number, Combo, Bool } type;
   struct Choice {
     QString label;
     double value;
   };
+  enum Type { Number, Combo, Bool };
+
+  int64_t id;
+  QString name;
+  double min, max, step, value, default_value;
+  Type type;
   QList<Choice> choices;
-  bool valid() const;
   int decimals = 2;
   bool is_duration = false;
   std::chrono::duration<double> duration_unit;
-  inline std::chrono::duration<double> seconds() const { return duration_unit * value; }
   bool supports_auto = false;
   bool value_auto = false;
   bool readonly = false;
+  
+  bool valid() const;
+  inline std::chrono::duration<double> seconds() const { return duration_unit * value; }
   bool same_value(const Control &other) const;
   QVariantMap asMap() const;
   void import(const QVariantMap &data, bool full_import = false);

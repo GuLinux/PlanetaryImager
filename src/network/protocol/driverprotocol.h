@@ -33,9 +33,14 @@ public:
   ADD_PROTOCOL_PACKET_NAME(GetCameraName)
   ADD_PROTOCOL_PACKET_NAME(GetCameraNameReply)
   ADD_PROTOCOL_PROPERTY(CameraName)
+  ADD_PROTOCOL_PACKET_NAME(GetProperties)
+  ADD_PROTOCOL_PACKET_NAME(GetPropertiesReply)
   static NetworkPacket::ptr sendCameraListReply(const Driver::Cameras &cameras);
+  static NetworkPacket::ptr sendGetPropertiesReply(const Imager::Properties &properties);
+  
   typedef std::function<Driver::Camera::ptr(const QString &, qlonglong)> CameraFactory;
   static void decode(Driver::Cameras &cameras, const NetworkPacket::ptr &packet, const CameraFactory &factory);
+  static void decode(Imager::Properties &properties, const NetworkPacket::ptr &packet);
 };
 
 #endif // DRIVERPROTOCOL_H

@@ -19,11 +19,14 @@
 
 #include "remoteimager.h"
 #include "network/protocol/driverprotocol.h"
+#include <QDebug>
+
 using namespace std;
 
 DPTR_IMPL(RemoteImager) {
   const ImageHandler::ptr image_handler;
   QString name;
+  Properties properties;
 };
 
 RemoteImager::RemoteImager(qlonglong id, const ImageHandler::ptr& image_handler, const NetworkDispatcher::ptr &dispatcher) : Imager{image_handler}, NetworkReceiver{dispatcher}, dptr(image_handler)
@@ -32,28 +35,38 @@ RemoteImager::RemoteImager(qlonglong id, const ImageHandler::ptr& image_handler,
   register_handler(DriverProtocol::GetCameraNameReply, [this](const NetworkPacket::ptr &packet) {
     d->name = packet->property(DriverProtocol::CameraName).toString();
   });
+  register_handler(DriverProtocol::GetPropertiesReply, [this](const NetworkPacket::ptr &packet) {
+    DriverProtocol::decode(d->properties, packet);
+  });
 
   dispatcher->queue_send( DriverProtocol::packetConnectCamera() << DriverProtocol::propertyCameraId(id) );
   wait_for_processed(DriverProtocol::ConnectCameraReply);
   dispatcher->queue_send(DriverProtocol::packetGetCameraName() );
   wait_for_processed(DriverProtocol::GetCameraNameReply);
+  dispatcher->queue_send(DriverProtocol::packetGetProperties() );
+  wait_for_processed(DriverProtocol::GetPropertiesReply);
 }
 
+#define LOG_TO_IMPLEMENT qDebug() << "***** TODO: implement " << __PRETTY_FUNCTION__;
 RemoteImager::~RemoteImager()
 {
+  LOG_TO_IMPLEMENT
 }
 
 
 void RemoteImager::startLive()
 {
+  LOG_TO_IMPLEMENT
 }
 
 void RemoteImager::clearROI()
 {
+  LOG_TO_IMPLEMENT
 }
 
 Imager::Controls RemoteImager::controls() const
 {
+  LOG_TO_IMPLEMENT
   return {};
 }
 
@@ -64,15 +77,17 @@ QString RemoteImager::name() const
 
 Imager::Properties RemoteImager::properties() const
 {
-  return {};
+  return d->properties;
 }
 
 void RemoteImager::setControl(const Imager::Control& control)
 {
+  LOG_TO_IMPLEMENT
 }
 
 void RemoteImager::setROI(const QRect&)
 {
+  LOG_TO_IMPLEMENT
 }
 
 

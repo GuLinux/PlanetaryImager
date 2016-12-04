@@ -17,37 +17,62 @@
  *
  */
 
+#include <functional>
 #include "driverforwarder.h"
 #include "network/protocol/driverprotocol.h"
 using namespace std;
+using namespace std::placeholders;
 
+#define DECLARE_HANDLER(name) void name(const NetworkPacket::ptr &p);
 DPTR_IMPL(DriverForwarder) {
   Driver::ptr driver;
+  DriverForwarder *q;
   Driver::Cameras cameras;
   Imager *imager = nullptr;
+  DECLARE_HANDLER(CameraList)
+  DECLARE_HANDLER(ConnectCamera)
+  DECLARE_HANDLER(GetCameraName)
+  DECLARE_HANDLER(GetProperties)
 };
 
-DriverForwarder::DriverForwarder(const NetworkDispatcher::ptr &dispatcher, const Driver::ptr& driver) : NetworkReceiver{dispatcher}, dptr(driver)
+#define REGISTER_HANDLER(protocol, name) register_handler(protocol::name, bind(&Private::name, d.get(), _1));
+
+DriverForwarder::DriverForwarder(const NetworkDispatcher::ptr &dispatcher, const Driver::ptr& driver) : NetworkReceiver{dispatcher}, dptr(driver, this)
 {
-  register_handler(DriverProtocol::CameraList, [this, dispatcher](const NetworkPacket::ptr &p) {
-      d->cameras = d->driver->cameras();
-      dispatcher->send(DriverProtocol::sendCameraListReply(d->cameras));
-  });
-  register_handler(DriverProtocol::ConnectCamera, [this, dispatcher](const NetworkPacket::ptr &p) {
-    delete d->imager;
-    d->imager = nullptr;
-    auto address = reinterpret_cast<Driver::Camera *>(p->property(DriverProtocol::CameraId).toLongLong());
-    if(count_if(begin(d->cameras), end(d->cameras), [address](const Driver::Camera::ptr &p){ return p.get() == address; }) == 1) {
-      d->imager = address->imager({}); // TODO: add handlers
-    }
-    dispatcher->send(DriverProtocol::packetConnectCameraReply()); // TODO: add status
-  });
-  register_handler(DriverProtocol::GetCameraName, [this, dispatcher](const NetworkPacket::ptr &p) {
-   dispatcher->send(DriverProtocol::packetGetCameraNameReply() << DriverProtocol::propertyCameraName(d->imager->name()));
-  });
+  REGISTER_HANDLER(DriverProtocol, CameraList)
+  REGISTER_HANDLER(DriverProtocol, ConnectCamera)
+  REGISTER_HANDLER(DriverProtocol, GetCameraName)
+  REGISTER_HANDLER(DriverProtocol, GetProperties)
 }
 
 DriverForwarder::~DriverForwarder()
 {
 }
 
+void DriverForwarder::Private::CameraList(const NetworkPacket::ptr& p)
+{
+      cameras = driver->cameras();
+      q->dispatcher()->send(DriverProtocol::sendCameraListReply(cameras));
+}
+
+void DriverForwarder::Private::ConnectCamera(const NetworkPacket::ptr& p)
+{
+    delete imager;
+    imager = nullptr;
+    auto address = reinterpret_cast<Driver::Camera *>(p->property(DriverProtocol::CameraId).toLongLong());
+    if(count_if(begin(cameras), end(cameras), [address](const Driver::Camera::ptr &p){ return p.get() == address; }) == 1) {
+      imager = address->imager({}); // TODO: add handlers
+    }
+    q->dispatcher()->send(DriverProtocol::packetConnectCameraReply()); // TODO: add status
+}
+
+void DriverForwarder::Private::GetCameraName(const NetworkPacket::ptr& p)
+{
+  q->dispatcher()->send(DriverProtocol::packetGetCameraNameReply() << DriverProtocol::propertyCameraName(imager->name()));
+}
+
+void DriverForwarder::Private::GetProperties(const NetworkPacket::ptr& p)
+{
+  imager->properties();
+  q->dispatcher()->send( DriverProtocol::sendGetPropertiesReply(imager->properties() ) );
+}

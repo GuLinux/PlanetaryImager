@@ -29,6 +29,8 @@ PROTOCOL_NAME_VALUE(Driver, ConnectCameraReply);
 PROTOCOL_NAME_VALUE(Driver, GetCameraName);
 PROTOCOL_NAME_VALUE(Driver, GetCameraNameReply);
 PROTOCOL_NAME_VALUE(Driver, CameraName);
+PROTOCOL_NAME_VALUE(Driver, GetProperties);
+PROTOCOL_NAME_VALUE(Driver, GetPropertiesReply);
 
 
 NetworkPacket::ptr DriverProtocol::sendCameraListReply(const Driver::Cameras& cameras)
@@ -49,4 +51,39 @@ void DriverProtocol::decode(Driver::Cameras& cameras, const NetworkPacket::ptr& 
 {
   auto v_cameras = packet->property("cameras").toList();
   transform(begin(v_cameras), end(v_cameras), back_inserter(cameras), [&](const QVariant &v) { return factory(v.toMap()["n"].toString(), v.toMap()["a"].toLongLong()); });
+}
+
+NetworkPacket::ptr DriverProtocol::sendGetPropertiesReply(const Imager::Properties& properties)
+{
+  QVariantList l;
+  QVariantList caps;
+  transform(begin(properties.properties), end(properties.properties), back_inserter(l), [](const Imager::Properties::Property &p) {
+    return QVariantMap {
+      {"n", p.name},
+      {"v", p.value},
+      {"dn", p.display_name},
+      {"dv", p.display_value},
+    };
+  });
+  transform(begin(properties.capabilities), end(properties.capabilities), back_inserter(caps), [](const Imager::Capability &c) { return static_cast<int>(c); } );
+  return packetGetPropertiesReply() << NetworkPacket::Property{"properties", l} << NetworkPacket::Property{"caps", caps};
+}
+
+
+void DriverProtocol::decode(Imager::Properties& properties, const NetworkPacket::ptr& packet)
+{
+  properties.capabilities.clear();
+  properties.properties.clear();
+  QVariantList p = packet->property("properties").toList();
+  transform(begin(p), end(p), back_inserter(properties.properties), [](const QVariant &v){
+    auto m = v.toMap();
+    return Imager::Properties::Property{
+      m["n"].toString(),
+      m["v"].toString(),
+      m["dn"].toString(),
+      m["dv"].toString(),
+    };
+  });
+  for(auto v: packet->property("caps").toList() )
+    properties.capabilities.insert( static_cast<Imager::Capability>(v.toInt()) );
 }
