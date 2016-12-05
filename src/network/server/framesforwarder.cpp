@@ -21,6 +21,8 @@
 #include <QObject>
 #include "network/protocol/driverprotocol.h"
 
+using namespace std;
+
 DPTR_IMPL(FramesForwarder) {
   NetworkDispatcher::ptr dispatcher;
   FramesForwarder *q;
@@ -46,7 +48,7 @@ void FramesForwarder::send_frames()
 {
   Frame::ptr frame;
   while(d->queue.pop(frame)) {
-    d->dispatcher->send(DriverProtocol::packetSendFrame() << NetworkPacket::Property{"frame", frame->as_variant()});
+    d->dispatcher->send(DriverProtocol::sendFrame(frame));
   }
 }
 

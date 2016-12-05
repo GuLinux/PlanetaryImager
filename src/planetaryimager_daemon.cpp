@@ -39,7 +39,8 @@ int main(int argc, char** argv)
     app.setApplicationName("PlanetaryImager");
     app.setApplicationVersion(PLANETARY_IMAGER_VERSION);
     auto driver = make_shared<SupportedDrivers>();
-    auto server = make_shared<NetworkServer>(driver, ImageHandler::ptr{new ImageHandlers{}} ); // TODO: add handlers
+    auto dispatcher = make_shared<NetworkDispatcher>();
+    auto server = make_shared<NetworkServer>(driver, ImageHandler::ptr{new ImageHandlers{ make_shared<FramesForwarder>(dispatcher) }}, dispatcher ); // TODO: add handlers
     QMetaObject::invokeMethod(server.get(), "listen", Q_ARG(QString, "0.0.0.0"), Q_ARG(int, 9999));
     
     QCommandLineParser parser;
@@ -47,8 +48,5 @@ int main(int argc, char** argv)
     parser.addVersionOption();
     parser.process(app);
     
-    // TODO: initialize all handlers and drivers here
-    //PlanetaryImagerMainWindow mainWindow;
-    //mainWindow.show();
     return app.exec();
 }

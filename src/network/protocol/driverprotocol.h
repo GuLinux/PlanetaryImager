@@ -45,6 +45,8 @@ public:
   static NetworkPacket::ptr sendCameraListReply(const Driver::Cameras &cameras);
   static NetworkPacket::ptr sendGetPropertiesReply(const Imager::Properties &properties);
   static NetworkPacket::ptr sendGetControlsReply(const Imager::Controls &controls);
+  static NetworkPacket::ptr sendFrame(const Frame::ptr &frame);
+  static Frame::ptr decodeFrame(const NetworkPacket::ptr &packet);
   
   typedef std::function<Driver::Camera::ptr(const QString &, qlonglong)> CameraFactory;
   static void decode(Driver::Cameras &cameras, const NetworkPacket::ptr &packet, const CameraFactory &factory);

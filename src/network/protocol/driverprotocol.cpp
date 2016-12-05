@@ -19,6 +19,8 @@
 
 #include "driverprotocol.h"
 #include <algorithm>
+#include <opencv2/opencv.hpp>
+
 using namespace std;
 PROTOCOL_NAME_VALUE(Driver, CameraList);
 PROTOCOL_NAME_VALUE(Driver, CameraListReply);
@@ -36,6 +38,7 @@ PROTOCOL_NAME_VALUE(Driver, StartLiveReply);
 PROTOCOL_NAME_VALUE(Driver, ClearROI);
 PROTOCOL_NAME_VALUE(Driver, GetControls);
 PROTOCOL_NAME_VALUE(Driver, GetControlsReply);
+PROTOCOL_NAME_VALUE(Driver, SendFrame);
 
 
 NetworkPacket::ptr DriverProtocol::sendCameraListReply(const Driver::Cameras& cameras)
@@ -151,4 +154,25 @@ void DriverProtocol::decode(Imager::Controls& controls, const NetworkPacket::ptr
     });
   }
 }
+
+NetworkPacket::ptr DriverProtocol::sendFrame(const Frame::ptr& frame)
+{
+  vector<uint8_t> data;
+  QByteArray image;
+  cv::imencode(".jpg", frame->mat(), data);
+  image.resize(data.size());
+  move(begin(data), end(data), begin(image));
+  return packetSendFrame() << NetworkPacket::Property{"frame", image};
+}
+
+Frame::ptr DriverProtocol::decodeFrame(const NetworkPacket::ptr& packet)
+{
+  auto bytes = packet->property("frame").toByteArray();
+  vector<uint8_t> data(bytes.size());
+  move(begin(bytes), end(bytes), begin(data));
+  auto mat = cv::imdecode(data, CV_LOAD_IMAGE_ANYDEPTH);
+  
+  return make_shared<Frame>(Frame::BGR, mat);
+}
+
 

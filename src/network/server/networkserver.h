@@ -22,12 +22,12 @@
 #include <QObject>
 #include "c++/dptr.h"
 #include "drivers/driver.h"
-
+#include "network/networkdispatcher.h"
 class NetworkServer : public QObject
 {
     Q_OBJECT
 public:
-  NetworkServer(const Driver::ptr &driver, const ImageHandler::ptr &handler, QObject *parent = nullptr);
+  NetworkServer(const Driver::ptr &driver, const ImageHandler::ptr &handler, const NetworkDispatcher::ptr &dispatcher, QObject *parent = nullptr);
   ~NetworkServer();
 public slots:
   void listen(const QString &address, int port);

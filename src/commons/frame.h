@@ -51,6 +51,7 @@ public:
   ColorFormat colorFormat() const;
   
   QVariantMap const as_variant();
+  static ptr from_variant(const QVariantMap &map);
 private:
   DPTR
 };

@@ -32,21 +32,6 @@ DPTR_IMPL(Frame) {
   static int cv_type(uint8_t bpp, ColorFormat format);
 };
 
-const QVariantMap Frame::as_variant()
-{
-  size_t size = d->mat.rows * d->mat.cols * d->mat.channels();
-  QByteArray data(size, '0');
-  copy(d->mat.data, d->mat.data + size, data.begin());
-  return {
-    {"utc", d->created_utc},
-    {"format", static_cast<int>(d->color_format)},
-    {"bpp", d->bpp},
-    {"resolution", d->resolution},
-    {"cv_type", d->mat.type()},
-    {"cv_data", data},
-  };
-}
-
 
 int Frame::Private::cv_type(uint8_t bpp, Frame::ColorFormat format)
 {

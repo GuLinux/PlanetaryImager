@@ -33,7 +33,7 @@ DPTR_IMPL(NetworkServer) {
   void new_connection();
 };
 
-NetworkServer::NetworkServer(const Driver::ptr &driver, const ImageHandler::ptr &handler, QObject* parent) : QObject{parent}, dptr(driver, handler, make_shared<NetworkDispatcher>())
+NetworkServer::NetworkServer(const Driver::ptr &driver, const ImageHandler::ptr &handler, const NetworkDispatcher::ptr &dispatcher, QObject* parent) : QObject{parent}, dptr(driver, handler, dispatcher)
 {
   d->server.setMaxPendingConnections(1);
   connect(&d->server, &QTcpServer::newConnection, bind(&Private::new_connection, d.get()));
