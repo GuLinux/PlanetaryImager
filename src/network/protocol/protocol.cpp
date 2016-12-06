@@ -26,4 +26,7 @@ NetworkPacket::ptr NetworkProtocol::packet(const NetworkPacket::Type& name)
   return make_shared<NetworkPacket>(name);
 }
 
+PROTOCOL_NAME_VALUE(Network, Hello);
+PROTOCOL_NAME_VALUE(Network, HelloReply);
+
 

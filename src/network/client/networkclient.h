@@ -23,7 +23,7 @@
 #include <QObject>
 #include "c++/dptr.h"
 #include "network/networkdispatcher.h"
-class NetworkClient : public QObject
+class NetworkClient : public QObject, public NetworkReceiver
 {
     Q_OBJECT
 public:
@@ -31,6 +31,8 @@ public:
   ~NetworkClient();
 public slots:
   void connectToHost(const QString &host, int port);
+signals:
+  void connected();
 private:
   DPTR
 };

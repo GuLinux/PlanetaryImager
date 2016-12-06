@@ -21,6 +21,7 @@
 #include <QtNetwork/QTcpServer>
 #include "network/server/driverforwarder.h"
 #include "network/networkdispatcher.h"
+#include "network/protocol/protocol.h"
 
 using namespace std;
 
@@ -34,11 +35,15 @@ DPTR_IMPL(NetworkServer) {
   void new_connection();
 };
 
-NetworkServer::NetworkServer(const Driver::ptr &driver, const ImageHandler::ptr &handler, const NetworkDispatcher::ptr &dispatcher, QObject* parent) : QObject{parent}, dptr(this, driver, handler, dispatcher)
+NetworkServer::NetworkServer(const Driver::ptr &driver, const ImageHandler::ptr &handler, const NetworkDispatcher::ptr &dispatcher, QObject* parent)
+  : QObject{parent}, NetworkReceiver{dispatcher}, dptr(this, driver, handler, dispatcher)
 {
   d->server.setMaxPendingConnections(1);
   connect(&d->server, &QTcpServer::newConnection, bind(&Private::new_connection, d.get()));
   d->forwarder = make_shared<DriverForwarder>(dispatcher, driver, handler);
+  register_handler(NetworkProtocol::Hello, [this](const NetworkPacket::ptr &p){
+    d->dispatcher->send(NetworkProtocol::packetHelloReply());
+  });
 }
 
 
@@ -59,6 +64,7 @@ void NetworkServer::Private::new_connection()
     dispatcher->setSocket(nullptr);
   });
   dispatcher->setSocket(socket);
+  q->wait_for_processed(NetworkProtocol::Hello);
 }
 
 

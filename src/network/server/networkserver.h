@@ -23,7 +23,7 @@
 #include "c++/dptr.h"
 #include "drivers/driver.h"
 #include "network/networkdispatcher.h"
-class NetworkServer : public QObject
+class NetworkServer : public QObject, public NetworkReceiver
 {
     Q_OBJECT
 public:

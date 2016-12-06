@@ -20,6 +20,7 @@
 #include "networkclient.h"
 #include <QtNetwork/QTcpSocket>
 #include "network/networkdispatcher.h"
+#include "protocol/protocol.h"
 using namespace std;
 
 DPTR_IMPL(NetworkClient) {
@@ -27,9 +28,10 @@ DPTR_IMPL(NetworkClient) {
   QTcpSocket socket;
 };
 
-NetworkClient::NetworkClient(const NetworkDispatcher::ptr &dispatcher, QObject *parent) : QObject{parent}, dptr(dispatcher)
+NetworkClient::NetworkClient(const NetworkDispatcher::ptr &dispatcher, QObject *parent) : QObject{parent}, NetworkReceiver{dispatcher}, dptr(dispatcher)
 {
   d->dispatcher->setSocket(&d->socket);
+  register_handler(NetworkProtocol::HelloReply, [this](const NetworkPacket::ptr &p) {});
 }
 
 NetworkClient::~NetworkClient()
@@ -38,6 +40,11 @@ NetworkClient::~NetworkClient()
 
 void NetworkClient::connectToHost(const QString& host, int port)
 {
+  connect(&d->socket, &QTcpSocket::connected, [this]{
+    d->dispatcher->send(NetworkProtocol::packetHello() );
+    wait_for_processed(NetworkProtocol::HelloReply);
+    emit connected();
+  });
   d->socket.connectToHost(host, port, QTcpSocket::ReadWrite);
 }
 

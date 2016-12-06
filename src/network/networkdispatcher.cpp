@@ -54,7 +54,7 @@ NetworkDispatcher::ptr NetworkReceiver::dispatcher() const
 }
 
 
-void NetworkReceiver::wait_for_processed(const QString& name) const
+void NetworkReceiver::wait_for_processed(const NetworkPacket::Type &name) const
 {
   if(! d->dispatcher->is_connected())
     return;

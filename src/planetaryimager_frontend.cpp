@@ -44,9 +44,11 @@ int main(int argc, char** argv)
     app.setApplicationVersion(PLANETARY_IMAGER_VERSION);
     auto dispatcher = make_shared<NetworkDispatcher>();
     auto networkClient = make_shared<NetworkClient>(dispatcher);
+    auto remoteDriver = make_shared<RemoteDriver>(dispatcher);
     QMetaObject::invokeMethod(networkClient.get(), "connectToHost", Q_ARG(QString, "localhost"), Q_ARG(int, 9999));
-    PlanetaryImagerMainWindow mainWindow{make_shared<RemoteDriver>(dispatcher)};
-    mainWindow.menuBar()->addMenu(QObject::tr("Connection"));
-    mainWindow.show();
+    QObject::connect(networkClient.get(), &NetworkClient::connected, networkClient.get(), [=]{
+      auto mainWindow = new PlanetaryImagerMainWindow{remoteDriver};
+      mainWindow->show();
+    });
     return app.exec();
 }
