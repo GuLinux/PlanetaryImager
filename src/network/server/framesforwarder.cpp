@@ -20,17 +20,19 @@
 #include <boost/lockfree/spsc_queue.hpp>
 #include <QObject>
 #include "network/protocol/driverprotocol.h"
-
+#include <QElapsedTimer>
 using namespace std;
 
 DPTR_IMPL(FramesForwarder) {
   NetworkDispatcher::ptr dispatcher;
   FramesForwarder *q;
   boost::lockfree::spsc_queue<Frame::ptr, boost::lockfree::capacity<3>> queue;
+  QElapsedTimer elapsed;
 };
 
 FramesForwarder::FramesForwarder(const NetworkDispatcher::ptr& dispatcher) : dptr(dispatcher, this)
 {
+  d->elapsed.restart();
 }
 
 FramesForwarder::~FramesForwarder()
@@ -39,8 +41,11 @@ FramesForwarder::~FramesForwarder()
 
 void FramesForwarder::handle(const Frame::ptr& frame)
 {
+  if(d->elapsed.elapsed() < 100)
+    return;
   if(d->queue.push(frame)) {
     QMetaObject::invokeMethod(this, "send_frames", Qt::QueuedConnection);
+    d->elapsed.restart();
   }
 }
 
