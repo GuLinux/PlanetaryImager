@@ -20,6 +20,7 @@
 #include "driverprotocol.h"
 #include <algorithm>
 #include <opencv2/opencv.hpp>
+#include <QJsonDocument>
 
 using namespace std;
 PROTOCOL_NAME_VALUE(Driver, CameraList);
@@ -39,6 +40,7 @@ PROTOCOL_NAME_VALUE(Driver, ClearROI);
 PROTOCOL_NAME_VALUE(Driver, GetControls);
 PROTOCOL_NAME_VALUE(Driver, GetControlsReply);
 PROTOCOL_NAME_VALUE(Driver, SendFrame);
+
 
 
 NetworkPacket::ptr DriverProtocol::sendCameraListReply(const Driver::Cameras& cameras)
@@ -122,14 +124,15 @@ NetworkPacket::ptr DriverProtocol::sendGetControlsReply(const Imager::Controls& 
       {"duration_unit", c.duration_unit.count()},
     };
   });
-  return packetGetControlsReply() << NetworkPacket::Property{"controls", v};
+  return packetGetControlsReply() << NetworkPacket::Property{"controls", QJsonDocument::fromVariant(v).toBinaryData()};
 }
 
 
 void DriverProtocol::decode(Imager::Controls& controls, const NetworkPacket::ptr& packet)
 {
   controls.clear();
-  for(auto c: packet->property("controls").toList()) {
+  QVariantList variant_controls = QJsonDocument::fromBinaryData(packet->property("controls").toByteArray()).toVariant().toList();
+  for(auto c: variant_controls) {
     QVariantMap ctrl = c.toMap();
     Imager::Control::Choices choices;
     for(auto c: ctrl["choices"].toList()) {

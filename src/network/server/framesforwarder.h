@@ -32,7 +32,6 @@ public:
 private:
   DPTR
 private slots:
-  void send_frames();
 };
 
 #endif // FRAMESFORWARDER_H
