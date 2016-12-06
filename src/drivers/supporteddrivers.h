@@ -16,25 +16,19 @@
  *
  */
 
-#ifndef LOCAL_SAVEIMAGE_H
-#define LOCAL_SAVEIMAGE_H
+#ifndef SUPPORTEDDRIVERS_H
+#define SUPPORTEDDRIVERS_H
 
-#include "saveimages.h"
+#include "driver.h"
 #include "c++/dptr.h"
 
-class Configuration;
-class LocalSaveImages : public SaveImages
-{
-  Q_OBJECT
+class SupportedDrivers : public Driver {
 public:
-    LocalSaveImages(Configuration &configuration, QObject *parent = 0);
-    ~LocalSaveImages();
-    virtual void handle(const Frame::ptr &frame);
-public slots:
-  void startRecording(Imager *imager);
-  void endRecording();
+  SupportedDrivers();
+  ~SupportedDrivers();
+  virtual Cameras cameras() const;
 private:
-  DPTR
+  DPTR;
 };
 
-#endif // SAVEIMAGE_H
+#endif // SUPPORTEDDRIVERS_H

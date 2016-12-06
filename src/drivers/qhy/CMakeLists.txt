@@ -24,6 +24,6 @@ install(FILES QHYCCD_Linux/85-qhy.rules DESTINATION ${UDEVRULES_INSTALL_DIR})
 file(GLOB QHY_FIRMWARE_FILES QHYCCD_Linux/firmware/*)
 install(FILES ${QHY_FIRMWARE_FILES} DESTINATION ${FIRMWARE_INSTALL_BASEDIR}/qhy)
 
-add_imager_dependencies(qhy_driver ${QHY_LIBRARY})
+add_backend_dependencies(qhy_driver ${QHY_LIBRARY})
 define_driver(drivers/qhy/qhydriver.h QHYDriver)
 #add_subdirectory(QHYCCD_Linux/)

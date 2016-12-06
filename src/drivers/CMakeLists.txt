@@ -7,7 +7,7 @@ endfunction(define_driver)
 
  set(UDEVRULES_INSTALL_DIR "/lib/udev/rules.d" CACHE STRING "Base directory for udev rules")
  set(FIRMWARE_INSTALL_BASEDIR "/lib/firmware/" CACHE STRING "Base directory for firmware files")
-add_imager_dependencies(drivers)
+add_backend_dependencies(drivers)
 
 if(NOT WIN32) # QHY currently not supported in Windows
   option(enable_qhy "Enable QHY Driver (default: ON)" ON)
@@ -33,5 +33,7 @@ if(NOT WIN32) # Not supported either... but coming soon
 endif()
 configure_file(available_drivers.h.in available_drivers.h)
 file(GLOB drivers_SRCS *.cpp)
-add_library(drivers STATIC ${drivers_SRCS})
-add_imager_dependencies(drivers)
+add_library(drivers STATIC driver.cpp imager.cpp imagercontrol.cpp imagerproperties.cpp imagerthread.cpp roi.cpp imagerexception.cpp)
+add_library(supporteddrivers STATIC supporteddrivers.cpp)
+add_backend_dependencies(drivers supporteddrivers)
+add_frontend_dependencies(drivers)

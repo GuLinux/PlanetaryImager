@@ -46,7 +46,10 @@
 #include <Qt/functional.h>
 #include <QGraphicsScene>
 #include <QFileInfo>
-#include "image_handlers/all_handlers.h"
+#include "image_handlers/frontend/displayimage.h"
+#include "image_handlers/saveimages.h"
+#include "image_handlers/threadimagehandler.h"
+
 #include "commons/messageslogger.h"
 #include "commons/exposuretimer.h"
 #include "widgets/controlspresetsdialog.h"

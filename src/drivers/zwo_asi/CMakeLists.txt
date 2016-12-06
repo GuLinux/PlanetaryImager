@@ -17,7 +17,7 @@ set(ASI_TARGET_ARCH ${ASI_ARCH_${PlanetaryImager_ARCH}})
 
 include_directories(${ASI_SDK_DIR}/include)
 
-add_imager_dependencies(zwo_asi_imager ${ASI_SDK_DIR}/lib/${ASI_TARGET_ARCH}/libASICamera2.a -lusb-1.0)
+add_backend_dependencies(zwo_asi_imager ${ASI_SDK_DIR}/lib/${ASI_TARGET_ARCH}/libASICamera2.a -lusb-1.0)
 define_driver(drivers/zwo_asi/zwo_asi_driver.h ZWO_ASI_Driver)
 
 add_library(zwo_asi_imager STATIC ${asi_imager_SRCS})

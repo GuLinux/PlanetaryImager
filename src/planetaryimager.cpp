@@ -20,10 +20,10 @@
 #include "commons/version.h"
 #include <iostream>
 #include <QDebug>
-#include "drivers/available_drivers.h"
+#include "drivers/supporteddrivers.h"
 #include "commons/loghandler.h"
 #include "commons/crashhandler.h"
-#include "image_handlers/local_saveimages.h"
+#include "image_handlers/backend/local_saveimages.h"
 
 using namespace std;
 

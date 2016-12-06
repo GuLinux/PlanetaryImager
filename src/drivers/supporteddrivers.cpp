@@ -15,27 +15,39 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef PLANETARY_IMAGER_DRIVER_H
-#define PLANETARY_IMAGER_DRIVER_H
-#include <QList>
-#include <QString>
-#include "imager.h"
-#include "dptr.h"
 
-class Driver {
+#include "supporteddrivers.h"
+#include "available_drivers.h"
+
+
+class SupportedDrivers::Private {
 public:
-  typedef std::shared_ptr<Driver> ptr;
-  class Camera {
-  public:
-    typedef std::shared_ptr<Camera> ptr;
-    virtual QString name() const = 0;
-    virtual Imager *imager(const ImageHandler::ptr &imageHandler) const = 0;
-  };
-  typedef QList<Camera::ptr> Cameras; 
-  
-  virtual Cameras cameras() const = 0;
+  Private(SupportedDrivers *q);  
+private:
+  SupportedDrivers *q;
 };
-typedef QList<Driver::ptr> Drivers;
+
+SupportedDrivers::Private::Private(SupportedDrivers* q) : q{q}
+{
+
+}
+
+SupportedDrivers::SupportedDrivers() : dptr(this)
+{
+}
+
+SupportedDrivers::~SupportedDrivers()
+{
+}
 
 
-#endif
+Driver::Cameras SupportedDrivers::cameras() const
+{
+  Cameras cameras;
+  qDebug() << "drivers: " << AvailableDrivers::drivers.size();
+  for(auto driver: AvailableDrivers::drivers) {
+    qDebug() << "driver cameras: " << driver->cameras().size();
+    cameras.append(driver->cameras());
+  }
+  return cameras;
+}

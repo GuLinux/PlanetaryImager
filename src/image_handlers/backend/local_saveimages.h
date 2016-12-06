@@ -15,27 +15,26 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#ifndef PLANETARY_IMAGER_DRIVER_H
-#define PLANETARY_IMAGER_DRIVER_H
-#include <QList>
-#include <QString>
-#include "imager.h"
-#include "dptr.h"
 
-class Driver {
+#ifndef LOCAL_SAVEIMAGE_H
+#define LOCAL_SAVEIMAGE_H
+
+#include "image_handlers/saveimages.h"
+#include "c++/dptr.h"
+
+class Configuration;
+class LocalSaveImages : public SaveImages
+{
+  Q_OBJECT
 public:
-  typedef std::shared_ptr<Driver> ptr;
-  class Camera {
-  public:
-    typedef std::shared_ptr<Camera> ptr;
-    virtual QString name() const = 0;
-    virtual Imager *imager(const ImageHandler::ptr &imageHandler) const = 0;
-  };
-  typedef QList<Camera::ptr> Cameras; 
-  
-  virtual Cameras cameras() const = 0;
+    LocalSaveImages(Configuration &configuration, QObject *parent = 0);
+    ~LocalSaveImages();
+    virtual void handle(const Frame::ptr &frame);
+public slots:
+  void startRecording(Imager *imager);
+  void endRecording();
+private:
+  DPTR
 };
-typedef QList<Driver::ptr> Drivers;
 
-
-#endif
+#endif // SAVEIMAGE_H

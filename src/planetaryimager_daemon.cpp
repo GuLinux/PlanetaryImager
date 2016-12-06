@@ -26,6 +26,7 @@
 #include "network/server/networkserver.h"
 #include "image_handlers/all_handlers.h"
 #include "network/server/framesforwarder.h"
+#include "drivers/supporteddrivers.h"
 using namespace std;
 
 
