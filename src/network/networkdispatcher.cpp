@@ -127,15 +127,18 @@ void NetworkDispatcher::queue_send(const NetworkPacket::ptr& packet)
 
 void NetworkDispatcher::Private::readyRead()
 {
+  QList<NetworkPacket::ptr> packets;
+  while(socket->bytesAvailable() > 0) {
+    qDebug() << socket->bytesAvailable();
     auto packet = make_shared<NetworkPacket>();
     packet->receiveFrom(socket);
-
+    packets.push_back(packet);
     qDebug() << packet->name();
+  }
+  for(auto packet: packets) {
     for(auto receiver: receivers)
       receiver->handle(packet);
-    if(socket->bytesAvailable() > 0) {
-      QMetaObject::invokeMethod(socket, "readyRead");
-    }
+  }
 }
 
 bool NetworkDispatcher::is_connected() const
