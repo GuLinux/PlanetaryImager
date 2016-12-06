@@ -41,12 +41,22 @@ public:
   ADD_PROTOCOL_PACKET_NAME(GetControls)
   ADD_PROTOCOL_PACKET_NAME(GetControlsReply)
   ADD_PROTOCOL_PACKET_NAME(SendFrame)
+  ADD_PROTOCOL_PACKET_NAME(SetControl)
+  
+  ADD_PROTOCOL_PACKET_NAME(signalFPS)
+  ADD_PROTOCOL_PROPERTY(FPS)
+  ADD_PROTOCOL_PACKET_NAME(signalTemperature)
+  ADD_PROTOCOL_PROPERTY(temp)
+  ADD_PROTOCOL_PACKET_NAME(signalControlChanged)
+  ADD_PROTOCOL_PACKET_NAME(signalDisconnected)
   
   static NetworkPacket::ptr sendCameraListReply(const Driver::Cameras &cameras);
   static NetworkPacket::ptr sendGetPropertiesReply(const Imager::Properties &properties);
   static NetworkPacket::ptr sendGetControlsReply(const Imager::Controls &controls);
   static NetworkPacket::ptr sendFrame(const Frame::ptr &frame);
+  static NetworkPacket::ptr control(const Imager::Control &control);
   static Frame::ptr decodeFrame(const NetworkPacket::ptr &packet);
+  static Imager::Control decodeControl(const NetworkPacket::ptr &packet);
   
   typedef std::function<Driver::Camera::ptr(const QString &, qlonglong)> CameraFactory;
   static void decode(Driver::Cameras &cameras, const NetworkPacket::ptr &packet, const CameraFactory &factory);

@@ -40,7 +40,7 @@ FramesForwarder::~FramesForwarder()
 
 void FramesForwarder::handle(const Frame::ptr& frame)
 {
-  if(d->elapsed.elapsed() < 100)
+  if(d->elapsed.elapsed() < 500) // TODO: variable rate, depending on network delay?
     return;
   QtConcurrent::run([this, frame]{
     d->dispatcher->queue_send(DriverProtocol::sendFrame(frame));

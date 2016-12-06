@@ -18,8 +18,10 @@
  */
 
 #include <functional>
+#include <QObject>
 #include "driverforwarder.h"
 #include "network/protocol/driverprotocol.h"
+
 using namespace std;
 using namespace std::placeholders;
 
@@ -37,6 +39,11 @@ DPTR_IMPL(DriverForwarder) {
   DECLARE_HANDLER(StartLive)
   DECLARE_HANDLER(ClearROI)
   DECLARE_HANDLER(GetControls)
+  DECLARE_HANDLER(SetControl)
+  void sendFPS(double fps);
+  void sendTemperature(double temperature);
+  void sendDisconnected();
+  void sendControlChanged(const Imager::Control &control);
 };
 
 #define REGISTER_HANDLER(protocol, name) register_handler(protocol::name, bind(&Private::name, d.get(), _1));
@@ -50,6 +57,7 @@ DriverForwarder::DriverForwarder(const NetworkDispatcher::ptr &dispatcher, const
   REGISTER_HANDLER(DriverProtocol, StartLive)
   REGISTER_HANDLER(DriverProtocol, ClearROI)
   REGISTER_HANDLER(DriverProtocol, GetControls)
+  REGISTER_HANDLER(DriverProtocol, SetControl)
 }
 
 DriverForwarder::~DriverForwarder()
@@ -71,6 +79,10 @@ void DriverForwarder::Private::ConnectCamera(const NetworkPacket::ptr& p)
       imager = address->imager(handler);
     }
     q->dispatcher()->send(DriverProtocol::packetConnectCameraReply()); // TODO: add status
+  QObject::connect(imager, &Imager::fps, q->dispatcher().get(), bind(&Private::sendFPS, this, _1));
+  QObject::connect(imager, &Imager::temperature, q->dispatcher().get(), bind(&Private::sendTemperature, this, _1));
+  QObject::connect(imager, &Imager::disconnected, q->dispatcher().get(), bind(&Private::sendDisconnected, this));
+  QObject::connect(imager, &Imager::changed, q->dispatcher().get(), bind(&Private::sendControlChanged, this, _1));
 }
 
 void DriverForwarder::Private::GetCameraName(const NetworkPacket::ptr& p)
@@ -99,4 +111,30 @@ void DriverForwarder::Private::StartLive(const NetworkPacket::ptr& p)
 void DriverForwarder::Private::GetControls(const NetworkPacket::ptr& p)
 {
   q->dispatcher()->send(DriverProtocol::sendGetControlsReply(imager->controls()));
+}
+
+void DriverForwarder::Private::SetControl(const NetworkPacket::ptr& p)
+{
+  imager->setControl(DriverProtocol::decodeControl(p));
+}
+
+
+void DriverForwarder::Private::sendFPS(double fps)
+{
+  q->dispatcher()->send( DriverProtocol::packetsignalFPS() << NetworkPacket::Property{DriverProtocol::FPS, fps});
+}
+
+void DriverForwarder::Private::sendTemperature(double temperature)
+{
+  q->dispatcher()->send( DriverProtocol::packetsignalTemperature() << NetworkPacket::Property{DriverProtocol::temp, temperature});
+}
+
+void DriverForwarder::Private::sendDisconnected()
+{
+  q->dispatcher()->send( DriverProtocol::packetsignalDisconnected());
+}
+
+void DriverForwarder::Private::sendControlChanged(const Imager::Control &control)
+{
+  q->dispatcher()->send( DriverProtocol::control(control));
 }
