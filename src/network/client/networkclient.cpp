@@ -32,10 +32,6 @@ DPTR_IMPL(NetworkClient) {
 NetworkClient::NetworkClient(const NetworkDispatcher::ptr &dispatcher, QObject *parent) : QObject{parent}, NetworkReceiver{dispatcher}, dptr(dispatcher)
 {
   d->dispatcher->setSocket(&d->socket);
-  register_handler(NetworkProtocol::HelloReply, [this](const NetworkPacket::ptr &p) {
-    QVariantMap status = p->payloadVariant().toMap();
-    d->imager_is_running = status["imager_running"].toBool();
-  });
 }
 
 NetworkClient::~NetworkClient()
@@ -52,10 +48,7 @@ void NetworkClient::connectToHost(const QString& host, int port)
   d->socket.connectToHost(host, port, QTcpSocket::ReadWrite);
 }
 
-bool NetworkClient::imager_is_running() const
-{
-  return d->imager_is_running;
-}
+
 
 
 #include "networkclient.moc"
