@@ -111,7 +111,7 @@ NetworkPacket::ptr DriverProtocol::sendGetControlsReply(const Imager::Controls& 
       {"name",  c.name},
       {"val",  c.value},
       {"def",  c.default_value},
-      {"type",  c.type},
+      {"type",  static_cast<int>(c.type)},
       {"min",  c.range.min},
       {"max",  c.range.max},
       {"step",  c.range.step},
@@ -124,6 +124,7 @@ NetworkPacket::ptr DriverProtocol::sendGetControlsReply(const Imager::Controls& 
       {"duration_unit", c.duration_unit.count()},
     };
   });
+  //qDebug().noquote().nospace() << "controls encoded: " << QJsonDocument::fromVariant(v).toJson(QJsonDocument::Compact);
   return packetGetControlsReply() << NetworkPacket::Property{"controls", QJsonDocument::fromVariant(v).toBinaryData()};
 }
 
@@ -132,18 +133,20 @@ void DriverProtocol::decode(Imager::Controls& controls, const NetworkPacket::ptr
 {
   controls.clear();
   QVariantList variant_controls = QJsonDocument::fromBinaryData(packet->property("controls").toByteArray()).toVariant().toList();
+  //qDebug().noquote().nospace() << "controls to decode: " << QJsonDocument::fromVariant(variant_controls).toJson(QJsonDocument::Compact);
   for(auto c: variant_controls) {
     QVariantMap ctrl = c.toMap();
     Imager::Control::Choices choices;
     for(auto c: ctrl["choices"].toList()) {
       QVariantMap choice = c.toMap();
       choices.push_back({choice["label"].toString(), choice["val"]});
+      qDebug() << "Choice: " << Imager::Control::Choice{choice["label"].toString(), choice["val"]};
     }
     
     controls.push_back( {
       ctrl["id"].toLongLong(),
       ctrl["name"].toString(),
-      ctrl["type"].value<Imager::Control::Type>(),
+      static_cast<Imager::Control::Type>(ctrl["type"].toInt()),
       ctrl["val"],
       ctrl["def"],
       { ctrl["min"], ctrl["max"], ctrl["step"] },
@@ -162,7 +165,8 @@ NetworkPacket::ptr DriverProtocol::sendFrame(const Frame::ptr& frame)
 {
   vector<uint8_t> data;
   QByteArray image;
-  cv::imencode(frame->channels() == 1 ? ".pgm" : ".ppm", frame->mat(), data);
+  cv::imencode(".jpg", frame->mat(), data);
+  //cv::imencode(frame->channels() == 1 ? ".pgm" : ".ppm", frame->mat(), data);
   image.resize(data.size());
   move(begin(data), end(data), begin(image));
   qDebug() << "FRAME data size: " << image.size() << ", bpp: " << frame->bpp() << ", res: " << frame->resolution() << ", channels: " << frame->channels();

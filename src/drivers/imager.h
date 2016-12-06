@@ -129,7 +129,6 @@ struct Imager::Control {
   void import(const QVariantMap &data, bool full_import = false);
 };
 
-Q_DECLARE_METATYPE(Imager::Control::Type)
 
 struct Imager::Properties {
     Properties &set_resolution_pixelsize(const QSize &resolution, double pixelwidth, double pixelheight);
