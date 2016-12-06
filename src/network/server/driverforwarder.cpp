@@ -82,7 +82,7 @@ void DriverForwarder::Private::ConnectCamera(const NetworkPacket::ptr& p)
   QObject::connect(imager, &Imager::fps, q->dispatcher().get(), bind(&Private::sendFPS, this, _1));
   QObject::connect(imager, &Imager::temperature, q->dispatcher().get(), bind(&Private::sendTemperature, this, _1));
   QObject::connect(imager, &Imager::disconnected, q->dispatcher().get(), bind(&Private::sendDisconnected, this));
-  QObject::connect(imager, &Imager::changed, q->dispatcher().get(), bind(&Private::sendControlChanged, this, _1));
+  QObject::connect(imager, &Imager::changed, q->dispatcher().get(), bind(&Private::sendControlChanged, this, _1), Qt::QueuedConnection);
 }
 
 void DriverForwarder::Private::GetCameraName(const NetworkPacket::ptr& p)
@@ -136,5 +136,5 @@ void DriverForwarder::Private::sendDisconnected()
 
 void DriverForwarder::Private::sendControlChanged(const Imager::Control &control)
 {
-  q->dispatcher()->send( DriverProtocol::control(control));
+  q->dispatcher()->send( DriverProtocol::controlChanged(control));
 }

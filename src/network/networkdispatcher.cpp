@@ -111,7 +111,7 @@ void NetworkDispatcher::setSocket(QTcpSocket* socket)
 }
 
 void NetworkDispatcher::send(const NetworkPacket::ptr &packet) {
-  qDebug() << "Sending tcp packet: " << packet->name();
+  qDebug() << packet->name();
   packet->sendTo(d->socket);
 }
 
@@ -126,6 +126,7 @@ void NetworkDispatcher::Private::readyRead()
   auto packet = make_shared<NetworkPacket>();
   packet->receiveFrom(socket);
 
+  qDebug() << packet->name();
   for(auto receiver: receivers)
     receiver->handle(packet);
 }

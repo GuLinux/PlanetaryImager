@@ -56,7 +56,8 @@ public:
   static NetworkPacket::ptr sendGetControlsReply(const Imager::Controls &controls);
   static void decode(Imager::Controls &controls, const NetworkPacket::ptr &packet);
   
-  static NetworkPacket::ptr control(const Imager::Control &control);
+  static NetworkPacket::ptr setControl(const Imager::Control &control);
+  static NetworkPacket::ptr controlChanged(const Imager::Control &control);
   static Imager::Control decodeControl(const NetworkPacket::ptr &packet);
   
   static NetworkPacket::ptr sendFrame(const Frame::ptr &frame);

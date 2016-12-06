@@ -195,9 +195,14 @@ Frame::ptr DriverProtocol::decodeFrame(const NetworkPacket::ptr& packet)
   return frame;
 }
 
-NetworkPacket::ptr DriverProtocol::control(const Imager::Control& control)
+NetworkPacket::ptr DriverProtocol::setControl(const Imager::Control& control)
 {
   return packetSetControl() << control2variant(control);
+}
+
+NetworkPacket::ptr DriverProtocol::controlChanged(const Imager::Control& control)
+{
+  return packetsignalControlChanged() << control2variant(control);
 }
 
 Imager::Control DriverProtocol::decodeControl(const NetworkPacket::ptr &packet) {

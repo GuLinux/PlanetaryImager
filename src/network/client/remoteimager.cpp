@@ -55,7 +55,8 @@ RemoteImager::RemoteImager(qlonglong id, const ImageHandler::ptr& image_handler,
   });
   register_handler(DriverProtocol::signalDisconnected, [this](const NetworkPacket::ptr &) { emit disconnected(); });
   register_handler(DriverProtocol::signalControlChanged, [this](const NetworkPacket::ptr &packet) {
-    emit changed( DriverProtocol::decodeControl(packet) );
+    auto control = DriverProtocol::decodeControl(packet) ;
+    emit changed( control );
   });
 
   dispatcher->queue_send( DriverProtocol::packetConnectCamera() << id );
@@ -102,7 +103,7 @@ Imager::Properties RemoteImager::properties() const
 
 void RemoteImager::setControl(const Imager::Control& control)
 {
-  dispatcher()->queue_send(DriverProtocol::control(control) );
+  dispatcher()->queue_send(DriverProtocol::setControl(control) );
 }
 
 void RemoteImager::setROI(const QRect&)
