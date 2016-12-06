@@ -177,7 +177,8 @@ NetworkPacket::ptr DriverProtocol::sendFrame(const Frame::ptr& frame)
   vector<uint8_t> data;
   QByteArray image;
   //cv::imencode(".jpg", frame->mat(), data);
-  cv::imencode(frame->channels() == 1 ? ".pgm" : ".ppm", frame->mat(), data);
+  static vector<int> binary_netbmp{CV_IMWRITE_PXM_BINARY , 1 };
+  cv::imencode(frame->channels() == 1 ? ".pgm" : ".ppm", frame->mat(), data, binary_netbmp );
   image.resize(data.size());
   move(begin(data), end(data), begin(image));
   qDebug() << "FRAME data size: " << image.size() << ", bpp: " << frame->bpp() << ", res: " << frame->resolution() << ", channels: " << frame->channels();
@@ -188,7 +189,7 @@ Frame::ptr DriverProtocol::decodeFrame(const NetworkPacket::ptr& packet)
 {
   vector<uint8_t> data(packet->payload().size());
   move(begin(packet->payload()), end(packet->payload()), begin(data));
-  auto mat = cv::imdecode(data, CV_LOAD_IMAGE_ANYDEPTH);
+  auto mat = cv::imdecode(data, CV_LOAD_IMAGE_UNCHANGED);
   auto frame = make_shared<Frame>(mat.channels() == 1 ? Frame::Mono : Frame::BGR, mat);
   qDebug() << "FRAME data size: " << packet->payload().size() << ", bpp: " << frame->bpp() << ", res: " << frame->resolution() << ", channels: " << frame->channels();
   

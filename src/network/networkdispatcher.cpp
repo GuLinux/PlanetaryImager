@@ -70,8 +70,6 @@ void NetworkReceiver::register_handler(const NetworkPacket::Type& name, const Ha
 
 void NetworkReceiver::handle(const NetworkPacket::ptr& packet)
 {
-  LOG_F_SCOPE
-  qDebug() << "Handling packet " << packet->name();
   auto handler = d->handlers[packet->name()];
   if(handler)
     handler(packet);
