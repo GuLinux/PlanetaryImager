@@ -158,14 +158,16 @@ NetworkPacket::ptr DriverProtocol::sendGetControlsReply(const Imager::Controls& 
   QVariantList v;
   transform(begin(controls), end(controls), back_inserter(v), bind(control2variant, _1));
   //qDebug().noquote().nospace() << "controls encoded: " << QJsonDocument::fromVariant(v).toJson(QJsonDocument::Compact);
-  return packetGetControlsReply() << QJsonDocument::fromVariant(v).toBinaryData();
+  return packetGetControlsReply() << v;
+//   return packetGetControlsReply() << QJsonDocument::fromVariant(v).toBinaryData();
 }
 
 
 void DriverProtocol::decode(Imager::Controls& controls, const NetworkPacket::ptr& packet)
 {
   controls.clear();
-  QVariantList variant_controls = QJsonDocument::fromBinaryData(packet->payload()).toVariant().toList();
+//   QVariantList variant_controls = QJsonDocument::fromBinaryData(packet->payload()).toVariant().toList();
+  QVariantList variant_controls = packet->payloadVariant().toList();
   //qDebug().noquote().nospace() << "controls to decode: " << QJsonDocument::fromVariant(variant_controls).toJson(QJsonDocument::Compact);
   transform(begin(variant_controls), end(variant_controls), back_inserter(controls), bind(variant2control, _1));
 }
