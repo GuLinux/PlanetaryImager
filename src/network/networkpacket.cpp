@@ -28,6 +28,7 @@
 using namespace std;
 
 DPTR_IMPL(NetworkPacket) {
+  QString name;
   QVariantMap properties;
   QByteArray getBinaryData();
   void fromBinaryData(const QByteArray &ba);
@@ -64,7 +65,7 @@ void NetworkPacket::sendTo(QIODevice *device) const
     qDebug() << "data size: " << data.size() << ", original frame data size: " << d->properties["frame"].toByteArray().size();
   }
   QDataStream s(device);
-  s << data.size();
+  s << d->name << data.size();
   qint64 wrote = device->write(data);
   if(wrote != data.size())
     qWarning() << "Wrote " << wrote << "bytes, expected " << data.size();
@@ -85,7 +86,7 @@ void NetworkPacket::receiveFrom(QIODevice *device)
 {
   int data_size;
   QDataStream s(device);
-  s >> data_size;
+  s >> d->name >> data_size;
   while(device->bytesAvailable() < data_size)
     qApp->processEvents();
   qDebug() << "reading " << data_size << " bytes";
@@ -106,12 +107,13 @@ QVariant NetworkPacket::property(const KeyType& name) const
 
 NetworkPacket::NameType NetworkPacket::name() const
 {
-  return property("name").value<NameType>();
+  return d->name;
 }
 
 NetworkPacket *NetworkPacket::setName(const NameType& name)
 {
-  return setProperty("name", name);
+  d->name = name;
+  return this;
 }
 
 NetworkPacket::ptr operator<<(NetworkPacket::ptr packet, const NetworkPacket::Property& property)
