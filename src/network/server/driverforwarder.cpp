@@ -98,7 +98,6 @@ void DriverForwarder::Private::ClearROI(const NetworkPacket::ptr& p)
 
 void DriverForwarder::Private::GetProperties(const NetworkPacket::ptr& p)
 {
-  imager->properties();
   q->dispatcher()->send( DriverProtocol::sendGetPropertiesReply(imager->properties() ) );
 }
 
@@ -132,9 +131,17 @@ void DriverForwarder::Private::sendTemperature(double temperature)
 void DriverForwarder::Private::sendDisconnected()
 {
   q->dispatcher()->send( DriverProtocol::packetsignalDisconnected());
+  imager->deleteLater();
+  imager = nullptr;
 }
 
 void DriverForwarder::Private::sendControlChanged(const Imager::Control &control)
 {
   q->dispatcher()->send( DriverProtocol::controlChanged(control));
 }
+
+void DriverForwarder::getStatus(QVariantMap& status)
+{
+  status["imager_running"] = static_cast<bool>(d->imager);
+}
+

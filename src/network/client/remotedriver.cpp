@@ -40,7 +40,7 @@ private:
 
 Imager * RemoteCamera::imager(const ImageHandler::ptr& imageHandler) const
 {
-  return new RemoteImager{_address, imageHandler, _dispatcher};
+  return new RemoteImager{imageHandler, _dispatcher, _address};
 }
 
 
@@ -64,4 +64,10 @@ Driver::Cameras RemoteDriver::cameras() const
   wait_for_processed(DriverProtocol::CameraListReply);
   return d->cameras;;
 }
+
+Driver::Camera::ptr RemoteDriver::existing_running_camera() const
+{
+  return make_shared<RemoteCamera>(QString{}, -1l, dispatcher());
+}
+
 

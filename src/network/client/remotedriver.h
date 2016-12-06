@@ -31,6 +31,7 @@ public:
   RemoteDriver(const NetworkDispatcher::ptr &dispatcher);
   ~RemoteDriver();
   Cameras cameras() const override;
+  Camera::ptr existing_running_camera() const;
 private:
   DPTR
 };

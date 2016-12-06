@@ -28,9 +28,10 @@ DPTR_IMPL(RemoteImager) {
   QString name;
   Properties properties;
   Controls controls;
+  bool live_was_started = true;
 };
 
-RemoteImager::RemoteImager(qlonglong id, const ImageHandler::ptr& image_handler, const NetworkDispatcher::ptr &dispatcher) : Imager{image_handler}, NetworkReceiver{dispatcher}, dptr(image_handler)
+RemoteImager::RemoteImager(const ImageHandler::ptr& image_handler, const NetworkDispatcher::ptr &dispatcher, qlonglong id) : Imager{image_handler}, NetworkReceiver{dispatcher}, dptr(image_handler)
 {
   register_handler(DriverProtocol::ConnectCameraReply, [](const NetworkPacket::ptr &) {});
   register_handler(DriverProtocol::GetCameraNameReply, [this](const NetworkPacket::ptr &packet) {
@@ -59,8 +60,11 @@ RemoteImager::RemoteImager(qlonglong id, const ImageHandler::ptr& image_handler,
     emit changed( control );
   });
 
-  dispatcher->queue_send( DriverProtocol::packetConnectCamera() << id );
-  wait_for_processed(DriverProtocol::ConnectCameraReply);
+  if(id != -1) {
+    dispatcher->queue_send( DriverProtocol::packetConnectCamera() << id );
+    wait_for_processed(DriverProtocol::ConnectCameraReply);
+    d->live_was_started = false;
+  }
   dispatcher->queue_send(DriverProtocol::packetGetCameraName() );
   wait_for_processed(DriverProtocol::GetCameraNameReply);
   dispatcher->queue_send(DriverProtocol::packetGetProperties() );
@@ -76,8 +80,10 @@ RemoteImager::~RemoteImager()
 
 void RemoteImager::startLive()
 {
-  dispatcher()->queue_send(DriverProtocol::packetStartLive());
-  wait_for_processed(DriverProtocol::StartLiveReply);
+  if(!d->live_was_started) { // TODO: fix the liveStarted: should be read from camera instead, and agreed in mainWindow
+    dispatcher()->queue_send(DriverProtocol::packetStartLive());
+    wait_for_processed(DriverProtocol::StartLiveReply);
+  }
 }
 
 void RemoteImager::clearROI()

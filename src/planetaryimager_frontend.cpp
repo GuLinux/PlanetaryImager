@@ -49,6 +49,9 @@ int main(int argc, char** argv)
     QObject::connect(networkClient.get(), &NetworkClient::connected, networkClient.get(), [=]{
       auto mainWindow = new PlanetaryImagerMainWindow{remoteDriver};
       mainWindow->show();
+      if(networkClient->imager_is_running()) {
+        mainWindow->connectCamera(remoteDriver->existing_running_camera());
+      }
     });
     return app.exec();
 }

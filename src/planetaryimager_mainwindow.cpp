@@ -364,6 +364,12 @@ void PlanetaryImagerMainWindow::Private::rescan_devices()
   });
 }
 
+void PlanetaryImagerMainWindow::connectCamera(const Driver::Camera::ptr& camera)
+{
+  d->connectCamera(camera);
+}
+
+
 void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::Camera::ptr& camera)
 {
     if(imager)

@@ -29,6 +29,7 @@ class NetworkClient : public QObject, public NetworkReceiver
 public:
   NetworkClient(const NetworkDispatcher::ptr &dispatcher, QObject *parent = nullptr);
   ~NetworkClient();
+  bool imager_is_running() const;
 public slots:
   void connectToHost(const QString &host, int port);
 signals:
