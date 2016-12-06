@@ -74,7 +74,7 @@ void DriverForwarder::Private::ConnectCamera(const NetworkPacket::ptr& p)
 {
     delete imager;
     imager = nullptr;
-    auto address = reinterpret_cast<Driver::Camera *>(p->property(DriverProtocol::CameraId).toLongLong());
+    auto address = reinterpret_cast<Driver::Camera *>(p->payloadVariant().toLongLong());
     if(count_if(begin(cameras), end(cameras), [address](const Driver::Camera::ptr &p){ return p.get() == address; }) == 1) {
       imager = address->imager(handler);
     }
@@ -87,7 +87,7 @@ void DriverForwarder::Private::ConnectCamera(const NetworkPacket::ptr& p)
 
 void DriverForwarder::Private::GetCameraName(const NetworkPacket::ptr& p)
 {
-  q->dispatcher()->send(DriverProtocol::packetGetCameraNameReply() << DriverProtocol::propertyCameraName(imager->name()));
+  q->dispatcher()->send(DriverProtocol::packetGetCameraNameReply() << imager->name().toLatin1());
 }
 
 void DriverForwarder::Private::ClearROI(const NetworkPacket::ptr& p)
@@ -121,12 +121,12 @@ void DriverForwarder::Private::SetControl(const NetworkPacket::ptr& p)
 
 void DriverForwarder::Private::sendFPS(double fps)
 {
-  q->dispatcher()->send( DriverProtocol::packetsignalFPS() << NetworkPacket::Property{DriverProtocol::FPS, fps});
+  q->dispatcher()->send( DriverProtocol::packetsignalFPS() << QVariant{fps});
 }
 
 void DriverForwarder::Private::sendTemperature(double temperature)
 {
-  q->dispatcher()->send( DriverProtocol::packetsignalTemperature() << NetworkPacket::Property{DriverProtocol::temp, temperature});
+  q->dispatcher()->send( DriverProtocol::packetsignalTemperature() << QVariant{temperature});
 }
 
 void DriverForwarder::Private::sendDisconnected()

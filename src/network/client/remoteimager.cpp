@@ -34,7 +34,7 @@ RemoteImager::RemoteImager(qlonglong id, const ImageHandler::ptr& image_handler,
 {
   register_handler(DriverProtocol::ConnectCameraReply, [](const NetworkPacket::ptr &) {});
   register_handler(DriverProtocol::GetCameraNameReply, [this](const NetworkPacket::ptr &packet) {
-    d->name = packet->property(DriverProtocol::CameraName).toString();
+    d->name = QString{packet->payload()};
   });
   register_handler(DriverProtocol::GetPropertiesReply, [this](const NetworkPacket::ptr &packet) {
     DriverProtocol::decode(d->properties, packet);
@@ -48,17 +48,17 @@ RemoteImager::RemoteImager(qlonglong id, const ImageHandler::ptr& image_handler,
     d->image_handler->handle(frame);
   });
   register_handler(DriverProtocol::signalFPS, [this](const NetworkPacket::ptr &packet) {
-    emit fps(packet->property(DriverProtocol::FPS).toDouble());
+    emit fps(packet->payloadVariant().toDouble());
   });
   register_handler(DriverProtocol::signalTemperature, [this](const NetworkPacket::ptr &packet) {
-    emit temperature(packet->property(DriverProtocol::temp).toDouble());
+    emit temperature(packet->payloadVariant().toDouble());
   });
   register_handler(DriverProtocol::signalDisconnected, [this](const NetworkPacket::ptr &) { emit disconnected(); });
   register_handler(DriverProtocol::signalControlChanged, [this](const NetworkPacket::ptr &packet) {
     emit changed( DriverProtocol::decodeControl(packet) );
   });
 
-  dispatcher->queue_send( DriverProtocol::packetConnectCamera() << DriverProtocol::propertyCameraId(id) );
+  dispatcher->queue_send( DriverProtocol::packetConnectCamera() << id );
   wait_for_processed(DriverProtocol::ConnectCameraReply);
   dispatcher->queue_send(DriverProtocol::packetGetCameraName() );
   wait_for_processed(DriverProtocol::GetCameraNameReply);

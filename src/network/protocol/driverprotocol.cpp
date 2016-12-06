@@ -29,11 +29,9 @@ PROTOCOL_NAME_VALUE(Driver, CameraList);
 PROTOCOL_NAME_VALUE(Driver, CameraListReply);
 PROTOCOL_NAME_VALUE(Driver, CamerasParameter);
 PROTOCOL_NAME_VALUE(Driver, ConnectCamera);
-PROTOCOL_NAME_VALUE(Driver, CameraId);
 PROTOCOL_NAME_VALUE(Driver, ConnectCameraReply);
 PROTOCOL_NAME_VALUE(Driver, GetCameraName);
 PROTOCOL_NAME_VALUE(Driver, GetCameraNameReply);
-PROTOCOL_NAME_VALUE(Driver, CameraName);
 PROTOCOL_NAME_VALUE(Driver, GetProperties);
 PROTOCOL_NAME_VALUE(Driver, GetPropertiesReply);
 PROTOCOL_NAME_VALUE(Driver, StartLive);
@@ -44,9 +42,7 @@ PROTOCOL_NAME_VALUE(Driver, GetControlsReply);
 PROTOCOL_NAME_VALUE(Driver, SendFrame);
 PROTOCOL_NAME_VALUE(Driver, SetControl);
 PROTOCOL_NAME_VALUE(Driver, signalFPS);
-PROTOCOL_NAME_VALUE(Driver, FPS);
 PROTOCOL_NAME_VALUE(Driver, signalTemperature);
-PROTOCOL_NAME_VALUE(Driver, temp);
 PROTOCOL_NAME_VALUE(Driver, signalControlChanged);
 PROTOCOL_NAME_VALUE(Driver, signalDisconnected);
 
@@ -110,16 +106,16 @@ NetworkPacket::ptr DriverProtocol::sendCameraListReply(const Driver::Cameras& ca
     p["a"] = reinterpret_cast<qlonglong>(c.get());
     return p;
   });
-  return packetCameraListReply() << NetworkPacket::Property{"cameras", v_cameras};
+  return packetCameraListReply() << v_cameras;
 }
-
-
 
 void DriverProtocol::decode(Driver::Cameras& cameras, const NetworkPacket::ptr& packet, const CameraFactory& factory)
 {
-  auto v_cameras = packet->property("cameras").toList();
+  auto v_cameras = packet->payloadVariant().toList();
   transform(begin(v_cameras), end(v_cameras), back_inserter(cameras), [&](const QVariant &v) { return factory(v.toMap()["n"].toString(), v.toMap()["a"].toLongLong()); });
 }
+
+
 
 NetworkPacket::ptr DriverProtocol::sendGetPropertiesReply(const Imager::Properties& properties)
 {
@@ -134,7 +130,7 @@ NetworkPacket::ptr DriverProtocol::sendGetPropertiesReply(const Imager::Properti
     };
   });
   transform(begin(properties.capabilities), end(properties.capabilities), back_inserter(caps), [](const Imager::Capability &c) { return static_cast<int>(c); } );
-  return packetGetPropertiesReply() << NetworkPacket::Property{"properties", l} << NetworkPacket::Property{"caps", caps};
+  return packetGetPropertiesReply() << QVariantMap{ {"properties", l},  {"caps", caps} };
 }
 
 
@@ -142,7 +138,8 @@ void DriverProtocol::decode(Imager::Properties& properties, const NetworkPacket:
 {
   properties.capabilities.clear();
   properties.properties.clear();
-  QVariantList p = packet->property("properties").toList();
+  QVariantMap packetMap = packet->payloadVariant().toMap();
+  QVariantList p = packetMap["properties"].toList();
   transform(begin(p), end(p), back_inserter(properties.properties), [](const QVariant &v){
     auto m = v.toMap();
     return Imager::Properties::Property{
@@ -152,7 +149,7 @@ void DriverProtocol::decode(Imager::Properties& properties, const NetworkPacket:
       m["dv"].toString(),
     };
   });
-  for(auto v: packet->property("caps").toList() )
+  for(auto v: packetMap["caps"].toList() )
     properties.capabilities.insert( static_cast<Imager::Capability>(v.toInt()) );
 }
 
@@ -161,14 +158,14 @@ NetworkPacket::ptr DriverProtocol::sendGetControlsReply(const Imager::Controls& 
   QVariantList v;
   transform(begin(controls), end(controls), back_inserter(v), bind(control2variant, _1));
   //qDebug().noquote().nospace() << "controls encoded: " << QJsonDocument::fromVariant(v).toJson(QJsonDocument::Compact);
-  return packetGetControlsReply() << NetworkPacket::Property{"controls", QJsonDocument::fromVariant(v).toBinaryData()};
+  return packetGetControlsReply() << QJsonDocument::fromVariant(v).toBinaryData();
 }
 
 
 void DriverProtocol::decode(Imager::Controls& controls, const NetworkPacket::ptr& packet)
 {
   controls.clear();
-  QVariantList variant_controls = QJsonDocument::fromBinaryData(packet->property("controls").toByteArray()).toVariant().toList();
+  QVariantList variant_controls = QJsonDocument::fromBinaryData(packet->payload()).toVariant().toList();
   //qDebug().noquote().nospace() << "controls to decode: " << QJsonDocument::fromVariant(variant_controls).toJson(QJsonDocument::Compact);
   transform(begin(variant_controls), end(variant_controls), back_inserter(controls), bind(variant2control, _1));
 }
@@ -182,27 +179,26 @@ NetworkPacket::ptr DriverProtocol::sendFrame(const Frame::ptr& frame)
   image.resize(data.size());
   move(begin(data), end(data), begin(image));
   qDebug() << "FRAME data size: " << image.size() << ", bpp: " << frame->bpp() << ", res: " << frame->resolution() << ", channels: " << frame->channels();
-  return packetSendFrame() << NetworkPacket::Property{"frame", image};
+  return packetSendFrame() << image;
 }
 
 Frame::ptr DriverProtocol::decodeFrame(const NetworkPacket::ptr& packet)
 {
-  auto bytes = packet->property("frame").toByteArray();
-  vector<uint8_t> data(bytes.size());
-  move(begin(bytes), end(bytes), begin(data));
+  vector<uint8_t> data(packet->payload().size());
+  move(begin(packet->payload()), end(packet->payload()), begin(data));
   auto mat = cv::imdecode(data, CV_LOAD_IMAGE_ANYDEPTH);
   auto frame = make_shared<Frame>(mat.channels() == 1 ? Frame::Mono : Frame::BGR, mat);
-  qDebug() << "FRAME data size: " << bytes.size() << ", bpp: " << frame->bpp() << ", res: " << frame->resolution() << ", channels: " << frame->channels();
+  qDebug() << "FRAME data size: " << packet->payload().size() << ", bpp: " << frame->bpp() << ", res: " << frame->resolution() << ", channels: " << frame->channels();
   
   return frame;
 }
 
 NetworkPacket::ptr DriverProtocol::control(const Imager::Control& control)
 {
-  return packetSetControl() << NetworkPacket::Property{"control", control2variant(control)};
+  return packetSetControl() << control2variant(control);
 }
 
 Imager::Control DriverProtocol::decodeControl(const NetworkPacket::ptr &packet) {
-  return variant2control(packet->property("control"));
+  return variant2control(packet->payloadVariant());
 }
 

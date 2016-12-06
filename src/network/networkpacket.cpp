@@ -28,17 +28,15 @@
 using namespace std;
 
 DPTR_IMPL(NetworkPacket) {
-  QString name;
-  QVariantMap properties;
-  QByteArray getBinaryData();
-  void fromBinaryData(const QByteArray &ba);
+  Type name;
+  QByteArray payload;
 };
 
 NetworkPacket::NetworkPacket() : dptr()
 {
 }
 
-NetworkPacket::NetworkPacket(const NameType& name) : NetworkPacket()
+NetworkPacket::NetworkPacket(const Type& name) : NetworkPacket()
 {
   setName(name);
 }
@@ -48,39 +46,19 @@ NetworkPacket::~NetworkPacket()
 {
 }
 
-QByteArray NetworkPacket::Private::getBinaryData()
-{
-  QBuffer buf;
-  buf.open(QIODevice::ReadWrite);
-  QDataStream s(&buf);
-  s << properties;
-  return buf.data();
-}
 
 
 void NetworkPacket::sendTo(QIODevice *device) const
 {
-  QByteArray data = d->getBinaryData();
-  if(d->properties.count("frame")) {
-    qDebug() << "data size: " << data.size() << ", original frame data size: " << d->properties["frame"].toByteArray().size();
-  }
   QDataStream s(device);
-  s << d->name << data.size();
-  qint64 wrote = device->write(data);
-  if(wrote != data.size())
-    qWarning() << "Wrote " << wrote << "bytes, expected " << data.size();
-  qDebug() << "Wrote " << wrote << "bytes, expected " << data.size();
+  s << d->name << d->payload.size();
+  qint64 wrote = device->write(d->payload);
+  if(wrote != d->payload.size())
+    qWarning() << "Wrote " << wrote << "bytes, expected " << d->payload.size();
+  qDebug() << "Wrote " << wrote << "bytes, expected " << d->payload.size();
   //qDebug() << "Sent data: " << data;
 }
 
-void NetworkPacket::Private::fromBinaryData(const QByteArray& ba)
-{
-  QBuffer buf;
-  buf.setData(ba);
-  buf.open(QIODevice::ReadWrite);
-  QDataStream s(&buf);
-  s >> properties;
-}
 
 void NetworkPacket::receiveFrom(QIODevice *device)
 {
@@ -90,42 +68,65 @@ void NetworkPacket::receiveFrom(QIODevice *device)
   while(device->bytesAvailable() < data_size)
     qApp->processEvents();
   qDebug() << "reading " << data_size << " bytes";
-  d->fromBinaryData(device->read(data_size));
-
+  d->payload = device->read(data_size);
 }
 
-NetworkPacket * NetworkPacket::setProperty(const KeyType& property, const QVariant& value)
-{
-  d->properties[property] = value;
-  return this;
-}
 
-QVariant NetworkPacket::property(const KeyType& name) const
-{
-  return d->properties[name];
-}
-
-NetworkPacket::NameType NetworkPacket::name() const
+NetworkPacket::Type NetworkPacket::name() const
 {
   return d->name;
 }
 
-NetworkPacket *NetworkPacket::setName(const NameType& name)
+void NetworkPacket::setName(const Type& name)
 {
   d->name = name;
-  return this;
 }
 
-NetworkPacket::ptr operator<<(NetworkPacket::ptr packet, const NetworkPacket::Property& property)
+void NetworkPacket::setPayload(const QByteArray& payload)
 {
-  packet->setProperty(property.key, property.value);
-  return packet;
+  d->payload = payload;
+}
+
+QByteArray NetworkPacket::payload() const
+{
+  return d->payload;
+}
+
+void NetworkPacket::setPayload(const QVariant& payload)
+{
+  QBuffer buffer(&d->payload);
+  buffer.open(QIODevice::WriteOnly);
+  QDataStream s(&buffer);
+  s << payload;
+}
+
+QVariant NetworkPacket::payloadVariant() const
+{
+  QBuffer buffer(&d->payload);
+  buffer.open(QIODevice::ReadOnly);
+  QVariant m;
+  QDataStream s(&buffer);
+  s >> m;
+  return m;
 }
 
 
 
 QDebug operator<<(QDebug dbg, const NetworkPacket& packet)
 {
-  dbg << packet.d->properties;
+  dbg << packet.d->name << packet.d->payload;
   return dbg;
 }
+
+NetworkPacket::ptr operator<<(const NetworkPacket::ptr& packet, const QByteArray& payload)
+{
+  packet->setPayload(payload);
+  return packet;
+}
+
+NetworkPacket::ptr operator<<(const NetworkPacket::ptr& packet, const QVariant& payload)
+{
+  packet->setPayload(payload);
+  return packet;
+}
+

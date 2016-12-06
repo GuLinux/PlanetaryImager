@@ -30,26 +30,27 @@ class NetworkPacket
 {
 public:
   typedef std::shared_ptr<NetworkPacket> ptr;
-  typedef QString NameType;;
-  typedef QString KeyType;
-  struct Property {
-    KeyType key;
-    QVariant value;
-  };
+  typedef QString Type;
   NetworkPacket();
-  NetworkPacket(const NameType &name);
+  NetworkPacket(const Type &name);
   ~NetworkPacket();
   void sendTo(QIODevice *device) const;
   void receiveFrom(QIODevice *device);
-  NetworkPacket *setName(const NameType &name);
-  NameType name() const;
-  NetworkPacket *setProperty(const KeyType &property, const QVariant &value);
-  QVariant property(const KeyType &name) const;
+  void setName(const Type &name);
+  Type name() const;
+  
+  void setPayload(const QByteArray &payload);
+  void setPayload(const QVariant &payload);
+  
+  QByteArray payload() const;
+  QVariant payloadVariant() const;
+  
   friend QDebug operator<<(QDebug dbg, const NetworkPacket &packet);
 private:
   DPTR
 };
-NetworkPacket::ptr operator<<(NetworkPacket::ptr packet, const NetworkPacket::Property &property);
+NetworkPacket::ptr operator<<(const NetworkPacket::ptr &packet, const QByteArray &payload);
+NetworkPacket::ptr operator<<(const NetworkPacket::ptr &packet, const QVariant &payload);
 
 QDebug operator<<(QDebug dbg, const NetworkPacket &packet);
 inline QDebug operator<<(QDebug dbg, const NetworkPacket::ptr &packet) { return dbg << *packet; }

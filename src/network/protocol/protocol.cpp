@@ -21,7 +21,7 @@
 
 using namespace std;
 
-NetworkPacket::ptr NetworkProtocol::packet(const NetworkPacket::NameType& name)
+NetworkPacket::ptr NetworkProtocol::packet(const NetworkPacket::Type& name)
 {
   return make_shared<NetworkPacket>(name);
 }

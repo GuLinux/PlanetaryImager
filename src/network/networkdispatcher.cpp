@@ -34,8 +34,8 @@ DPTR_IMPL(NetworkDispatcher) {
 
 DPTR_IMPL(NetworkReceiver) {
   const NetworkDispatcher::ptr dispatcher;
-  QHash<NetworkPacket::NameType, bool> packets_processed;
-  QHash<NetworkPacket::NameType, NetworkReceiver::HandlePacket> handlers;
+  QHash<NetworkPacket::Type, bool> packets_processed;
+  QHash<NetworkPacket::Type, NetworkReceiver::HandlePacket> handlers;
 };
 
 NetworkReceiver::NetworkReceiver(const NetworkDispatcher::ptr &dispatcher) : dptr(dispatcher)
@@ -63,7 +63,7 @@ void NetworkReceiver::wait_for_processed(const QString& name) const
 
 
 
-void NetworkReceiver::register_handler(const NetworkPacket::NameType& name, const HandlePacket handler)
+void NetworkReceiver::register_handler(const NetworkPacket::Type& name, const HandlePacket handler)
 {
   d->handlers[name] = handler;
 }
