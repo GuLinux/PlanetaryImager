@@ -61,10 +61,7 @@ void NetworkReceiver::wait_for_processed(const QString& name) const
     qApp->processEvents();
 }
 
-void NetworkReceiver::set_processed(const QString& name)
-{
-  d->packets_processed[name] = true;
-}
+
 
 void NetworkReceiver::register_handler(const NetworkPacket::NameType& name, const HandlePacket handler)
 {

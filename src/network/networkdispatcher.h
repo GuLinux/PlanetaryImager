@@ -35,7 +35,6 @@ protected:
   typedef std::function<void(const NetworkPacket::ptr &)> HandlePacket;
   void register_handler(const NetworkPacket::NameType &name, const HandlePacket handler);
   void wait_for_processed(const QString &name) const;
-  void set_processed(const QString &name);
   std::shared_ptr<NetworkDispatcher> dispatcher() const;
 private:
   DPTR
