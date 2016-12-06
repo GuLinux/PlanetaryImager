@@ -69,7 +69,11 @@ SimulatorImager::SimulatorImager(const ImageHandler::ptr& handler) : Imager(hand
     {"movement", Control{2, "movement"}.set_range(0., 5., 1.).set_value(1.)},
     {"seeing",   Control{3l, "seeing"}.set_range(0, 5, 1).set_value(1).set_supports_auto(true)},
     {"bin",	 Control{4l, "bin", Control::Combo}.set_value(4).add_choice("1x1", 1).add_choice("2x2", 2).add_choice("3x3", 3).add_choice("4x4", 4) }, 
-    {"format", Control{5l, "format", Control::Combo}.set_value(SimulatorImagerWorker::BGR).add_choice("Mono", SimulatorImagerWorker::Mono).add_choice("BGR", SimulatorImagerWorker::BGR).add_choice("Bayer", SimulatorImagerWorker::Bayer)}, 
+    {"format", Control{5l, "format", Control::Combo}.set_value(static_cast<int>(SimulatorImagerWorker::BGR))
+      .add_choice("Mono", static_cast<int>(SimulatorImagerWorker::Mono))
+      .add_choice("BGR", static_cast<int>(SimulatorImagerWorker::BGR))
+      .add_choice("Bayer", static_cast<int>(SimulatorImagerWorker::Bayer))
+    }, 
     {"bpp",	 Control{6l, "bpp", Control::Combo}.set_value(8).add_choice("8", 8).add_choice("16", 16)}, 
     {"reject",	 Control{7l, "reject", Control::Combo}.set_value(0).add_choice("Never", 0).add_choice("1 out of 10", 10).add_choice("1 out of 5", 5).add_choice("1 out of 3", 3).add_choice("1 out of 2", 2)}, 
     {"max_speed",	 Control{8, "Max speed", Control::Bool}.set_value(false) }, 
@@ -168,15 +172,14 @@ Frame::ptr SimulatorImagerWorker::shoot()
   };
   auto rand = [](int a, int b) { return qrand() % ((b + 1) - a) + a; };
   cv::Mat cropped, blurred, result;
-  Imager::Control exposure, seeing, format, bpp;
-  {
-      exposure = settings["exposure"];
-      format = settings["format"];
-      seeing = settings["seeing"];
-      bpp = settings["bpp"];
-  }
-  bool is_bayer = format.get_value<ImageType>() == Bayer;
-  const cv::Mat &image = is_bayer ? images[Bayer] : images[format.get_value<int>() + settings["bin"].get_value<int>()];
+  Imager::Control exposure, seeing, bpp;
+  exposure = settings["exposure"];
+  auto format = static_cast<ImageType>(settings["format"].get_value<int>());
+  seeing = settings["seeing"];
+  bpp = settings["bpp"];
+  
+  bool is_bayer = format == Bayer;
+  const cv::Mat &image = is_bayer ? images[Bayer] : images[format + settings["bin"].get_value<int>()];
   int h = image.rows;
   int w = image.cols;
   int crop_factor = settings["movement"].get_value<int>();
@@ -208,7 +211,7 @@ Frame::ptr SimulatorImagerWorker::shoot()
 
   if(bpp.value == 16)
       result.convertTo(result, result.channels() == 1 ? CV_16UC1 : CV_16UC3, BITS_8_TO_16);
-  auto frame_format = formats[format.get_value<ImageType>()];
+  auto frame_format = formats[format];
   auto frame = make_shared<Frame>( bpp.value.toInt(), frame_format, QSize{result.cols, result.rows} );
   move(result.data, result.data + frame->size(), frame->data());
   if(settings["max_speed"].value == 0)
