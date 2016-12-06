@@ -29,7 +29,7 @@
 #include <QMenuBar>
 #include <QMenu>
 
-#include "image_handlers/local_saveimages.h" // TODO: implement remote
+#include "network/client/remotesaveimages.h"
 using namespace std;
 
 
@@ -49,7 +49,7 @@ int main(int argc, char** argv)
     QMetaObject::invokeMethod(networkClient.get(), "connectToHost", Q_ARG(QString, "localhost"), Q_ARG(int, 9999));
     Configuration configuration;
     QObject::connect(networkClient.get(), &NetworkClient::connected, networkClient.get(), [=, &configuration]{
-      auto mainWindow = new PlanetaryImagerMainWindow{remoteDriver, make_shared<LocalSaveImages>(configuration), configuration};
+      auto mainWindow = new PlanetaryImagerMainWindow{remoteDriver, make_shared<RemoteSaveImages>(dispatcher), configuration};
       mainWindow->show();
       if(auto running_camera = remoteDriver->existing_running_camera()) {
         mainWindow->connectCamera(running_camera);

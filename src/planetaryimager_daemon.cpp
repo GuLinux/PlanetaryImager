@@ -38,9 +38,14 @@ int main(int argc, char** argv)
     LogHandler log_handler;
     app.setApplicationName("PlanetaryImager");
     app.setApplicationVersion(PLANETARY_IMAGER_VERSION);
+    Configuration configuration;
     auto driver = make_shared<SupportedDrivers>();
     auto dispatcher = make_shared<NetworkDispatcher>();
-    auto server = make_shared<NetworkServer>(driver, ImageHandler::ptr{new ImageHandlers{ make_shared<FramesForwarder>(dispatcher) }}, dispatcher ); // TODO: add handlers
+    auto imageHandlers = ImageHandler::ptr{new ImageHandlers{
+      make_shared<FramesForwarder>(dispatcher),
+      //make_shared<LocalSaveImages>(configuration)
+    }};
+    auto server = make_shared<NetworkServer>(driver, imageHandlers, dispatcher ); // TODO: add handlers
     QMetaObject::invokeMethod(server.get(), "listen", Q_ARG(QString, "0.0.0.0"), Q_ARG(int, 9999));
     
     QCommandLineParser parser;
