@@ -211,3 +211,13 @@ Imager::Control DriverProtocol::decodeControl(const NetworkPacket::ptr &packet) 
   return variant2control(packet->payloadVariant());
 }
 
+DriverProtocol::DriverStatus DriverProtocol::decodeStatus(const NetworkPacket::ptr& packet)
+{
+  return { packet->payloadVariant().toMap()["imager_running"].toBool() };
+}
+
+void DriverProtocol::encodeStatus(const DriverProtocol::DriverStatus& status, QVariantMap& data)
+{
+  data["imager_running"] = status.imager_running;
+}
+

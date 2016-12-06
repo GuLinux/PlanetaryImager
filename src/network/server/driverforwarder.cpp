@@ -142,6 +142,6 @@ void DriverForwarder::Private::sendControlChanged(const Imager::Control &control
 
 void DriverForwarder::getStatus(QVariantMap& status)
 {
-  status["imager_running"] = static_cast<bool>(d->imager);
+  DriverProtocol::encodeStatus({static_cast<bool>(d->imager)}, status);
 }
 

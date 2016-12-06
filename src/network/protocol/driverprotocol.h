@@ -63,6 +63,11 @@ public:
   static NetworkPacket::ptr sendFrame(const Frame::ptr &frame);
   static Frame::ptr decodeFrame(const NetworkPacket::ptr &packet);
   
+  struct DriverStatus {
+    bool imager_running;
+  };
+  static DriverStatus decodeStatus(const NetworkPacket::ptr &packet);
+  static void encodeStatus(const DriverStatus &status, QVariantMap &data);
 };
 
 #endif // DRIVERPROTOCOL_H

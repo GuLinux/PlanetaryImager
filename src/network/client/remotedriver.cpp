@@ -25,7 +25,7 @@ using namespace std;
 
 DPTR_IMPL(RemoteDriver) {
   Cameras cameras;
-  bool is_remote_camera_initialized = false;
+  DriverProtocol::DriverStatus status;
 };
 
 class RemoteCamera : public Driver::Camera {
@@ -47,6 +47,7 @@ Imager * RemoteCamera::imager(const ImageHandler::ptr& imageHandler) const
 
 RemoteDriver::RemoteDriver(const NetworkDispatcher::ptr &dispatcher) : NetworkReceiver{dispatcher}, dptr()
 {
+  d->status.imager_running = false;
   register_handler(DriverProtocol::CameraListReply, [this](const NetworkPacket::ptr &packet){
     qDebug() << "Processing cameras: " << packet;
     d->cameras.clear();
@@ -54,8 +55,7 @@ RemoteDriver::RemoteDriver(const NetworkDispatcher::ptr &dispatcher) : NetworkRe
   });
   register_handler(NetworkProtocol::HelloReply, [this](const NetworkPacket::ptr &p) {
     qDebug() << "hello reply handler";
-    QVariantMap status = p->payloadVariant().toMap();
-    d->is_remote_camera_initialized = status["imager_running"].toBool();
+    d->status = DriverProtocol::decodeStatus(p);
   });
 }
 
@@ -73,7 +73,7 @@ Driver::Cameras RemoteDriver::cameras() const
 
 Driver::Camera::ptr RemoteDriver::existing_running_camera() const
 {
-  if(! d->is_remote_camera_initialized)
+  if(! d->status.imager_running)
     return {};
   return make_shared<RemoteCamera>(QString{}, -1l, dispatcher());
 }
