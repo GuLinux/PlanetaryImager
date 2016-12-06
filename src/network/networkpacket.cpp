@@ -53,6 +53,10 @@ void NetworkPacket::sendTo(QIODevice *device) const
   QDataStream s(device);
   s << d->name << d->payload.size();
   qint64 wrote = device->write(d->payload);
+  if(wrote == -1) {
+    qWarning() << "Error writing data to device: " << device->errorString();
+    return;
+  }
   if(wrote != d->payload.size())
     qWarning() << "Wrote " << wrote << "bytes, expected " << d->payload.size();
   //qDebug() << "Wrote " << wrote << "bytes, expected " << d->payload.size();

@@ -56,6 +56,8 @@ NetworkDispatcher::ptr NetworkReceiver::dispatcher() const
 
 void NetworkReceiver::wait_for_processed(const QString& name) const
 {
+  if(! d->dispatcher->is_connected())
+    return;
   d->packets_processed[name] = false;
   while(! d->packets_processed[name])
     qApp->processEvents();
@@ -103,12 +105,16 @@ void NetworkDispatcher::detach(NetworkReceiver* receiver)
 
 void NetworkDispatcher::setSocket(QTcpSocket* socket)
 {
-  delete d->socket;
+  //delete d->socket;
   d->socket = socket;
+  if(! socket)
+    return;
   connect(socket, &QTcpSocket::readyRead, bind(&Private::readyRead, d.get()));
 }
 
 void NetworkDispatcher::send(const NetworkPacket::ptr &packet) {
+  if(! is_connected())
+    return;
   qDebug() << packet->name();
   packet->sendTo(d->socket);
 }
@@ -128,3 +134,9 @@ void NetworkDispatcher::Private::readyRead()
   for(auto receiver: receivers)
     receiver->handle(packet);
 }
+
+bool NetworkDispatcher::is_connected() const
+{
+  return d->socket && d->socket->isValid() && d->socket->isOpen();
+}
+

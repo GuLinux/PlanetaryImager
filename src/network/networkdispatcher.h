@@ -51,6 +51,7 @@ public:
   void detach(NetworkReceiver *receiver);
   void setSocket(QTcpSocket *socket);
   void queue_send(const NetworkPacket::ptr &packet);
+  bool is_connected() const;
 public slots:
   void send(const NetworkPacket::ptr &packet);
 private:
