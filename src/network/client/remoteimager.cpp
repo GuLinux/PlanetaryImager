@@ -43,7 +43,9 @@ RemoteImager::RemoteImager(qlonglong id, const ImageHandler::ptr& image_handler,
     DriverProtocol::decode(d->controls, packet);
   });
   register_handler(DriverProtocol::SendFrame, [this](const NetworkPacket::ptr &packet) {
-    d->image_handler->handle(DriverProtocol::decodeFrame(packet));
+    qDebug() << "Got frame";
+    auto frame = DriverProtocol::decodeFrame(packet);
+    d->image_handler->handle(frame);
   });
 
   dispatcher->queue_send( DriverProtocol::packetConnectCamera() << DriverProtocol::propertyCameraId(id) );

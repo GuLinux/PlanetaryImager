@@ -26,7 +26,7 @@ using namespace std;
 DPTR_IMPL(FramesForwarder) {
   NetworkDispatcher::ptr dispatcher;
   FramesForwarder *q;
-  boost::lockfree::spsc_queue<Frame::ptr, boost::lockfree::capacity<5>> queue;
+  boost::lockfree::spsc_queue<Frame::ptr, boost::lockfree::capacity<3>> queue;
 };
 
 FramesForwarder::FramesForwarder(const NetworkDispatcher::ptr& dispatcher) : dptr(dispatcher, this)

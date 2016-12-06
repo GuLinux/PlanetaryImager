@@ -111,7 +111,7 @@ void NetworkDispatcher::setSocket(QTcpSocket* socket)
 }
 
 void NetworkDispatcher::send(const NetworkPacket::ptr &packet) {
-  qDebug() << "Sending tcp packet: " << packet;
+  qDebug() << "Sending tcp packet: " << packet->name();
   packet->sendTo(d->socket);
 }
 

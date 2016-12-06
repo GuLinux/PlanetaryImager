@@ -159,9 +159,10 @@ NetworkPacket::ptr DriverProtocol::sendFrame(const Frame::ptr& frame)
 {
   vector<uint8_t> data;
   QByteArray image;
-  cv::imencode(".jpg", frame->mat(), data);
+  cv::imencode(frame->channels() == 1 ? ".pgm" : ".ppm", frame->mat(), data);
   image.resize(data.size());
   move(begin(data), end(data), begin(image));
+  qDebug() << "FRAME data size: " << image.size() << ", bpp: " << frame->bpp() << ", res: " << frame->resolution() << ", channels: " << frame->channels();
   return packetSendFrame() << NetworkPacket::Property{"frame", image};
 }
 
@@ -171,8 +172,10 @@ Frame::ptr DriverProtocol::decodeFrame(const NetworkPacket::ptr& packet)
   vector<uint8_t> data(bytes.size());
   move(begin(bytes), end(bytes), begin(data));
   auto mat = cv::imdecode(data, CV_LOAD_IMAGE_ANYDEPTH);
+  auto frame = make_shared<Frame>(mat.channels() == 1 ? Frame::Mono : Frame::BGR, mat);
+  qDebug() << "FRAME data size: " << bytes.size() << ", bpp: " << frame->bpp() << ", res: " << frame->resolution() << ", channels: " << frame->channels();
   
-  return make_shared<Frame>(Frame::BGR, mat);
+  return frame;
 }
 
 

@@ -21,10 +21,16 @@
 #include <QIODevice>
 #include <QDataStream>
 #include <QJsonDocument>
+#include "Qt/strings.h"
+#include <QCoreApplication>
+#include <QBuffer>
+
 using namespace std;
 
 DPTR_IMPL(NetworkPacket) {
   QVariantMap properties;
+  QByteArray getBinaryData();
+  void fromBinaryData(const QByteArray &ba);
 };
 
 NetworkPacket::NetworkPacket() : dptr()
@@ -41,21 +47,50 @@ NetworkPacket::~NetworkPacket()
 {
 }
 
+QByteArray NetworkPacket::Private::getBinaryData()
+{
+  QBuffer buf;
+  buf.open(QIODevice::ReadWrite);
+  QDataStream s(&buf);
+  s << properties;
+  return buf.data();
+}
+
+
 void NetworkPacket::sendTo(QIODevice *device) const
 {
-  QByteArray data = QJsonDocument::fromVariant(d->properties).toBinaryData();
-  QDataStream s{device};
-  s << data;
-  qDebug() << "Sent data: " << data;
+  QByteArray data = d->getBinaryData();
+  if(d->properties.count("frame")) {
+    qDebug() << "data size: " << data.size() << ", original frame data size: " << d->properties["frame"].toByteArray().size();
+  }
+  QDataStream s(device);
+  s << data.size();
+  qint64 wrote = device->write(data);
+  if(wrote != data.size())
+    qWarning() << "Wrote " << wrote << "bytes, expected " << data.size();
+  qDebug() << "Wrote " << wrote << "bytes, expected " << data.size();
+  //qDebug() << "Sent data: " << data;
+}
+
+void NetworkPacket::Private::fromBinaryData(const QByteArray& ba)
+{
+  QBuffer buf;
+  buf.setData(ba);
+  buf.open(QIODevice::ReadWrite);
+  QDataStream s(&buf);
+  s >> properties;
 }
 
 void NetworkPacket::receiveFrom(QIODevice *device)
 {
-  QByteArray data;
-  QDataStream s{device};
-  s >> data;
-  qDebug() << "Got data: " << data;
-  d->properties = QJsonDocument::fromBinaryData(data).toVariant().toMap();
+  int data_size;
+  QDataStream s(device);
+  s >> data_size;
+  while(device->bytesAvailable() < data_size)
+    qApp->processEvents();
+  qDebug() << "reading " << data_size << " bytes";
+  d->fromBinaryData(device->read(data_size));
+
 }
 
 NetworkPacket * NetworkPacket::setProperty(const KeyType& property, const QVariant& value)
