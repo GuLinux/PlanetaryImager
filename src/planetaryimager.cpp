@@ -23,6 +23,7 @@
 #include "drivers/available_drivers.h"
 #include "commons/loghandler.h"
 #include "commons/crashhandler.h"
+#include "image_handlers/local_saveimages.h"
 
 using namespace std;
 
@@ -37,7 +38,9 @@ int main(int argc, char** argv)
     app.setApplicationName("PlanetaryImager");
     app.setApplicationDisplayName("Planetary Imager");
     app.setApplicationVersion(PLANETARY_IMAGER_VERSION);
-    PlanetaryImagerMainWindow mainWindow{make_shared<SupportedDrivers>()};
+    Configuration configuration;
+    
+    PlanetaryImagerMainWindow mainWindow{make_shared<SupportedDrivers>(), make_shared<LocalSaveImages>(configuration), configuration};
     mainWindow.show();
     return app.exec();
 }

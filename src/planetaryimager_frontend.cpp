@@ -29,6 +29,7 @@
 #include <QMenuBar>
 #include <QMenu>
 
+#include "image_handlers/local_saveimages.h" // TODO: implement remote
 using namespace std;
 
 
@@ -46,8 +47,9 @@ int main(int argc, char** argv)
     auto networkClient = make_shared<NetworkClient>(dispatcher);
     auto remoteDriver = make_shared<RemoteDriver>(dispatcher);
     QMetaObject::invokeMethod(networkClient.get(), "connectToHost", Q_ARG(QString, "localhost"), Q_ARG(int, 9999));
-    QObject::connect(networkClient.get(), &NetworkClient::connected, networkClient.get(), [=]{
-      auto mainWindow = new PlanetaryImagerMainWindow{remoteDriver};
+    Configuration configuration;
+    QObject::connect(networkClient.get(), &NetworkClient::connected, networkClient.get(), [=, &configuration]{
+      auto mainWindow = new PlanetaryImagerMainWindow{remoteDriver, make_shared<LocalSaveImages>(configuration), configuration};
       mainWindow->show();
       if(auto running_camera = remoteDriver->existing_running_camera()) {
         mainWindow->connectCamera(running_camera);

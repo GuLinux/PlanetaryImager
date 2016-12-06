@@ -16,19 +16,25 @@
  *
  */
 
+#ifndef LOCAL_SAVEIMAGE_H
+#define LOCAL_SAVEIMAGE_H
+
 #include "saveimages.h"
+#include "c++/dptr.h"
 
-using namespace std;
-
-
-SaveImages::SaveImages(QObject* parent) : QObject(parent)
+class Configuration;
+class LocalSaveImages : public SaveImages
 {
-}
+  Q_OBJECT
+public:
+    LocalSaveImages(Configuration &configuration, QObject *parent = 0);
+    ~LocalSaveImages();
+    virtual void handle(const Frame::ptr &frame);
+public slots:
+  void startRecording(Imager *imager);
+  void endRecording();
+private:
+  DPTR
+};
 
-
-SaveImages::~SaveImages()
-{
-}
-
-
-#include "saveimages.moc"
+#endif // SAVEIMAGE_H

@@ -60,18 +60,19 @@ Q_DECLARE_METATYPE(cv::Mat)
 
 DPTR_IMPL(PlanetaryImagerMainWindow) {
   Driver::ptr driver;
+  SaveImages::ptr saveImages;
+  Configuration &configuration;
+  
   static PlanetaryImagerMainWindow *q;
   unique_ptr<Ui::PlanetaryImagerMainWindow> ui;
   Imager *imager = nullptr;
   void rescan_devices();
-  Configuration configuration;
   void saveState();
 
   StatusBarInfoWidget *statusbar_info_widget;
   shared_ptr<DisplayImage> displayImage;
   QThread displayImageThread;
   QThread imagerThread;
-  shared_ptr<SaveImages> saveImages;
   Histogram::ptr histogram;
   CameraControlsWidget* cameraSettingsWidget = nullptr;
   CameraInfoWidget* cameraInfoWidget = nullptr;
@@ -160,7 +161,8 @@ void PlanetaryImagerMainWindow::Private::saveState()
 }
 
 
-PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, QWidget* parent, Qt::WindowFlags flags) : dptr(driver)
+PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, const SaveImages::ptr &save_images, Configuration &configuration, QWidget* parent, Qt::WindowFlags flags)
+  : dptr(driver, save_images, configuration)
 {
     Private::q = this;
     d->ui.reset(new Ui::PlanetaryImagerMainWindow);
@@ -170,7 +172,6 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
     d->ui->recording->setWidget(d->recording_panel = new RecordingPanel{d->configuration});
     d->configurationDialog = new ConfigurationDialog(d->configuration, this);
     d->displayImage = make_shared<DisplayImage>(d->configuration);
-    d->saveImages = make_shared<SaveImages>(d->configuration);
     d->histogram = make_shared<Histogram>(d->configuration);
     d->ui->histogram->setWidget(d->histogramWidget = new HistogramWidget(d->histogram, d->configuration));
     d->ui->statusbar->addPermanentWidget(d->statusbar_info_widget = new StatusBarInfoWidget(), 1);
@@ -325,6 +326,7 @@ void PlanetaryImagerMainWindow::closeEvent(QCloseEvent* event)
 
 #include <iostream>
 
+// TODO: extract to external class
 void PlanetaryImagerMainWindow::Private::init_devices_watcher()
 {
 #ifdef Q_OS_LINUX

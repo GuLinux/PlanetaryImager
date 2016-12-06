@@ -22,21 +22,19 @@
 #include "image_handlers/imagehandler.h"
 #include "drivers/imager.h"
 #include <QObject>
-#include "dptr.h"
 
 class Configuration;
 class SaveImages : public QObject, public ImageHandler
 {
   Q_OBJECT
 public:
-    SaveImages(Configuration &configuration, QObject *parent = 0);
-    ~SaveImages();
-    virtual void handle(const Frame::ptr &frame);
+  typedef std::shared_ptr<SaveImages> ptr;
+    SaveImages(QObject *parent = 0);
+    virtual ~SaveImages();
+    virtual void handle(const Frame::ptr &frame) = 0;
 public slots:
-  void startRecording(Imager *imager);
-  void endRecording();
-private:
-  DPTR
+  virtual void startRecording(Imager *imager) = 0;
+  virtual void endRecording() = 0;
 signals:
   void saveFPS(double fps);
   void meanFPS(double fps);
