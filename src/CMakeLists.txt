@@ -2,8 +2,13 @@ set(PlanetaryImager_GUI_SRCS planetaryimager_mainwindow.cpp planetaryimager_main
 set(PlanetaryImager_SRCS planetaryimager.cpp ${PlanetaryImager_GUI_SRCS})
 
 
+unset(planetary_imager_commons_DEPS CACHE)
 unset(planetary_imager_backend_DEPS CACHE)
 unset(planetary_imager_frontend_DEPS CACHE)
+
+function(add_imager_dependencies)
+  set(planetary_imager_commons_DEPS ${planetary_imager_commons_DEPS} ${ARGN} CACHE INTERNAL "planetary imager common deps" FORCE)
+endfunction()
 
 function(add_backend_dependencies)
   set(planetary_imager_backend_DEPS ${planetary_imager_backend_DEPS} ${ARGN} CACHE INTERNAL "planetary imager backend deps" FORCE)
@@ -18,6 +23,7 @@ add_subdirectory(widgets)
 add_subdirectory(commons)
 
 
+message("common dependencies: ${planetary_imager_commons_DEPS}")
 message("backend dependencies: ${planetary_imager_backend_DEPS}")
 message("frontend dependencies: ${planetary_imager_frontend_DEPS}")
 
@@ -27,6 +33,9 @@ add_executable(planetary_imager ${PlanetaryImager_SRCS} )
 target_link_libraries(planetary_imager
     ${planetary_imager_backend_DEPS}
     ${planetary_imager_frontend_DEPS}
+    ${planetary_imager_commons_DEPS}
+    ${planetary_imager_backend_DEPS}
+    ${planetary_imager_commons_DEPS}
     GuLinux_Qt_Commons
     GuLinux_c++_Commons
     ${Boost_LIBRARIES}
@@ -46,6 +55,9 @@ if(build_network_server)
   target_link_libraries(planetary_imager_daemon
     network_server
     ${planetary_imager_backend_DEPS}
+    ${planetary_imager_commons_DEPS}
+    ${planetary_imager_backend_DEPS}
+    ${planetary_imager_commons_DEPS}
     GuLinux_Qt_Commons
     GuLinux_c++_Commons
     ${Boost_LIBRARIES}
@@ -61,7 +73,7 @@ if(build_network_server)
   target_link_libraries(planetary_imager_frontend
     network_client
     ${planetary_imager_frontend_DEPS}
-    ${planetary_imager_frontend_DEPS}
+    ${planetary_imager_commons_DEPS}
     GuLinux_Qt_Commons
     GuLinux_c++_Commons
     ${Boost_LIBRARIES}

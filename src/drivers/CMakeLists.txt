@@ -5,9 +5,8 @@ function(define_driver include class)
   set(available_drivers_CLASSES "${available_drivers_CLASSES}std::make_shared<${class}>()," CACHE INTERNAL "driver classes" FORCE)
 endfunction(define_driver)
 
- set(UDEVRULES_INSTALL_DIR "/lib/udev/rules.d" CACHE STRING "Base directory for udev rules")
- set(FIRMWARE_INSTALL_BASEDIR "/lib/firmware/" CACHE STRING "Base directory for firmware files")
-add_backend_dependencies(drivers)
+set(UDEVRULES_INSTALL_DIR "/lib/udev/rules.d" CACHE STRING "Base directory for udev rules")
+set(FIRMWARE_INSTALL_BASEDIR "/lib/firmware/" CACHE STRING "Base directory for firmware files")
 
 if(NOT WIN32) # QHY currently not supported in Windows
   option(enable_qhy "Enable QHY Driver (default: ON)" ON)
@@ -32,8 +31,8 @@ if(NOT WIN32) # Not supported either... but coming soon
   add_subdirectory(zwo_asi)
 endif()
 configure_file(available_drivers.h.in available_drivers.h)
-file(GLOB drivers_SRCS *.cpp)
+
 add_library(drivers STATIC driver.cpp imager.cpp imagercontrol.cpp imagerproperties.cpp imagerthread.cpp roi.cpp imagerexception.cpp)
 add_library(supporteddrivers STATIC supporteddrivers.cpp)
-add_backend_dependencies(drivers supporteddrivers)
-add_frontend_dependencies(drivers)
+add_backend_dependencies(supporteddrivers)
+add_imager_dependencies(drivers)

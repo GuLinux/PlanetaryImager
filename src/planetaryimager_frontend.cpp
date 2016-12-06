@@ -25,7 +25,6 @@
 #include "network/networkdispatcher.h"
 #include "commons/loghandler.h"
 #include "commons/crashhandler.h"
-#include "drivers/available_drivers.h" // TODO: find out why this is needed..
 #include <QMenuBar>
 #include <QMenu>
 
