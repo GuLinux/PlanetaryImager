@@ -17,6 +17,8 @@
  */
 
 #include "remotesaveimages.h"
+#include "network/protocol/savefileprotocol.h"
+
 using namespace std;
 
 DPTR_IMPL(RemoteSaveImages) {
@@ -25,6 +27,13 @@ DPTR_IMPL(RemoteSaveImages) {
 
 RemoteSaveImages::RemoteSaveImages(const NetworkDispatcher::ptr& dispatcher) : NetworkReceiver{dispatcher}, dptr(this)
 {
+  register_handler(SaveFileProtocol::signalSaveFPS, [this](const NetworkPacket::ptr &p) { emit saveFPS(p->payloadVariant().toDouble()); });
+  register_handler(SaveFileProtocol::signalMeanFPS, [this](const NetworkPacket::ptr &p) { emit meanFPS(p->payloadVariant().toDouble()); });
+  register_handler(SaveFileProtocol::signalSavedFrames, [this](const NetworkPacket::ptr &p) { emit savedFrames(p->payloadVariant().toLongLong()); });
+  register_handler(SaveFileProtocol::signalDroppedFrames, [this](const NetworkPacket::ptr &p) { emit droppedFrames(p->payloadVariant().toLongLong()); });
+  register_handler(SaveFileProtocol::signalRecording, [this](const NetworkPacket::ptr &p) { emit recording(p->payloadVariant().toString()); });
+  register_handler(SaveFileProtocol::signalFinished, [this](const NetworkPacket::ptr &) { emit finished(); });
+  
 }
 
 RemoteSaveImages::~RemoteSaveImages()
@@ -33,10 +42,12 @@ RemoteSaveImages::~RemoteSaveImages()
 
 void RemoteSaveImages::startRecording(Imager* imager)
 {
+  dispatcher()->queue_send(SaveFileProtocol::packetStartRecording());
 }
 
 void RemoteSaveImages::endRecording()
 {
+  dispatcher()->queue_send(SaveFileProtocol::packetEndRecording());
 }
 
 void RemoteSaveImages::handle(const Frame::ptr& frame)
