@@ -199,7 +199,7 @@ Frame::ptr SimulatorImagerWorker::shoot()
   } else {
       cropped.copyTo(blurred);
   }
-  double exposure_percent = (exposure.value.toDouble() - exposure.range.min.toDouble()) / (exposure.range.max.toDouble()- exposure.range.min.toDouble()) * 100;
+  double exposure_percent = (exposure.value.toDouble() - exposure.range.min.toDouble()) / (exposure.range.max.toDouble()- exposure.range.min.toDouble()) * 100.;
   double exposure_offset = log(exposure_percent)*150 - 100;
   static auto started = chrono::steady_clock::now();
   auto now = chrono::steady_clock::now();
@@ -214,7 +214,7 @@ Frame::ptr SimulatorImagerWorker::shoot()
   auto frame_format = formats[format];
   auto frame = make_shared<Frame>( bpp.value.toInt(), frame_format, QSize{result.cols, result.rows} );
   move(result.data, result.data + frame->size(), frame->data());
-  if(settings["max_speed"].value == 0)
+  if(settings["max_speed"].get_value<bool>())
     return frame;
   Scope sleep{[=]{
     QThread::usleep(exposure.value.toDouble() * 1000.);
