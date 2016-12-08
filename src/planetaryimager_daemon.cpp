@@ -24,7 +24,8 @@
 #include "commons/crashhandler.h"
 #include "commons/loghandler.h"
 #include "network/server/networkserver.h"
-#include "image_handlers/all_handlers.h"
+#include "image_handlers/backend/local_saveimages.h"
+#include "network/server/savefileforwarder.h"
 #include "network/server/framesforwarder.h"
 #include "drivers/supporteddrivers.h"
 using namespace std;
@@ -42,11 +43,14 @@ int main(int argc, char** argv)
     Configuration configuration;
     auto driver = make_shared<SupportedDrivers>();
     auto dispatcher = make_shared<NetworkDispatcher>();
+    auto save_images = make_shared<LocalSaveImages>(configuration);
     auto imageHandlers = ImageHandler::ptr{new ImageHandlers{
       make_shared<FramesForwarder>(dispatcher),
-      //make_shared<LocalSaveImages>(configuration)
+      save_images,
     }};
-    auto server = make_shared<NetworkServer>(driver, imageHandlers, dispatcher ); // TODO: add handlers
+    
+    auto save_files_forwarder = make_shared<SaveFileForwarder>(save_images, dispatcher);
+    auto server = make_shared<NetworkServer>(driver, imageHandlers, dispatcher, save_files_forwarder ); // TODO: add handlers
     QMetaObject::invokeMethod(server.get(), "listen", Q_ARG(QString, "0.0.0.0"), Q_ARG(int, 9999));
     
     QCommandLineParser parser;

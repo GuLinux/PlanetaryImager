@@ -27,7 +27,9 @@
 class SaveFileForwarder : public NetworkReceiver
 {
 public:
+  typedef std::shared_ptr<SaveFileForwarder> ptr;
   SaveFileForwarder(const SaveImages::ptr &save_images, const NetworkDispatcher::ptr &dispatcher);
+  ~SaveFileForwarder();
   void setImager(Imager *imager);
 private:
   DPTR

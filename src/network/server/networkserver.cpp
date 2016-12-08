@@ -35,12 +35,12 @@ DPTR_IMPL(NetworkServer) {
   void new_connection();
 };
 
-NetworkServer::NetworkServer(const Driver::ptr &driver, const ImageHandler::ptr &handler, const NetworkDispatcher::ptr &dispatcher, QObject* parent)
+NetworkServer::NetworkServer(const Driver::ptr &driver, const ImageHandler::ptr &handler, const NetworkDispatcher::ptr &dispatcher, const SaveFileForwarder::ptr &save_file, QObject* parent)
   : QObject{parent}, NetworkReceiver{dispatcher}, dptr(this, driver, handler, dispatcher)
 {
   d->server.setMaxPendingConnections(1);
   connect(&d->server, &QTcpServer::newConnection, bind(&Private::new_connection, d.get()));
-  d->forwarder = make_shared<DriverForwarder>(dispatcher, driver, handler);
+  d->forwarder = make_shared<DriverForwarder>(dispatcher, driver, handler, [save_file](Imager *imager) { save_file->setImager(imager); });
   register_handler(NetworkProtocol::Hello, [this](const NetworkPacket::ptr &p){
     QVariantMap status;
     d->forwarder->getStatus(status);

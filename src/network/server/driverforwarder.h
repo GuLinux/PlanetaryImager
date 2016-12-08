@@ -27,7 +27,8 @@
 class DriverForwarder : public NetworkReceiver
 {
 public:
-    DriverForwarder(const NetworkDispatcher::ptr &dispatcher, const Driver::ptr &driver, const ImageHandler::ptr &handler);
+    typedef std::function<void(Imager *)> OnImagerChanged;
+    DriverForwarder(const NetworkDispatcher::ptr &dispatcher, const Driver::ptr &driver, const ImageHandler::ptr &handler, OnImagerChanged on_imager_changed = {});
     ~DriverForwarder();
     typedef std::shared_ptr<DriverForwarder> ptr;
     void getStatus(QVariantMap &status);

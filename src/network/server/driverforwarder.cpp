@@ -29,6 +29,7 @@ using namespace std::placeholders;
 DPTR_IMPL(DriverForwarder) {
   Driver::ptr driver;
   ImageHandler::ptr handler;
+  OnImagerChanged on_imager_changed;
   DriverForwarder *q;
   Driver::Cameras cameras;
   Imager *imager = nullptr;
@@ -48,7 +49,8 @@ DPTR_IMPL(DriverForwarder) {
 
 #define REGISTER_HANDLER(protocol, name) register_handler(protocol::name, bind(&Private::name, d.get(), _1));
 
-DriverForwarder::DriverForwarder(const NetworkDispatcher::ptr &dispatcher, const Driver::ptr& driver, const ImageHandler::ptr &handler) : NetworkReceiver{dispatcher}, dptr(driver, handler, this)
+DriverForwarder::DriverForwarder(const NetworkDispatcher::ptr &dispatcher, const Driver::ptr& driver, const ImageHandler::ptr &handler, OnImagerChanged on_imager_changed) 
+  : NetworkReceiver{dispatcher}, dptr(driver, handler, on_imager_changed, this)
 {
   REGISTER_HANDLER(DriverProtocol, CameraList)
   REGISTER_HANDLER(DriverProtocol, ConnectCamera)
@@ -72,13 +74,15 @@ void DriverForwarder::Private::CameraList(const NetworkPacket::ptr& p)
 
 void DriverForwarder::Private::ConnectCamera(const NetworkPacket::ptr& p)
 {
-    delete imager;
-    imager = nullptr;
-    auto address = reinterpret_cast<Driver::Camera *>(p->payloadVariant().toLongLong());
-    if(count_if(begin(cameras), end(cameras), [address](const Driver::Camera::ptr &p){ return p.get() == address; }) == 1) {
-      imager = address->imager(handler);
-    }
-    q->dispatcher()->send(DriverProtocol::packetConnectCameraReply()); // TODO: add status
+  delete imager;
+  imager = nullptr;
+  auto address = reinterpret_cast<Driver::Camera *>(p->payloadVariant().toLongLong());
+  if(count_if(begin(cameras), end(cameras), [address](const Driver::Camera::ptr &p){ return p.get() == address; }) == 1) {
+    imager = address->imager(handler);
+  }
+  if(on_imager_changed)
+    on_imager_changed(imager);
+  q->dispatcher()->send(DriverProtocol::packetConnectCameraReply()); // TODO: add status
   QObject::connect(imager, &Imager::fps, q->dispatcher().get(), bind(&Private::sendFPS, this, _1));
   QObject::connect(imager, &Imager::temperature, q->dispatcher().get(), bind(&Private::sendTemperature, this, _1));
   QObject::connect(imager, &Imager::disconnected, q->dispatcher().get(), bind(&Private::sendDisconnected, this));
