@@ -78,9 +78,9 @@ void DurationControlWidget::Private::valueChanged()
   q->valueChanged( q->value() );
 }
 
-double DurationControlWidget::value() const
+QVariant DurationControlWidget::value() const
 {
-  return (d->edit->value() * d->unit()) / d->device_unit.count();
+  return {(d->edit->value() * d->unit()) / d->device_unit.count()};
 }
 
 double DurationControlWidget::Private::unit() const

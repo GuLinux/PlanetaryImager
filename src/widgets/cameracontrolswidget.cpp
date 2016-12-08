@@ -82,7 +82,7 @@ CameraControl::CameraControl(const Imager::Control& control, Imager* imager, QWi
     auto_value_widget->setVisible(control.supports_auto);
     auto_value_widget->setChecked(control.value_auto);
     
-    connect(control_widget, &ControlWidget::valueChanged, [=](double v) {
+    connect(control_widget, &ControlWidget::valueChanged, [=](const QVariant &v) {
       new_value.value = v;
       emit changed();
     });

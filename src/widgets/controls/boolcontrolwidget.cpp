@@ -25,7 +25,7 @@ struct BoolControlWidget::Private {
 BoolControlWidget::BoolControlWidget(QWidget* parent): ControlWidget(parent), dptr()
 {
   layout()->addWidget(d->edit = new QCheckBox);
-  connect(d->edit, &QCheckBox::toggled, [=](bool checked) { emit valueChanged(checked ? 1 : 0); });
+  connect(d->edit, &QCheckBox::toggled, [=](bool checked) { emit valueChanged({checked}); });
 }
 
 BoolControlWidget::~BoolControlWidget()
@@ -38,7 +38,7 @@ void BoolControlWidget::update(const Imager::Control& setting)
   d->edit->setChecked(setting.value == 1);
 }
 
-double BoolControlWidget::value() const
+QVariant BoolControlWidget::value() const
 {
-  return static_cast<double>(d->edit->isChecked());
+  return {d->edit->isChecked()};
 }

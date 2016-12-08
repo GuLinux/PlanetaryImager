@@ -43,7 +43,7 @@ void MenuControlWidget::update(const Imager::Control& setting)
   d->edit->setCurrentIndex(d->edit->findData(setting.value));
 }
 
-double MenuControlWidget::value() const
+QVariant MenuControlWidget::value() const
 {
-  return d->edit->itemData(d->edit->currentIndex()).toDouble();
+  return d->edit->itemData(d->edit->currentIndex());
 }

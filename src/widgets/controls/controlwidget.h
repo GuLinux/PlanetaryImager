@@ -28,11 +28,11 @@ class ControlWidget : public QWidget {
   Q_OBJECT
 public:
   ControlWidget(QWidget* parent = 0);
-  virtual double value() const = 0;
+  virtual QVariant value() const = 0;
 public slots:
   virtual void update(const Imager::Control &setting) = 0;
 signals:
-  void valueChanged(double value);
+  void valueChanged(QVariant value);
 };
 
 #endif // SETTINGWIDGET_H

@@ -40,7 +40,7 @@ void NumberControlWidget::update(const Imager::Control& setting)
   d->edit->setValue(setting.value.toDouble());
 }
 
-double NumberControlWidget::value() const
+QVariant NumberControlWidget::value() const
 {
-  return d->edit->value();
+  return {d->edit->value()};
 }
