@@ -29,7 +29,7 @@ class HistogramWidget : public QWidget
     Q_OBJECT
 public:
 ~HistogramWidget();
-HistogramWidget(const Histogram::ptr &histogram, Configuration &configuration, QWidget* parent = 0);
+HistogramWidget(const Histogram::ptr &histogram, const Configuration::ptr &configuration, QWidget* parent = 0);
 
 private:
     DPTR

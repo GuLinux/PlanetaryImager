@@ -27,7 +27,7 @@ using namespace std;
 using namespace std::placeholders;
 
 DPTR_IMPL(ImageFileWriter) {
-  Configuration &configuration;
+  Configuration::ptr configuration;
   QString filename;
   ImageFileWriter *q;
   function<void(const Frame::ptr&)> writer;
@@ -36,7 +36,7 @@ DPTR_IMPL(ImageFileWriter) {
   void saveFITS(const Frame::ptr &frame) const;
 };
 
-ImageFileWriter::ImageFileWriter(ImageFileWriter::Format format, Configuration& configuration) : dptr(configuration, configuration.savefile(), this)
+ImageFileWriter::ImageFileWriter(ImageFileWriter::Format format, const Configuration::ptr & configuration) : dptr(configuration, configuration->savefile(), this)
 {
   qDebug() << "Format: " << format;
   switch(format) {

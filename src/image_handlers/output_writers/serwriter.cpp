@@ -35,11 +35,11 @@ DPTR_IMPL(SERWriter) {
   vector<QDateTime> frames_datetimes;
 };
 
-SERWriter::SERWriter ( const QString& deviceName, Configuration& configuration ) : dptr(this)
+SERWriter::SERWriter ( const QString& deviceName, const Configuration::ptr & configuration ) : dptr(this)
 {
-  d->file.setFileName(configuration.savefile());
-  qDebug() << "Using buffered output: " << configuration.buffered_output();
-  if(configuration.buffered_output()) {
+  d->file.setFileName(configuration->savefile());
+  qDebug() << "Using buffered output: " << configuration->buffered_output();
+  if(configuration->buffered_output()) {
     d->file.open(QIODevice::ReadWrite);
   }
   else {
@@ -50,8 +50,8 @@ SERWriter::SERWriter ( const QString& deviceName, Configuration& configuration )
   empty_header.datetime_utc = SER_Header::timestamp(QDateTime::currentDateTimeUtc());
   qDebug() << "Starting datetime: " << QDateTime::currentDateTimeUtc() << ", : " << SER_Header::qdatetime(empty_header.datetime_utc);
   ::strcpy(empty_header.camera, deviceName.left(40).toLatin1());
-  ::strcpy(empty_header.observer, configuration.observer().left(40).toLatin1());
-  ::strcpy(empty_header.telescope, configuration.telescope().left(40).toLatin1());
+  ::strcpy(empty_header.observer, configuration->observer().left(40).toLatin1());
+  ::strcpy(empty_header.telescope, configuration->telescope().left(40).toLatin1());
   d->file.write(reinterpret_cast<char*>(&empty_header), sizeof(empty_header));
   d->file.flush();
   d->header = reinterpret_cast<SER_Header*>(d->file.map(0, sizeof(SER_Header)));

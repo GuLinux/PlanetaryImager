@@ -23,7 +23,7 @@
 #include "drivers/imager.h"
 #include <QObject>
 
-class Configuration;
+#include "commons/configuration.h"
 class SaveImages : public QObject, public ImageHandler
 {
   Q_OBJECT

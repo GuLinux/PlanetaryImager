@@ -27,12 +27,13 @@ class Configuration : public QObject
 {
   Q_OBJECT
 public:
+    typedef std::shared_ptr<Configuration> ptr;
     Configuration();
     ~Configuration();
 #define declare_setting(name, type) \
-    void set_## name(const type &value); \
-    void reset_## name(); \
-    type name() const;
+    virtual void set_## name(const type &value); \
+    virtual void reset_## name(); \
+    virtual type name() const;
 
     declare_setting(dock_status, QByteArray )
     declare_setting(main_window_geometry, QByteArray )

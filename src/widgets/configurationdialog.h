@@ -21,18 +21,14 @@
 
 #include <QDialog>
 #include "dptr.h"
-class Configuration;
-namespace Ui
-{
-class ConfigurationDialog;
-}
+#include "commons/configuration.h"
 
 class ConfigurationDialog : public QDialog
 {
     Q_OBJECT
 public:
     ~ConfigurationDialog();
-    ConfigurationDialog(Configuration &configuration, QWidget* parent = 0);
+    ConfigurationDialog(const Configuration::ptr &configuration, QWidget* parent = 0);
 
 private:
   DPTR

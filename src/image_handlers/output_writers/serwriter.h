@@ -25,7 +25,7 @@
 class SERWriter : public FileWriter
 {
 public:
- SERWriter(const QString &deviceName, Configuration &configuration);
+ SERWriter(const QString &deviceName, const Configuration::ptr &configuration);
  ~SERWriter();
  QString filename() const override;
  void handle(const Frame::ptr &frame) override;

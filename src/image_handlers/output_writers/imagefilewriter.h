@@ -25,7 +25,7 @@ class ImageFileWriter : public FileWriter
 {
 public:
   enum Format {PNG, FITS};
-  ImageFileWriter(Format format, Configuration &configuration);
+  ImageFileWriter(Format format, const Configuration::ptr &configuration);
   QString filename() const override;
   void handle(const Frame::ptr & frame) override;
   ~ImageFileWriter();

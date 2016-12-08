@@ -25,9 +25,9 @@ using namespace std;
 QMap< Configuration::SaveFormat, FileWriter::Factory > FileWriter::factories()
 {
   return {
-    {Configuration::SER, [](const QString &deviceName, Configuration &configuration){ return make_shared<SERWriter>(deviceName, configuration); }},
-    {Configuration::Video, [](const QString &, Configuration &configuration){ return make_shared<cvVideoWriter>(configuration); }},
-    {Configuration::PNG, [](const QString &, Configuration &configuration){ return make_shared<ImageFileWriter>(ImageFileWriter::PNG, configuration); }},
-    {Configuration::FITS, [](const QString &, Configuration &configuration){ return make_shared<ImageFileWriter>(ImageFileWriter::FITS, configuration); }},
+    {Configuration::SER, [](const QString &deviceName, const Configuration::ptr &configuration){ return make_shared<SERWriter>(deviceName, configuration); }},
+    {Configuration::Video, [](const QString &, const Configuration::ptr &configuration){ return make_shared<cvVideoWriter>(configuration); }},
+    {Configuration::PNG, [](const QString &, const Configuration::ptr &configuration){ return make_shared<ImageFileWriter>(ImageFileWriter::PNG, configuration); }},
+    {Configuration::FITS, [](const QString &, const Configuration::ptr &configuration){ return make_shared<ImageFileWriter>(ImageFileWriter::FITS, configuration); }},
   };
 }

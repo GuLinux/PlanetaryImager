@@ -64,7 +64,7 @@ Q_DECLARE_METATYPE(cv::Mat)
 DPTR_IMPL(PlanetaryImagerMainWindow) {
   Driver::ptr driver;
   SaveImages::ptr saveImages;
-  Configuration &configuration;
+  Configuration::ptr configuration;
   
   static PlanetaryImagerMainWindow *q;
   unique_ptr<Ui::PlanetaryImagerMainWindow> ui;
@@ -159,12 +159,12 @@ PlanetaryImagerMainWindow::~PlanetaryImagerMainWindow()
 
 void PlanetaryImagerMainWindow::Private::saveState()
 {
-  configuration.set_dock_status(q->saveState());
-  configuration.set_main_window_geometry(q->saveGeometry());
+  configuration->set_dock_status(q->saveState());
+  configuration->set_main_window_geometry(q->saveGeometry());
 }
 
 
-PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, const SaveImages::ptr &save_images, Configuration &configuration, QWidget* parent, Qt::WindowFlags flags)
+PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, const SaveImages::ptr &save_images, const Configuration::ptr &configuration, QWidget* parent, Qt::WindowFlags flags)
   : dptr(driver, save_images, configuration)
 {
     Private::q = this;
@@ -184,7 +184,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
     d->ui->image->layout()->setSpacing(0);
     d->ui->image->layout()->addWidget(d->image_widget = new ZoomableImage(false));
 #ifdef HAVE_QT5_OPENGL // TODO: make configuration item
-    if(d->configuration.opengl())
+    if(d->configuration->opengl())
       d->image_widget->setOpenGL();
 #endif
     d->image_widget->scene()->setBackgroundBrush(QBrush{Qt::black, Qt::Dense4Pattern});
@@ -207,8 +207,8 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
     d->image_widget->toolbar()->setFloatable(true);
     d->image_widget->toolbar()->setMovable(true);
     
-    restoreGeometry(d->configuration.main_window_geometry());
-    restoreState(d->configuration.dock_status());
+    restoreGeometry(d->configuration->main_window_geometry());
+    restoreState(d->configuration->dock_status());
     connect(d->ui->actionAbout, &QAction::triggered, bind(&QMessageBox::about, this, tr("About"),
 							  tr("%1 version %2.\nFast imaging capture software for planetary imaging").arg(qApp->applicationDisplayName())
 							 .arg(qApp->applicationVersion())));
@@ -249,11 +249,11 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
     setupDockWidget(d->ui->actionCamera_Settings, d->ui->camera_settings);
     setupDockWidget(d->ui->actionRecording, d->ui->recording);
     setupDockWidget(d->ui->actionHistogram, d->ui->histogram);
-    if(! d->configuration.widgets_setup_first_run() ) {
+    if(! d->configuration->widgets_setup_first_run() ) {
       tabifyDockWidget(d->ui->chipInfoWidget, d->ui->camera_settings);
       tabifyDockWidget(d->ui->chipInfoWidget, d->ui->histogram);
       tabifyDockWidget(d->ui->chipInfoWidget, d->ui->recording);
-      d->configuration.set_widgets_setup_first_run(true);
+      d->configuration->set_widgets_setup_first_run(true);
     }
     connect(d->ui->actionHide_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::hide, _1) ); });
     connect(d->ui->actionShow_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::show, _1) ); });
@@ -316,7 +316,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
       d->statusbar_info_widget->showMessage("Exposure: %1s, remaining: %2s"_q % QString::number(elapsed, 'f', 1) % QString::number(remaining, 'f', 1), 1000);
     });
     connect(&d->exposure_timer, &ExposureTimer::finished, [=]{ d->statusbar_info_widget->clearMessage(); });
-    connect(&d->configuration, &Configuration::last_control_files_changed, this, bind(&Private::populate_recent_control_files, d.get()));
+    connect(d->configuration.get(), &Configuration::last_control_files_changed, this, bind(&Private::populate_recent_control_files, d.get()));
     d->populate_recent_control_files();
 }
 
@@ -472,30 +472,30 @@ void PlanetaryImagerMainWindow::Private::export_controls(const QString& file_pat
 void PlanetaryImagerMainWindow::Private::pick_controls_file()
 {
   // TODO: last directory used
-  auto filename = QFileDialog::getOpenFileName(q, tr("Select Planetary Imager controls file"), configuration.last_controls_folder(), tr("Planetary Imager controls file (*.json)") );
+  auto filename = QFileDialog::getOpenFileName(q, tr("Select Planetary Imager controls file"), configuration->last_controls_folder(), tr("Planetary Imager controls file (*.json)") );
   if(filename.isEmpty())
     return;
-  configuration.set_last_controls_folder(QFileInfo{filename}.dir().canonicalPath());
+  configuration->set_last_controls_folder(QFileInfo{filename}.dir().canonicalPath());
   import_controls(filename);
-  configuration.add_last_control_file(filename);
+  configuration->add_last_control_file(filename);
 }
 
 void PlanetaryImagerMainWindow::Private::pick_controls_save_file()
 {
   // TODO: last directory used
-  auto filename = QFileDialog::getSaveFileName(q, tr("Export Planetary Imager controls file"), configuration.last_controls_folder(), tr("Planetary Imager controls file (*.json)") );
+  auto filename = QFileDialog::getSaveFileName(q, tr("Export Planetary Imager controls file"), configuration->last_controls_folder(), tr("Planetary Imager controls file (*.json)") );
   if(filename.isEmpty())
     return;
-  configuration.set_last_controls_folder(QFileInfo{filename}.dir().canonicalPath());
+  configuration->set_last_controls_folder(QFileInfo{filename}.dir().canonicalPath());
   export_controls(filename);
-  configuration.add_last_control_file(filename);
+  configuration->add_last_control_file(filename);
 }
 
 void PlanetaryImagerMainWindow::Private::populate_recent_control_files()
 {
   delete ui->actionRecent_Files->menu();
   ui->actionRecent_Files->setMenu(new QMenu);
-  for(auto file: configuration.last_control_files()) {
+  for(auto file: configuration->last_control_files()) {
     connect(ui->actionRecent_Files->menu()->addAction(file), &QAction::triggered, q, bind(&Private::import_controls, this, file));
   }
 }

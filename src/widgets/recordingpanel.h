@@ -22,13 +22,13 @@
 #include <QWidget>
 #include "dptr.h"
 
-class Configuration;
+#include "commons/configuration.h"
 class RecordingPanel : public QWidget
 {
     Q_OBJECT
 public:
     ~RecordingPanel();
-    RecordingPanel(Configuration &configuration, QWidget* parent = 0);
+    RecordingPanel(const Configuration::ptr &configuration, QWidget* parent = 0);
 public slots:
   void recording(bool recording = false, const QString &filename = {});
   void saveFPS(double fps);

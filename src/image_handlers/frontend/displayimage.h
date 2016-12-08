@@ -23,13 +23,13 @@
 #include "dptr.h"
 #include "image_handlers/imagehandler.h"
 
-class Configuration;
+#include "commons/configuration.h"
 class DisplayImage : public QObject, public ImageHandler
 {
 Q_OBJECT
 public:
     ~DisplayImage();
-    DisplayImage(Configuration &configuration, QObject* parent = 0);
+    DisplayImage(const Configuration::ptr &configuration, QObject* parent = 0);
     virtual void handle(const Frame::ptr &frame);
     void setRecording(bool recording);
     QRect imageRect() const;

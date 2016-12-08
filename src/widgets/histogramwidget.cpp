@@ -27,7 +27,7 @@ using namespace std::placeholders;
 
 DPTR_IMPL(HistogramWidget) {
   Histogram::ptr histogram;
-  Configuration &configuration;
+  Configuration::ptr configuration;
   HistogramWidget *q;
   std::unique_ptr<Ui::HistogramWidget> ui;
   void got_histogram(const QImage& histogram);
@@ -37,28 +37,28 @@ HistogramWidget::~HistogramWidget()
 {
 }
 
-HistogramWidget::HistogramWidget(const Histogram::ptr &histogram, Configuration &configuration, QWidget* parent) : dptr(histogram, configuration, this)
+HistogramWidget::HistogramWidget(const Histogram::ptr &histogram, const Configuration::ptr &configuration, QWidget* parent) : dptr(histogram, configuration, this)
 {
     d->ui.reset(new Ui::HistogramWidget);
     d->ui->setupUi(this);
-    d->ui->histogram_bins->setValue(d->configuration.histogram_bins());
+    d->ui->histogram_bins->setValue(d->configuration->histogram_bins());
     
     auto update_bins = [&]{
       auto value = d->ui->histogram_bins->value();
       d->histogram->set_bins(value);
-      d->configuration.set_histogram_bins(value);
+      d->configuration->set_histogram_bins(value);
     };
     update_bins();
     connect(d->ui->histogram_bins, F_PTR(QSpinBox, valueChanged, int), update_bins);
     connect(d->histogram.get(), &Histogram::histogram, this, bind(&Private::got_histogram, d.get(), _1), Qt::QueuedConnection);
     connect(d->ui->histogram_logarithmic, &QCheckBox::toggled, this, bind(&Private::toggle_histogram_logarithmic, d.get(), _1));
-    d->toggle_histogram_logarithmic(configuration.histogram_logarithmic());
+    d->toggle_histogram_logarithmic(configuration->histogram_logarithmic());
 }
 
 void HistogramWidget::Private::toggle_histogram_logarithmic(bool logarithmic)
 {
   ui->histogram_logarithmic->setChecked(logarithmic);
-  configuration.set_histogram_logarithmic(logarithmic);
+  configuration->set_histogram_logarithmic(logarithmic);
   histogram->setLogarithmic(logarithmic);
 }
 

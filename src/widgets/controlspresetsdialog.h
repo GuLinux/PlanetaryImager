@@ -29,7 +29,7 @@ class ControlsPresetsDialog : public QDialog
 {
     Q_OBJECT
 public:
-    ControlsPresetsDialog(Configuration &configuration, Imager *imager, QWidget *parent = 0);
+    ControlsPresetsDialog(const Configuration::ptr &configuration, Imager *imager, QWidget *parent = 0);
     ~ControlsPresetsDialog();
 private:
   DPTR

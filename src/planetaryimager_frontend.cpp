@@ -46,7 +46,7 @@ int main(int argc, char** argv)
     auto networkClient = make_shared<NetworkClient>(dispatcher);
     auto remoteDriver = make_shared<RemoteDriver>(dispatcher);
     QMetaObject::invokeMethod(networkClient.get(), "connectToHost", Q_ARG(QString, "localhost"), Q_ARG(int, 9999));
-    Configuration configuration;
+    auto configuration = make_shared<Configuration>();
     QObject::connect(networkClient.get(), &NetworkClient::connected, networkClient.get(), [=, &configuration]{
       auto mainWindow = new PlanetaryImagerMainWindow{remoteDriver, make_shared<RemoteSaveImages>(dispatcher), configuration};
       mainWindow->show();

@@ -44,51 +44,51 @@ RecordingPanel::~RecordingPanel()
 {
 }
 
-RecordingPanel::RecordingPanel(Configuration& configuration, QWidget* parent) : QWidget{parent}, dptr(this)
+RecordingPanel::RecordingPanel(const Configuration::ptr & configuration, QWidget* parent) : QWidget{parent}, dptr(this)
 {
   d->ui.reset(new Ui::RecordingPanel);
   d->ui->setupUi(this);
   recording(false);
-  d->ui->save_recording_info->setCurrentIndex( (configuration.save_json_info_file() ? 1 : 0) + (configuration.save_info_file() ? 2 : 0) );
-  d->ui->saveDirectory->setText(configuration.save_directory());
-  d->ui->filePrefix->setCurrentText(configuration.save_file_prefix());
-  d->ui->fileSuffix->setCurrentText(configuration.save_file_suffix());
+  d->ui->save_recording_info->setCurrentIndex( (configuration->save_json_info_file() ? 1 : 0) + (configuration->save_info_file() ? 2 : 0) );
+  d->ui->saveDirectory->setText(configuration->save_directory());
+  d->ui->filePrefix->setCurrentText(configuration->save_file_prefix());
+  d->ui->fileSuffix->setCurrentText(configuration->save_file_suffix());
   static vector<Configuration::SaveFormat> format_combo_index {
     Configuration::SER,
     Configuration::Video,
     Configuration::PNG,
     Configuration::FITS,
   };
-  auto current_format_index = std::find(format_combo_index.begin(), format_combo_index.end(), configuration.save_format());
+  auto current_format_index = std::find(format_combo_index.begin(), format_combo_index.end(), configuration->save_format());
   d->ui->videoOutputType->setCurrentIndex( current_format_index == format_combo_index.end() ? 0 : current_format_index-format_combo_index.begin() );
   connect(d->ui->videoOutputType, F_PTR(QComboBox, activated, int), [&](int index) {
-    configuration.set_save_format(format_combo_index[index]);
+    configuration->set_save_format(format_combo_index[index]);
   });
   connect(d->ui->saveDirectory, &QLineEdit::textChanged, [&configuration](const QString &directory){
-    configuration.set_save_directory(directory);
+    configuration->set_save_directory(directory);
   });
   
   
   auto is_reloading_prefix_suffix = make_shared<bool>(false);
-  auto change_prefix = [is_reloading_prefix_suffix, &configuration](const QString &prefix){ if(! *is_reloading_prefix_suffix) configuration.set_save_file_prefix(prefix); };
-  auto change_suffix = [is_reloading_prefix_suffix, &configuration](const QString &suffix){ if(! *is_reloading_prefix_suffix) configuration.set_save_file_suffix(suffix); };
+  auto change_prefix = [is_reloading_prefix_suffix, &configuration](const QString &prefix){ if(! *is_reloading_prefix_suffix) configuration->set_save_file_prefix(prefix); };
+  auto change_suffix = [is_reloading_prefix_suffix, &configuration](const QString &suffix){ if(! *is_reloading_prefix_suffix) configuration->set_save_file_suffix(suffix); };
   connect(d->ui->filePrefix, F_PTR(QComboBox, editTextChanged, const QString&), this, change_prefix);
   connect(d->ui->fileSuffix, F_PTR(QComboBox, editTextChanged, const QString&), this, change_suffix);
   
   auto reload_filename_hints = [&,is_reloading_prefix_suffix]{
       *is_reloading_prefix_suffix = true;
       d->ui->filePrefix->clear();
-      d->ui->filePrefix->addItems(configuration.save_file_avail_prefixes());
-      d->ui->filePrefix->setCurrentText(configuration.save_file_prefix());
+      d->ui->filePrefix->addItems(configuration->save_file_avail_prefixes());
+      d->ui->filePrefix->setCurrentText(configuration->save_file_prefix());
       d->ui->fileSuffix->clear();
-      d->ui->fileSuffix->addItems(configuration.save_file_avail_suffixes());
-      d->ui->fileSuffix->setCurrentText(configuration.save_file_suffix());
+      d->ui->fileSuffix->addItems(configuration->save_file_avail_suffixes());
+      d->ui->fileSuffix->setCurrentText(configuration->save_file_suffix());
       *is_reloading_prefix_suffix = false;
 };
   reload_filename_hints();
-  d->ui->limitType->setCurrentIndex(configuration.recording_limit_type());
+  d->ui->limitType->setCurrentIndex(configuration->recording_limit_type());
   connect(d->ui->limitType, F_PTR(QComboBox, activated, int), d->ui->limitsWidgets, &QStackedWidget::setCurrentIndex);
-  connect(d->ui->limitType, F_PTR(QComboBox, activated, int), [&configuration](int index){ configuration.set_recording_limit_type(static_cast<Configuration::RecordingLimit>(index)); });
+  connect(d->ui->limitType, F_PTR(QComboBox, activated, int), [&configuration](int index){ configuration->set_recording_limit_type(static_cast<Configuration::RecordingLimit>(index)); });
   d->ui->limitsWidgets->setCurrentIndex(d->ui->limitType->currentIndex());
   
   connect(d->ui->filename_options, &QPushButton::clicked, [&,reload_filename_hints] {
@@ -102,33 +102,33 @@ RecordingPanel::RecordingPanel(Configuration& configuration, QWidget* parent) : 
       reload_filename_hints();
       dialog->deleteLater();
   });
-  d->ui->saveFramesLimit->setCurrentText(QString::number(configuration.recording_frames_limit()));
+  d->ui->saveFramesLimit->setCurrentText(QString::number(configuration->recording_frames_limit()));
   connect(d->ui->saveFramesLimit, &QComboBox::currentTextChanged, [&configuration](const QString &text){
-      configuration.set_recording_frames_limit(text.toLongLong());
+      configuration->set_recording_frames_limit(text.toLongLong());
   });
   
-  d->ui->duration_limit->setValue(configuration.recording_seconds_limit());
+  d->ui->duration_limit->setValue(configuration->recording_seconds_limit());
   connect(d->ui->duration_limit, F_PTR(QDoubleSpinBox, valueChanged, double), [&configuration](double seconds){
-      configuration.set_recording_seconds_limit(seconds);
+      configuration->set_recording_seconds_limit(seconds);
   });
   
   connect(d->ui->save_recording_info, F_PTR(QComboBox, activated, int), [&configuration](int index) {
     switch(index) {
       case 0:
-        configuration.set_save_info_file(false);
-        configuration.set_save_json_info_file(false);
+        configuration->set_save_info_file(false);
+        configuration->set_save_json_info_file(false);
         break;
       case 1:
-        configuration.set_save_info_file(false);
-        configuration.set_save_json_info_file(true);
+        configuration->set_save_info_file(false);
+        configuration->set_save_json_info_file(true);
         break;
       case 2:
-        configuration.set_save_info_file(true);
-        configuration.set_save_json_info_file(false);
+        configuration->set_save_info_file(true);
+        configuration->set_save_json_info_file(false);
         break;
       case 3:
-        configuration.set_save_info_file(true);
-        configuration.set_save_json_info_file(true);
+        configuration->set_save_info_file(true);
+        configuration->set_save_json_info_file(true);
         break;
     }
   });
@@ -143,14 +143,14 @@ RecordingPanel::RecordingPanel(Configuration& configuration, QWidget* parent) : 
   connect(pickDirectory, &QAction::triggered, [&]{
     QFileDialog *filedialog = new QFileDialog(this);
     filedialog->setFileMode(QFileDialog::Directory);
-    filedialog->setDirectory(configuration.save_directory());
+    filedialog->setDirectory(configuration->save_directory());
     filedialog->setOption(QFileDialog::ShowDirsOnly);
     connect(filedialog, SIGNAL(fileSelected(QString)), d->ui->saveDirectory, SLOT(setText(QString)));
     connect(filedialog, SIGNAL(finished(int)), filedialog, SLOT(deleteLater()));
     filedialog->show();
   });
   auto check_directory = [&] {
-    d->ui->start_stop_recording->setEnabled(QDir(configuration.save_directory()).exists());
+    d->ui->start_stop_recording->setEnabled(QDir(configuration->save_directory()).exists());
   };
   check_directory();
   connect(d->ui->saveDirectory, &QLineEdit::textChanged, check_directory);

@@ -43,7 +43,7 @@ class WriterThreadWorker;
 };
 
 DPTR_IMPL(LocalSaveImages) {
-    Configuration &configuration;
+    Configuration::ptr configuration;
     WriterThreadWorker *worker;
     QThread *recordingThread;
     LocalSaveImages *q;
@@ -213,14 +213,14 @@ void WriterThreadWorker::start(const RecordingParameters & recording_parameters,
 
 FileWriter::Factory LocalSaveImages::Private::writerFactory()
 {
-  if(configuration.savefile().isEmpty()) {
+  if(configuration->savefile().isEmpty()) {
     return {};
   }
 
-  return FileWriter::factories()[configuration.save_format()];
+  return FileWriter::factories()[configuration->save_format()];
 }
 
-LocalSaveImages::LocalSaveImages(Configuration& configuration, QObject* parent) : dptr(configuration, new WriterThreadWorker(this), new QThread, this)
+LocalSaveImages::LocalSaveImages(const Configuration::ptr & configuration, QObject* parent) : dptr(configuration, new WriterThreadWorker(this), new QThread, this)
 {
   d->worker->moveToThread(d->recordingThread);
   d->recordingThread->start();
@@ -248,15 +248,15 @@ void LocalSaveImages::startRecording(Imager *imager)
     RecordingInformation::ptr recording_information;
     
     RecordingParameters recording{
-      bind(writerFactory, imager->name(), std::ref<Configuration>(d->configuration)), 
+      bind(writerFactory, imager->name(), d->configuration), 
       make_shared<RecordingInformation>(d->configuration, imager),
-      d->configuration.recording_limit_type(),
-      d->configuration.recording_frames_limit(),
-      chrono::duration<double>{d->configuration.recording_seconds_limit()},
-      d->configuration.save_info_file(),
-      d->configuration.save_json_info_file(),
+      d->configuration->recording_limit_type(),
+      d->configuration->recording_frames_limit(),
+      chrono::duration<double>{d->configuration->recording_seconds_limit()},
+      d->configuration->save_info_file(),
+      d->configuration->save_json_info_file(),
     };    
-    QMetaObject::invokeMethod(d->worker, "start", Q_ARG(RecordingParameters, recording), Q_ARG(qlonglong, d->configuration.max_memory_usage() ));    
+    QMetaObject::invokeMethod(d->worker, "start", Q_ARG(RecordingParameters, recording), Q_ARG(qlonglong, d->configuration->max_memory_usage() ));    
   }
 }
 

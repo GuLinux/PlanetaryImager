@@ -170,7 +170,7 @@ CameraControlsWidget::~CameraControlsWidget()
 
 
 
-CameraControlsWidget::CameraControlsWidget(Imager *imager, Configuration &configuration, QWidget *parent) : dptr(this)
+CameraControlsWidget::CameraControlsWidget(Imager *imager, const Configuration::ptr &configuration, QWidget *parent) : dptr(this)
 {
   d->ui.reset(new Ui::CameraControlsWidget);
   d->ui->setupUi(this);

@@ -22,12 +22,12 @@
 #include "image_handlers/saveimages.h"
 #include "c++/dptr.h"
 
-class Configuration;
+#include "commons/configuration.h"
 class LocalSaveImages : public SaveImages
 {
   Q_OBJECT
 public:
-    LocalSaveImages(Configuration &configuration, QObject *parent = 0);
+    LocalSaveImages(const Configuration::ptr &configuration, QObject *parent = 0);
     ~LocalSaveImages();
     virtual void handle(const Frame::ptr &frame);
 public slots:

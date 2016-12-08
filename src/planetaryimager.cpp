@@ -38,7 +38,7 @@ int main(int argc, char** argv)
     app.setApplicationName("PlanetaryImager");
     app.setApplicationDisplayName("Planetary Imager");
     app.setApplicationVersion(PLANETARY_IMAGER_VERSION);
-    Configuration configuration;
+    auto configuration = make_shared<Configuration>();
     
     PlanetaryImagerMainWindow mainWindow{make_shared<SupportedDrivers>(), make_shared<LocalSaveImages>(configuration), configuration};
     mainWindow.show();

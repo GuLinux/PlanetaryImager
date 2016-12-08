@@ -22,14 +22,14 @@
 #include <QtCore>
 #include "image_handlers/imagehandler.h"
 #include "dptr.h"
-class Configuration;
+#include "commons/configuration.h"
 class Histogram : public QObject, public ImageHandler
 {
   Q_OBJECT
 public:
   typedef std::shared_ptr<Histogram> ptr;
   ~Histogram();
-  Histogram(Configuration &configuration, QObject* parent = 0);
+  Histogram(const Configuration::ptr &configuration, QObject* parent = 0);
   virtual void handle(const Frame::ptr &frame);
   void set_bins(std::size_t bins_size);
   void setRecording(bool recording);

@@ -27,7 +27,7 @@ using namespace std;
 
 DPTR_IMPL(ControlsPresetsDialog) {
   unique_ptr<Ui::ControlsPresetsDialog> ui;
-  Configuration &configuration;
+  Configuration::ptr configuration;
   Imager *imager;
   ControlsPresetsDialog *q;
   
@@ -42,7 +42,7 @@ DPTR_IMPL(ControlsPresetsDialog) {
   QString current_selection() const;
 };
 
-ControlsPresetsDialog::ControlsPresetsDialog(Configuration &configuration, Imager *imager, QWidget* parent)
+ControlsPresetsDialog::ControlsPresetsDialog(const Configuration::ptr &configuration, Imager *imager, QWidget* parent)
   : QDialog{parent}, dptr(make_unique<Ui::ControlsPresetsDialog>(), configuration, imager, this)
 {
     d->ui->setupUi(this);
@@ -63,13 +63,13 @@ void ControlsPresetsDialog::Private::add_preset()
   auto name = QInputDialog::getText(q, tr("Save preset as..."), tr("Enter preset name to save current controls") );
   if(name.isEmpty())
     return;
-  configuration.add_preset(name, QVariantMap{{"controls", imager->export_controls()}});
+  configuration->add_preset(name, QVariantMap{{"controls", imager->export_controls()}});
   load_presets();
 }
 
 void ControlsPresetsDialog::Private::load_presets()
 {
-  model.setStringList(configuration.list_presets());
+  model.setStringList(configuration->list_presets());
   selection_changed();
 }
 
@@ -77,7 +77,7 @@ void ControlsPresetsDialog::Private::load_preset()
 {
   if(! has_selection())
     return;
-  auto preset = configuration.load_preset(current_selection());
+  auto preset = configuration->load_preset(current_selection());
   imager->import_controls(preset["controls"].toList());
 }
 
@@ -85,7 +85,7 @@ void ControlsPresetsDialog::Private::remove_preset()
 {
   if(! has_selection())
     return;
-  configuration.remove_preset(current_selection());
+  configuration->remove_preset(current_selection());
   load_presets();
 }
 

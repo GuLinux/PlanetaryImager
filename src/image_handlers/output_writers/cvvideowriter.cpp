@@ -24,12 +24,12 @@ using namespace std;
 
 DPTR_IMPL(cvVideoWriter) {
   QString filename;
-  Configuration &configuration;
+  Configuration::ptr configuration;
   cvVideoWriter *q;
   cv::VideoWriter videoWriter;
 };
 
-cvVideoWriter::cvVideoWriter(Configuration& configuration ) : dptr(configuration.savefile(), configuration, this)
+cvVideoWriter::cvVideoWriter(const Configuration::ptr & configuration ) : dptr(configuration->savefile(), configuration, this)
 {
   qDebug() << "writing to " << filename();
 }
@@ -50,7 +50,7 @@ void cvVideoWriter::handle ( const Frame::ptr &frame )
   auto size = cv::Size{frame->mat().cols, frame->mat().rows};
   try {
     if(!d->videoWriter.isOpened())
-      d->videoWriter.open(d->filename.toStdString(), fourcc(d->configuration.video_codec().toStdString()), 25, size);
+      d->videoWriter.open(d->filename.toStdString(), fourcc(d->configuration->video_codec().toStdString()), 25, size);
     if(! d->videoWriter.isOpened()) {
       qWarning() << "unable to open video file" << d->filename << size;
       return;

@@ -40,7 +40,7 @@ int main(int argc, char** argv)
     LogHandler log_handler;
     app.setApplicationName("PlanetaryImager");
     app.setApplicationVersion(PLANETARY_IMAGER_VERSION);
-    Configuration configuration;
+    auto configuration = make_shared<Configuration>();
     auto driver = make_shared<SupportedDrivers>();
     auto dispatcher = make_shared<NetworkDispatcher>();
     auto save_images = make_shared<LocalSaveImages>(configuration);

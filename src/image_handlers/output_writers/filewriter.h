@@ -27,7 +27,7 @@
 class FileWriter : public ImageHandler {
 public:
   typedef std::shared_ptr<FileWriter> Ptr;
-  typedef std::function<Ptr(const QString &deviceName, Configuration &configuration)> Factory;
+  typedef std::function<Ptr(const QString &deviceName, const Configuration::ptr &configuration)> Factory;
   virtual void handle(const Frame::ptr &frame) = 0;
   virtual QString filename() const = 0;
   static QMap<Configuration::SaveFormat, Factory> factories();

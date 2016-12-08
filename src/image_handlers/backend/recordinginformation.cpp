@@ -33,12 +33,12 @@ DPTR_IMPL(RecordingInformation) {
   QVariantMap properties;
 };
 
-RecordingInformation::RecordingInformation(Configuration& configuration, Imager *imager) : dptr(QDateTime::currentDateTime())
+RecordingInformation::RecordingInformation(const Configuration::ptr & configuration, Imager *imager) : dptr(QDateTime::currentDateTime())
 {
   d->properties["started"] = d->started.toString(Qt::ISODate);
   d->properties["camera"] = imager->name();
-  d->properties["observer"] = configuration.observer();
-  d->properties["telescope"] = configuration.telescope();
+  d->properties["observer"] = configuration->observer();
+  d->properties["telescope"] = configuration->telescope();
   QVariantList controls;
   for(auto control: imager->controls()) {
     controls.push_back(control.asMap());
