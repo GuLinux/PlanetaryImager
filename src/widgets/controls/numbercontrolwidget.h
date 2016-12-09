@@ -26,7 +26,7 @@ class NumberControlWidget : public ControlWidget {
 public:
   NumberControlWidget(QWidget* parent = 0);
   ~NumberControlWidget();
-  virtual double value() const;
+  virtual QVariant value() const;
 public slots:
   virtual void update(const Imager::Control &setting);
 private:

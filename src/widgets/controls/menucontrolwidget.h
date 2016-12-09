@@ -24,7 +24,7 @@ class MenuControlWidget : public ControlWidget {
 public:
   MenuControlWidget(QWidget* parent = 0);
   ~MenuControlWidget();
-  virtual double value() const;
+  virtual QVariant value() const;
 public slots:
   virtual void update(const Imager::Control &setting);
 private:

@@ -76,9 +76,9 @@ SimulatorImager::SimulatorImager(const ImageHandler::ptr& handler) : Imager(hand
     }, 
     {"bpp",	 Control{6l, "bpp", Control::Combo}.set_value(8).add_choice("8", 8).add_choice("16", 16)}, 
     {"reject",	 Control{7l, "reject", Control::Combo}.set_value(0).add_choice("Never", 0).add_choice("1 out of 10", 10).add_choice("1 out of 5", 5).add_choice("1 out of 3", 3).add_choice("1 out of 2", 2)}, 
-    {"max_speed",	 Control{8, "Max speed", Control::Bool}.set_value(false) }, 
+    {"max_speed",	 Control{8l, "max_speed", Control::Bool}.set_value(false) }, 
   };
-  
+  qDebug() << "Max speed: " << d->settings["max_speed"];
   connect(&d->refresh_temperature, &QTimer::timeout, this, [this]{
    push_job_on_thread([&]{
       double celsius = SimulatorImager::rand(200, 500) / 10.;

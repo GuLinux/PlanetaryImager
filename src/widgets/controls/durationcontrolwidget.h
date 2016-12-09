@@ -26,7 +26,7 @@ class DurationControlWidget : public ControlWidget {
 public:
     DurationControlWidget(QWidget* parent = 0);
     ~DurationControlWidget();
-    virtual double value() const;
+    virtual QVariant value() const;
 public slots:
   virtual void update(const Imager::Control &setting);
 private:
