@@ -37,14 +37,15 @@ public:
 
     declare_setting(dock_status, QByteArray )
     declare_setting(main_window_geometry, QByteArray )
-    declare_setting(max_memory_usage, long long )
-    declare_setting(buffered_output, bool )
     declare_setting(max_display_fps, int )
-    declare_setting(limit_fps, bool)
     declare_setting(max_display_fps_recording, int )
     declare_setting(limit_fps_recording, bool)
     declare_setting(debayer, bool)
+    declare_setting(limit_fps, bool)
     declare_setting(opengl, bool)
+    
+    declare_setting(buffered_output, bool )
+    declare_setting(max_memory_usage, long long )
     
     enum RecordingLimit { Infinite = 0, FramesNumber = 1, Duration = 2, FileSize = 3};
     declare_setting(recording_limit_type, RecordingLimit)
@@ -57,6 +58,13 @@ public:
     declare_setting(save_file_avail_suffixes, QStringList)
     declare_setting(save_file_prefix, QString)
     declare_setting(save_file_suffix, QString )
+
+    enum SaveFormat { SER, Video, PNG, FITS };
+    declare_setting(save_format, SaveFormat)
+    declare_setting(video_codec, QString)
+    declare_setting(save_json_info_file, bool)
+    declare_setting(save_info_file, bool)
+
     declare_setting(observer, QString)
     declare_setting(telescope, QString)
 
@@ -74,11 +82,6 @@ public:
     void resetCannyAdvancedSettings();
     void resetSobelAdvancedSettings();
 
-    enum SaveFormat { SER, Video, PNG, FITS };
-    declare_setting(save_format, SaveFormat)
-    declare_setting(video_codec, QString)
-    declare_setting(save_json_info_file, bool)
-    declare_setting(save_info_file, bool)
     declare_setting(widgets_setup_first_run, bool)
     declare_setting(histogram_bins, int)
     declare_setting(histogram_logarithmic, bool)

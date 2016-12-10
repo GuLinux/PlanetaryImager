@@ -24,6 +24,7 @@
 #include "commons/crashhandler.h"
 #include "commons/loghandler.h"
 #include "network/server/networkserver.h"
+#include "network/server/configurationforwarder.h"
 #include "image_handlers/backend/local_saveimages.h"
 #include "network/server/savefileforwarder.h"
 #include "network/server/framesforwarder.h"
@@ -48,7 +49,7 @@ int main(int argc, char** argv)
       make_shared<FramesForwarder>(dispatcher),
       save_images,
     }};
-    
+    auto configuration_forwarder = make_shared<ConfigurationForwarder>(configuration, dispatcher);
     auto save_files_forwarder = make_shared<SaveFileForwarder>(save_images, dispatcher);
     auto server = make_shared<NetworkServer>(driver, imageHandlers, dispatcher, save_files_forwarder ); // TODO: add handlers
     QMetaObject::invokeMethod(server.get(), "listen", Q_ARG(QString, "0.0.0.0"), Q_ARG(int, 9999));
