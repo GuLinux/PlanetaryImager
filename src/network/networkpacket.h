@@ -34,7 +34,7 @@ public:
   NetworkPacket();
   NetworkPacket(const Type &name);
   ~NetworkPacket();
-  void sendTo(QIODevice *device) const;
+  qint64 sendTo(QIODevice *device) const;
   void receiveFrom(QIODevice *device);
   void setName(const Type &name);
   Type name() const;

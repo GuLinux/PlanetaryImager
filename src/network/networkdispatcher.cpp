@@ -29,6 +29,8 @@ DPTR_IMPL(NetworkDispatcher) {
   QSet<NetworkReceiver *> receivers;
   QTcpSocket *socket = nullptr;
   void readyRead();
+  uint64_t written;
+  uint64_t sent;
 };
 
 
@@ -106,17 +108,26 @@ void NetworkDispatcher::detach(NetworkReceiver* receiver)
 void NetworkDispatcher::setSocket(QTcpSocket* socket)
 {
   //delete d->socket;
+  if(d->socket)
+    d->socket->disconnect(this, 0);
   d->socket = socket;
   if(! socket)
     return;
-  connect(socket, &QTcpSocket::readyRead, bind(&Private::readyRead, d.get()));
+  d->written = 0;
+  d->sent = 0;
+  connect(socket, &QTcpSocket::bytesWritten, this, [=](qint64 written){
+    d->sent += written;
+    qDebug() << "total written: " << d->written << ", sent: " << d->sent << ", cached: " << d->written - d->sent;
+  });
+  connect(socket, &QTcpSocket::readyRead, this, bind(&Private::readyRead, d.get()));
 }
 
 void NetworkDispatcher::send(const NetworkPacket::ptr &packet) {
   if(! is_connected())
     return;
   qDebug() << packet->name();
-  packet->sendTo(d->socket);
+  auto written = packet->sendTo(d->socket);
+  d->written += written;
 }
 
 void NetworkDispatcher::queue_send(const NetworkPacket::ptr& packet)
