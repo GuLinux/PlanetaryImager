@@ -133,6 +133,9 @@ define_setting(histogram_timeout, long long, 3'500)
 define_setting(histogram_timeout_recording, long long, 10'000)
 define_setting(last_controls_folder, QString, QString(qgetenv("HOME")))
 
+define_setting(server_host, QString, "localhost")
+define_setting(server_port, int, 19232)
+
 
 QString Configuration::savefile() const
 {

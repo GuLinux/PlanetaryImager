@@ -17,25 +17,20 @@
  *
  */
 
-#ifndef NETWORKCLIENT_H
-#define NETWORKCLIENT_H
-
-#include <QObject>
+#ifndef CONNECTIONMANAGER_H
+#define CONNECTIONMANAGER_H
+#include <QDialog>
 #include "c++/dptr.h"
-#include "network/networkdispatcher.h"
-class NetworkClient : public QObject, public NetworkReceiver
+#include "network/client/networkclient.h"
+
+class ConnectionManager : public QDialog
 {
-    Q_OBJECT
+  Q_OBJECT
 public:
-  typedef std::shared_ptr<NetworkClient> ptr;
-  NetworkClient(const NetworkDispatcher::ptr &dispatcher, QObject *parent = nullptr);
-  ~NetworkClient();
-public slots:
-  void connectToHost(const QString &host, int port);
-signals:
-  void connected();
+  ConnectionManager();
+  ~ConnectionManager();
 private:
   DPTR
 };
 
-#endif // NETWORKCLIENT_H
+#endif // CONNECTIONMANAGER_H

@@ -16,20 +16,17 @@
  *
  */
 #include <QApplication>
-#include "planetaryimager_mainwindow.h"
 #include "commons/version.h"
 #include <iostream>
 #include <QDebug>
-#include "network/client/remotedriver.h"
-#include "network/client/networkclient.h"
-#include "network/client/remoteconfiguration.h"
-#include "network/networkdispatcher.h"
+#include "commons/frame.h"
 #include "commons/loghandler.h"
 #include "commons/crashhandler.h"
 #include <QMenuBar>
 #include <QMenu>
 
-#include "network/client/remotesaveimages.h"
+#include "network/client/connectionmanager.h"
+
 using namespace std;
 
 
@@ -43,17 +40,8 @@ int main(int argc, char** argv)
     app.setApplicationName("PlanetaryImager");
     app.setApplicationDisplayName("Planetary Imager");
     app.setApplicationVersion(PLANETARY_IMAGER_VERSION);
-    auto dispatcher = make_shared<NetworkDispatcher>();
-    auto networkClient = make_shared<NetworkClient>(dispatcher);
-    auto remoteDriver = make_shared<RemoteDriver>(dispatcher);
-    QMetaObject::invokeMethod(networkClient.get(), "connectToHost", Q_ARG(QString, "localhost"), Q_ARG(int, 9999));
-    auto configuration = make_shared<RemoteConfiguration>(dispatcher);
-    QObject::connect(networkClient.get(), &NetworkClient::connected, networkClient.get(), [=, &configuration]{
-      auto mainWindow = new PlanetaryImagerMainWindow{remoteDriver, make_shared<RemoteSaveImages>(dispatcher), configuration};
-      mainWindow->show();
-      if(auto running_camera = remoteDriver->existing_running_camera()) {
-        mainWindow->connectCamera(running_camera);
-      }
-    });
+
+    (new ConnectionManager())->show();
+
     return app.exec();
 }

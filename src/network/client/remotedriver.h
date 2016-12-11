@@ -28,6 +28,7 @@ class RemoteDriver : public QObject, public Driver, public NetworkReceiver
 {
 Q_OBJECT
 public:
+  typedef std::shared_ptr<RemoteDriver> ptr;
   RemoteDriver(const NetworkDispatcher::ptr &dispatcher);
   ~RemoteDriver();
   Cameras cameras() const override;

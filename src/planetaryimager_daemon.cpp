@@ -52,7 +52,7 @@ int main(int argc, char** argv)
     auto configuration_forwarder = make_shared<ConfigurationForwarder>(configuration, dispatcher);
     auto save_files_forwarder = make_shared<SaveFileForwarder>(save_images, dispatcher);
     auto server = make_shared<NetworkServer>(driver, imageHandlers, dispatcher, save_files_forwarder ); // TODO: add handlers
-    QMetaObject::invokeMethod(server.get(), "listen", Q_ARG(QString, "0.0.0.0"), Q_ARG(int, 9999));
+    QMetaObject::invokeMethod(server.get(), "listen", Q_ARG(QString, "0.0.0.0"), Q_ARG(int, configuration->server_port()));
     
     QCommandLineParser parser;
     parser.addHelpOption();

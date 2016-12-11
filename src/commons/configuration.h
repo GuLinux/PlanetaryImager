@@ -89,6 +89,9 @@ public:
     declare_setting(histogram_timeout, long long)
     declare_setting(histogram_timeout_recording, long long)
     
+    declare_setting(server_host, QString)
+    declare_setting(server_port, int)
+    
     declare_setting(last_controls_folder, QString)
     
     QStringList last_control_files() const;
