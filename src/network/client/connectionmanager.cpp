@@ -42,6 +42,8 @@ DPTR_IMPL(ConnectionManager) {
   NetworkClient::ptr client;
   RemoteConfiguration::ptr configuration;
   
+  PlanetaryImagerMainWindow *mainWindow = nullptr;
+  
   void onConnected();
 };
 
@@ -68,6 +70,8 @@ ConnectionManager::ConnectionManager() : dptr(this)
     if(status == NetworkClient::Connected)
       d->ui->status->setText("Connection established");
     if(status == NetworkClient::Disconnected) {
+      delete d->mainWindow;
+      d->mainWindow = nullptr;
       show();
     }
   });
@@ -87,7 +91,7 @@ ConnectionManager::~ConnectionManager()
 void ConnectionManager::Private::onConnected()
 {
   ui->status->clear();
-  auto mainWindow = new PlanetaryImagerMainWindow{remoteDriver, make_shared<RemoteSaveImages>(dispatcher), configuration};
+  mainWindow = new PlanetaryImagerMainWindow{remoteDriver, make_shared<RemoteSaveImages>(dispatcher), configuration};
   mainWindow->show();
   q->hide();
   if(auto running_camera = remoteDriver->existing_running_camera()) {
