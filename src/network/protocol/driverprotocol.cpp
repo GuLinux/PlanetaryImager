@@ -178,8 +178,8 @@ NetworkPacket::ptr DriverProtocol::sendFrame(const Frame::ptr& frame)
   QByteArray image;
   static vector<int> binary_netbmp{CV_IMWRITE_PXM_BINARY , 1 };
   static vector<int> jpeg_quality{CV_IMWRITE_JPEG_QUALITY  , 95 };
-  cv::imencode(".jpg", frame->mat(), data, jpeg_quality);
-  //cv::imencode(frame->channels() == 1 ? ".pgm" : ".ppm", frame->mat(), data, binary_netbmp );
+  //cv::imencode(".jpg", frame->mat(), data, jpeg_quality);
+  cv::imencode(frame->channels() == 1 ? ".pgm" : ".ppm", frame->mat(), data, binary_netbmp );
   image.resize(data.size());
   move(begin(data), end(data), begin(image));
   qDebug() << "FRAME data size: " << image.size() << ", bpp: " << frame->bpp() << ", res: " << frame->resolution() << ", channels: " << frame->channels();
