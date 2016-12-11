@@ -21,6 +21,7 @@
 #include <QtNetwork/QTcpSocket>
 #include "network/networkdispatcher.h"
 #include "protocol/protocol.h"
+#include "Qt/functional.h"
 using namespace std;
 
 DPTR_IMPL(NetworkClient) {
@@ -31,8 +32,31 @@ DPTR_IMPL(NetworkClient) {
 
 NetworkClient::NetworkClient(const NetworkDispatcher::ptr &dispatcher, QObject *parent) : QObject{parent}, NetworkReceiver{dispatcher}, dptr(dispatcher)
 {
+  static bool metatypes_registered = false;
+  if(!metatypes_registered) {
+    metatypes_registered = true;
+    qRegisterMetaType<NetworkClient::Status>("NetworkClient::Status");
+  }
   d->dispatcher->setSocket(&d->socket);
-}
+  connect(&d->socket, &QTcpSocket::connected, [this]{
+    d->dispatcher->send(NetworkProtocol::packetHello() );
+    wait_for_processed(NetworkProtocol::HelloReply);
+    emit connected();
+  });
+  connect(&d->socket, F_PTR(QTcpSocket, error, QTcpSocket::SocketError), [this] {
+    emit error(d->socket.errorString());
+  });
+  connect(&d->socket, &QTcpSocket::stateChanged, [this] (QTcpSocket::SocketState s) {
+    static QHash<QTcpSocket::SocketState, Status> states { 
+      {QTcpSocket::ConnectedState, Connected},
+      {QTcpSocket::UnconnectedState, Disconnected},
+      {QTcpSocket::ConnectingState, Connecting},
+      {QTcpSocket::ClosingState, Disconnected},
+    };
+    emit statusChanged(states.value(s, Error));
+  });
+  d->socket.setSocketOption(QAbstractSocket::LowDelayOption, 1);
+} 
 
 NetworkClient::~NetworkClient()
 {
@@ -40,12 +64,13 @@ NetworkClient::~NetworkClient()
 
 void NetworkClient::connectToHost(const QString& host, int port)
 {
-  connect(&d->socket, &QTcpSocket::connected, [this]{
-    d->dispatcher->send(NetworkProtocol::packetHello() );
-    wait_for_processed(NetworkProtocol::HelloReply);
-    emit connected();
-  });
   d->socket.connectToHost(host, port, QTcpSocket::ReadWrite);
+  QTimer::singleShot(30000, [=]{
+    if(d->socket.state() == QAbstractSocket::ConnectingState) {
+      d->socket.close();
+      emit error(tr("Connection timeout"));
+    }
+  });
 }
 
 

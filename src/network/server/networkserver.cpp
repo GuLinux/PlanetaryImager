@@ -66,6 +66,8 @@ void NetworkServer::Private::new_connection()
     dispatcher->setSocket(nullptr);
   });
   dispatcher->setSocket(socket);
+  socket->setSocketOption(QAbstractSocket::LowDelayOption, 1);
+  
   q->wait_for_processed(NetworkProtocol::Hello);
 }
 

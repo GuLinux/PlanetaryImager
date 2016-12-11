@@ -40,8 +40,8 @@ int main(int argc, char** argv)
     app.setApplicationName("PlanetaryImager");
     app.setApplicationDisplayName("Planetary Imager");
     app.setApplicationVersion(PLANETARY_IMAGER_VERSION);
+    app.setQuitOnLastWindowClosed(false);
 
     (new ConnectionManager())->show();
-
     return app.exec();
 }

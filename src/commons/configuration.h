@@ -89,6 +89,7 @@ public:
     declare_setting(histogram_timeout, long long)
     declare_setting(histogram_timeout_recording, long long)
     
+    static const int DefaultServerPort;
     declare_setting(server_host, QString)
     declare_setting(server_port, int)
     
@@ -101,6 +102,7 @@ public:
     QStringList list_presets() const;
     QVariantMap load_preset(const QString &name) const;
     void remove_preset(const QString &name);
+    
 public slots:
     void add_last_control_file(const QString &file);
 signals:

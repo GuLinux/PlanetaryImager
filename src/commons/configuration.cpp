@@ -35,6 +35,8 @@ DPTR_IMPL(Configuration) {
   mutable QHash<QString, QVariant> values_cache;
 };
 
+const int Configuration::DefaultServerPort = 19232;
+
 Configuration::Configuration() : dptr(make_shared<QSettings>("GuLinux", qApp->applicationName()), this)
 {
 }
@@ -134,7 +136,7 @@ define_setting(histogram_timeout_recording, long long, 10'000)
 define_setting(last_controls_folder, QString, QString(qgetenv("HOME")))
 
 define_setting(server_host, QString, "localhost")
-define_setting(server_port, int, 19232)
+define_setting(server_port, int, Configuration::DefaultServerPort)
 
 
 QString Configuration::savefile() const

@@ -30,6 +30,7 @@
 
 #include <QPushButton>
 
+#include "Qt/strings.h"
 #include "commons/utils.h"
 using namespace std;
 
@@ -40,6 +41,8 @@ DPTR_IMPL(ConnectionManager) {
   RemoteDriver::ptr remoteDriver;
   NetworkClient::ptr client;
   RemoteConfiguration::ptr configuration;
+  
+  void onConnected();
 };
 
 ConnectionManager::ConnectionManager() : dptr(this)
@@ -47,28 +50,48 @@ ConnectionManager::ConnectionManager() : dptr(this)
   d->dispatcher = make_shared<NetworkDispatcher>();
   d->client = make_shared<NetworkClient>(d->dispatcher);
   d->remoteDriver = make_shared<RemoteDriver>(d->dispatcher);
-    d->configuration = make_shared<RemoteConfiguration>(d->dispatcher);
-    d->ui = make_unique<Ui::ConnectionManager>();
-    d->ui->setupUi(this);
-    QObject::connect(d->client.get(), &NetworkClient::connected, this, [=]{
-      auto mainWindow = new PlanetaryImagerMainWindow{d->remoteDriver, make_shared<RemoteSaveImages>(d->dispatcher), d->configuration};
-      mainWindow->show();
-      this->hide();
-      if(auto running_camera = d->remoteDriver->existing_running_camera()) {
-        mainWindow->connectCamera(running_camera);
-      }
-    });
-    auto connectButton = d->ui->buttonBox->addButton(tr("Connect"), QDialogButtonBox::ApplyRole);
-    connect(connectButton, &QPushButton::clicked, this, [=] {
-      d->configuration->set_server_host(d->ui->host->text());
-      d->configuration->set_server_port(d->ui->port->value());
-      d->client->connectToHost(d->ui->host->text(), d->ui->port->value());
-    });
-    d->ui->host->setText(d->configuration->server_host());
-    d->ui->port->setValue(d->configuration->server_port());
+  d->configuration = make_shared<RemoteConfiguration>(d->dispatcher);
+  d->ui = make_unique<Ui::ConnectionManager>();
+  d->ui->setupUi(this);
+  auto connectButton = d->ui->buttonBox->addButton(tr("Connect"), QDialogButtonBox::ApplyRole);
+  connect(connectButton, &QPushButton::clicked, this, [=] {
+    d->configuration->set_server_host(d->ui->host->text());
+    d->configuration->set_server_port(d->ui->port->value());
+    d->ui->status->setText(tr("Connecting to %1:%2") % d->ui->host->text() % d->ui->port->value());
+    d->client->connectToHost(d->ui->host->text(), d->ui->port->value());
+  });
+  connect(d->ui->host, &QLineEdit::textChanged, this, [=](const QString &newHost) {
+    connectButton->setEnabled(! newHost.isEmpty());
+  });
+  connect(d->client.get(), &NetworkClient::statusChanged, [=](NetworkClient::Status status){
+    connectButton->setEnabled(status != NetworkClient::Connecting && status != NetworkClient::Connected);
+    if(status == NetworkClient::Connected)
+      d->ui->status->setText("Connection established");
+    if(status == NetworkClient::Disconnected) {
+      show();
+    }
+  });
+  
+  connect(d->client.get(), &NetworkClient::connected, this, bind(&Private::onConnected, d.get()));
+  connect(d->client.get(), &NetworkClient::error, d->ui->status, &QLabel::setText);
+  d->ui->host->setText(d->configuration->server_host());
+  d->ui->port->setValue(d->configuration->server_port());
+  connect(this, &QDialog::finished, qApp, &QApplication::quit);
 }
 
 ConnectionManager::~ConnectionManager()
 {
   LOG_F_SCOPE
 }
+
+void ConnectionManager::Private::onConnected()
+{
+  ui->status->clear();
+  auto mainWindow = new PlanetaryImagerMainWindow{remoteDriver, make_shared<RemoteSaveImages>(dispatcher), configuration};
+  mainWindow->show();
+  q->hide();
+  if(auto running_camera = remoteDriver->existing_running_camera()) {
+    mainWindow->connectCamera(running_camera);
+  }
+}
+
