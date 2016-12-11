@@ -20,6 +20,7 @@
 #include "remoteimager.h"
 #include "network/protocol/driverprotocol.h"
 #include <QDebug>
+#include <QtConcurrent/QtConcurrent>
 
 using namespace std;
 
@@ -45,8 +46,10 @@ RemoteImager::RemoteImager(const ImageHandler::ptr& image_handler, const Network
   });
   register_handler(DriverProtocol::SendFrame, [this](const NetworkPacket::ptr &packet) {
     qDebug() << "Got frame";
-    auto frame = DriverProtocol::decodeFrame(packet);
-    d->image_handler->handle(frame);
+    QtConcurrent::run([=] {
+      auto frame = DriverProtocol::decodeFrame(packet);
+      d->image_handler->handle(frame);
+    });
   });
   register_handler(DriverProtocol::signalFPS, [this](const NetworkPacket::ptr &packet) {
     emit fps(packet->payloadVariant().toDouble());
