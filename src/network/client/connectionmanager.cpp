@@ -31,7 +31,11 @@
 #include <QPushButton>
 
 #include "Qt/strings.h"
+#include "Qt/functional.h"
 #include "commons/utils.h"
+
+#include "network/protocol/protocol.h"
+
 using namespace std;
 
 DPTR_IMPL(ConnectionManager) {
@@ -44,23 +48,30 @@ DPTR_IMPL(ConnectionManager) {
   
   PlanetaryImagerMainWindow *mainWindow = nullptr;
   
+  QHash<int, NetworkProtocol::Format> formats_indexes;
+  NetworkProtocol::Format format() const;
+  
   void onConnected();
+  void adjustParametersVisibility();
 };
 
 ConnectionManager::ConnectionManager() : dptr(this)
 {
+  d->ui = make_unique<Ui::ConnectionManager>();
+  d->ui->setupUi(this);
+  
+  d->formats_indexes = { {0, NetworkProtocol::RAW}, {1, NetworkProtocol::JPEG} };
+  
   d->dispatcher = make_shared<NetworkDispatcher>();
   d->client = make_shared<NetworkClient>(d->dispatcher);
   d->remoteDriver = make_shared<RemoteDriver>(d->dispatcher);
   d->configuration = make_shared<RemoteConfiguration>(d->dispatcher);
-  d->ui = make_unique<Ui::ConnectionManager>();
-  d->ui->setupUi(this);
   auto connectButton = d->ui->buttonBox->addButton(tr("Connect"), QDialogButtonBox::ApplyRole);
   connect(connectButton, &QPushButton::clicked, this, [=] {
     d->configuration->set_server_host(d->ui->host->text());
     d->configuration->set_server_port(d->ui->port->value());
     d->ui->status->setText(tr("Connecting to %1:%2") % d->ui->host->text() % d->ui->port->value());
-    d->client->connectToHost(d->ui->host->text(), d->ui->port->value());
+    d->client->connectToHost(d->ui->host->text(), d->ui->port->value(), d->format(), d->ui->compression->isChecked(), d->ui->force8bit->isChecked(), d->ui->jpeg_quality->value());
   });
   connect(d->ui->host, &QLineEdit::textChanged, this, [=](const QString &newHost) {
     connectButton->setEnabled(! newHost.isEmpty());
@@ -84,6 +95,15 @@ ConnectionManager::ConnectionManager() : dptr(this)
   d->ui->host->setText(d->configuration->server_host());
   d->ui->port->setValue(d->configuration->server_port());
   connect(this, &QDialog::finished, qApp, &QApplication::quit);
+  connect(d->ui->format, F_PTR(QComboBox, currentIndexChanged, int), this, bind(&Private::adjustParametersVisibility, d.get()));
+  
+  // TODO: values from configuration
+  d->ui->format->setCurrentIndex(0);
+  d->ui->compression->setChecked(false);
+  d->ui->force8bit->setChecked(false);
+  d->ui->jpeg_quality->setValue(85);
+  
+  d->adjustParametersVisibility();
 }
 
 ConnectionManager::~ConnectionManager()
@@ -103,3 +123,17 @@ void ConnectionManager::Private::onConnected()
   connect(mainWindow, &PlanetaryImagerMainWindow::quit, client.get(), &NetworkClient::disconnectFromHost);
 }
 
+NetworkProtocol::Format ConnectionManager::Private::format() const
+{
+  return formats_indexes[ui->format->currentIndex()];
+}
+
+
+void ConnectionManager::Private::adjustParametersVisibility()
+{
+  auto format = this->format();
+  ui->compression->setVisible(format == NetworkProtocol::RAW);
+  ui->force8bit->setVisible(format == NetworkProtocol::RAW);
+  ui->jpeg_quality->setVisible(format == NetworkProtocol::JPEG);
+  ui->jpeg_quality_label->setVisible(format == NetworkProtocol::JPEG);
+}

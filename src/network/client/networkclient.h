@@ -23,6 +23,8 @@
 #include <QObject>
 #include "c++/dptr.h"
 #include "network/networkdispatcher.h"
+#include "network/protocol/protocol.h"
+
 class NetworkClient : public QObject, public NetworkReceiver
 {
     Q_OBJECT
@@ -32,7 +34,7 @@ public:
   ~NetworkClient();
   enum Status { Connecting, Connected, Disconnected, Error};
 public slots:
-  void connectToHost(const QString &host, int port);
+  void connectToHost(const QString &host, int port, NetworkProtocol::Format format, bool compression, bool force8bit, int jpegQuality);
   void disconnectFromHost();
 signals:
   void connected();

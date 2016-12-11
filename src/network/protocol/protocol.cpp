@@ -26,6 +26,29 @@ NetworkPacket::ptr NetworkProtocol::packet(const NetworkPacket::Type& name)
   return make_shared<NetworkPacket>(name);
 }
 
+NetworkPacket::ptr NetworkProtocol::hello(const FormatParameters &parameters)
+{
+  QVariantMap params {
+    {"format", static_cast<int>(parameters.format) },
+    {"compression", parameters.compression },
+    {"force8bit", parameters.force8bit},
+    {"jpegQuality", parameters.jpegQuality},
+  };
+  return packetHello() << params;
+}
+
+NetworkProtocol::FormatParameters NetworkProtocol::decodeHello(const NetworkPacket::ptr& packet)
+{
+  QVariantMap params = packet->payloadVariant().toMap();
+  return {
+    static_cast<Format>(params["format"].toInt()),
+    params["compression"].toBool(),
+    params["force8bit"].toBool(),
+    params["jpegQuality"].toInt(),
+  };
+}
+
+
 PROTOCOL_NAME_VALUE(Network, Hello);
 PROTOCOL_NAME_VALUE(Network, HelloReply);
 

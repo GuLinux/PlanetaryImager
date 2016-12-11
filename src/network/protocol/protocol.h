@@ -35,8 +35,18 @@ static NetworkPacket::ptr packet ## name() { return NetworkProtocol::packet(name
 class NetworkProtocol {
 public:
   static NetworkPacket::ptr packet(const NetworkPacket::Type &name);
+  enum Format { RAW, JPEG };
   ADD_PROTOCOL_PACKET_NAME(Hello)
   ADD_PROTOCOL_PACKET_NAME(HelloReply)
+  struct FormatParameters {
+    NetworkProtocol::Format format;
+    bool compression;
+    bool force8bit;
+    int jpegQuality;
+  };
+  static NetworkPacket::ptr hello(const FormatParameters &parameters);
+  static FormatParameters decodeHello(const NetworkPacket::ptr &packet);
+  
 };
 
 #endif

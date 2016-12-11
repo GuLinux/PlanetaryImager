@@ -60,6 +60,7 @@ public:
   static NetworkPacket::ptr controlChanged(const Imager::Control &control);
   static Imager::Control decodeControl(const NetworkPacket::ptr &packet);
   
+  static void setFormatParameters(const FormatParameters &parameters);
   static NetworkPacket::ptr sendFrame(const Frame::ptr &frame);
   static Frame::ptr decodeFrame(const NetworkPacket::ptr &packet);
   

@@ -95,7 +95,22 @@ namespace {
       std::chrono::duration<double>{ctrl["duration_unit"].toDouble()},
     };
   }
+  static NetworkProtocol::FormatParameters format_parameters;
+  static vector<int> opencv_encode_parameters;
 }
+
+void DriverProtocol::setFormatParameters(const FormatParameters& parameters)
+{
+  format_parameters = parameters;
+  opencv_encode_parameters.clear();
+  if(parameters.format == JPEG) {
+    opencv_encode_parameters = {CV_IMWRITE_JPEG_QUALITY  , parameters.jpegQuality };
+  }
+  if(parameters.format == RAW) {
+    opencv_encode_parameters = {CV_IMWRITE_PXM_BINARY , 1 };
+  }
+}
+
 
 NetworkPacket::ptr DriverProtocol::sendCameraListReply(const Driver::Cameras& cameras)
 {
@@ -176,12 +191,26 @@ NetworkPacket::ptr DriverProtocol::sendFrame(const Frame::ptr& frame)
 {
   vector<uint8_t> data;
   QByteArray image;
-  static vector<int> binary_netbmp{CV_IMWRITE_PXM_BINARY , 1 };
-  static vector<int> jpeg_quality{CV_IMWRITE_JPEG_QUALITY  , 95 };
-  //cv::imencode(".jpg", frame->mat(), data, jpeg_quality);
-  cv::imencode(frame->channels() == 1 ? ".pgm" : ".ppm", frame->mat(), data, binary_netbmp );
+  string extension;
+  
+  if(format_parameters.format == JPEG) {
+    extension = ".jpg";
+  } else if(format_parameters.format == RAW) {
+    extension = frame->channels() == 1 ? ".pgm" : ".ppm";
+  };
+  cv::Mat cv_image = frame->mat();
+  if(
+    ( (format_parameters.force8bit && format_parameters.format == RAW) || format_parameters.format == JPEG )
+    && frame->bpp() > 8
+  ) {
+    cv_image.convertTo(cv_image, frame->channels() == 1 ? CV_8UC1 : CV_8UC3, 1./256.);
+  }
+  cv::imencode(extension, cv_image, data, opencv_encode_parameters );
   image.resize(data.size());
   move(begin(data), end(data), begin(image));
+  if(format_parameters.compression && format_parameters.format == RAW) {
+    image = qCompress(image, 1);
+  }
   qDebug() << "FRAME data size: " << image.size() << ", bpp: " << frame->bpp() << ", res: " << frame->resolution() << ", channels: " << frame->channels();
   auto packet = packetSendFrame();
   packet->movePayload(std::move(image));
@@ -190,11 +219,15 @@ NetworkPacket::ptr DriverProtocol::sendFrame(const Frame::ptr& frame)
 
 Frame::ptr DriverProtocol::decodeFrame(const NetworkPacket::ptr& packet)
 {
-  vector<uint8_t> data(packet->payload().size());
-  move(begin(packet->payload()), end(packet->payload()), begin(data));
+  QByteArray image = packet->payload();
+  if(format_parameters.compression && format_parameters.format == RAW) {
+    image = qUncompress(image);
+  }
+  vector<uint8_t> data(image.size());
+  move(begin(image), end(image), begin(data));
   auto mat = cv::imdecode(data, CV_LOAD_IMAGE_UNCHANGED);
   auto frame = make_shared<Frame>(mat.channels() == 1 ? Frame::Mono : Frame::BGR, mat);
-  qDebug() << "FRAME data size: " << packet->payload().size() << ", bpp: " << frame->bpp() << ", res: " << frame->resolution() << ", channels: " << frame->channels();
+  qDebug() << "FRAME data size: " << image.size() << ", bpp: " << frame->bpp() << ", res: " << frame->resolution() << ", channels: " << frame->channels();
   
   return frame;
 }

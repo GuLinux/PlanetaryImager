@@ -21,13 +21,16 @@
 #include <QtNetwork/QTcpSocket>
 #include "network/networkdispatcher.h"
 #include "protocol/protocol.h"
+#include "protocol/driverprotocol.h"
 #include "Qt/functional.h"
+
 using namespace std;
 
 DPTR_IMPL(NetworkClient) {
   NetworkDispatcher::ptr dispatcher;
   QTcpSocket socket;
   bool imager_is_running = false;
+  NetworkPacket::ptr helloPacket;
 };
 
 NetworkClient::NetworkClient(const NetworkDispatcher::ptr &dispatcher, QObject *parent) : QObject{parent}, NetworkReceiver{dispatcher}, dptr(dispatcher)
@@ -39,7 +42,9 @@ NetworkClient::NetworkClient(const NetworkDispatcher::ptr &dispatcher, QObject *
   }
   d->dispatcher->setSocket(&d->socket);
   connect(&d->socket, &QTcpSocket::connected, [this]{
-    d->dispatcher->send(NetworkProtocol::packetHello() );
+    d->dispatcher->send( d->helloPacket );
+    DriverProtocol::setFormatParameters(NetworkProtocol::decodeHello(d->helloPacket));
+    d->helloPacket.reset();
     wait_for_processed(NetworkProtocol::HelloReply);
     emit connected();
   });
@@ -62,8 +67,9 @@ NetworkClient::~NetworkClient()
 {
 }
 
-void NetworkClient::connectToHost(const QString& host, int port)
+void NetworkClient::connectToHost(const QString& host, int port, NetworkProtocol::Format format, bool compression, bool force8bit, int jpegQuality)
 {
+  d->helloPacket = NetworkProtocol::hello({format, compression, force8bit, jpegQuality});
   d->socket.connectToHost(host, port, QTcpSocket::ReadWrite);
   QTimer::singleShot(30000, [=]{
     if(d->socket.state() == QAbstractSocket::ConnectingState) {
@@ -77,6 +83,7 @@ void NetworkClient::disconnectFromHost()
 {
   d->socket.close();
 }
+
 
 
 

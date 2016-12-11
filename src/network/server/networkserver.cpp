@@ -51,6 +51,7 @@ NetworkServer::NetworkServer(const Driver::ptr &driver, const ImageHandler::ptr 
   connect(&d->server, &QTcpServer::newConnection, bind(&Private::new_connection, d.get()));
   d->forwarder = make_shared<DriverForwarder>(dispatcher, driver, handler, [save_file](Imager *imager) { save_file->setImager(imager); });
   register_handler(NetworkProtocol::Hello, [this](const NetworkPacket::ptr &p){
+    DriverProtocol::setFormatParameters(NetworkProtocol::decodeHello(p));
     QVariantMap status;
     d->forwarder->getStatus(status);
     d->dispatcher->send(NetworkProtocol::packetHelloReply() << status);
