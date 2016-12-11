@@ -22,21 +22,30 @@
 #include "network/server/driverforwarder.h"
 #include "network/networkdispatcher.h"
 #include "network/protocol/protocol.h"
+#include "network/protocol/driverprotocol.h"
+#include "Qt/strings.h"
+#include <QElapsedTimer>
 
 using namespace std;
+using namespace std::placeholders;
 
 DPTR_IMPL(NetworkServer) {
   NetworkServer *q;
   Driver::ptr driver;
   ImageHandler::ptr handler;
   NetworkDispatcher::ptr dispatcher;
+  FramesForwarder::ptr framesForwarder;
   QTcpServer server;
   DriverForwarder::ptr forwarder;
   void new_connection();
+  void bytes_sent(quint64 written, quint64 sent);
+  QElapsedTimer elapsed;
+  quint64 last_sent;
+  bool paused = false;
 };
 
-NetworkServer::NetworkServer(const Driver::ptr &driver, const ImageHandler::ptr &handler, const NetworkDispatcher::ptr &dispatcher, const SaveFileForwarder::ptr &save_file, QObject* parent)
-  : QObject{parent}, NetworkReceiver{dispatcher}, dptr(this, driver, handler, dispatcher)
+NetworkServer::NetworkServer(const Driver::ptr &driver, const ImageHandler::ptr &handler, const NetworkDispatcher::ptr &dispatcher, const SaveFileForwarder::ptr &save_file, const FramesForwarder::ptr &framesForwarder, QObject* parent)
+  : QObject{parent}, NetworkReceiver{dispatcher}, dptr(this, driver, handler, dispatcher, framesForwarder)
 {
   d->server.setMaxPendingConnections(1);
   connect(&d->server, &QTcpServer::newConnection, bind(&Private::new_connection, d.get()));
@@ -46,6 +55,10 @@ NetworkServer::NetworkServer(const Driver::ptr &driver, const ImageHandler::ptr 
     d->forwarder->getStatus(status);
     d->dispatcher->send(NetworkProtocol::packetHelloReply() << status);
   });
+  register_handler(DriverProtocol::StartLive, [this](const NetworkPacket::ptr &){
+      d->elapsed.restart();
+  });
+  connect(d->dispatcher.get(), &NetworkDispatcher::bytes, this, bind(&Private::bytes_sent, d.get(), _1, _2));
 }
 
 
@@ -71,6 +84,22 @@ void NetworkServer::Private::new_connection()
   q->wait_for_processed(NetworkProtocol::Hello);
 }
 
+void NetworkServer::Private::bytes_sent(quint64 written, quint64 sent)
+{
+    auto to_kb = [](uint64_t size) -> double { return static_cast<double>(size) / 1024.; };
+    auto to_mb = [to_kb](uint64_t size) { return to_kb(size) / 1024.; };
+    auto to_secs = [](qint64 msecs){ return static_cast<double>(msecs)/ 1000.; };
+    qDebug() << "written: %1 MB, sent: %2 MB, cached: %3 MB, rate: %4 KB/sec"_q
+      % to_mb(written) % to_mb(sent) % to_mb(written - sent) % ( to_mb(sent - last_sent) / to_secs(elapsed.elapsed()) );
+    elapsed.restart();
+    last_sent = sent;
+    if(written - sent > 100'000'000) {
+      framesForwarder->setEnabled(false);
+      paused = true;
+    } else if(paused) {
+      framesForwarder->setEnabled(true);
+    }
+}
 
 
 

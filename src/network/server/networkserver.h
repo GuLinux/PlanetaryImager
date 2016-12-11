@@ -24,11 +24,12 @@
 #include "drivers/driver.h"
 #include "network/server/savefileforwarder.h"
 #include "network/networkdispatcher.h"
+#include "framesforwarder.h"
 class NetworkServer : public QObject, public NetworkReceiver
 {
     Q_OBJECT
 public:
-  NetworkServer(const Driver::ptr &driver, const ImageHandler::ptr &handler, const NetworkDispatcher::ptr &dispatcher, const SaveFileForwarder::ptr &save_file, QObject *parent = nullptr);
+  NetworkServer(const Driver::ptr &driver, const ImageHandler::ptr &handler, const NetworkDispatcher::ptr &dispatcher, const SaveFileForwarder::ptr &save_file, const FramesForwarder::ptr &framesForwarder, QObject *parent = nullptr);
   ~NetworkServer();
 public slots:
   void listen(const QString &address, int port);

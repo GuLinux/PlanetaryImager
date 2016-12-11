@@ -54,6 +54,8 @@ public:
   bool is_connected() const;
 public slots:
   void send(const NetworkPacket::ptr &packet);
+signals:
+  void bytes(quint64 written, quint64 transmitted);
 private:
   DPTR
 };

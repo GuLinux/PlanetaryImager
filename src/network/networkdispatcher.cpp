@@ -31,7 +31,6 @@ DPTR_IMPL(NetworkDispatcher) {
   void readyRead();
   uint64_t written;
   uint64_t sent;
-  QElapsedTimer elapsed;
 };
 
 
@@ -116,10 +115,9 @@ void NetworkDispatcher::setSocket(QTcpSocket* socket)
     return;
   d->written = 0;
   d->sent = 0;
-  d->elapsed.restart();
   connect(socket, &QTcpSocket::bytesWritten, this, [=](qint64 written){
     d->sent += written;
-    qDebug() << "total written: " << d->written << ", sent: " << d->sent << ", cached: " << d->written - d->sent << ", avg rate: " << (d->sent / static_cast<double>(d->elapsed.elapsed())/1000.) << "bytes/sec";
+    emit bytes(d->written, d->sent);
   });
   connect(socket, &QTcpSocket::readyRead, this, bind(&Private::readyRead, d.get()));
 }

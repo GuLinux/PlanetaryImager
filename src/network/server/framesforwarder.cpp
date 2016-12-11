@@ -21,15 +21,18 @@
 #include "network/protocol/driverprotocol.h"
 #include <QElapsedTimer>
 #include <QtConcurrent/QtConcurrent>
+#include <atomic>
+
 using namespace std;
 
 DPTR_IMPL(FramesForwarder) {
   NetworkDispatcher::ptr dispatcher;
+  atomic_bool enabled;
   FramesForwarder *q;
   QElapsedTimer elapsed;
 };
 
-FramesForwarder::FramesForwarder(const NetworkDispatcher::ptr& dispatcher) : dptr(dispatcher, this)
+FramesForwarder::FramesForwarder(const NetworkDispatcher::ptr& dispatcher) : dptr(dispatcher, {true}, this)
 {
   d->elapsed.restart();
 }
@@ -40,7 +43,7 @@ FramesForwarder::~FramesForwarder()
 
 void FramesForwarder::handle(const Frame::ptr& frame)
 {
-  if(d->elapsed.elapsed() < 100) // TODO: variable rate, depending on network delay?
+  if(d->elapsed.elapsed() < 50 || ! d->enabled) // TODO: variable rate, depending on network delay?
     return;
   QtConcurrent::run([this, frame]{
     d->dispatcher->queue_send(DriverProtocol::sendFrame(frame));
@@ -48,5 +51,13 @@ void FramesForwarder::handle(const Frame::ptr& frame)
   });
 }
 
+void FramesForwarder::setEnabled(bool enabled)
+{
+  d->enabled = enabled;
+}
+
+bool FramesForwarder::enabled() const {
+  return d->enabled;
+}
 
 #include "framesforwarder.moc"

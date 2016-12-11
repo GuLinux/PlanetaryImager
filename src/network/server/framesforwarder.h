@@ -26,12 +26,15 @@ class FramesForwarder : public QObject, public ImageHandler
 {
 Q_OBJECT
 public:
+  typedef std::shared_ptr<FramesForwarder> ptr;
   FramesForwarder(const NetworkDispatcher::ptr &dispatcher);
   ~FramesForwarder();
   void handle(const Frame::ptr & frame) override;
+  bool enabled() const;
 private:
   DPTR
-private slots:
+public slots:
+  void setEnabled(bool enabled);
 };
 
 #endif // FRAMESFORWARDER_H
