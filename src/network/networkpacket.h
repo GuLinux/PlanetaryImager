@@ -40,6 +40,7 @@ public:
   Type name() const;
   
   void setPayload(const QByteArray &payload);
+  void movePayload(QByteArray &&payload);
   void setPayload(const QVariant &payload);
   
   QByteArray payload() const;

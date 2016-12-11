@@ -120,6 +120,11 @@ QVariant NetworkPacket::payloadVariant() const
 }
 
 
+void NetworkPacket::movePayload(QByteArray && payload)
+{
+  d->payload = std::move(payload);
+}
+
 
 QDebug operator<<(QDebug dbg, const NetworkPacket& packet)
 {

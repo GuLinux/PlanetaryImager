@@ -183,7 +183,9 @@ NetworkPacket::ptr DriverProtocol::sendFrame(const Frame::ptr& frame)
   image.resize(data.size());
   move(begin(data), end(data), begin(image));
   qDebug() << "FRAME data size: " << image.size() << ", bpp: " << frame->bpp() << ", res: " << frame->resolution() << ", channels: " << frame->channels();
-  return packetSendFrame() << image;
+  auto packet = packetSendFrame();
+  packet->movePayload(std::move(image));
+  return packet;
 }
 
 Frame::ptr DriverProtocol::decodeFrame(const NetworkPacket::ptr& packet)
