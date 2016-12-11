@@ -93,5 +93,6 @@ void ConnectionManager::Private::onConnected()
   if(auto running_camera = remoteDriver->existing_running_camera()) {
     mainWindow->connectCamera(running_camera);
   }
+  connect(mainWindow, &PlanetaryImagerMainWindow::quit, client.get(), &NetworkClient::disconnectFromHost);
 }
 

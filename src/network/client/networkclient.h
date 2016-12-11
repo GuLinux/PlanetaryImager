@@ -33,6 +33,7 @@ public:
   enum Status { Connecting, Connected, Disconnected, Error};
 public slots:
   void connectToHost(const QString &host, int port);
+  void disconnectFromHost();
 signals:
   void connected();
   void statusChanged(Status);

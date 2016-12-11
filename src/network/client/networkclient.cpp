@@ -73,6 +73,10 @@ void NetworkClient::connectToHost(const QString& host, int port)
   });
 }
 
+void NetworkClient::disconnectFromHost()
+{
+  d->socket.close();
+}
 
 
 

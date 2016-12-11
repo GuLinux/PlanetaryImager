@@ -41,6 +41,7 @@ int main(int argc, char** argv)
     auto configuration = make_shared<Configuration>();
     
     PlanetaryImagerMainWindow mainWindow{make_shared<SupportedDrivers>(), make_shared<LocalSaveImages>(configuration), configuration};
+    QObject::connect(&mainWindow, &PlanetaryImagerMainWindow::quit, &app, &QApplication::quit);
     mainWindow.show();
     return app.exec();
 }

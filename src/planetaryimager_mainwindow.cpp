@@ -272,7 +272,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
     });
 
     connect(d->ui->actionQuit, &QAction::triggered, this, &QWidget::close);
-    connect(d->ui->actionQuit, &QAction::triggered, qApp, &QApplication::quit);
+    connect(d->ui->actionQuit, &QAction::triggered, this, &PlanetaryImagerMainWindow::quit);
     d->enableUIWidgets(false);
 
     d->saveImages->moveToThread(&d->displayImageThread);
@@ -323,7 +323,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
 void PlanetaryImagerMainWindow::closeEvent(QCloseEvent* event)
 {
   QMainWindow::closeEvent(event);
-  qApp->quit();
+  emit quit();
 }
 
 

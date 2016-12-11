@@ -41,6 +41,8 @@ public slots:
   void notify(const QDateTime &when, MessagesLogger::Type notification_type, const QString &title, const QString &message);
 protected:
   void closeEvent(QCloseEvent *event) override;
+signals:
+  void quit();
 private:
   DPTR
 };
