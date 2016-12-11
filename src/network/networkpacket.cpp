@@ -61,7 +61,7 @@ qint64 NetworkPacket::sendTo(QIODevice *device) const
     return -1;
   }
   
-  if(wrote != d->payload.size())
+  if(wrote != d->payload.size() + buffer.size())
     qWarning() << "Wrote " << wrote << "bytes, expected " << d->payload.size();
   //qDebug() << "Wrote " << wrote << "bytes, expected " << d->payload.size();
   //qDebug() << "Sent data: " << data;

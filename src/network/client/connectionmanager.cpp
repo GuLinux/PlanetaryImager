@@ -70,7 +70,10 @@ ConnectionManager::ConnectionManager() : dptr(this)
     if(status == NetworkClient::Connected)
       d->ui->status->setText("Connection established");
     if(status == NetworkClient::Disconnected) {
-      delete d->mainWindow;
+      if(d->mainWindow) {
+        d->mainWindow->close();
+        d->mainWindow->deleteLater();
+      }
       d->mainWindow = nullptr;
       show();
     }

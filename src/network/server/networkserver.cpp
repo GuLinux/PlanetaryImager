@@ -86,10 +86,10 @@ void NetworkServer::Private::new_connection()
 
 void NetworkServer::Private::bytes_sent(quint64 written, quint64 sent)
 {
-    auto to_kb = [](uint64_t size) -> double { return static_cast<double>(size) / 1024.; };
-    auto to_mb = [to_kb](uint64_t size) { return to_kb(size) / 1024.; };
-    auto to_secs = [](qint64 msecs){ return static_cast<double>(msecs)/ 1000.; };
-    qDebug() << "written: %1 MB, sent: %2 MB, cached: %3 MB, rate: %4 KB/sec"_q
+    static auto to_kb = [](uint64_t size) -> double { return static_cast<double>(size) / 1024.; };
+    static auto to_mb = [to_kb](uint64_t size) { return to_kb(size) / 1024.; };
+    static auto to_secs = [](qint64 msecs){ return static_cast<double>(msecs)/ 1000.; };
+    qDebug() << "written: %1 MB, sent: %2 MB, cached: %3 MB, rate: %4 MB/sec"_q
       % to_mb(written) % to_mb(sent) % to_mb(written - sent) % ( to_mb(sent - last_sent) / to_secs(elapsed.elapsed()) );
     elapsed.restart();
     last_sent = sent;
