@@ -34,7 +34,7 @@ public:
   ~NetworkClient();
   enum Status { Connecting, Connected, Disconnected, Error};
 public slots:
-  void connectToHost(const QString &host, int port, NetworkProtocol::Format format, bool compression, bool force8bit, int jpegQuality);
+  void connectToHost(const QString &host, int port, const NetworkProtocol::FormatParameters &parameters);
   void disconnectFromHost();
 signals:
   void connected();

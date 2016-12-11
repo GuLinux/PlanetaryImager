@@ -103,10 +103,10 @@ void DriverProtocol::setFormatParameters(const FormatParameters& parameters)
 {
   format_parameters = parameters;
   opencv_encode_parameters.clear();
-  if(parameters.format == JPEG) {
+  if(parameters.format == Configuration::Network_JPEG) {
     opencv_encode_parameters = {CV_IMWRITE_JPEG_QUALITY  , parameters.jpegQuality };
   }
-  if(parameters.format == RAW) {
+  if(parameters.format == Configuration::Network_RAW) {
     opencv_encode_parameters = {CV_IMWRITE_PXM_BINARY , 1 };
   }
 }
@@ -193,14 +193,14 @@ NetworkPacket::ptr DriverProtocol::sendFrame(const Frame::ptr& frame)
   QByteArray image;
   string extension;
   
-  if(format_parameters.format == JPEG) {
+  if(format_parameters.format == Configuration::Network_JPEG) {
     extension = ".jpg";
-  } else if(format_parameters.format == RAW) {
+  } else if(format_parameters.format == Configuration::Network_RAW) {
     extension = frame->channels() == 1 ? ".pgm" : ".ppm";
   };
   cv::Mat cv_image = frame->mat();
   if(
-    ( (format_parameters.force8bit && format_parameters.format == RAW) || format_parameters.format == JPEG )
+    ( (format_parameters.force8bit && format_parameters.format == Configuration::Network_RAW) || format_parameters.format ==Configuration::Network_JPEG )
     && frame->bpp() > 8
   ) {
     cv_image.convertTo(cv_image, frame->channels() == 1 ? CV_8UC1 : CV_8UC3, 1./256.);
@@ -208,7 +208,7 @@ NetworkPacket::ptr DriverProtocol::sendFrame(const Frame::ptr& frame)
   cv::imencode(extension, cv_image, data, opencv_encode_parameters );
   image.resize(data.size());
   move(begin(data), end(data), begin(image));
-  if(format_parameters.compression && format_parameters.format == RAW) {
+  if(format_parameters.compression && format_parameters.format == Configuration::Network_RAW) {
     image = qCompress(image, 1);
   }
   qDebug() << "FRAME data size: " << image.size() << ", bpp: " << frame->bpp() << ", res: " << frame->resolution() << ", channels: " << frame->channels();
@@ -220,7 +220,7 @@ NetworkPacket::ptr DriverProtocol::sendFrame(const Frame::ptr& frame)
 Frame::ptr DriverProtocol::decodeFrame(const NetworkPacket::ptr& packet)
 {
   QByteArray image = packet->payload();
-  if(format_parameters.compression && format_parameters.format == RAW) {
+  if(format_parameters.compression && format_parameters.format == Configuration::Network_RAW) {
     image = qUncompress(image);
   }
   vector<uint8_t> data(image.size());

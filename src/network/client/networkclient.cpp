@@ -67,9 +67,9 @@ NetworkClient::~NetworkClient()
 {
 }
 
-void NetworkClient::connectToHost(const QString& host, int port, NetworkProtocol::Format format, bool compression, bool force8bit, int jpegQuality)
+void NetworkClient::connectToHost(const QString& host, int port, const NetworkProtocol::FormatParameters &parameters)
 {
-  d->helloPacket = NetworkProtocol::hello({format, compression, force8bit, jpegQuality});
+  d->helloPacket = NetworkProtocol::hello(parameters);
   d->socket.connectToHost(host, port, QTcpSocket::ReadWrite);
   QTimer::singleShot(30000, [=]{
     if(d->socket.state() == QAbstractSocket::ConnectingState) {

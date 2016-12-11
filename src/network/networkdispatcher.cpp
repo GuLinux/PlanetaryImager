@@ -61,7 +61,7 @@ void NetworkReceiver::wait_for_processed(const NetworkPacket::Type &name) const
   if(! d->dispatcher->is_connected())
     return;
   d->packets_processed[name] = false;
-  while(! d->packets_processed[name])
+  while(! d->packets_processed[name] && d->dispatcher->is_connected())
     qApp->processEvents();
 }
 

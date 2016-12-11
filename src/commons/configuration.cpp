@@ -137,6 +137,10 @@ define_setting(last_controls_folder, QString, QString(qgetenv("HOME")))
 
 define_setting(server_host, QString, "localhost")
 define_setting(server_port, int, Configuration::DefaultServerPort)
+define_setting_enum(server_image_format, Configuration::NetworkImageFormat, Configuration::Network_RAW)
+define_setting(server_compression, bool, false)
+define_setting(server_force8bit, bool, true)
+define_setting(server_jpeg_quality, int, 85)
 
 
 QString Configuration::savefile() const

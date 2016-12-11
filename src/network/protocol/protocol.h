@@ -23,7 +23,7 @@
 #include <QString>
 #include "network/networkdispatcher.h"
 #include "network/networkpacket.h"
-
+#include "commons/configuration.h"
 #define ADD_PROTOCOL_NAME(name) static const NetworkPacket::Type name;
 
 #define ADD_PROTOCOL_PACKET_NAME(name) ADD_PROTOCOL_NAME(name) \
@@ -35,11 +35,11 @@ static NetworkPacket::ptr packet ## name() { return NetworkProtocol::packet(name
 class NetworkProtocol {
 public:
   static NetworkPacket::ptr packet(const NetworkPacket::Type &name);
-  enum Format { RAW, JPEG };
+
   ADD_PROTOCOL_PACKET_NAME(Hello)
   ADD_PROTOCOL_PACKET_NAME(HelloReply)
   struct FormatParameters {
-    NetworkProtocol::Format format;
+    Configuration::NetworkImageFormat format;
     bool compression;
     bool force8bit;
     int jpegQuality;

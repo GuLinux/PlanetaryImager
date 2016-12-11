@@ -35,6 +35,7 @@
 #include "commons/utils.h"
 
 #include "network/protocol/protocol.h"
+#include "commons/configuration.h"
 
 using namespace std;
 
@@ -48,8 +49,8 @@ DPTR_IMPL(ConnectionManager) {
   
   PlanetaryImagerMainWindow *mainWindow = nullptr;
   
-  QHash<int, NetworkProtocol::Format> formats_indexes;
-  NetworkProtocol::Format format() const;
+  QHash<int, Configuration::NetworkImageFormat> formats_indexes;
+  Configuration::NetworkImageFormat format() const;
   
   void onConnected();
   void adjustParametersVisibility();
@@ -60,7 +61,7 @@ ConnectionManager::ConnectionManager() : dptr(this)
   d->ui = make_unique<Ui::ConnectionManager>();
   d->ui->setupUi(this);
   
-  d->formats_indexes = { {0, NetworkProtocol::RAW}, {1, NetworkProtocol::JPEG} };
+  d->formats_indexes = { {0, Configuration::Network_RAW}, {1, Configuration::Network_JPEG} };
   
   d->dispatcher = make_shared<NetworkDispatcher>();
   d->client = make_shared<NetworkClient>(d->dispatcher);
@@ -71,7 +72,12 @@ ConnectionManager::ConnectionManager() : dptr(this)
     d->configuration->set_server_host(d->ui->host->text());
     d->configuration->set_server_port(d->ui->port->value());
     d->ui->status->setText(tr("Connecting to %1:%2") % d->ui->host->text() % d->ui->port->value());
-    d->client->connectToHost(d->ui->host->text(), d->ui->port->value(), d->format(), d->ui->compression->isChecked(), d->ui->force8bit->isChecked(), d->ui->jpeg_quality->value());
+    NetworkProtocol::FormatParameters parameters{d->format(), d->ui->compression->isChecked(), d->ui->force8bit->isChecked(), d->ui->jpeg_quality->value()};
+    d->configuration->set_server_image_format(parameters.format);
+    d->configuration->set_server_compression(parameters.compression);
+    d->configuration->set_server_force8bit(parameters.force8bit);
+    d->configuration->set_server_jpeg_quality(parameters.jpegQuality);
+    d->client->connectToHost(d->ui->host->text(), d->ui->port->value(), parameters);
   });
   connect(d->ui->host, &QLineEdit::textChanged, this, [=](const QString &newHost) {
     connectButton->setEnabled(! newHost.isEmpty());
@@ -98,10 +104,10 @@ ConnectionManager::ConnectionManager() : dptr(this)
   connect(d->ui->format, F_PTR(QComboBox, currentIndexChanged, int), this, bind(&Private::adjustParametersVisibility, d.get()));
   
   // TODO: values from configuration
-  d->ui->format->setCurrentIndex(0);
-  d->ui->compression->setChecked(false);
-  d->ui->force8bit->setChecked(false);
-  d->ui->jpeg_quality->setValue(85);
+  d->ui->format->setCurrentIndex(d->formats_indexes.key(d->configuration->server_image_format()));
+  d->ui->compression->setChecked(d->configuration->server_compression());
+  d->ui->force8bit->setChecked(d->configuration->server_force8bit());
+  d->ui->jpeg_quality->setValue(d->configuration->server_jpeg_quality());
   
   d->adjustParametersVisibility();
 }
@@ -123,7 +129,7 @@ void ConnectionManager::Private::onConnected()
   connect(mainWindow, &PlanetaryImagerMainWindow::quit, client.get(), &NetworkClient::disconnectFromHost);
 }
 
-NetworkProtocol::Format ConnectionManager::Private::format() const
+Configuration::NetworkImageFormat ConnectionManager::Private::format() const
 {
   return formats_indexes[ui->format->currentIndex()];
 }
@@ -132,8 +138,8 @@ NetworkProtocol::Format ConnectionManager::Private::format() const
 void ConnectionManager::Private::adjustParametersVisibility()
 {
   auto format = this->format();
-  ui->compression->setVisible(format == NetworkProtocol::RAW);
-  ui->force8bit->setVisible(format == NetworkProtocol::RAW);
-  ui->jpeg_quality->setVisible(format == NetworkProtocol::JPEG);
-  ui->jpeg_quality_label->setVisible(format == NetworkProtocol::JPEG);
+  ui->compression->setEnabled(format == Configuration::Network_RAW);
+  ui->force8bit->setEnabled(format == Configuration::Network_RAW);
+  ui->jpeg_quality->setEnabled(format == Configuration::Network_JPEG);
+  ui->jpeg_quality_label->setEnabled(format == Configuration::Network_JPEG);
 }

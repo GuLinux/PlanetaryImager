@@ -93,6 +93,12 @@ public:
     declare_setting(server_host, QString)
     declare_setting(server_port, int)
     
+    enum NetworkImageFormat { Network_RAW, Network_JPEG };
+    declare_setting(server_image_format, NetworkImageFormat)
+    declare_setting(server_compression, bool)
+    declare_setting(server_force8bit, bool)
+    declare_setting(server_jpeg_quality, int)
+    
     declare_setting(last_controls_folder, QString)
     
     QStringList last_control_files() const;

@@ -41,7 +41,7 @@ NetworkProtocol::FormatParameters NetworkProtocol::decodeHello(const NetworkPack
 {
   QVariantMap params = packet->payloadVariant().toMap();
   return {
-    static_cast<Format>(params["format"].toInt()),
+    static_cast<Configuration::NetworkImageFormat>(params["format"].toInt()),
     params["compression"].toBool(),
     params["force8bit"].toBool(),
     params["jpegQuality"].toInt(),
