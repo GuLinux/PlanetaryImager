@@ -117,10 +117,12 @@ ConnectionManager::~ConnectionManager()
   LOG_F_SCOPE
 }
 
+// TODO: change with remote
+#include "widgets/localfilesystembrowser.h"
 void ConnectionManager::Private::onConnected()
 {
   ui->status->clear();
-  mainWindow = new PlanetaryImagerMainWindow{remoteDriver, make_shared<RemoteSaveImages>(dispatcher), configuration};
+  mainWindow = new PlanetaryImagerMainWindow{remoteDriver, make_shared<RemoteSaveImages>(dispatcher), configuration, make_shared<LocalFilesystemBrowser>()};
   mainWindow->show();
   q->hide();
   if(auto running_camera = remoteDriver->existing_running_camera()) {

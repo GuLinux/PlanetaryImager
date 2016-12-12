@@ -20,33 +20,27 @@
 #include "ui_recordingpanel.h"
 #include "commons/configuration.h"
 #include "savefileconfiguration.h"
-#include <QFileDialog>
 #include <Qt/functional.h>
+#include <QDir>
+#include <QDialog>
+
 using namespace std;
 
-class RecordingPanel::Private {
-public:
-  Private(RecordingPanel *q);
-    unique_ptr<Ui::RecordingPanel> ui;
+DPTR_IMPL(RecordingPanel) {
+    FilesystemBrowser::ptr filesystemBrowser;
     bool recording;
-private:
-  RecordingPanel *q;
+    RecordingPanel *q;
+    unique_ptr<Ui::RecordingPanel> ui;
 };
-
-RecordingPanel::Private::Private(RecordingPanel* q)
-  : q{q}
-{
-
-}
-
 
 RecordingPanel::~RecordingPanel()
 {
 }
 
-RecordingPanel::RecordingPanel(const Configuration::ptr & configuration, QWidget* parent) : QWidget{parent}, dptr(this)
+RecordingPanel::RecordingPanel(const Configuration::ptr & configuration, const FilesystemBrowser::ptr &filesystemBrowser, QWidget* parent)
+  : QWidget{parent}, dptr(filesystemBrowser, false, this)
 {
-  d->ui.reset(new Ui::RecordingPanel);
+  d->ui = make_unique<Ui::RecordingPanel>();
   d->ui->setupUi(this);
   recording(false);
   d->ui->save_recording_info->setCurrentIndex( (configuration->save_json_info_file() ? 1 : 0) + (configuration->save_info_file() ? 2 : 0) );
@@ -140,15 +134,9 @@ RecordingPanel::RecordingPanel(const Configuration::ptr & configuration, QWidget
   });
   
   auto pickDirectory = d->ui->saveDirectory->addAction(QIcon(":/resources/folder.png"), QLineEdit::TrailingPosition);
-  connect(pickDirectory, &QAction::triggered, [&]{
-    QFileDialog *filedialog = new QFileDialog(this);
-    filedialog->setFileMode(QFileDialog::Directory);
-    filedialog->setDirectory(configuration->save_directory());
-    filedialog->setOption(QFileDialog::ShowDirsOnly);
-    connect(filedialog, SIGNAL(fileSelected(QString)), d->ui->saveDirectory, SLOT(setText(QString)));
-    connect(filedialog, SIGNAL(finished(int)), filedialog, SLOT(deleteLater()));
-    filedialog->show();
-  });
+  connect(pickDirectory, &QAction::triggered, d->filesystemBrowser.get(), [=]{ d->filesystemBrowser->pickDirectory(configuration->save_directory()); });
+  connect(d->filesystemBrowser.get(), &FilesystemBrowser::directoryPicked, d->ui->saveDirectory, &QLineEdit::setText);
+
   auto check_directory = [&] {
     d->ui->start_stop_recording->setEnabled(QDir(configuration->save_directory()).exists());
   };

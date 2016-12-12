@@ -16,31 +16,6 @@
  *
  */
 
-#ifndef RECORDINGPANEL_H
-#define RECORDINGPANEL_H
+#include "filesystembrowser.h"
+#include "filesystembrowser.moc"
 
-#include <QWidget>
-#include "dptr.h"
-
-#include "commons/configuration.h"
-#include "commons/filesystembrowser.h"
-class RecordingPanel : public QWidget
-{
-    Q_OBJECT
-public:
-    ~RecordingPanel();
-    RecordingPanel(const Configuration::ptr &configuration, const FilesystemBrowser::ptr &filesystemBrowser, QWidget* parent = 0);
-public slots:
-  void recording(bool recording = false, const QString &filename = {});
-  void saveFPS(double fps);
-  void meanFPS(double fps);
-  void saved(int frames);
-  void dropped(int frames);
-signals:
-  void start();
-  void stop();
-private:
-  DPTR;
-};
-
-#endif // RECORDINGPANEL_H

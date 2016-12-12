@@ -24,6 +24,7 @@
 #include "drivers/driver.h"
 #include "commons/messageslogger.h"
 #include "commons/configuration.h"
+#include "commons/filesystembrowser.h"
 #include "image_handlers/saveimages.h"
 namespace Ui
 {
@@ -35,7 +36,7 @@ class PlanetaryImagerMainWindow : public QMainWindow
   Q_OBJECT
 public:
   ~PlanetaryImagerMainWindow();
-  PlanetaryImagerMainWindow(const Driver::ptr &driver, const SaveImages::ptr &save_images, const Configuration::ptr &configuration, QWidget* parent = 0, Qt::WindowFlags flags = 0);
+  PlanetaryImagerMainWindow(const Driver::ptr &driver, const SaveImages::ptr &save_images, const Configuration::ptr &configuration, const FilesystemBrowser::ptr &filesystemBrowser, QWidget* parent = 0, Qt::WindowFlags flags = 0);
   void connectCamera(const Driver::Camera::ptr &camera);
 public slots:
   void notify(const QDateTime &when, MessagesLogger::Type notification_type, const QString &title, const QString &message);

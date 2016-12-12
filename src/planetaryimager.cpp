@@ -24,6 +24,7 @@
 #include "commons/loghandler.h"
 #include "commons/crashhandler.h"
 #include "image_handlers/backend/local_saveimages.h"
+#include "widgets/localfilesystembrowser.h"
 
 using namespace std;
 
@@ -40,7 +41,7 @@ int main(int argc, char** argv)
     app.setApplicationVersion(PLANETARY_IMAGER_VERSION);
     auto configuration = make_shared<Configuration>();
     
-    PlanetaryImagerMainWindow mainWindow{make_shared<SupportedDrivers>(), make_shared<LocalSaveImages>(configuration), configuration};
+    PlanetaryImagerMainWindow mainWindow{make_shared<SupportedDrivers>(), make_shared<LocalSaveImages>(configuration), configuration, make_shared<LocalFilesystemBrowser>()};
     QObject::connect(&mainWindow, &PlanetaryImagerMainWindow::quit, &app, &QApplication::quit);
     mainWindow.show();
     return app.exec();

@@ -164,7 +164,7 @@ void PlanetaryImagerMainWindow::Private::saveState()
 }
 
 
-PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, const SaveImages::ptr &save_images, const Configuration::ptr &configuration, QWidget* parent, Qt::WindowFlags flags)
+PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, const SaveImages::ptr &save_images, const Configuration::ptr &configuration, const FilesystemBrowser::ptr &filesystemBrowser, QWidget* parent, Qt::WindowFlags flags)
   : dptr(driver, save_images, configuration)
 {
     Private::q = this;
@@ -172,7 +172,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
     d->ui->setupUi(this);
     d->ui->actionControlsSection->setSeparator(true);
     setWindowIcon(QIcon::fromTheme("planetary_imager"));
-    d->ui->recording->setWidget(d->recording_panel = new RecordingPanel{d->configuration});
+    d->ui->recording->setWidget(d->recording_panel = new RecordingPanel{d->configuration, filesystemBrowser});
     d->configurationDialog = new ConfigurationDialog(d->configuration, this);
     d->displayImage = make_shared<DisplayImage>(d->configuration);
     d->histogram = make_shared<Histogram>(d->configuration);

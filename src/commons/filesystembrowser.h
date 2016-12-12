@@ -16,31 +16,22 @@
  *
  */
 
-#ifndef RECORDINGPANEL_H
-#define RECORDINGPANEL_H
+#ifndef FILESYSTEM_BROWSER_H
+#define FILESYSTEM_BROWSER_H
+#include <QObject>
+#include <memory>
 
-#include <QWidget>
-#include "dptr.h"
-
-#include "commons/configuration.h"
-#include "commons/filesystembrowser.h"
-class RecordingPanel : public QWidget
+class QSettings;
+class FilesystemBrowser : public QObject
 {
-    Q_OBJECT
+  Q_OBJECT
 public:
-    ~RecordingPanel();
-    RecordingPanel(const Configuration::ptr &configuration, const FilesystemBrowser::ptr &filesystemBrowser, QWidget* parent = 0);
+  typedef std::shared_ptr<FilesystemBrowser> ptr;
 public slots:
-  void recording(bool recording = false, const QString &filename = {});
-  void saveFPS(double fps);
-  void meanFPS(double fps);
-  void saved(int frames);
-  void dropped(int frames);
+  virtual void pickDirectory(const QString currentDirectory = {}) const = 0;
 signals:
-  void start();
-  void stop();
-private:
-  DPTR;
+  void directoryPicked(const QString &directory);
 };
 
-#endif // RECORDINGPANEL_H
+
+#endif // FILESYSTEM_BROWSER_H
