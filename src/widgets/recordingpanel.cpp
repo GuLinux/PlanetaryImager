@@ -154,6 +154,15 @@ RecordingPanel::RecordingPanel(const Configuration::ptr & configuration, QWidget
   };
   check_directory();
   connect(d->ui->saveDirectory, &QLineEdit::textChanged, check_directory);
+  connect(d->ui->timelapse, &QCheckBox::toggled, this, [=](bool checked) {
+    d->ui->timelapse_frame->setVisible(checked);
+    configuration->set_timelapse_mode(checked);
+  });
+  connect(d->ui->timelapse_duration, &QTimeEdit::timeChanged, this, [=](const QTime &time) {
+    configuration->set_timelapse_msecs(QTime{0,0,0}.msecsTo(time));
+  });
+  d->ui->timelapse->setChecked(configuration->timelapse_mode());
+  d->ui->timelapse_duration->setTime(QTime{0,0,0}.addMSecs(configuration->timelapse_msecs()));
 }
 
 void RecordingPanel::recording(bool recording, const QString& filename)

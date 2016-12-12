@@ -101,6 +101,9 @@ public:
     
     declare_setting(last_controls_folder, QString)
     
+    declare_setting(timelapse_mode, bool)
+    declare_setting(timelapse_msecs, qlonglong)
+    
     QStringList last_control_files() const;
     QString savefile() const;
     

@@ -64,6 +64,8 @@ struct RecordingParameters {
   bool write_txt_info;
   bool write_json_info;
   int64_t max_size;
+  bool timelapse;
+  qlonglong timelapse_msecs;
   RecordingInformation::Writer::ptr recording_information_writer(const FileWriter::Ptr &file_writer) const;
 };
 
@@ -82,8 +84,10 @@ public:
     Recording(const RecordingParameters &parameters, LocalSaveImages *saveImagesObject, std::atomic_bool &is_recording_control);
   ~Recording();
   RecordingParameters parameters() const { return _parameters; }
-  void add(const Frame::ptr &frame);
+  void evaluate(const Frame::ptr &frame);
   bool accepting_frames() const;
+  void handle(const Frame::ptr &frame);
+  
 private:
   const RecordingParameters _parameters;
   LocalSaveImages *saveImagesObject;
@@ -93,6 +97,7 @@ private:
   FileWriter::Ptr file_writer;
   size_t frames = 0;
   Frame::ptr reference;
+  QDateTime timelapse_last_shot;
 };
 
 class WriterThreadWorker : public QObject {
@@ -131,13 +136,26 @@ Recording::Recording(const RecordingParameters &parameters, LocalSaveImages *sav
   emit saveImagesObject->recording(file_writer->filename());
 }
 
-void Recording::add(const Frame::ptr &frame) {
-  if(frames == 0)
-    reference = frame;
+
+
+void Recording::handle(const Frame::ptr &frame) {
   file_writer->handle(frame);
   ++savefps;
   ++meanfps;
   emit saveImagesObject->savedFrames(++frames);
+}
+void Recording::evaluate(const Frame::ptr &frame) {
+  if(frames == 0) {
+    reference = frame;
+  }
+  if(parameters().timelapse) {
+    if(frames == 0 || (timelapse_last_shot.msecsTo(frame->created_utc()) >= parameters().timelapse_msecs )) {
+      timelapse_last_shot = frame->created_utc();
+      handle(frame);
+    }
+  } else {
+    handle(frame);
+  }
 }
 
 bool Recording::accepting_frames() const {
@@ -203,7 +221,7 @@ void WriterThreadWorker::start(const RecordingParameters & recording_parameters,
   while(recording.accepting_frames() ) {
     Frame::ptr frame;
     if(framesQueue && framesQueue->pop(frame)) {
-      recording.add(frame);
+      recording.evaluate(frame);
     } else {
       QThread::msleep(1);
     }
@@ -255,6 +273,9 @@ void LocalSaveImages::startRecording(Imager *imager)
       chrono::duration<double>{d->configuration->recording_seconds_limit()},
       d->configuration->save_info_file(),
       d->configuration->save_json_info_file(),
+      0,
+      d->configuration->timelapse_mode(),
+      d->configuration->timelapse_msecs()
     };    
     QMetaObject::invokeMethod(d->worker, "start", Q_ARG(RecordingParameters, recording), Q_ARG(qlonglong, d->configuration->max_memory_usage() ));    
   }

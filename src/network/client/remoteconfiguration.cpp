@@ -92,3 +92,6 @@ define_setting(save_info_file, bool)
 
 define_setting(observer, QString)
 define_setting(telescope, QString)
+
+define_setting(timelapse_mode, bool)
+define_setting(timelapse_msecs, qlonglong)

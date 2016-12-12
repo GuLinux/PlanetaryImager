@@ -52,6 +52,8 @@ public:
   
   declare_setting(observer, QString)
   declare_setting(telescope, QString)
+  declare_setting(timelapse_mode, bool)
+  declare_setting(timelapse_msecs, qlonglong)
 private:
     DPTR
 };

@@ -142,6 +142,9 @@ define_setting(server_compression, bool, false)
 define_setting(server_force8bit, bool, true)
 define_setting(server_jpeg_quality, int, 85)
 
+define_setting(timelapse_mode, bool, false)
+define_setting(timelapse_msecs, qlonglong, 1000)
+
 
 QString Configuration::savefile() const
 {

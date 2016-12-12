@@ -75,7 +75,10 @@ ConfigurationForwarder::ConfigurationForwarder(const Configuration::ptr& configu
   register_conf_function(save_info_file, bool)
   
   register_conf_function(observer, QString)
-  register_conf_function(telescope, QString)  
+  register_conf_function(telescope, QString)
+  
+  register_conf_function(timelapse_mode, bool)
+  register_conf_function(timelapse_msecs, qlonglong)
 }
 
 ConfigurationForwarder::~ConfigurationForwarder()
