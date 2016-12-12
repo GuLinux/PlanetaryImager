@@ -35,8 +35,14 @@ SaveFileForwarder::SaveFileForwarder(const SaveImages::ptr& save_images, const N
   QObject::connect(save_images.get(), &SaveImages::meanFPS, save_images.get(), [this](double fps) { this->dispatcher()->queue_send(SaveFileProtocol::packetsignalMeanFPS() << QVariant{fps}); } );
   QObject::connect(save_images.get(), &SaveImages::savedFrames, save_images.get(), [this](uint64_t frames) { this->dispatcher()->queue_send(SaveFileProtocol::packetsignalSavedFrames() << QVariant{static_cast<qlonglong>(frames)}); } );
   QObject::connect(save_images.get(), &SaveImages::droppedFrames, save_images.get(), [this](uint64_t frames) { this->dispatcher()->queue_send(SaveFileProtocol::packetsignalDroppedFrames() << QVariant{static_cast<qlonglong>(frames)}); } );
-  QObject::connect(save_images.get(), &SaveImages::recording, save_images.get(), [this](const QString &file) { this->dispatcher()->queue_send(SaveFileProtocol::packetsignalRecording() << QVariant{file}); } );
-  QObject::connect(save_images.get(), &SaveImages::finished, save_images.get(), [this]{ this->dispatcher()->queue_send(SaveFileProtocol::packetsignalFinished()); } );
+  QObject::connect(save_images.get(), &SaveImages::recording, save_images.get(), [this](const QString &file) {
+    emit isRecording(true);
+    this->dispatcher()->queue_send(SaveFileProtocol::packetsignalRecording() << QVariant{file});
+  } );
+  QObject::connect(save_images.get(), &SaveImages::finished, save_images.get(), [this]{
+    this->dispatcher()->queue_send(SaveFileProtocol::packetsignalFinished());
+    emit isRecording(false);
+  } );
 }
 
 void SaveFileForwarder::setImager(Imager* imager)

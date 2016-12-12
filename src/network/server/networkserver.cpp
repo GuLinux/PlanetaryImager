@@ -60,6 +60,7 @@ NetworkServer::NetworkServer(const Driver::ptr &driver, const ImageHandler::ptr 
       d->elapsed.restart();
   });
   connect(d->dispatcher.get(), &NetworkDispatcher::bytes, this, bind(&Private::bytes_sent, d.get(), _1, _2));
+  connect(save_file.get(), &SaveFileForwarder::isRecording, framesForwarder.get(), &FramesForwarder::recordingMode);
 }
 
 

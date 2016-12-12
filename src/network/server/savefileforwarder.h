@@ -23,14 +23,18 @@
 #include "network/networkdispatcher.h"
 #include "c++/dptr.h"
 #include "image_handlers/saveimages.h"
+#include <QObject>
 
-class SaveFileForwarder : public NetworkReceiver
+class SaveFileForwarder : public QObject, public NetworkReceiver
 {
+  Q_OBJECT
 public:
   typedef std::shared_ptr<SaveFileForwarder> ptr;
   SaveFileForwarder(const SaveImages::ptr &save_images, const NetworkDispatcher::ptr &dispatcher);
   ~SaveFileForwarder();
   void setImager(Imager *imager);
+signals:
+  void isRecording(bool recording);
 private:
   DPTR
 };

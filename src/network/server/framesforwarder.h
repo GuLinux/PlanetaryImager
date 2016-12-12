@@ -35,6 +35,7 @@ private:
   DPTR
 public slots:
   void setEnabled(bool enabled);
+  void recordingMode(bool recording);
 };
 
 #endif // FRAMESFORWARDER_H
