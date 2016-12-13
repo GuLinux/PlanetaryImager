@@ -1,3 +1,11 @@
+## 0.7.0 201x-xx-xx
+ - feature: adding profiles import and export, both in settings and to filesystem
+ - feature: daemon mode: adding daemon and frontend executables for remote control.
+ - feature: adding timelapse mode
+ - feature: adding new formats for saving: FITS images, and PNG
+ - feature: statusbar indicator of time elapsed/left for long exposures
+ - bugfix: ASI: better handling of exposure timeout
+ 
 ## 0.6.2 2016-10-30
  - Fix ASI ROI validation, particularly with USB2 cameras
  - Fix ASI SDK version number
