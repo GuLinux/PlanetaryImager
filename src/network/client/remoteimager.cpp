@@ -45,7 +45,7 @@ RemoteImager::RemoteImager(const ImageHandler::ptr& image_handler, const Network
     DriverProtocol::decode(d->controls, packet);
   });
   register_handler(DriverProtocol::SendFrame, [this](const NetworkPacket::ptr &packet) {
-    qDebug() << "Got frame";
+    //qDebug() << "Got frame";
     QtConcurrent::run([=] {
       auto frame = DriverProtocol::decodeFrame(packet);
       d->image_handler->handle(frame);

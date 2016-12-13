@@ -125,7 +125,7 @@ void NetworkDispatcher::setSocket(QTcpSocket* socket)
 void NetworkDispatcher::send(const NetworkPacket::ptr &packet) {
   if(! is_connected())
     return;
-  qDebug() << packet->name();
+  //qDebug() << packet->name();
   auto written = packet->sendTo(d->socket);
   d->written += written;
 }
@@ -140,11 +140,11 @@ void NetworkDispatcher::Private::readyRead()
 {
   QList<NetworkPacket::ptr> packets;
   while(socket->bytesAvailable() > 0) {
-    qDebug() << socket->bytesAvailable();
+    //qDebug() << socket->bytesAvailable();
     auto packet = make_shared<NetworkPacket>();
     packet->receiveFrom(socket);
     packets.push_back(packet);
-    qDebug() << packet->name();
+    //qDebug() << packet->name();
   }
   for(auto packet: packets) {
     for(auto receiver: receivers)

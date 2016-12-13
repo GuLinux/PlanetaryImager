@@ -199,12 +199,7 @@ Frame::ptr SimulatorImagerWorker::shoot()
   }
   double exposure_percent = (exposure.value.toDouble() - exposure.range.min.toDouble()) / (exposure.range.max.toDouble()- exposure.range.min.toDouble()) * 100.;
   double exposure_offset = log(exposure_percent)*150 - 100;
-  static auto started = chrono::steady_clock::now();
-  auto now = chrono::steady_clock::now();
-  if( (now-started) >= 1s) {
-    qDebug() << "Exposure percent: " << exposure_percent << ", exposure offset: " << exposure_offset;
-    started = now;
-  }
+
   result = blurred + cv::Scalar{exposure_offset, exposure_offset, exposure_offset};
 
   if(bpp.value == 16)

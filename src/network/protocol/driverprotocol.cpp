@@ -211,7 +211,7 @@ NetworkPacket::ptr DriverProtocol::sendFrame(const Frame::ptr& frame)
   if(format_parameters.compression && format_parameters.format == Configuration::Network_RAW) {
     image = qCompress(image, 1);
   }
-  qDebug() << "FRAME data size: " << image.size() << ", bpp: " << frame->bpp() << ", res: " << frame->resolution() << ", channels: " << frame->channels();
+  //qDebug() << "FRAME data size: " << image.size() << ", bpp: " << frame->bpp() << ", res: " << frame->resolution() << ", channels: " << frame->channels();
   auto packet = packetSendFrame();
   packet->movePayload(std::move(image));
   return packet;
@@ -227,7 +227,7 @@ Frame::ptr DriverProtocol::decodeFrame(const NetworkPacket::ptr& packet)
   move(begin(image), end(image), begin(data));
   auto mat = cv::imdecode(data, CV_LOAD_IMAGE_UNCHANGED);
   auto frame = make_shared<Frame>(mat.channels() == 1 ? Frame::Mono : Frame::BGR, mat);
-  qDebug() << "FRAME data size: " << image.size() << ", bpp: " << frame->bpp() << ", res: " << frame->resolution() << ", channels: " << frame->channels();
+  //qDebug() << "FRAME data size: " << image.size() << ", bpp: " << frame->bpp() << ", res: " << frame->resolution() << ", channels: " << frame->channels();
   
   return frame;
 }
