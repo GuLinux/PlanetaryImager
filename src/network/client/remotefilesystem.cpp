@@ -18,8 +18,11 @@
 
 #include "remotefilesystem.h"
 #include <QDebug>
+#include "network/protocol/filesystemprotocol.h"
+#include "commons/utils.h"
 
 using namespace std;
+using namespace std::placeholders;
 
 DPTR_IMPL(FilesystemEntry) {
   const QString name;
@@ -93,12 +96,19 @@ void FilesystemEntry::Private::retrieve_parent()
 #include <QDir>
 DPTR_IMPL(RemoteFilesystem) {
   RemoteFilesystem *q;
-  FilesystemEntry::ptr entry(const QFileInfo &info);
+  typedef function<void(const FilesystemEntry::ptr &)> OnEntry;
+  void entry(OnEntry onEntry, const QString &name, const QString &path, bool isFile, bool isDir);
+  FilesystemEntry::ptr last_entry;
+  FilesystemEntry::List last_list;
+  void fileInfoReply(const NetworkPacket::ptr &p);
+  void childrenReply(const NetworkPacket::ptr &p);
 };
 
 
 RemoteFilesystem::RemoteFilesystem(const NetworkDispatcher::ptr& dispatcher) : NetworkReceiver{dispatcher}, dptr(this)
 {
+  register_handler(FilesystemProtocol::FileInfoReply, bind(&Private::fileInfoReply, d.get(), _1));
+  register_handler(FilesystemProtocol::ChildrenReply, bind(&Private::childrenReply, d.get(), _1));
 }
 
 RemoteFilesystem::~RemoteFilesystem()
@@ -106,23 +116,37 @@ RemoteFilesystem::~RemoteFilesystem()
 }
 FilesystemEntry::ptr RemoteFilesystem::entry(const QString& path)
 {
-  qDebug() << "Entry for " << path;
-  return d->entry({path});
+  LOG_F_SCOPE
+  d->last_entry = nullptr;
+  dispatcher()->send(FilesystemProtocol::packetFileInfo() << QVariant{path});
+  wait_for_processed(FilesystemProtocol::FileInfoReply);
+  return d->last_entry;
 }
 
 FilesystemEntry::List RemoteFilesystem::entries(const QString& parent_path)
 {
-  qDebug() << "Entries for " << parent_path;
-  FilesystemEntry::List entries;
-  QDir dir(parent_path);
-  for(auto file: dir.entryInfoList()) {
-    entries.push_back(d->entry(file));
-    qDebug() << file.fileName() << ", " <<  file.canonicalFilePath();
-  }
-  return entries;
+  LOG_F_SCOPE
+  d->last_list = {};
+  dispatcher()->send(FilesystemProtocol::packetChildren() << QVariant{parent_path});
+  wait_for_processed(FilesystemProtocol::ChildrenReply);
+  return d->last_list;
 }
 
-FilesystemEntry::ptr RemoteFilesystem::Private::entry(const QFileInfo& info)
+void RemoteFilesystem::Private::entry(OnEntry onEntry, const QString& name, const QString& path, bool isFile, bool isDir)
 {
-  return make_shared<FilesystemEntry>(info.fileName(), info.canonicalFilePath(), info.isDir() ? FilesystemEntry::Directory : FilesystemEntry::File, q->shared_from_this());
+  onEntry(make_shared<FilesystemEntry>(name, path, isDir ? FilesystemEntry::Directory : FilesystemEntry::File, q->shared_from_this()));
 }
+
+void RemoteFilesystem::Private::fileInfoReply(const NetworkPacket::ptr& p)
+{
+  LOG_F_SCOPE
+  FilesystemProtocol::decodeFileInfoReply(p, bind(&Private::entry, this, [=](const FilesystemEntry::ptr &e){ last_entry = e; }, _1, _2, _3, _4));
+}
+
+void RemoteFilesystem::Private::childrenReply(const NetworkPacket::ptr& p)
+{
+  LOG_F_SCOPE
+  FilesystemProtocol::decodeChildrenReply(p, bind(&Private::entry, this, [=](const FilesystemEntry::ptr &e){ last_list.push_back(e);}, _1, _2, _3, _4));
+}
+
+

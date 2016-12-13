@@ -25,6 +25,7 @@
 #include "network/protocol/driverprotocol.h"
 #include "Qt/strings.h"
 #include <QElapsedTimer>
+#include "network/server/filesystemforwarder.h"
 
 using namespace std;
 using namespace std::placeholders;
@@ -37,6 +38,7 @@ DPTR_IMPL(NetworkServer) {
   FramesForwarder::ptr framesForwarder;
   QTcpServer server;
   DriverForwarder::ptr forwarder;
+  FilesystemForwarder::ptr filesystemForwarder;
   void new_connection();
   void bytes_sent(quint64 written, quint64 sent);
   QElapsedTimer elapsed;
@@ -48,6 +50,7 @@ NetworkServer::NetworkServer(const Driver::ptr &driver, const ImageHandler::ptr 
   : QObject{parent}, NetworkReceiver{dispatcher}, dptr(this, driver, handler, dispatcher, framesForwarder)
 {
   d->server.setMaxPendingConnections(1);
+  d->filesystemForwarder = make_shared<FilesystemForwarder>(dispatcher);
   connect(&d->server, &QTcpServer::newConnection, bind(&Private::new_connection, d.get()));
   d->forwarder = make_shared<DriverForwarder>(dispatcher, driver, handler, [save_file](Imager *imager) { save_file->setImager(imager); });
   register_handler(NetworkProtocol::Hello, [this](const NetworkPacket::ptr &p){
