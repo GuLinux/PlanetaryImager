@@ -49,8 +49,9 @@ public:
 protected:
   void restart(const ImagerThread::Worker::factory &worker);
   std::shared_ptr<QWaitCondition> push_job_on_thread(const ImagerThread::Job &job);
-  void set_exposure(const Control &control);
+  void update_exposure();
   void wait_for(const std::shared_ptr<QWaitCondition> &wait_condition) const;
+  // Call this at the end of each subclass constructor. Still have to find a better way for it, but whatever...
 private:
   DPTR
   
@@ -65,8 +66,9 @@ public slots:
 signals:
   void fps(double rate);
   void temperature(double celsius);
-  void changed(const Control &control);
+  void changed(const Imager::Control &control);
   void disconnected();
+  void exposure_changed(const Imager::Control &control);
   void long_exposure_started(double exposure_seconds);
   void long_exposure_ended();
 };
@@ -94,6 +96,7 @@ struct Imager::Control {
   bool value_auto = false;
   bool readonly = false;
   std::chrono::duration<double> duration_unit;
+  bool is_exposure = false;
   
   Control &set_id(const qlonglong &id) { this->id = id; return *this; }
   Control &set_name(const QString &name) { this->name= name; return *this; }
@@ -117,6 +120,7 @@ struct Imager::Control {
   Control &set_supports_auto(bool supports_auto) { this->supports_auto= supports_auto; return *this; }
   Control &set_value_auto(bool value_auto) { this->value_auto= value_auto; return *this; }
   Control &set_readonly(bool readonly) { this->readonly= readonly; return *this; }
+  Control &set_is_exposure(bool is_exposure) { this->is_exposure = is_exposure; return *this; }
   Control &set_duration_unit(double duration_unit) { this->duration_unit = std::chrono::duration<double>{duration_unit}; return *this; }
   Control &set_duration_unit(std::chrono::duration<double> duration_unit) { this->duration_unit = duration_unit; return *this; }
   

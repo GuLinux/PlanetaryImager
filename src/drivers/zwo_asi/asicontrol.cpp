@@ -101,5 +101,6 @@ ASIControl::operator Imager::Control() const
   control.readonly = !caps.IsWritable;
   control.value_auto = caps.IsAutoSupported && is_auto;
   control.supports_auto = caps.IsAutoSupported;
+  control.is_exposure = caps.ControlType == ASI_EXPOSURE;
   return control;
 }

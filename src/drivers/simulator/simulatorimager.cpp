@@ -65,7 +65,7 @@ SimulatorImager::SimulatorImager(const ImageHandler::ptr& handler) : Imager(hand
     ROIValidator::height_multiple(2),
     });
   d->settings = {
-    {"exposure",    Control{1l, "exposure"}.set_range(0.1, 1000., 0.1).set_value(19.5).set_is_duration(true).set_duration_unit(1ms) },
+    {"exposure",    Control{1l, "exposure"}.set_range(0.1, 1000., 0.1).set_value(19.5).set_is_duration(true).set_is_exposure(true).set_duration_unit(1ms) },
     {"movement", Control{2, "movement"}.set_range(0., 5., 1.).set_value(1.)},
     {"seeing",   Control{3l, "seeing"}.set_range(0, 5, 1).set_value(1).set_supports_auto(true)},
     {"bin",	 Control{4l, "bin", Control::Combo}.set_value(4).add_choice("1x1", 1).add_choice("2x2", 2).add_choice("3x3", 3).add_choice("4x4", 4) }, 
@@ -118,8 +118,6 @@ void SimulatorImager::setControl(const Imager::Control& setting)
         return;
     }
     d->settings[setting.name] = setting;
-    if(setting.name == "exposure")
-      set_exposure(setting);
     emit changed(setting);
   }));
 }

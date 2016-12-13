@@ -63,6 +63,7 @@ DPTR_IMPL(ZWO_ASI_Imager) {
     QRect maxROI(int bin) const;
     void restart_worker(int bin, const QRect &roi, ASI_IMG_TYPE format);
     void read_temperature();
+    void update_worker_exposure_timeout();
 };
 
 void ZWO_ASI_Imager::Private::read_temperature() {
@@ -108,6 +109,7 @@ ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandler::
 #endif
     connect(d->reload_temperature_timer.get(), &QTimer::timeout, this, bind(&Private::read_temperature, d.get() ));
     d->reload_temperature_timer->start(5000);
+    connect(this, &Imager::exposure_changed, this, bind(&Private::update_worker_exposure_timeout, d.get()));
 }
 
 ZWO_ASI_Imager::~ZWO_ASI_Imager()
@@ -124,6 +126,12 @@ Imager::Properties ZWO_ASI_Imager::properties() const
 QString ZWO_ASI_Imager::name() const
 {
     return d->info.Name;
+}
+
+void ZWO_ASI_Imager::Private::update_worker_exposure_timeout()
+{
+  if(worker)
+    worker->calc_exposure_timeout();
 }
 
 
@@ -192,14 +200,12 @@ void ZWO_ASI_Imager::setControl(const Control& control)
     wait_for(push_job_on_thread([=]{
       camera_control->set(control.get_value<qlonglong>(), control.value_auto);
       qDebug() << "Changed control " << camera_control->control();
-      if(control.id == ASI_EXPOSURE) {
-        set_exposure(camera_control->control() );
-        d->worker->calc_exposure_timeout();
-      }
       emit changed(*camera_control);
     }));
   }
 }
+
+
 
 
 void ZWO_ASI_Imager::Private::restart_worker(int bin, const QRect& roi, ASI_IMG_TYPE format)

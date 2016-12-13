@@ -47,7 +47,7 @@ public:
   QThread thread;
   boost::lockfree::spsc_queue<Job> jobs_queue;
   bool long_exposure_mode = false;
-  chrono::duration<double> long_exposure_duration;
+  chrono::duration<double> exposure;
   void thread_started();
   LOG_C_SCOPE(ImagerThread);
 };
@@ -108,8 +108,9 @@ void ImagerThread::Private::thread_started()
     }
     try {
       if(long_exposure_mode)
-        imager->long_exposure_started(long_exposure_duration.count() );
+        imager->long_exposure_started(exposure.count() );
       if(auto frame = worker->shoot()) {
+          frame->set_exposure(exposure);
           imageHandler->handle(frame);
         ++fps;
         error_messages_since_last_success = 0;
@@ -150,7 +151,7 @@ shared_ptr<QWaitCondition> ImagerThread::push_job(const Job& job)
 void ImagerThread::set_exposure(const std::chrono::duration<double> &exposure)
 {
   d->long_exposure_mode = ( exposure >= 2s);
-  d->long_exposure_duration = exposure;
+  d->exposure = exposure;
   qDebug() << "Exposure: " << exposure.count() << "s; long exposure: " << d->long_exposure_mode;
 }
 

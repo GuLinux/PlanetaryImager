@@ -25,6 +25,7 @@
 #include <QSize>
 #include <QDateTime>
 #include <QVariantMap>
+#include <chrono>
 class Frame
 {
 public:
@@ -52,6 +53,9 @@ public:
   
   QVariantMap const as_variant();
   static ptr from_variant(const QVariantMap &map);
+  typedef std::chrono::duration<double> Seconds;
+  Seconds exposure() const;
+  void set_exposure(const Seconds &exposure);
 private:
   DPTR
 };

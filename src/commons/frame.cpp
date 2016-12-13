@@ -28,6 +28,7 @@ DPTR_IMPL(Frame) {
   const uint8_t bpp;
   const QSize resolution;
   cv::Mat mat;
+  Seconds exposure = Seconds::zero();
   
   static int cv_type(uint8_t bpp, ColorFormat format);
 };
@@ -113,4 +114,15 @@ Frame::ColorFormat Frame::colorFormat() const
 {
   return d->color_format;
 }
+
+Frame::Seconds Frame::exposure() const
+{
+  return d->exposure;
+}
+
+void Frame::set_exposure(const Frame::Seconds& exposure)
+{
+  d->exposure = exposure;
+}
+
 

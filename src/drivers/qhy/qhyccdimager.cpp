@@ -157,6 +157,7 @@ void QHYCCDImager::Private::load_controls()
       if(control.id == CONTROL_EXPOSURE) {
                 control.is_duration = true;
                 control.duration_unit = 1us;
+                control.set_is_exposure(true);
       }
       load(control);
   //     setting.value = GetQHYCCDParam(handle, control.second);
@@ -181,9 +182,6 @@ void QHYCCDImager::setControl(const QHYCCDImager::Control& setting)
     Control &setting_ref = *find_if(begin(d->controls), end(d->controls), [setting](const Control &s) { return s.id == setting.id; });
     d->load(setting_ref);
     qDebug() << "setting" << setting.name << "updated to value" << setting_ref.value;
-    if(setting.id == CONTROL_EXPOSURE) {
-      set_exposure(setting_ref);
-    }
     emit changed(setting_ref);
   }));
 }

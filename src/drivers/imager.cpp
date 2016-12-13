@@ -33,6 +33,12 @@ DPTR_IMPL(Imager) {
 
 Imager::Imager(const ImageHandler::ptr& image_handler) : QObject(nullptr), dptr(image_handler)
 {
+  static bool metatypes_registered = false;
+  if(!metatypes_registered) {
+    metatypes_registered = true;
+    qRegisterMetaType<Imager::Control>("Imager::Control");
+  }
+  connect(this, &Imager::changed, this, [=](const Imager::Control &c) { if(c.is_exposure) update_exposure(); });
 }
 
 Imager::~Imager()
@@ -94,16 +100,22 @@ void Imager::restart(const ImagerThread::Worker::factory& worker)
   LOG_F_SCOPE
   d->imager_thread.reset();
   d->imager_thread = make_shared<ImagerThread>(worker(), this, d->image_handler);
+  update_exposure();
   d->imager_thread->start();
 }
 
-void Imager::set_exposure(const Control &control)
+void Imager::update_exposure()
 {
-  if(! control.is_duration)
-    return;
-  const chrono::duration<double> exposure = control.seconds();
-  if(d->imager_thread)
-    d->imager_thread->set_exposure(exposure);
+  for(auto control: controls()) {
+    if(control.is_duration && control.is_exposure) {
+      const chrono::duration<double> exposure = control.seconds();
+      qDebug() << "Setting exposure: " << exposure.count();
+      if(d->imager_thread)
+        d->imager_thread->set_exposure(exposure);
+      emit exposure_changed(control);
+      break;
+    }
+  }
 }
 
 void Imager::wait_for(const std::shared_ptr<QWaitCondition>& wait_condition) const
@@ -135,3 +147,4 @@ bool Imager::supports(Capability capability) const
   return d->capabilities->value(capability, false);
 }
 
+#include "imager.moc"
