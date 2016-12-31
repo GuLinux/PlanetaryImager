@@ -29,12 +29,16 @@ Requirements
 Source download
 ---------------
 
-Remember to clone the submodule repository, or it won't compile!
-  
+You need to use the following commands to clone both planetary imager and its submodules.
+A simple git clone won't work!
 
-    git clone https://github.com/GuLinux/PlanetaryImager.git
-    cd PlanetaryImager
-    ./scripts/init_repository
+Stable release (replace 'v0.6.2' with the current stable release, if needed):
+
+    git clone --recursive -b v0.6.2 https://github.com/GuLinux/PlanetaryImager.git 
+
+Master (development) version:
+
+    git clone --recursive https://github.com/GuLinux/PlanetaryImager.git 
     
 
 Compile Howto
