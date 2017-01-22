@@ -1,4 +1,5 @@
-UBUNTU_BASE_IMAGE="gulinux/planetaryimager_build:ubuntu_xenial_arm_base"
-UBUNTU_VERSION=16.04
+DEB_BASE_IMAGE="gulinux/planetaryimager_build:ubuntu_xenial_arm_base"
+DEB_VERSION=16.04
+DEB_CONFIG_NAME="ubuntu-16.04"
 . ../ubuntu-commons/Dockerfile.in
 

@@ -1,0 +1,4 @@
+DEB_BASE_IMAGE="debian:testing"
+DEB_CONFIG_NAME="debian-testing"
+DEB_VERSION=testing
+. ../debian-based-commons/Dockerfile.in 

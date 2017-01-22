@@ -1,4 +1,5 @@
-UBUNTU_BASE_IMAGE="f69m/ubuntu32:16.04"
-UBUNTU_VERSION=16.04
+DEB_BASE_IMAGE="f69m/ubuntu32:16.04"
+DEB_VERSION=16.04
+DEB_CONFIG_NAME="ubuntu-16.04"
 . ../ubuntu-commons/Dockerfile.in
 
