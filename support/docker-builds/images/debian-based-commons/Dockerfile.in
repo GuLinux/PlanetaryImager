@@ -1,4 +1,4 @@
-cp "$( dirname "$BASH_SOURCE")/configuration-${DEB_VERSION}.cmake" "$PWD"
+cp "$( dirname "$BASH_SOURCE")/configuration-${DEB_CONFIG_NAME}.cmake" "$PWD"
 cat <<EOF
 FROM ${DEB_BASE_IMAGE}
 RUN apt-get update && apt-get install -y \
@@ -18,6 +18,6 @@ EOF
 . ../commons/Dockerfile.workdir.in
 
 cat <<EOF
-COPY configuration-${DEB_VERSION}.cmake /
-ENV CMAKE_EXTRA_OPTIONS -DCMAKE_INCLUDE_EXT_FILE=/configuration-${DEB_CONFIG_NAME}.cmake
+COPY configuration-${DEB_CONFIG_NAME}.cmake /
+ENV CMAKE_EXTRA_OPTIONS -DCMAKE_INCLUDE_EXT_FILE=/configuration-${DEB_CONFIG_NAME}.cmake ${CMAKE_EXTRA_OPTIONS}
 EOF

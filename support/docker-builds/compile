@@ -5,6 +5,7 @@ DAILY_TAG_SUFFIX="$(git log --pretty=format:'%h' -n 1)"
 export DEST=/tmp
 COMPILE_ENVS=""
 export MAKE_OPTS=""
+CMAKE_EXTRA_OPTIONS=""
 
 print-help() {
   cat <<EOF

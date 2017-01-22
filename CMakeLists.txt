@@ -41,6 +41,7 @@ include_directories(${LIBUSB_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 
 option(cflags_fpic "Use -fPIC for compilation " on)
 if(cflags_fpic)
+  message("Compiling with -fPIC")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 endif(cflags_fpic)
 
@@ -63,6 +64,7 @@ set(FULL_VERSION ${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}${PACKAGE_VER
  add_definitions(-DHOST_PROCESSOR="${CMAKE_HOST_SYSTEM_PROCESSOR}" -DARCHITECTURE="${PlanetaryImager_ARCH}")
  message("Detected architecture: ${PlanetaryImager_ARCH}")
 SET(EXTRA_LIBRARIES "" CACHE STRING "Extra libraries for linking")
+message("Extra libraries for linking: ${EXTRA_LIBRARIES}")
 
 set(PACKAGE_VERSION_SUFFIX "" CACHE STRING "Suffix package version (default: empty)")
 set(PACKAGE_NAME_SUFFIX "" CACHE STRING "Suffix package name (default: empty)")

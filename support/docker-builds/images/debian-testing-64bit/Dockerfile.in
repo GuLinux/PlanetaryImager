@@ -1,4 +1,5 @@
 DEB_BASE_IMAGE="debian:testing"
 DEB_CONFIG_NAME="debian-testing"
 DEB_VERSION=testing
+CMAKE_EXTRA_OPTIONS='-Denable_qhy=Off'
 . ../debian-based-commons/Dockerfile.in 

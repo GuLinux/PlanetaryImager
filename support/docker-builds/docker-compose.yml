@@ -1,6 +1,6 @@
 version: '2'
 services:
-    ubuntu-build:
+    planetaryimager-build:
         image: ${COMPOSE_IMAGE}
         volumes:
             - ../../:/code
