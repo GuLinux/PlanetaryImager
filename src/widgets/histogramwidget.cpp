@@ -22,6 +22,7 @@
 #include "Qt/functional.h"
 #include <QMap>
 #include <opencv2/opencv.hpp>
+#include "histogramstatswidget.h"
 
 using namespace std;
 using namespace std::placeholders;
@@ -31,21 +32,23 @@ DPTR_IMPL(HistogramWidget) {
   Configuration::ptr configuration;
   HistogramWidget *q;
   std::unique_ptr<Ui::HistogramWidget> ui;
-  void got_histogram(const QImage& histogram, const QVariantMap &stats, Histogram::Channel channel);
+  void got_histogram(const QImage& histogram, const QMap<Histogram::Channel, QVariantMap> &stats, Histogram::Channel channel);
   void toggle_histogram_logarithmic(bool logarithmic);
   QMap<Histogram::Channel, int> channel_combo_indexes;
+  QList<shared_ptr<HistogramStatsWidget>> statsWidgets;
 };
 HistogramWidget::~HistogramWidget()
 {
 }
 
-HistogramWidget::HistogramWidget(const Histogram::ptr &histogram, const Configuration::ptr &configuration, QWidget* parent) : dptr(histogram, configuration, this)
+HistogramWidget::HistogramWidget(const Histogram::ptr &histogram, const Configuration::ptr &configuration, QWidget* parent) : QWidget(parent), dptr(histogram, configuration, this)
 {
     d->channel_combo_indexes = {
       {Histogram::Grayscale, 0},
       {Histogram::Red, 1},
       {Histogram::Green, 2},
       {Histogram::Blue, 3},
+      {Histogram::All, 4},
     };
     d->ui.reset(new Ui::HistogramWidget);
     d->ui->setupUi(this);
@@ -62,6 +65,7 @@ HistogramWidget::HistogramWidget(const Histogram::ptr &histogram, const Configur
     connect(d->ui->histogram_logarithmic, &QCheckBox::toggled, this, bind(&Private::toggle_histogram_logarithmic, d.get(), _1));
     connect(d->ui->channel, F_PTR(QComboBox, currentIndexChanged, int), this, [this](int index) { d->histogram->setChannel(d->channel_combo_indexes.key(index)); });
     d->toggle_histogram_logarithmic(configuration->histogram_logarithmic());
+    d->ui->statsWidget->setLayout(new QVBoxLayout);
 }
 
 void HistogramWidget::Private::toggle_histogram_logarithmic(bool logarithmic)
@@ -72,31 +76,15 @@ void HistogramWidget::Private::toggle_histogram_logarithmic(bool logarithmic)
 }
 
 
-void HistogramWidget::Private::got_histogram(const QImage& histogram, const QVariantMap& stats, Histogram::Channel channel)
+void HistogramWidget::Private::got_histogram(const QImage& histogram, const QMap<Histogram::Channel, QVariantMap>& stats, Histogram::Channel channel)
 {
   ui->channel->setCurrentIndex(channel_combo_indexes[channel]);
   ui->histogram_plot->setPixmap(QPixmap::fromImage(histogram));
-  int totalPixels = stats["pixels"].toInt();
-  int range_min = stats["range_min"].toInt();
-  int range_max = stats["range_max"].toInt();
-  auto format_stat = [totalPixels, range_min, range_max, &stats](const QString &name){
-    int value = stats[name + "_value"].toInt();
-    int pixels = stats[name + "_count"].toInt();
-    double percent = 100. * pixels / totalPixels;
-    double positionPercent = 100. * (value - range_min) / (range_max-range_min);
-    return QString("value: %1, count: %2 (%3%), position: %4%")
-      .arg(value, 5)
-      .arg(pixels, 10)
-      .arg(percent, 5, 'f', 1)
-      .arg(positionPercent, 5, 'f', 1)
-      ;
-  };
-  ui->highlights->setText(format_stat("highlights"));
-  ui->shadows->setText(format_stat("shadows"));
-  ui->maximum->setText(QString("values: %1-%2, position: %3%")
-    .arg(stats["maximum_value_min"].toInt() )
-    .arg(stats["maximum_value_max"].toInt() )
-    .arg(stats["maximum_value_percent"].toDouble(), 5, 'f', 1 )
-  );
+  statsWidgets.clear();
+  for(auto channel: stats.keys()) {
+    auto widget = make_shared<HistogramStatsWidget>(channel, stats[channel], ui->statsWidget);
+    ui->statsWidget->layout()->addWidget(widget.get());
+    statsWidgets.push_back(widget);
+  }
 } 
 

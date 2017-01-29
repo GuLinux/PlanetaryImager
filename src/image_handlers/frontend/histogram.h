@@ -33,6 +33,7 @@ public:
     Red,
     Green,
     Blue,
+    All,
   };
   ~Histogram();
   Histogram(const Configuration::ptr &configuration, QObject* parent = 0);
@@ -45,7 +46,7 @@ public slots:
   void read_settings();
   void setChannel(Channel channel);
 signals:
-  void histogram(const QImage &, const QVariantMap &, Histogram::Channel channel);
+  void histogram(const QImage &, const QMap<Histogram::Channel, QVariantMap> &, Histogram::Channel channel);
 private:
   DPTR
 };
