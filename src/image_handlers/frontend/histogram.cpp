@@ -124,7 +124,7 @@ void Histogram::handle(const Frame::ptr &frame)
   QImage hist_qimage(histImage.data, hist_w, hist_h, static_cast<int>(histImage.step), QImage::Format_RGB888);
 
   vector<uint16_t> mat_data;
-  frame->mat().reshape(1, 1).copyTo(mat_data);
+  source.reshape(1, 1).copyTo(mat_data);
   uint16_t min_value = *min_element(begin(mat_data), end(mat_data));
   uint16_t max_value = *max_element(begin(mat_data), end(mat_data));
   
