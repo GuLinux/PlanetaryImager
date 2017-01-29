@@ -163,6 +163,7 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionEdges_Detection"/>
+   <addaction name="actionNight_Mode"/>
    <addaction name="actionShow_settings"/>
   </widget>
   <widget class="QToolBar" name="ROIToolbar">
@@ -361,7 +362,7 @@
   </action>
   <action name="actionControlsSection">
    <property name="text">
-    <string>Controls</string>
+    <string>&amp;Controls</string>
    </property>
   </action>
   <action name="actionControlsPresets">
@@ -370,6 +371,14 @@
    </property>
    <property name="text">
     <string>&amp;Presets</string>
+   </property>
+  </action>
+  <action name="actionNight_Mode">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Night Mode</string>
    </property>
   </action>
  </widget>

@@ -169,6 +169,8 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
 {
     Private::q = this;
     d->ui.reset(new Ui::PlanetaryImagerMainWindow);
+    //qApp->setStyleSheet("* { background-color: red }");
+    
     d->ui->setupUi(this);
     d->ui->actionControlsSection->setSeparator(true);
     setWindowIcon(QIcon::fromTheme("planetary_imager"));
@@ -260,6 +262,12 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
     connect(MessagesLogger::instance(), &MessagesLogger::message, this, bind(&PlanetaryImagerMainWindow::notify, this, _1, _2, _3, _4), Qt::QueuedConnection);
     d->rescan_devices();
     connect(d->displayImage.get(), &DisplayImage::gotImage, this, bind(&ZoomableImage::setImage, d->image_widget, _1), Qt::QueuedConnection);
+    
+    connect(d->ui->actionNight_Mode, &QAction::toggled, this, [=](bool checked) {
+      qApp->setStyleSheet(checked ? R"_(
+        * { background-color: rgb(40, 0, 0); color: rgb(220, 220, 220); }
+      )_" : "");
+    });
 
     
     connect(d->displayImage.get(), &DisplayImage::displayFPS, d->statusbar_info_widget, &StatusBarInfoWidget::displayFPS, Qt::QueuedConnection);
