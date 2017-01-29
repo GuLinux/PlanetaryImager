@@ -83,7 +83,7 @@ void HistogramWidget::Private::got_histogram(const QImage& histogram, const QVar
   };
   ui->highlights->setText(format_stat("highlights"));
   ui->shadows->setText(format_stat("shadows"));
-  ui->maximum->setText(QString("value: %1-%2, position: %3%")
+  ui->maximum->setText(QString("values: %1-%2, position: %3%")
     .arg(stats["maximum_value_min"].toInt() )
     .arg(stats["maximum_value_max"].toInt() )
     .arg(stats["maximum_value_percent"].toDouble(), 5, 'f', 1 )
