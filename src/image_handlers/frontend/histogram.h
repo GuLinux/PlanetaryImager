@@ -28,16 +28,24 @@ class Histogram : public QObject, public ImageHandler
   Q_OBJECT
 public:
   typedef std::shared_ptr<Histogram> ptr;
+  enum Channel {
+    Grayscale,
+    Red,
+    Green,
+    Blue,
+  };
   ~Histogram();
   Histogram(const Configuration::ptr &configuration, QObject* parent = 0);
   virtual void handle(const Frame::ptr &frame);
   void set_bins(std::size_t bins_size);
   void setRecording(bool recording);
   void setLogarithmic(bool logarithmic);
+  Channel channel() const;
 public slots:
   void read_settings();
+  void setChannel(Channel channel);
 signals:
-  void histogram(const QImage &, const QVariantMap &);
+  void histogram(const QImage &, const QVariantMap &, Histogram::Channel channel);
 private:
   DPTR
 };

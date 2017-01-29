@@ -43,6 +43,7 @@ DPTR_IMPL(Histogram) {
   size_t bins_size;
   bool should_read_frame() const;
   bool logarithmic = false;
+  Channel channel = Grayscale;
 };
 
 
@@ -55,6 +56,11 @@ Histogram::Histogram(const Configuration::ptr &configuration, QObject* parent) :
   d->last.start();
   d->recording = false;
   read_settings();
+  static bool metatypes_registered = false;
+  if(!metatypes_registered) {
+    metatypes_registered = true;
+    qRegisterMetaType<Histogram::Channel>("Histogram::Channel");
+  }
 }
 
 #include <fstream>
@@ -67,8 +73,22 @@ void Histogram::handle(const Frame::ptr &frame)
   BENCH(_histogram)->every(5)->ms();
   cv::Mat source;
   frame->mat().copyTo(source);
-  if(frame->channels() > 1)
-    cv::cvtColor(source,  source, cv::COLOR_BGR2GRAY);
+  if(frame->channels() == 1) {
+    d->channel = Grayscale;
+  }
+  if(frame->channels() > 1) {
+    if( d->channel == Grayscale )
+      cv::cvtColor(source,  source, cv::COLOR_BGR2GRAY);
+    else {
+      static map<Frame::ColorFormat, map<Channel, int>> channel_indexes {
+        {Frame::RGB, { {Red, 0}, {Green, 1 }, {Blue, 2} }},
+        {Frame::BGR, { {Red, 2}, {Green, 1 }, {Blue, 0} }},
+      };
+      vector<cv::Mat> channels(3);
+      cv::split(source, channels);
+      source = channels[ channel_indexes[frame->colorFormat()][d->channel] ];
+    }
+  }
   
   cv::Mat hist;
   int nimages = 1;
@@ -121,7 +141,7 @@ void Histogram::handle(const Frame::ptr &frame)
     {"range_max", pow(2, frame->bpp()) - 1},
     {"pixels", frame->resolution().width() * frame->resolution().height()},
   };
-  emit histogram(hist_qimage.rgbSwapped(), stats);
+  emit histogram(hist_qimage.rgbSwapped(), stats, d->channel);
 }
 
 
@@ -155,6 +175,15 @@ void Histogram::setLogarithmic(bool logarithmic)
   d->logarithmic = logarithmic;
 }
 
+Histogram::Channel Histogram::channel() const
+{
+  return d->channel;
+}
+
+void Histogram::setChannel(Histogram::Channel channel)
+{
+  d->channel = channel;
+}
 
 
 #include "histogram.moc"

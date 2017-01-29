@@ -20,6 +20,7 @@
 #include "ui_histogramwidget.h"
 #include "commons/configuration.h"
 #include "Qt/functional.h"
+#include <QMap>
 #include <opencv2/opencv.hpp>
 
 using namespace std;
@@ -30,8 +31,9 @@ DPTR_IMPL(HistogramWidget) {
   Configuration::ptr configuration;
   HistogramWidget *q;
   std::unique_ptr<Ui::HistogramWidget> ui;
-  void got_histogram(const QImage& histogram, const QVariantMap &stats);
+  void got_histogram(const QImage& histogram, const QVariantMap &stats, Histogram::Channel channel);
   void toggle_histogram_logarithmic(bool logarithmic);
+  QMap<Histogram::Channel, int> channel_combo_indexes;
 };
 HistogramWidget::~HistogramWidget()
 {
@@ -39,6 +41,12 @@ HistogramWidget::~HistogramWidget()
 
 HistogramWidget::HistogramWidget(const Histogram::ptr &histogram, const Configuration::ptr &configuration, QWidget* parent) : dptr(histogram, configuration, this)
 {
+    d->channel_combo_indexes = {
+      {Histogram::Grayscale, 0},
+      {Histogram::Red, 1},
+      {Histogram::Green, 2},
+      {Histogram::Blue, 3},
+    };
     d->ui.reset(new Ui::HistogramWidget);
     d->ui->setupUi(this);
     d->ui->histogram_bins->setValue(d->configuration->histogram_bins());
@@ -50,8 +58,9 @@ HistogramWidget::HistogramWidget(const Histogram::ptr &histogram, const Configur
     };
     update_bins();
     connect(d->ui->histogram_bins, F_PTR(QSpinBox, valueChanged, int), update_bins);
-    connect(d->histogram.get(), &Histogram::histogram, this, bind(&Private::got_histogram, d.get(), _1, _2), Qt::QueuedConnection);
+    connect(d->histogram.get(), &Histogram::histogram, this, bind(&Private::got_histogram, d.get(), _1, _2, _3), Qt::QueuedConnection);
     connect(d->ui->histogram_logarithmic, &QCheckBox::toggled, this, bind(&Private::toggle_histogram_logarithmic, d.get(), _1));
+    connect(d->ui->channel, F_PTR(QComboBox, currentIndexChanged, int), this, [this](int index) { d->histogram->setChannel(d->channel_combo_indexes.key(index)); });
     d->toggle_histogram_logarithmic(configuration->histogram_logarithmic());
 }
 
@@ -63,8 +72,9 @@ void HistogramWidget::Private::toggle_histogram_logarithmic(bool logarithmic)
 }
 
 
-void HistogramWidget::Private::got_histogram(const QImage& histogram, const QVariantMap& stats)
+void HistogramWidget::Private::got_histogram(const QImage& histogram, const QVariantMap& stats, Histogram::Channel channel)
 {
+  ui->channel->setCurrentIndex(channel_combo_indexes[channel]);
   ui->histogram_plot->setPixmap(QPixmap::fromImage(histogram));
   int totalPixels = stats["pixels"].toInt();
   int range_min = stats["range_min"].toInt();
