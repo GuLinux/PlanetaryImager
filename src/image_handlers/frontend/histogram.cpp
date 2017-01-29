@@ -44,6 +44,8 @@ DPTR_IMPL(Histogram) {
   bool should_read_frame() const;
   bool logarithmic = false;
   Channel channel = Grayscale;
+  Frame::ptr last_frame;
+  void calcHistogram(const Frame::ptr &frame);
 };
 
 
@@ -63,21 +65,24 @@ Histogram::Histogram(const Configuration::ptr &configuration, QObject* parent) :
   }
 }
 
-#include <fstream>
 void Histogram::handle(const Frame::ptr &frame)
 {
-  
   if( ! d->should_read_frame() )
     return;
   d->last.restart();
+  d->calcHistogram(frame);
+  d->last_frame = frame;
+}
+void Histogram::Private::calcHistogram(const Frame::ptr& frame)
+{
   BENCH(_histogram)->every(5)->ms();
   cv::Mat source;
   frame->mat().copyTo(source);
   if(frame->channels() == 1) {
-    d->channel = Grayscale;
+    channel = Grayscale;
   }
   if(frame->channels() > 1) {
-    if( d->channel == Grayscale )
+    if( channel == Grayscale )
       cv::cvtColor(source,  source, cv::COLOR_BGR2GRAY);
     else {
       static map<Frame::ColorFormat, map<Channel, int>> channel_indexes {
@@ -86,7 +91,7 @@ void Histogram::handle(const Frame::ptr &frame)
       };
       vector<cv::Mat> channels(3);
       cv::split(source, channels);
-      source = channels[ channel_indexes[frame->colorFormat()][d->channel] ];
+      source = channels[ channel_indexes[frame->colorFormat()][channel] ];
     }
   }
   
@@ -94,28 +99,28 @@ void Histogram::handle(const Frame::ptr &frame)
   int nimages = 1;
   int channels[]{0};
   int dims = 1;
-  int bins []{static_cast<int>(d->bins_size)};
+  int bins []{static_cast<int>(bins_size)};
   float range[]{0, static_cast<float>( frame->bpp() == 8 ? numeric_limits<uint8_t>().max() : numeric_limits<uint16_t>().max() ) };
   const float *ranges[]{range};
   
   cv::calcHist(&source, nimages, channels, cv::Mat{}, hist, dims, bins, ranges);
   auto top_bin_it = max_element(hist.begin<float>(), hist.end<float>());
   auto top_bin_position = top_bin_it - hist.begin<float>();
-  auto top_bin_value_min = range[1]/d->bins_size * top_bin_position;
-  auto top_bin_value_max = top_bin_value_min + (range[1]/d->bins_size);
+  auto top_bin_value_min = range[1]/bins_size * top_bin_position;
+  auto top_bin_value_max = top_bin_value_min + (range[1]/bins_size);
   
-  if(d->logarithmic)
+  if(logarithmic)
     transform(hist.begin<float>(), hist.end<float>(), hist.begin<float>(), [](float n){ return n==0?0:log10(n); });
   int hist_w = 1024; int hist_h = 600;
-  int bin_w = cvRound( (double) hist_w/d->bins_size );
+  int bin_w = cvRound( (double) hist_w/bins_size );
   
   cv::Mat histImage( hist_h, hist_w, CV_8UC3, cv::Scalar( 0,0,0) );
 
   normalize(hist, hist, 0, histImage.rows, cv::NORM_MINMAX, -1, cv::Mat() );
   /// Draw for each channel
-  for(int i = 1; i <= d->bins_size; i++)
+  for(int i = 1; i <= bins_size; i++)
   cv::line( histImage, cv::Point(bin_w*(i), 0), cv::Point(bin_w*(i), hist_h), cv::Scalar(50, 50, 50), 1, CV_AA);
-  for( int i = 1; i < d->bins_size; i++ )
+  for( int i = 1; i < bins_size; i++ )
   {
     cv::line( histImage, cv::Point( bin_w*(i-1), hist_h - cvRound(hist.at<float>(i-1)) ) ,
               cv::Point( bin_w*(i), hist_h - cvRound(hist.at<float>(i)) ),
@@ -136,12 +141,12 @@ void Histogram::handle(const Frame::ptr &frame)
     {"highlights_count", static_cast<int>(count(begin(mat_data), end(mat_data), max_value))},
     {"maximum_value_min", top_bin_value_min},
     {"maximum_value_max", top_bin_value_max},
-    {"maximum_value_percent", 100. * top_bin_position / d->bins_size},
+    {"maximum_value_percent", 100. * top_bin_position / bins_size},
     {"range_min", 0},
     {"range_max", pow(2, frame->bpp()) - 1},
     {"pixels", frame->resolution().width() * frame->resolution().height()},
   };
-  emit histogram(hist_qimage.rgbSwapped(), stats, d->channel);
+  emit q->histogram(hist_qimage.rgbSwapped(), stats, channel);
 }
 
 
@@ -167,7 +172,7 @@ bool Histogram::Private::should_read_frame() const // TODO read limits only once
 {
   if( recording && histogram_disable_on_recording  )
     return false;
-  return last.elapsed() >= (recording ? histogram_timeout_recording : histogram_timeout );
+  return !last_frame || last.elapsed() >= (recording ? histogram_timeout_recording : histogram_timeout );
 }
 
 void Histogram::setLogarithmic(bool logarithmic)
@@ -183,6 +188,8 @@ Histogram::Channel Histogram::channel() const
 void Histogram::setChannel(Histogram::Channel channel)
 {
   d->channel = channel;
+  if(d->last_frame)
+    d->calcHistogram(d->last_frame);
 }
 
 

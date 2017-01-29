@@ -168,6 +168,9 @@
        <verstretch>0</verstretch>
       </sizepolicy>
      </property>
+     <property name="whatsThis">
+      <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;If you have a monochrome camera, &lt;span style=&quot; font-style:italic;&quot;&gt;Grayscale&lt;/span&gt; will be the only valid option.&lt;/p&gt;&lt;p&gt;If you have a colour camera, selecting &lt;span style=&quot; font-style:italic;&quot;&gt;Grayscale&lt;/span&gt; will convert the image to grayscale before calculating histogram and statistics.&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+     </property>
      <item>
       <property name="text">
        <string>Grayscale</string>
