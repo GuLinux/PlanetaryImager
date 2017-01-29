@@ -27,6 +27,9 @@
 
 #include <opencv2/opencv.hpp>
 #include <QImage>
+#include <cmath>
+#include "c++/stlutils.h"
+
 using namespace std;
 
 DPTR_IMPL(Histogram) {
@@ -61,6 +64,7 @@ void Histogram::handle(const Frame::ptr &frame)
   if( ! d->should_read_frame() )
     return;
   d->last.restart();
+  BENCH(_histogram)->every(5)->ms();
   cv::Mat source;
   frame->mat().copyTo(source);
   if(frame->channels() > 1)
@@ -75,9 +79,13 @@ void Histogram::handle(const Frame::ptr &frame)
   const float *ranges[]{range};
   
   cv::calcHist(&source, nimages, channels, cv::Mat{}, hist, dims, bins, ranges);
+  auto top_bin_it = max_element(hist.begin<float>(), hist.end<float>());
+  auto top_bin_position = top_bin_it - hist.begin<float>();
+  auto top_bin_value_min = range[1]/d->bins_size * top_bin_position;
+  auto top_bin_value_max = top_bin_value_min + (range[1]/d->bins_size);
+  
   if(d->logarithmic)
     transform(hist.begin<float>(), hist.end<float>(), hist.begin<float>(), [](float n){ return n==0?0:log10(n); });
-  
   int hist_w = 1024; int hist_h = 600;
   int bin_w = cvRound( (double) hist_w/d->bins_size );
   
@@ -94,7 +102,26 @@ void Histogram::handle(const Frame::ptr &frame)
           cv::Scalar( 255, 255, 255), 1, 8, 0  );
   }
   QImage hist_qimage(histImage.data, hist_w, hist_h, static_cast<int>(histImage.step), QImage::Format_RGB888);
-  emit histogram(hist_qimage.rgbSwapped());
+
+  vector<uint16_t> mat_data;
+  frame->mat().reshape(1, 1).copyTo(mat_data);
+  uint16_t min_value = *min_element(begin(mat_data), end(mat_data));
+  uint16_t max_value = *max_element(begin(mat_data), end(mat_data));
+  
+  
+  QVariantMap stats{
+    {"shadows_value", min_value},
+    {"shadows_count", static_cast<int>(count(begin(mat_data), end(mat_data), min_value))},
+    {"highlights_value", max_value},
+    {"highlights_count", static_cast<int>(count(begin(mat_data), end(mat_data), max_value))},
+    {"maximum_value_min", top_bin_value_min},
+    {"maximum_value_max", top_bin_value_max},
+    {"maximum_value_percent", 100. * top_bin_position / d->bins_size},
+    {"range_min", 0},
+    {"range_max", pow(2, frame->bpp()) - 1},
+    {"pixels", frame->resolution().width() * frame->resolution().height()},
+  };
+  emit histogram(hist_qimage.rgbSwapped(), stats);
 }
 
 

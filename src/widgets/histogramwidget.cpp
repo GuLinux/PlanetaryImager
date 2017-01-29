@@ -30,7 +30,7 @@ DPTR_IMPL(HistogramWidget) {
   Configuration::ptr configuration;
   HistogramWidget *q;
   std::unique_ptr<Ui::HistogramWidget> ui;
-  void got_histogram(const QImage& histogram);
+  void got_histogram(const QImage& histogram, const QVariantMap &stats);
   void toggle_histogram_logarithmic(bool logarithmic);
 };
 HistogramWidget::~HistogramWidget()
@@ -50,7 +50,7 @@ HistogramWidget::HistogramWidget(const Histogram::ptr &histogram, const Configur
     };
     update_bins();
     connect(d->ui->histogram_bins, F_PTR(QSpinBox, valueChanged, int), update_bins);
-    connect(d->histogram.get(), &Histogram::histogram, this, bind(&Private::got_histogram, d.get(), _1), Qt::QueuedConnection);
+    connect(d->histogram.get(), &Histogram::histogram, this, bind(&Private::got_histogram, d.get(), _1, _2), Qt::QueuedConnection);
     connect(d->ui->histogram_logarithmic, &QCheckBox::toggled, this, bind(&Private::toggle_histogram_logarithmic, d.get(), _1));
     d->toggle_histogram_logarithmic(configuration->histogram_logarithmic());
 }
@@ -63,8 +63,30 @@ void HistogramWidget::Private::toggle_histogram_logarithmic(bool logarithmic)
 }
 
 
-void HistogramWidget::Private::got_histogram(const QImage& histogram)
+void HistogramWidget::Private::got_histogram(const QImage& histogram, const QVariantMap& stats)
 {
   ui->histogram_plot->setPixmap(QPixmap::fromImage(histogram));
+  int totalPixels = stats["pixels"].toInt();
+  int range_min = stats["range_min"].toInt();
+  int range_max = stats["range_max"].toInt();
+  auto format_stat = [totalPixels, range_min, range_max, &stats](const QString &name){
+    int value = stats[name + "_value"].toInt();
+    int pixels = stats[name + "_count"].toInt();
+    double percent = 100. * pixels / totalPixels;
+    double positionPercent = 100. * (value - range_min) / (range_max-range_min);
+    return QString("value: %1, count: %2 (%3%), position: %4%")
+      .arg(value, 5)
+      .arg(pixels, 10)
+      .arg(percent, 5, 'f', 1)
+      .arg(positionPercent, 5, 'f', 1)
+      ;
+  };
+  ui->highlights->setText(format_stat("highlights"));
+  ui->shadows->setText(format_stat("shadows"));
+  ui->maximum->setText(QString("value: %1-%2, position: %3%")
+    .arg(stats["maximum_value_min"].toInt() )
+    .arg(stats["maximum_value_max"].toInt() )
+    .arg(stats["maximum_value_percent"].toDouble(), 5, 'f', 1 )
+  );
 } 
 

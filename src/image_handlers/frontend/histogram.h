@@ -37,7 +37,7 @@ public:
 public slots:
   void read_settings();
 signals:
-  void histogram(const QImage &);
+  void histogram(const QImage &, const QVariantMap &);
 private:
   DPTR
 };
