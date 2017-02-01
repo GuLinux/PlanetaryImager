@@ -169,7 +169,6 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
 {
     Private::q = this;
     d->ui.reset(new Ui::PlanetaryImagerMainWindow);
-    //qApp->setStyleSheet("* { background-color: red }");
     
     d->ui->setupUi(this);
     d->ui->actionControlsSection->setSeparator(true);
