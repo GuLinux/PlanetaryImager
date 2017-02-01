@@ -29,6 +29,7 @@
 #include <QImage>
 #include <cmath>
 #include "c++/stlutils.h"
+#include <QColor>
 
 using namespace std;
 
