@@ -45,7 +45,7 @@ DPTR_IMPL(Histogram) {
   size_t bins_size;
   bool should_read_frame() const;
   bool logarithmic = false;
-  Channel channel = Grayscale;
+  Channel channel = All;
   Frame::ptr last_frame;
   void handle(const Frame::ptr &frame);
   struct HistogramOutput {
