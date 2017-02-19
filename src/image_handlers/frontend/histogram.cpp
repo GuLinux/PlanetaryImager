@@ -54,10 +54,19 @@ DPTR_IMPL(Histogram) {
   };
   HistogramOutput calcHistogram(const cv::Mat &source, int bpp);
   HistogramOutput calcHistogramStats(const cv::Mat &source, cv::Mat &histogram, int bpp);
-  void drawHistogram(const cv::Mat &histogram, int bins_width, cv::Mat &image, const QColor &color = Qt::white);
-  
+  cv::Mat getHistogramImage(const cv::Mat &source) const;
   CHistLib histLib;
 };
+
+cv::Mat Histogram::Private::getHistogramImage(const cv::Mat& source) const
+{
+  qDebug() << "histogram frame bpp: " << source.depth();
+  if(source.depth() == CV_8U || source.depth() == CV_8S)
+    return source;
+  cv::Mat dest;
+  source.convertTo(dest, CV_8U, 1. / 256);
+  return dest;
+}
 
 
 Histogram::~Histogram()
@@ -98,17 +107,20 @@ void Histogram::Private::handle(const Frame::ptr& frame)
   cv::Mat plot;
   QMap<Histogram::Channel, QVariantMap> histogramStats;
   
+  vector<cv::Mat> channels(3);
+  static map<Frame::ColorFormat, map<Channel, int>> channel_indexes {
+    {Frame::RGB, { {Red, 0}, {Green, 1 }, {Blue, 2} }},
+    {Frame::BGR, { {Red, 2}, {Green, 1 }, {Blue, 0} }},
+  };
+  
   frame->mat().copyTo(source);
   if(frame->channels() == 1) {
     channel = Grayscale;
   }
-  if(channel != Grayscale && channel != All) {
-    static map<Frame::ColorFormat, map<Channel, int>> channel_indexes {
-      {Frame::RGB, { {Red, 0}, {Green, 1 }, {Blue, 2} }},
-      {Frame::BGR, { {Red, 2}, {Green, 1 }, {Blue, 0} }},
-    };
-    vector<cv::Mat> channels(3);
+  else {
     cv::split(source, channels);
+  }
+  if(channel != Grayscale && channel != All) {
     source = channels[ channel_indexes[frame->colorFormat()][channel] ];
   }
   
@@ -121,7 +133,7 @@ void Histogram::Private::handle(const Frame::ptr& frame)
     };
     histLib.SetPlotColor(colors[channel]);
     cv::MatND hist;
-    histLib.ComputeHistogramValue(source, hist);
+    histLib.ComputeHistogramValue(getHistogramImage(source), hist);
     
     HistogramOutput out = calcHistogramStats(source, hist, frame->bpp());
     histogramStats[channel] = out.stats;
@@ -130,11 +142,11 @@ void Histogram::Private::handle(const Frame::ptr& frame)
   }
   else {
     cv::MatND histB, histR, histG;
-    histLib.ComputeHistogramBGR(source, histB, histG, histR);
+    histLib.ComputeHistogramBGR(getHistogramImage(source), histB, histG, histR);
     
-    histogramStats[Red]  = calcHistogramStats(source, histR, frame->bpp()).stats;
-    histogramStats[Green]  = calcHistogramStats(source, histG, frame->bpp()).stats;
-    histogramStats[Blue]  = calcHistogramStats(source, histB, frame->bpp()).stats;
+    histogramStats[Red]  = calcHistogramStats(channels[ channel_indexes[frame->colorFormat()][Red] ], histR, frame->bpp()).stats;
+    histogramStats[Green]  = calcHistogramStats(channels[ channel_indexes[frame->colorFormat()][Green] ], histG, frame->bpp()).stats;
+    histogramStats[Blue]  = calcHistogramStats(channels[ channel_indexes[frame->colorFormat()][Blue] ], histB, frame->bpp()).stats;
     
     histLib.DrawHistogramBGR(histB, histG, histR, plot);
   }

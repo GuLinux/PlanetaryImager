@@ -71,7 +71,7 @@ Frame::ptr QHYImagingWorker::shoot()
     int type = d->bpp==8 ? CV_8UC1 : CV_16UC1;
     if(d->channels == 3)
       type = d->bpp==8 ? CV_8UC3 : CV_16UC3;
-    cv::Mat image({static_cast<int>(d->w), static_cast<int>(d->h)}, type, d->buffer.data());
+    cv::Mat image(cv::Size{static_cast<int>(d->w), static_cast<int>(d->h)}, type, d->buffer.data());
     cv::Mat copy;
     image.copyTo(copy); // TODO: is copy necessary?
     return make_shared<Frame>(d->color_format, copy); //TODO port to new constructor
