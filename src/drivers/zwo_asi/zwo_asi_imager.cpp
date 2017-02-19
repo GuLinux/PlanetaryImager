@@ -155,7 +155,7 @@ Imager::Controls ZWO_ASI_Imager::controls() const
         {ASI_IMG_RAW8, "Raw 8bit"},
         {ASI_IMG_RGB24, "RGB24"},
         {ASI_IMG_RAW16, "RAW 16bit"},
-        {ASI_IMG_Y8, "Y8 (Bayer)"},
+        {ASI_IMG_Y8, "Y8 (Monochrome)"},
     };
     auto imageFormat = Control{ImgTypeControlID, "Image Format", Control::Combo}.set_value(d->worker->format());
     int i = 0;
