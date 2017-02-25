@@ -1,66 +1,15 @@
 #!/bin/bash
 . Dockerfile.in > Dockerfile
-root="arm-root"
 RELEASE="${1:-xenial}"
 base_image_name="gulinux/planetaryimager_build:ubuntu_${RELEASE}_arm_base"
 
-if docker inspect "$base_image_name" >/dev/null 2>&1 ; then
-  echo "Base image $base_image_name already exists; skipping creation." >&2
-  echo "If you prefer to rebuild it, please remove it using this command:" >&2
-  echo "docker rmi $base_image_name." >&2
-  exit 0
+if [[ -z "$( docker images -q $base_image_name )" ]] && ! docker pull $base_image_name 2>/dev/null ; then
+    docker run -it --rm -v $PWD:/target --privileged ubuntu:16.04 /target/prepare-fs "${RELEASE}"
+    (
+      cd base-image
+      set -x
+      docker build -t $base_image_name .
+    )
 fi
-
-if [[ "$UID" != "0" ]]; then
-	sudo "$0" "$@"
-	exit $?
-fi
-
-
-
-if ! hash lsb_release >/dev/null 2>&1; then
-	echo "lsb_release missing: not able to know distribution details" >&2
-	exit 1
-fi
-
-
-if ! hash update-binfmts >/dev/null 2>&1 || ! hash qemu-arm-static; then
-	case "$( lsb_release -is )" in
-		"Arch")
-			AUR_MANAGER="${AUR_MANAGER:-packer}" # overwrite with env variable if you want to use another compatible package, like yaourt, etc
-			sudo -u $SUDO_USER $AUR_MANAGER -S qemu-user-static binfmt-support
-			;;
-		"Ubuntu")
-			apt-get install -y qemu-user-static binfmt-support debootstrap
-  			;;
-	esac
-fi
-
-update-binfmts --enable
-alias qemu-debootstrap=debootstrap
-if ! [[ -r "$root"/usr/bin/qemu-arm-static ]]; then
-       debootstrap --foreign --arch armhf $RELEASE "$root" http://ports.ubuntu.com/
-       cp -av "$( which qemu-arm-static )" $root/usr/bin
-       DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
-	        LC_ALL=C LANGUAGE=C LANG=C chroot $root/ /debootstrap/debootstrap --second-stage
-       DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
-	        LC_ALL=C LANGUAGE=C LANG=C chroot $root dpkg --configure -a
-       rm -rf $root/debootstrap
-fi
-cat >"$root"/etc/apt/sources.list <<EOF
-deb http://ports.ubuntu.com/ubuntu-ports xenial main restricted universe multiverse
-EOF
-
-mkdir -p base-image
-(
-  set -x
-  tar --numeric-owner --create --auto-compress --file "base-image/arm-root.tar" --directory "$root" --transform='s,^./,,' .
-)
-#rm -rf "$root"
-(
-  cd base-image
-  set -x
-  docker build -t $base_image_name .
-)
-#rm -rf "base-image"
+rm -rf "base-image/arm-root.tar"
 
