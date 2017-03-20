@@ -8,13 +8,13 @@ endfunction(define_driver)
 set(UDEVRULES_INSTALL_DIR "/lib/udev/rules.d" CACHE STRING "Base directory for udev rules")
 set(FIRMWARE_INSTALL_BASEDIR "/lib/firmware/" CACHE STRING "Base directory for firmware files")
 
-if(NOT WIN32) # QHY currently not supported in Windows
-  option(enable_qhy "Enable QHY Driver (default: ON)" ON)
-  if(enable_qhy)
-    message("qhyccd input module enabled")
-    add_subdirectory(qhy)
-  endif(enable_qhy)
-endif()
+#if(NOT WIN32) # QHY currently not supported in Windows
+#  option(enable_qhy "Enable QHY Driver (default: ON)" ON)
+#  if(enable_qhy)
+#    message("qhyccd input module enabled")
+#    add_subdirectory(qhy)
+#  endif(enable_qhy)
+#endif()
 #add_subdirectory(qmultimedia)
 option(enable_simulator "Enable fake driver simulator (default: OFF)" OFF) # TODO restore
 if(enable_simulator)

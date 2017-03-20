@@ -66,36 +66,9 @@ set(FULL_VERSION ${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}${PACKAGE_VER
 SET(EXTRA_LIBRARIES "" CACHE STRING "Extra libraries for linking")
 message("Extra libraries for linking: ${EXTRA_LIBRARIES}")
 
-set(PACKAGE_VERSION_SUFFIX "" CACHE STRING "Suffix package version (default: empty)")
-set(PACKAGE_NAME_SUFFIX "" CACHE STRING "Suffix package name (default: empty)")
 
 install(FILES README.md Changelog.md DESTINATION share/doc/PlanetaryImager)
 
-INCLUDE(InstallRequiredSystemLibraries)
-SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "GuLinux.net Planetary Imager for Linux")
-SET(CPACK_PACKAGE_VENDOR "GuLinux <marco@gulinux.net>")
-SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_SOURCE_DIR}/README.md")
-#SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_SOURCE_DIR}/src/")
-SET(CPACK_PACKAGE_VERSION_MAJOR "${MAJOR_VERSION}")
-SET(CPACK_PACKAGE_VERSION_MINOR "${MINOR_VERSION}")
-SET(CPACK_PACKAGE_VERSION_PATCH "${PATCH_VERSION}")
-set(CPACK_PACKAGE_FILE_NAME PlanetaryImager-${FULL_VERSION}-${CMAKE_SYSTEM_NAME}-${PlanetaryImager_ARCH}${PACKAGE_NAME_SUFFIX})
-SET(CPACK_PACKAGE_CONTACT "marco@gulinux.net")
-#SET(CPACK_STRIP_FILES "bin/planetary_imager")
-
-set(CPACK_SET_DESTDIR On)
-
-SET(CPACK_GENERATOR TGZ CACHE STRING "CPack generator type (default: TGZ)")
-
-set(CMAKE_INCLUDE_EXT_FILE CACHE INTERNAL "Per-environment include file")
-if(CMAKE_INCLUDE_EXT_FILE)
-  message("Using cmake environment: ${CMAKE_INCLUDE_EXT_FILE}")
-  include(${CMAKE_INCLUDE_EXT_FILE})
-endif()
-
-if( CPACK_GENERATOR STREQUAL "TGZ" OR CPACK_GENERATOR STREQUAL "TBZ2")
-  install(PROGRAMS support/install.sh DESTINATION "/")
-endif( CPACK_GENERATOR STREQUAL "TGZ" OR CPACK_GENERATOR STREQUAL "TBZ2")
 
 add_subdirectory(GuLinux-Commons/Qt)
 add_subdirectory(GuLinux-Commons/c++)
@@ -109,6 +82,7 @@ endif()
 add_subdirectory(files)
 add_subdirectory(support)
 
-INCLUDE(CPack)
+include(packaging.cmake)
+
 
 message("Done configuring PlanetaryImager-${FULL_VERSION}-${PlanetaryImager_ARCH}")
