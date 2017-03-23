@@ -19,10 +19,12 @@
 #define PLANETARY_IMAGER_DRIVER_H
 #include <QList>
 #include <QString>
+#include <QtPlugin>
 #include "imager.h"
 #include "dptr.h"
 
-class Driver {
+class Driver : public QObject {
+  Q_OBJECT
 public:
   typedef std::shared_ptr<Driver> ptr;
   class Camera {
@@ -36,6 +38,10 @@ public:
   virtual Cameras cameras() const = 0;
 };
 typedef QList<Driver::ptr> Drivers;
-
+#define DRIVER_IID "net.gulinux.planetaryimager.driver"
+Q_DECLARE_INTERFACE(Driver, DRIVER_IID)
+#define DECLARE_DRIVER_PLUGIN   \
+Q_INTERFACES(Driver) \
+Q_PLUGIN_METADATA(IID DRIVER_IID FILE JSON_DRIVER_METADATA)
 
 #endif

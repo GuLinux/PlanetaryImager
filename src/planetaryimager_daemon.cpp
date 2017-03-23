@@ -31,6 +31,7 @@
 #include "drivers/supporteddrivers.h"
 
 #include "Qt/strings.h"
+#include "commons/commandline.h"
 using namespace std;
 
 
@@ -43,8 +44,12 @@ int main(int argc, char** argv)
     LogHandler log_handler;
     app.setApplicationName("PlanetaryImager");
     app.setApplicationVersion(PLANETARY_IMAGER_VERSION);
+    
+    CommandLine commandLine(app);
+    commandLine.daemon().process();
+    
     auto configuration = make_shared<Configuration>();
-    auto driver = make_shared<SupportedDrivers>();
+    auto driver = make_shared<SupportedDrivers>(commandLine.driversDirectory());
     auto dispatcher = make_shared<NetworkDispatcher>();
     auto save_images = make_shared<LocalSaveImages>(configuration);
     auto frames_forwarder = make_shared<FramesForwarder>(dispatcher);
@@ -56,21 +61,8 @@ int main(int argc, char** argv)
     auto save_files_forwarder = make_shared<SaveFileForwarder>(save_images, dispatcher);
     auto server = make_shared<NetworkServer>(driver, imageHandlers, dispatcher, save_files_forwarder, frames_forwarder );
     
-    QCommandLineParser parser;
-    parser.addHelpOption();
-    parser.addVersionOption();
-    parser.addOptions({
-      { {"p", "port"}, "listening port for server (default: %1)"_q % Configuration::DefaultServerPort, "port", "%1"_q % Configuration::DefaultServerPort},
-    });
-    parser.process(app);
-    
-    bool port_ok;
-    int port = parser.value("port").toInt(&port_ok);
-    if(!port_ok) {
-      cerr << "Error: invalid port specified" << endl;
-      parser.showHelp(1);
-    }
-    QMetaObject::invokeMethod(server.get(), "listen", Q_ARG(QString, "0.0.0.0"), Q_ARG(int, port));
+
+    QMetaObject::invokeMethod(server.get(), "listen", Q_ARG(QString, "0.0.0.0"), Q_ARG(int, commandLine.port()));
     
     return app.exec();
 }

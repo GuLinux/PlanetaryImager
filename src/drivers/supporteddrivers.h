@@ -21,10 +21,10 @@
 
 #include "driver.h"
 #include "c++/dptr.h"
-
+class QString;
 class SupportedDrivers : public Driver {
 public:
-  SupportedDrivers();
+  SupportedDrivers(const QString &driversPath = {});
   ~SupportedDrivers();
   virtual Cameras cameras() const;
 private:
