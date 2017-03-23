@@ -1,0 +1,5 @@
+{
+  "name": "@driver_name@",
+  "library": "@driver_library@",
+  "type": "PlanetaryImager::Driver"
+}

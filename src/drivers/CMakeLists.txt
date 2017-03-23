@@ -5,6 +5,11 @@ function(define_driver include class)
   set(available_drivers_CLASSES "${available_drivers_CLASSES}std::make_shared<${class}>()," CACHE INTERNAL "driver classes" FORCE)
 endfunction(define_driver)
 
+function(add_driver_plugin driver_name driver_library)
+  configure_file("${CMAKE_SOURCE_DIR}/src/drivers/driver.json.in" "driver_${driver_name}.json")
+  add_definitions(-DJSON_DRIVER_METADATA="driver_${driver_name}.json")
+endfunction()
+
 set(UDEVRULES_INSTALL_DIR "/lib/udev/rules.d" CACHE STRING "Base directory for udev rules")
 set(FIRMWARE_INSTALL_BASEDIR "/lib/firmware/" CACHE STRING "Base directory for firmware files")
 

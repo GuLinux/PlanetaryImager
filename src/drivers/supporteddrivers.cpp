@@ -18,22 +18,34 @@
 
 #include "supporteddrivers.h"
 #include "available_drivers.h"
+#include <QPluginLoader>
+#include <QDebug>
+#include <QDirIterator>
+#include <QFile>
+#include <QFileInfo>
+#include <QDirIterator>
+#include <QJsonDocument>
 
+using namespace std;
 
-class SupportedDrivers::Private {
-public:
-  Private(SupportedDrivers *q);  
-private:
+DPTR_IMPL(SupportedDrivers) {
   SupportedDrivers *q;
+  QList<shared_ptr<QPluginLoader>> drivers;
 };
 
-SupportedDrivers::Private::Private(SupportedDrivers* q) : q{q}
-{
 
-}
-
-SupportedDrivers::SupportedDrivers() : dptr(this)
+SupportedDrivers::SupportedDrivers(const QString &driversPath) : dptr(this)
 {
+  qDebug() << "Looking for drivers in " << driversPath;
+  if(QFileInfo{driversPath}.isDir()) {
+    QDirIterator it{driversPath, QDirIterator::Subdirectories | QDirIterator::FollowSymlinks};
+    while(it.hasNext()) {
+      auto plugin = make_shared<QPluginLoader>(it.next());
+      if(plugin->metaData().value("IID").toString() == DRIVER_IID && plugin->load()) {
+        d->drivers.push_back(plugin);
+      }
+    }
+  }
 }
 
 SupportedDrivers::~SupportedDrivers()
@@ -49,5 +61,12 @@ Driver::Cameras SupportedDrivers::cameras() const
     qDebug() << "driver cameras: " << driver->cameras().size();
     cameras.append(driver->cameras());
   }
+  list<Driver*> drivers;
+  transform(begin(d->drivers), end(d->drivers), back_inserter(drivers), [](const auto &p) { return qobject_cast<Driver*>(p->instance()); });
+  for(auto driver: drivers) {
+    if(driver)
+      cameras.append(driver->cameras());
+  }
+
   return cameras;
 }

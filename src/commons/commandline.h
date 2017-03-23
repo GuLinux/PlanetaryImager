@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2016  Marco Gulino <marco@gulinux.net>
+ * GuLinux Planetary Imager - https://github.com/GuLinux/PlanetaryImager
+ * Copyright (C) 2017  Marco Gulino <marco@gulinux.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,18 +17,26 @@
  *
  */
 
-#ifndef SIMULATORDRIVER_H
-#define SIMULATORDRIVER_H
+#ifndef COMMANDLINE_H
+#define COMMANDLINE_H
+#include "c++/dptr.h"
+#include <QString>
+class QCoreApplication;
 
-#include "drivers/driver.h"
-
-class SimulatorDriver : public Driver
+class CommandLine
 {
-  Q_OBJECT
 public:
-  DECLARE_DRIVER_PLUGIN
-  SimulatorDriver();
-  virtual Driver::Cameras cameras() const;
+  CommandLine(QCoreApplication &app);
+  ~CommandLine();
+  CommandLine &backend();
+  CommandLine &daemon();
+  
+  CommandLine &process();
+  
+  QString driversDirectory() const;
+  int port() const;
+private:
+  DPTR
 };
 
-#endif // SIMULATORDRIVER_H
+#endif // COMMANDLINE_H

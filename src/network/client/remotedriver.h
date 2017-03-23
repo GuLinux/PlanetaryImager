@@ -24,7 +24,7 @@
 #include "drivers/driver.h"
 #include "network/networkdispatcher.h"
 #include <QObject>
-class RemoteDriver : public QObject, public Driver, public NetworkReceiver
+class RemoteDriver : public Driver, public NetworkReceiver
 {
 Q_OBJECT
 public:
