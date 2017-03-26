@@ -17,7 +17,6 @@
  */
 
 #include "supporteddrivers.h"
-#include "available_drivers.h"
 #include <QPluginLoader>
 #include <QDebug>
 #include <QDirIterator>
@@ -31,22 +30,42 @@ using namespace std;
 DPTR_IMPL(SupportedDrivers) {
   SupportedDrivers *q;
   QList<shared_ptr<QPluginLoader>> drivers;
+  void find_drivers(const QString &directory);
+  void load_driver(const QString &filename);
 };
 
 
-SupportedDrivers::SupportedDrivers(const QString &driversPath) : dptr(this)
+SupportedDrivers::SupportedDrivers(const QStringList &driversPath) : dptr(this)
 {
-  qDebug() << "Looking for drivers in " << driversPath;
-  if(QFileInfo{driversPath}.isDir()) {
-    QDirIterator it{driversPath, QDirIterator::Subdirectories | QDirIterator::FollowSymlinks};
+  for(const QString &path: driversPath)
+    d->find_drivers(path);
+}
+
+void SupportedDrivers::Private::find_drivers(const QString& directory)
+{
+  qDebug() << "Looking for drivers in " << directory;
+  if(QFileInfo{directory}.isDir()) {
+    QDirIterator it{directory, QDirIterator::Subdirectories | QDirIterator::FollowSymlinks};
     while(it.hasNext()) {
-      auto plugin = make_shared<QPluginLoader>(it.next());
-      if(plugin->metaData().value("IID").toString() == DRIVER_IID && plugin->load()) {
-        d->drivers.push_back(plugin);
-      }
+      load_driver(it.next());
     }
   }
 }
+
+
+void SupportedDrivers::Private::load_driver(const QString& filename)
+{
+  auto plugin = make_shared<QPluginLoader>(filename);
+  if(plugin->metaData().value("IID").toString() == DRIVER_IID) {
+    if(plugin->load()) {
+      qDebug() << "driver " << plugin->fileName() << "loaded:" << QJsonDocument{plugin->metaData()}.toJson();
+      drivers.push_back(plugin);
+    } else {
+      qWarning() << "Error loading driver " << plugin->fileName() << ": " << plugin->errorString();
+    }
+  }
+}
+
 
 SupportedDrivers::~SupportedDrivers()
 {
@@ -56,11 +75,6 @@ SupportedDrivers::~SupportedDrivers()
 Driver::Cameras SupportedDrivers::cameras() const
 {
   Cameras cameras;
-  qDebug() << "drivers: " << AvailableDrivers::drivers.size();
-  for(auto driver: AvailableDrivers::drivers) {
-    qDebug() << "driver cameras: " << driver->cameras().size();
-    cameras.append(driver->cameras());
-  }
   list<Driver*> drivers;
   transform(begin(d->drivers), end(d->drivers), back_inserter(drivers), [](const auto &p) { return qobject_cast<Driver*>(p->instance()); });
   for(auto driver: drivers) {

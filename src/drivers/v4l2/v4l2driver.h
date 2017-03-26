@@ -24,7 +24,9 @@
 
 class V4L2Driver : public Driver
 {
+  Q_OBJECT
 public:
+  DECLARE_DRIVER_PLUGIN
 V4L2Driver();
 ~V4L2Driver();
 virtual Driver::Cameras cameras() const;

@@ -49,7 +49,7 @@ int main(int argc, char** argv)
     commandLine.daemon().process();
     
     auto configuration = make_shared<Configuration>();
-    auto driver = make_shared<SupportedDrivers>(commandLine.driversDirectory());
+    auto driver = make_shared<SupportedDrivers>(commandLine.driversDirectories());
     auto dispatcher = make_shared<NetworkDispatcher>();
     auto save_images = make_shared<LocalSaveImages>(configuration);
     auto frames_forwarder = make_shared<FramesForwarder>(dispatcher);

@@ -45,7 +45,7 @@ int main(int argc, char** argv)
     CommandLine commandLine(app);
     commandLine.backend().process();
     
-    PlanetaryImagerMainWindow mainWindow{make_shared<SupportedDrivers>(commandLine.driversDirectory()), make_shared<LocalSaveImages>(configuration), configuration, make_shared<LocalFilesystemBrowser>()};
+    PlanetaryImagerMainWindow mainWindow{make_shared<SupportedDrivers>(commandLine.driversDirectories()), make_shared<LocalSaveImages>(configuration), configuration, make_shared<LocalFilesystemBrowser>()};
     QObject::connect(&mainWindow, &PlanetaryImagerMainWindow::quit, &app, &QApplication::quit);
     mainWindow.show();
     return app.exec();

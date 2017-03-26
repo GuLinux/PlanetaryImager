@@ -1,8 +1,4 @@
 file(GLOB testing_imager_SRCS *.cpp *.qrc)
 add_library(testing_imager MODULE ${testing_imager_SRCS} )
-target_link_libraries(testing_imager png)
-#add_backend_dependencies(png testing_imager )
-#define_driver(drivers/simulator/simulatordriver.h SimulatorDriver)
-set(driver_name "Simulator")
-set(driver_library "libtesting_imager.so")
-add_driver_plugin("Simulator" "libtesting_imager.so")
+target_link_libraries(testing_imager png drivers)
+
