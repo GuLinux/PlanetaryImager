@@ -24,7 +24,7 @@
 class QString;
 class SupportedDrivers : public Driver {
 public:
-  SupportedDrivers(const QString &driversPath = {});
+  SupportedDrivers(const QStringList &driversPath = {});
   ~SupportedDrivers();
   virtual Cameras cameras() const;
 private:

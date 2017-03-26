@@ -66,9 +66,10 @@ CommandLine & CommandLine::process()
 
 
 
-QString CommandLine::driversDirectory() const
+QStringList CommandLine::driversDirectories() const
 {
-  return d->parser.value("drivers");
+  QStringList drivers(d->parser.value("drivers"));
+  return drivers;
 }
 
 int CommandLine::port() const

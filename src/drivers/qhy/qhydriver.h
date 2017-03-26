@@ -23,7 +23,9 @@
 
 class QHYDriver : public Driver
 {
+  Q_OBJECT
 public:
+  DECLARE_DRIVER_PLUGIN
     QHYDriver();
     ~QHYDriver();
     virtual Cameras cameras() const;

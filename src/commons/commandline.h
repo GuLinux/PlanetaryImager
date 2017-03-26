@@ -33,7 +33,7 @@ public:
   
   CommandLine &process();
   
-  QString driversDirectory() const;
+  QStringList driversDirectories() const;
   int port() const;
 private:
   DPTR

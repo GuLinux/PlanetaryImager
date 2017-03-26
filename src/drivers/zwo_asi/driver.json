@@ -1,0 +1,5 @@
+{
+  "name": "ASI",
+  "description": "ZWO ASI CMOS Cameras driver",
+  "version": "0.7"
+}

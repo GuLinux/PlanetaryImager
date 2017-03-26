@@ -25,7 +25,9 @@
 
 class ZWO_ASI_Driver : public Driver
 {
+  Q_OBJECT
 public:
+  DECLARE_DRIVER_PLUGIN
     ZWO_ASI_Driver();
     ~ZWO_ASI_Driver();
     virtual Driver::Cameras cameras() const;
