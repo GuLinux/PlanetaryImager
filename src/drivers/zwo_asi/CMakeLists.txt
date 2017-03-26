@@ -17,7 +17,6 @@ set(ASI_TARGET_ARCH ${ASI_ARCH_${PlanetaryImager_ARCH}})
 
 include_directories(${ASI_SDK_DIR}/include)
 
-add_library(zwo_asi_imager MODULE ${asi_imager_SRCS})
-target_link_libraries(zwo_asi_imager ${ASI_SDK_DIR}/lib/${ASI_TARGET_ARCH}/libASICamera2.a -lusb-1.0 drivers)
+add_driver(NAME zwo_asi_imager OS Linux DEFAULT_ON SRCS ${asi_imager_SRCS} LINK ${ASI_SDK_DIR}/lib/${ASI_TARGET_ARCH}/libASICamera2.a -lusb-1.0)
 
 install(FILES ${ASI_SDK_DIR}/lib/asi.rules DESTINATION ${UDEVRULES_INSTALL_DIR})

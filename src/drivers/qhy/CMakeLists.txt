@@ -12,7 +12,6 @@ configure_file(qhyexception.cpp.in qhyexception.cpp)
 set(qhy_GENERATED_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/qhyexception.cpp)
 file(GLOB qhy_SOURCES *.cpp)
 
-add_library(qhy_driver MODULE ${qhy_SOURCES} ${qhy_GENERATED_SOURCES})
 
 set(QHY_LIBRARY_armv6 ${CMAKE_CURRENT_SOURCE_DIR}/QHYCCD_Linux/libqhy_arm_v6.a)
 set(QHY_LIBRARY_armv7 ${CMAKE_CURRENT_SOURCE_DIR}/QHYCCD_Linux/libqhy_arm_v7.a)
@@ -23,6 +22,5 @@ set(QHY_LIBRARY ${QHY_LIBRARY_${PlanetaryImager_ARCH}})
 install(FILES QHYCCD_Linux/85-qhy.rules DESTINATION ${UDEVRULES_INSTALL_DIR})
 file(GLOB QHY_FIRMWARE_FILES QHYCCD_Linux/firmware/*)
 install(FILES ${QHY_FIRMWARE_FILES} DESTINATION ${FIRMWARE_INSTALL_BASEDIR}/qhy)
-target_link_libraries(qhy_driver ${QHY_LIBRARY})
-#add_backend_dependencies(qhy_driver ${QHY_LIBRARY})
-#define_driver(drivers/qhy/qhydriver.h QHYDriver)
+
+add_driver(NAME qhy OS Linux SRCS ${qhy_SOURCES} ${qhy_GENERATED_SOURCES} LINK ${QHY_LIBRARY})
