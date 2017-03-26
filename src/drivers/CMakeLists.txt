@@ -1,31 +1,58 @@
 set(UDEVRULES_INSTALL_DIR "/lib/udev/rules.d" CACHE STRING "Base directory for udev rules")
 set(FIRMWARE_INSTALL_BASEDIR "/lib/firmware/" CACHE STRING "Base directory for firmware files")
 
-# TODO QHY currently disabled for compilation issues
-# if(NOT WIN32) # QHY currently not supported in Windows
-#   option(enable_qhy "Enable QHY Driver (default: ON)" ON)
-#   if(enable_qhy)
-#     message("qhyccd input module enabled")
-#     add_subdirectory(qhy)
-#   endif(enable_qhy)
-# endif()
+set(enabled_drivers "" CACHE INTERNAL "" FORCE)
+set(disabled_drivers "" CACHE INTERNAL "" FORCE)
+set(unsupported_drivers "" CACHE INTERNAL "" FORCE)
 
-option(enable_simulator "Enable fake driver simulator (default: OFF)" OFF) # TODO restore
-if(enable_simulator)
-  message("simulator input module enabled")
-  add_subdirectory(simulator)
-endif(enable_simulator)
+function(add_driver)
+  set(options DEFAULT_ON)
+  set(oneValueArgs NAME)
+  set(multiValueArgs SRCS LINK OS)
+  cmake_parse_arguments(add_driver "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+  list(FIND add_driver_OS ${CMAKE_SYSTEM_NAME} OS_SUPPORTED)
+  if(OS_SUPPORTED EQUAL -1)
+    set(unsupported_drivers ${unsupported_drivers} ${add_driver_NAME} CACHE INTERNAL "")
+    return()
+  endif()
+  option(BUILD_DRIVER_${add_driver_NAME} "Enable compilation of driver ${add_driver_NAME}" ${add_driver_DEFAULT_ON})
+  if(NOT BUILD_DRIVER_${add_driver_NAME})
+    set(disabled_drivers ${disabled_drivers} ${add_driver_NAME} CACHE INTERNAL "")
+    return()
+  endif()
+  add_library(${add_driver_NAME} MODULE ${add_driver_SRCS})
+  target_link_libraries(${add_driver_NAME} drivers ${add_driver_LINK})
+  install(TARGETS ${add_driver_NAME} LIBRARY DESTINATION ${drivers_destination})
+  set(enabled_drivers ${enabled_drivers} ${add_driver_NAME} CACHE INTERNAL "")
+endfunction()
 
-if(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-  message("v4l webcam input module enabled")
-  add_subdirectory(v4l2)
-endif(${CMAKE_SYSTEM_NAME} STREQUAL "Linux")
-
-if(NOT WIN32) # Not supported either... but coming soon
-  add_subdirectory(zwo_asi)
-endif()
 
 add_library(drivers STATIC driver.cpp imager.cpp imagercontrol.cpp imagerproperties.cpp imagerthread.cpp roi.cpp imagerexception.cpp)
 add_library(supporteddrivers STATIC supporteddrivers.cpp)
 add_backend_dependencies(supporteddrivers)
 add_imager_dependencies(drivers)
+
+add_subdirectory(zwo_asi)
+add_subdirectory(simulator)
+add_subdirectory(qhy)
+add_subdirectory(v4l2)
+
+
+message(STATUS "Will build the following drivers:")
+list(REMOVE_DUPLICATES enabled_drivers)
+foreach(driver ${enabled_drivers})
+  message(STATUS " * ${driver}")
+endforeach()  
+
+message(STATUS "Drivers disabled but available for this platform:")
+list(REMOVE_DUPLICATES disabled_drivers)
+foreach(driver ${disabled_drivers})
+  message(STATUS " * ${driver}")
+endforeach()  
+
+
+message(STATUS "Drivers unsupported for this platform:")
+list(REMOVE_DUPLICATES unsupported_drivers)
+foreach(driver ${unsupported_drivers})
+  message(STATUS " * ${driver}")
+endforeach()  

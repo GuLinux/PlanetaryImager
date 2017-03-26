@@ -17,6 +17,8 @@ function(add_frontend_dependencies)
   set(planetary_imager_frontend_DEPS ${planetary_imager_frontend_DEPS} ${ARGN} CACHE INTERNAL "planetary imager frontend deps" FORCE)
 endfunction()
 
+set(drivers_destination ${CMAKE_INSTALL_PREFIX}/lib/${CMAKE_PROJECT_NAME}/drivers)
+add_definitions(-DDRIVERS_DIRECTORY="${drivers_destination}")
 add_subdirectory(drivers)
 add_subdirectory(image_handlers)
 add_subdirectory(widgets)

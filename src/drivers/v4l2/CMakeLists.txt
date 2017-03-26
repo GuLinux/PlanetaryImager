@@ -1,3 +1,2 @@
 file(GLOB v4l2_imager_SRCS *.cpp)
-add_library(v4l2_imager MODULE ${v4l2_imager_SRCS})
-target_link_libraries(v4l2_imager drivers)
+add_driver(NAME v4l2 OS Linux DEFAULT_ON SRCS ${v4l2_imager_SRCS})
