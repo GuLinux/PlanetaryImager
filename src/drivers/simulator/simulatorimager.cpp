@@ -33,9 +33,10 @@ using namespace GuLinux;
 typedef QMap<QString, Imager::Control> SimulatorSettings;
 class SimulatorImagerWorker;
 DPTR_IMPL(SimulatorImager) {
+  unique_ptr<QTimer> refresh_temperature;
   SimulatorSettings settings;
   shared_ptr<SimulatorImagerWorker> worker;
-  QTimer refresh_temperature;
+
   LOG_C_SCOPE(SimulatorImager);
   ROIValidator::ptr roi_validator;
 };
@@ -56,7 +57,7 @@ private:
 
 Q_DECLARE_METATYPE(SimulatorImagerWorker::ImageType)
 
-SimulatorImager::SimulatorImager(const ImageHandler::ptr& handler) : Imager(handler), dptr()
+SimulatorImager::SimulatorImager(const ImageHandler::ptr& handler) : Imager(handler), dptr(make_unique<QTimer>())
 {
   d->roi_validator = make_shared<ROIValidator>(list<ROIValidator::Rule>{
     ROIValidator::x_multiple(2),
@@ -79,13 +80,13 @@ SimulatorImager::SimulatorImager(const ImageHandler::ptr& handler) : Imager(hand
     {"max_speed",	 Control{8l, "max_speed", Control::Bool}.set_value(false) }, 
   };
   qDebug() << "Max speed: " << d->settings["max_speed"];
-  connect(&d->refresh_temperature, &QTimer::timeout, this, [this]{
+  connect(d->refresh_temperature.get(), &QTimer::timeout, this, [this]{
    push_job_on_thread([&]{
       double celsius = SimulatorImager::rand(200, 500) / 10.;
       emit temperature(celsius);
     });
   });
-  d->refresh_temperature.start(2000);
+  d->refresh_temperature->start(2000);
 }
 
 SimulatorImager::~SimulatorImager()

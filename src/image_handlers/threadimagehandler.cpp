@@ -23,7 +23,7 @@ using namespace std;
 
 DPTR_IMPL(ThreadImageHandler) {
   ThreadImageHandler *q;
-  QThread thread;
+  unique_ptr<QThread> thread;
   class Worker;
   unique_ptr<Worker> worker;
 };
@@ -50,17 +50,17 @@ void ThreadImageHandler::Private::Worker::handle(const Frame::ptr& frame)
 }
 
 
-ThreadImageHandler::ThreadImageHandler(const ImageHandler::ptr &imageHandler) : dptr(this)
+ThreadImageHandler::ThreadImageHandler(const ImageHandler::ptr &imageHandler) : dptr(this, make_unique<QThread>())
 {
   d->worker = make_unique<Private::Worker>(imageHandler);
-  d->worker->moveToThread(&d->thread);
-  d->thread.start();
+  d->worker->moveToThread(d->thread.get());
+  d->thread->start();
 }
 
 ThreadImageHandler::~ThreadImageHandler()
 {
-  d->thread.quit();
-  d->thread.wait();
+  d->thread->quit();
+  d->thread->wait();
 }
 
 void ThreadImageHandler::handle(const Frame::ptr& frame)

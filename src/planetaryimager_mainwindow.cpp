@@ -65,6 +65,9 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   Driver::ptr driver;
   SaveImages::ptr saveImages;
   Configuration::ptr configuration;
+  unique_ptr<QThread> displayImageThread;
+  unique_ptr<QThread> imagerThread;
+
   
   static PlanetaryImagerMainWindow *q;
   unique_ptr<Ui::PlanetaryImagerMainWindow> ui;
@@ -74,8 +77,6 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
 
   StatusBarInfoWidget *statusbar_info_widget;
   shared_ptr<DisplayImage> displayImage;
-  QThread displayImageThread;
-  QThread imagerThread;
   Histogram::ptr histogram;
   CameraControlsWidget* cameraSettingsWidget = nullptr;
   CameraInfoWidget* cameraInfoWidget = nullptr;
@@ -153,8 +154,8 @@ PlanetaryImagerMainWindow::~PlanetaryImagerMainWindow()
   if(d->imager) {
       d->imager->destroy();
   }
-  d->imagerThread.quit();
-  d->imagerThread.wait();
+  d->imagerThread->quit();
+  d->imagerThread->wait();
 }
 
 void PlanetaryImagerMainWindow::Private::saveState()
@@ -165,7 +166,7 @@ void PlanetaryImagerMainWindow::Private::saveState()
 
 
 PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, const SaveImages::ptr &save_images, const Configuration::ptr &configuration, const FilesystemBrowser::ptr &filesystemBrowser, QWidget* parent, Qt::WindowFlags flags)
-  : dptr(driver, save_images, configuration)
+  : dptr(driver, save_images, configuration, make_unique<QThread>(), make_unique<QThread>())
 {
     Private::q = this;
     d->ui.reset(new Ui::PlanetaryImagerMainWindow);
@@ -282,20 +283,20 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
     connect(d->ui->actionQuit, &QAction::triggered, this, &PlanetaryImagerMainWindow::quit);
     d->enableUIWidgets(false);
 
-    d->saveImages->moveToThread(&d->displayImageThread);
-    connect(&d->displayImageThread, &QThread::started, bind(&DisplayImage::create_qimages, d->displayImage));
-    d->displayImageThread.start();
-    d->imagerThread.start();
+    d->saveImages->moveToThread(d->displayImageThread.get());
+    connect(d->displayImageThread.get(), &QThread::started, bind(&DisplayImage::create_qimages, d->displayImage));
+    d->displayImageThread->start();
+    d->imagerThread->start();
     connect(qApp, &QApplication::aboutToQuit, this, [=]{
       if(d->imager)
         d->imager->destroy();
     }, Qt::QueuedConnection);
     connect(qApp, &QApplication::aboutToQuit, this, [&] {
       d->displayImage->quit();
-      d->displayImageThread.quit();
-      d->displayImageThread.wait();
-      d->imagerThread.quit();
-      d->imagerThread.wait();
+      d->displayImageThread->quit();
+      d->displayImageThread->wait();
+      d->imagerThread->quit();
+      d->imagerThread->wait();
     });
     connect(d->ui->actionEdges_Detection, &QAction::toggled, [=](bool detect){
       d->displayImage->detectEdges(detect);
@@ -388,7 +389,7 @@ void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::Camera::ptr
         imager->destroy();
   auto compositeImageHandler = ImageHandler::ptr{new ImageHandlers{displayImage, saveImages, histogram}};
   auto threadImageHandler = ImageHandler::ptr{new ThreadImageHandler{compositeImageHandler}};
-  CreateImagerWorker::create(camera, threadImageHandler, &imagerThread, q, bind(&Private::onImagerInitialized, this, _1) );
+  CreateImagerWorker::create(camera, threadImageHandler, imagerThread.get(), q, bind(&Private::onImagerInitialized, this, _1) );
 }
 
 void PlanetaryImagerMainWindow::Private::onImagerInitialized(Imager * imager)

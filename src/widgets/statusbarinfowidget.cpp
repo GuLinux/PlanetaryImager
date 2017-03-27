@@ -27,7 +27,7 @@ using namespace std;
 DPTR_IMPL(StatusBarInfoWidget) {
   StatusBarInfoWidget *q;
   unique_ptr<Ui::StatusBarInfoWidget> ui;
-  QTimer clear_message_timer;
+  unique_ptr<QTimer> clear_message_timer;
 };
 
 StatusBarInfoWidget::~StatusBarInfoWidget()
@@ -35,15 +35,14 @@ StatusBarInfoWidget::~StatusBarInfoWidget()
 
 }
 
-StatusBarInfoWidget::StatusBarInfoWidget(QWidget* parent, Qt::WindowFlags f) : QWidget(parent, f), dptr(this)
+StatusBarInfoWidget::StatusBarInfoWidget(QWidget* parent, Qt::WindowFlags f) : QWidget(parent, f), dptr(this, make_unique<Ui::StatusBarInfoWidget>(), make_unique<QTimer>())
 {
-    d->ui = make_unique<Ui::StatusBarInfoWidget>();
     d->ui->setupUi(this);
     captureFPS(0);
     displayFPS(0);
     temperature(0, true);
-    connect(&d->clear_message_timer, &QTimer::timeout, this, &StatusBarInfoWidget::clearMessage);
-    d->clear_message_timer.setSingleShot(true);
+    connect(d->clear_message_timer.get(), &QTimer::timeout, this, &StatusBarInfoWidget::clearMessage);
+    d->clear_message_timer->setSingleShot(true);
 }
 
 void StatusBarInfoWidget::captureFPS(double fps)
@@ -71,10 +70,10 @@ void StatusBarInfoWidget::zoom(double ratio)
 
 void StatusBarInfoWidget::showMessage(const QString& message, long int timeout_ms)
 {
-  d->clear_message_timer.stop();
+  d->clear_message_timer->stop();
   d->ui->message->setText(message);
   if(timeout_ms > 0)
-    d->clear_message_timer.start(timeout_ms);
+    d->clear_message_timer->start(timeout_ms);
 }
 
 
