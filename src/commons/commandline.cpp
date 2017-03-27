@@ -62,6 +62,7 @@ CommandLine & CommandLine::daemon()
 CommandLine & CommandLine::process()
 {
   d->parser.process(d->app);
+  return *this;
 }
 
 
