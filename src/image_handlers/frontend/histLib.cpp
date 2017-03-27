@@ -229,7 +229,7 @@ void CHistLib::ComputeHistogramBGR(
   }
 
   // Initialize histogram settings
-  int histSize[] = {mBinCount};
+  int histSize[] = {static_cast<int>(mBinCount)};
   float Range[] = {0, 256}; //{0, 256} = 0 to 255
   const float* Ranges[] = {Range};
   int chanB[] = {0};
@@ -306,7 +306,7 @@ void CHistLib::ComputeHistogramValue(const cv::Mat& Image, cv::MatND& Hist)
   }
 
   // Initialize histogram settings
-  int histSize[] = { mBinCount };
+  int histSize[] = { static_cast<int>(mBinCount) };
   float Range[] = { 0, 256 }; //{0, 256} = 0 to 255
   const float *Ranges[] = { Range };
   int channels[] = { 0 };

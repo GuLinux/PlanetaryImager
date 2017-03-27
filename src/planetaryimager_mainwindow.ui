@@ -271,10 +271,6 @@
    </property>
   </action>
   <action name="actionShow_settings">
-   <property name="icon">
-    <iconset theme="configure">
-     <normaloff>.</normaloff>.</iconset>
-   </property>
    <property name="text">
     <string>&amp;Configuration</string>
    </property>

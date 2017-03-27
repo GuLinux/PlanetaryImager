@@ -29,9 +29,10 @@ DPTR_IMPL(ControlsPresetsDialog) {
   unique_ptr<Ui::ControlsPresetsDialog> ui;
   Configuration::ptr configuration;
   Imager *imager;
+  unique_ptr<QStringListModel> model;
   ControlsPresetsDialog *q;
   
-  QStringListModel model;
+
   
   void load_presets();
   void load_preset();
@@ -43,10 +44,10 @@ DPTR_IMPL(ControlsPresetsDialog) {
 };
 
 ControlsPresetsDialog::ControlsPresetsDialog(const Configuration::ptr &configuration, Imager *imager, QWidget* parent)
-  : QDialog{parent}, dptr(make_unique<Ui::ControlsPresetsDialog>(), configuration, imager, this)
+  : QDialog{parent}, dptr(make_unique<Ui::ControlsPresetsDialog>(), configuration, imager, make_unique<QStringListModel>(), this)
 {
     d->ui->setupUi(this);
-    d->ui->presets->setModel(&d->model);
+    d->ui->presets->setModel(d->model.get());
     connect(d->ui->add, &QPushButton::clicked, this, bind(&Private::add_preset, d.get()));
     connect(d->ui->remove, &QPushButton::clicked, this, bind(&Private::remove_preset, d.get()));
     connect(d->ui->load, &QPushButton::clicked, this, bind(&Private::load_preset, d.get()));
@@ -69,7 +70,7 @@ void ControlsPresetsDialog::Private::add_preset()
 
 void ControlsPresetsDialog::Private::load_presets()
 {
-  model.setStringList(configuration->list_presets());
+  model->setStringList(configuration->list_presets());
   selection_changed();
 }
 
@@ -99,7 +100,7 @@ QString ControlsPresetsDialog::Private::current_selection() const
 {
   if(! has_selection() )
     return {};
-  return model.data(ui->presets->selectionModel()->selectedRows().first(), Qt::DisplayRole).toString();
+  return model->data(ui->presets->selectionModel()->selectedRows().first(), Qt::DisplayRole).toString();
 }
 
 void ControlsPresetsDialog::Private::selection_changed()
