@@ -45,7 +45,7 @@ CommandLine::~CommandLine()
 
 CommandLine & CommandLine::backend()
 {
-  d->parser.addOption({"drivers", "Drivers directory", "drivers_directory_path"});
+  d->parser.addOption({"drivers", "Drivers directory", "drivers_directory_path", DRIVERS_DIRECTORY});
   return *this;
 }
 
@@ -70,6 +70,9 @@ CommandLine & CommandLine::process()
 QStringList CommandLine::driversDirectories() const
 {
   QStringList drivers(d->parser.value("drivers"));
+#ifdef ADDITIONAL_DRIVERS_DIRECTORY
+  drivers << ADDITIONAL_DRIVERS_DIRECTORY;
+#endif
   return drivers;
 }
 
