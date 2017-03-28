@@ -14,6 +14,9 @@ set(ASI_ARCH_armv7 armv7)
 set(ASI_ARCH_armv6 armv6)
 
 set(ASI_TARGET_ARCH ${ASI_ARCH_${PlanetaryImager_ARCH}})
+if( "${CMAKE_SYSTEM_NAME}" STREQUAL "Darwin")
+    set(ASI_TARGET_ARCH "mac")
+endif()
 
 include_directories(${ASI_SDK_DIR}/include)
 set(asi_driver_library ${ASI_SDK_DIR}/lib/${ASI_TARGET_ARCH}/libASICamera2.a)
@@ -29,6 +32,6 @@ if(NOT EXISTS ${asi_driver_library})
   execute_process(COMMAND rm ASI_linux_mac_SDK.tar.bz2 WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
 
-add_driver(NAME zwo_asi_imager OS Linux DEFAULT_ON SRCS ${asi_imager_SRCS} LINK ${asi_driver_library} -lusb-1.0)
+add_driver(NAME zwo_asi_imager OS Linux Darwin DEFAULT_ON SRCS ${asi_imager_SRCS} LINK ${asi_driver_library} -lusb-1.0)
 
 install(FILES ${ASI_SDK_DIR}/lib/asi.rules DESTINATION ${UDEVRULES_INSTALL_DIR})
