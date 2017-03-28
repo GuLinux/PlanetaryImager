@@ -1,9 +1,3 @@
-set(CMAKE_INCLUDE_EXT_FILE CACHE INTERNAL "Per-environment include file")
-if(CMAKE_INCLUDE_EXT_FILE)
-  message("Using cmake environment: ${CMAKE_INCLUDE_EXT_FILE}")
-  include(${CMAKE_INCLUDE_EXT_FILE})
-endif()
-
 set(PACKAGE_VERSION_SUFFIX "" CACHE STRING "Suffix package version (default: empty)")
 set(PACKAGE_NAME_SUFFIX "" CACHE STRING "Suffix package name (default: empty)")
 

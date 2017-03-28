@@ -25,5 +25,5 @@ RUN cd / && git clone https://github.com/mxe/mxe.git && cd /mxe && \
 
 ENV PATH=/mxe/usr/bin:\$PATH
 EOF
-CMAKE_BIN=${MXE_PREFIX}-cmake . ../commons/Dockerfile.opencv.in  
+#CMAKE_BIN=${MXE_PREFIX}-cmake . ../commons/Dockerfile.opencv.in  
 . ../commons/Dockerfile.workdir.in
