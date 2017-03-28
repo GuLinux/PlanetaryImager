@@ -23,6 +23,9 @@
 #include <Qt/functional.h>
 #include <QDir>
 #include <QDialog>
+#include <QElapsedTimer>
+#include <QTimer>
+#include <QTime>
 
 using namespace std;
 
@@ -31,6 +34,8 @@ DPTR_IMPL(RecordingPanel) {
     bool recording;
     RecordingPanel *q;
     unique_ptr<Ui::RecordingPanel> ui;
+    QElapsedTimer recording_elapsed;
+    unique_ptr<QTimer> recording_elapsed_timer;
 };
 
 RecordingPanel::~RecordingPanel()
@@ -42,6 +47,11 @@ RecordingPanel::RecordingPanel(const Configuration::ptr & configuration, const F
 {
   d->ui = make_unique<Ui::RecordingPanel>();
   d->ui->setupUi(this);
+  d->recording_elapsed_timer = make_unique<QTimer>();
+  connect(d->recording_elapsed_timer.get(), &QTimer::timeout, this, [this]{
+    d->ui->elapsed->setText(QTime{0,0,0}.addMSecs(d->recording_elapsed.elapsed()).toString());
+  });
+  
   recording(false);
   d->ui->save_recording_info->setCurrentIndex( (configuration->save_json_info_file() ? 1 : 0) + (configuration->save_info_file() ? 2 : 0) );
   d->ui->saveDirectory->setText(configuration->save_directory());
@@ -151,6 +161,7 @@ RecordingPanel::RecordingPanel(const Configuration::ptr & configuration, const F
   });
   d->ui->timelapse->setChecked(configuration->timelapse_mode());
   d->ui->timelapse_duration->setTime(QTime{0,0,0}.addMSecs(configuration->timelapse_msecs()));
+
 }
 
 void RecordingPanel::recording(bool recording, const QString& filename)
@@ -163,6 +174,12 @@ void RecordingPanel::recording(bool recording, const QString& filename)
   d->ui->start_stop_recording->setText(recording ? tr("Stop") : tr("Start"));
   for(auto widget: QList<QWidget*>{d->ui->saveDirectory, d->ui->filePrefix, d->ui->fileSuffix, d->ui->saveFramesLimit})
     widget->setEnabled(!recording);
+  if(recording) {
+    d->recording_elapsed.restart();
+    d->recording_elapsed_timer->start(500);
+  } else {
+    d->recording_elapsed_timer->stop();
+  }
 }
 
 void RecordingPanel::saveFPS(double fps)

@@ -166,7 +166,7 @@ void PlanetaryImagerMainWindow::Private::saveState()
 
 
 PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, const SaveImages::ptr &save_images, const Configuration::ptr &configuration, const FilesystemBrowser::ptr &filesystemBrowser, QWidget* parent, Qt::WindowFlags flags)
-  : dptr(driver, save_images, configuration, make_unique<QThread>(), make_unique<QThread>())
+  : QMainWindow(parent, flags), dptr(driver, save_images, configuration, make_unique<QThread>(), make_unique<QThread>())
 {
     Private::q = this;
     d->ui.reset(new Ui::PlanetaryImagerMainWindow);
