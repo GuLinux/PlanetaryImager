@@ -67,7 +67,7 @@ DPTR_IMPL(DisplayImage) {
 
   QElapsedTimer elapsed;
   QRect imageRect;
-  boost::lockfree::spsc_queue<Frame::ptr, boost::lockfree::capacity<5>> queue;
+  boost::lockfree::spsc_queue<Frame::ptr, boost::lockfree::capacity<50>> queue;
   atomic_bool detectEdges;
   QVector<QRgb> grayScale;
   bool should_display_frame() const;
@@ -136,7 +136,11 @@ void DisplayImage::read_settings()
 
 void DisplayImage::handle( const Frame::ptr &frame )
 {
-  if( ! d->should_display_frame()  || !frame->mat().data || ! d->queue.push(frame) ) {
+  if( ! d->should_display_frame()  || !frame->mat().data ) {
+    return;
+  }
+  if(! d->queue.push(frame)) {
+    qDebug() << "Display queue full, skipping frame";
     return;
   }
   d->elapsed.restart();

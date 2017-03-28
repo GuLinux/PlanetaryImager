@@ -91,7 +91,7 @@ void Histogram::handle(const Frame::ptr &frame)
   if( ! d->should_read_frame() )
     return;
   d->last.restart();
-  d->handle(frame);
+  QtConcurrent::run(bind(&Private::handle, d.get(), frame));
   d->last_frame = frame;
 }
 
