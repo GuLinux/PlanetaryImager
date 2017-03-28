@@ -173,6 +173,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
     
     d->ui->setupUi(this);
     d->ui->actionControlsSection->setSeparator(true);
+    d->ui->actionControlsSection->setText(tr("Controls")); // workaround, since in QtDesigner separators don't seem to be supported
     setWindowIcon(QIcon::fromTheme("planetary_imager"));
     d->ui->recording->setWidget(d->recording_panel = new RecordingPanel{d->configuration, filesystemBrowser});
     d->configurationDialog = new ConfigurationDialog(d->configuration, this);
