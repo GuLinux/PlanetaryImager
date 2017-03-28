@@ -22,7 +22,13 @@ include_directories(${Qt5Widgets_INCLUDE_DIRS} ${Qt5PrintSupport_INCLUDE_DIRS})
 add_definitions(-DSRC_DIR="${CMAKE_SOURCE_DIR}")
 
 find_package(Boost REQUIRED)
-find_package(OpenCV REQUIRED )
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+    message(STATUS "Temporary workaround for Windows build - MXE BUG https://github.com/mxe/mxe/issues/1576#issuecomment-263007248")
+    include_directories(/opt/opencv/include/opencv2/)
+    set(OpenCV_LIBS opencv_core opencv_imgproc opencv_highgui opencv_video CACHE INTERNAL "")
+else()
+    find_package(OpenCV REQUIRED )
+endif()
 #find_package(QCustomPlot REQUIRED)
 
 
@@ -64,10 +70,19 @@ set(FULL_VERSION ${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}${PACKAGE_VER
  add_definitions(-DHOST_PROCESSOR="${CMAKE_HOST_SYSTEM_PROCESSOR}" -DARCHITECTURE="${PlanetaryImager_ARCH}")
  message("Detected architecture: ${PlanetaryImager_ARCH}")
 SET(EXTRA_LIBRARIES "" CACHE STRING "Extra libraries for linking")
-message("Extra libraries for linking: ${EXTRA_LIBRARIES}")
+
 
 
 install(FILES README.md Changelog.md DESTINATION share/doc/PlanetaryImager)
+
+
+set(CMAKE_INCLUDE_EXT_FILE CACHE INTERNAL "Per-environment include file")
+if(CMAKE_INCLUDE_EXT_FILE)
+  message("Using cmake environment: ${CMAKE_INCLUDE_EXT_FILE}")
+  include(${CMAKE_INCLUDE_EXT_FILE})
+endif()
+
+message("Extra libraries for linking: ${EXTRA_LIBRARIES}")
 
 
 add_subdirectory(GuLinux-Commons/Qt)

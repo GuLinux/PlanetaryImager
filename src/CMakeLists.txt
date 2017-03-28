@@ -29,6 +29,7 @@ add_subdirectory(widgets)
 add_subdirectory(commons)
 
 
+message(STATUS "********* ExtraLibraries: ${EXTRA_LIBRARIES}")
 message("common dependencies: ${planetary_imager_commons_DEPS}")
 message("backend dependencies: ${planetary_imager_backend_DEPS}")
 message("frontend dependencies: ${planetary_imager_frontend_DEPS}")

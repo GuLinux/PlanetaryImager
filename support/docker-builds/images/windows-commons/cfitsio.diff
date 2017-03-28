@@ -1,0 +1,15 @@
+diff --git a/src/cfitsio.mk b/src/cfitsio.mk
+index 304f491..2554e24 100644
+--- a/src/cfitsio.mk
++++ b/src/cfitsio.mk
+@@ -18,7 +18,9 @@ define $(PKG)_UPDATE
+ endef
+ 
+ define $(PKG)_BUILD
+-    cd '$(1)' && ./configure \
++    cd '$(1)' && \
++	sed 's/\\${ZLIB_SOURCES}//g' Makefile.in && \
++	./configure \
+         --host='$(TARGET)' \
+         --prefix='$(PREFIX)/$(TARGET)' \
+         FC='$(TARGET)-gfortran'
