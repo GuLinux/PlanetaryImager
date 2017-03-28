@@ -25,6 +25,9 @@
 #include <QDateTime>
 #include <QProcessEnvironment>
 #include <QCoreApplication>
+#include <QStandardPaths>
+#include <QDir>
+#include <QJsonDocument>
 
 using namespace std;
 DPTR_IMPL(Configuration) {
@@ -33,12 +36,16 @@ DPTR_IMPL(Configuration) {
   template<typename T> T value(const QString &key, const T &defaultValue = {}) const;
   template<typename T> void set(const QString &key, const T &value);
   mutable QHash<QString, QVariant> values_cache;
+  QDir profilesPath;
+  shared_ptr<QFile> openProfile(const QString &name, QFile::OpenMode mode = QFile::NotOpen);
 };
 
 const int Configuration::DefaultServerPort = 19232;
 
 Configuration::Configuration() : dptr(make_shared<QSettings>("GuLinux", qApp->applicationName()), this)
 {
+  QDir appDataPath{QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)};
+  d->profilesPath.setPath(appDataPath.path() + "/profiles");
 }
 
 Configuration::~Configuration()
@@ -179,7 +186,8 @@ QStringList Configuration::last_control_files() const
 void Configuration::add_preset(const QString& name, const QVariantMap& preset)
 {
   d->settings->setValue("presets", list_presets() << name);
-  d->settings->setValue("preset_%1"_q % name, preset);
+  auto presetFile = d->openProfile(name, QFile::WriteOnly);
+  presetFile->write(QJsonDocument::fromVariant(preset).toJson());
 }
 
 QStringList Configuration::list_presets() const
@@ -189,7 +197,8 @@ QStringList Configuration::list_presets() const
 
 QVariantMap Configuration::load_preset(const QString &name) const
 {
-  return d->settings->value("preset_%1"_q % name).toMap();
+  auto presetFile = d->openProfile(name, QFile::ReadOnly);
+  return QJsonDocument::fromJson(presetFile->readAll()).toVariant().toMap();
 }
 
 void Configuration::remove_preset(const QString& name)
@@ -197,9 +206,17 @@ void Configuration::remove_preset(const QString& name)
   auto names = list_presets();
   names.removeAll(name);
   d->settings->setValue("presets", names);
-  d->settings->remove("preset_%1"_q % name);
+  d->openProfile(name)->remove();
 }
 
+shared_ptr<QFile> Configuration::Private::openProfile(const QString& name, QFile::OpenMode mode)
+{
+  auto presetFile = make_shared<QFile>(profilesPath.filePath(name + ".json"));
+  if(mode != QFile::NotOpen && ! presetFile->open(mode)) {
+    throw runtime_error(("Unable to open preset file for %1: %2"_q % (mode == QFile::ReadOnly ? "reading" : "writing") % presetFile->fileName()).toStdString());
+  }
+  return presetFile;
+}
 
 
 #include "configuration.moc"

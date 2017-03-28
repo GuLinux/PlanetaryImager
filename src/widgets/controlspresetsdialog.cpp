@@ -64,8 +64,11 @@ void ControlsPresetsDialog::Private::add_preset()
   auto name = QInputDialog::getText(q, tr("Save preset as..."), tr("Enter preset name to save current controls") );
   if(name.isEmpty())
     return;
-  configuration->add_preset(name, QVariantMap{{"controls", imager->export_controls()}});
+  auto controls = imager->export_controls();
+  qDebug() << "Exporting controls: " << controls;
+  configuration->add_preset(name, QVariantMap{{"controls", controls}});
   load_presets();
+  qDebug() << "Reloading control: " << configuration->load_preset(name);
 }
 
 void ControlsPresetsDialog::Private::load_presets()
@@ -79,6 +82,7 @@ void ControlsPresetsDialog::Private::load_preset()
   if(! has_selection())
     return;
   auto preset = configuration->load_preset(current_selection());
+  qDebug() << "Importing presets name" << current_selection() << ":" << preset;
   imager->import_controls(preset["controls"].toList());
 }
 
