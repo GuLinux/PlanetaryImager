@@ -6,8 +6,8 @@
    <rect>
     <x>0</x>
     <y>0</y>
-    <width>335</width>
-    <height>289</height>
+    <width>674</width>
+    <height>773</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -45,12 +45,29 @@
        <rect>
         <x>0</x>
         <y>0</y>
-        <width>331</width>
-        <height>263</height>
+        <width>670</width>
+        <height>747</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_2">
        <item row="0" column="0">
+        <widget class="QPushButton" name="presetsButton">
+         <property name="text">
+          <string>Presets..</string>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QComboBox" name="presets">
+         <property name="sizePolicy">
+          <sizepolicy hsizetype="Preferred" vsizetype="Fixed">
+           <horstretch>1</horstretch>
+           <verstretch>0</verstretch>
+          </sizepolicy>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="0" colspan="2">
         <widget class="QWidget" name="controls_box" native="true"/>
        </item>
       </layout>
@@ -148,6 +165,31 @@
     </layout>
    </item>
   </layout>
+  <action name="actionLoad_selected_preset">
+   <property name="text">
+    <string>Load selected preset</string>
+   </property>
+  </action>
+  <action name="actionSave_current_settings_as_presets">
+   <property name="text">
+    <string>Save current settings as presets</string>
+   </property>
+  </action>
+  <action name="actionRemove_selected_preset">
+   <property name="text">
+    <string>Remove selected preset</string>
+   </property>
+  </action>
+  <action name="actionLoad_settings_from_file">
+   <property name="text">
+    <string>Load settings from file...</string>
+   </property>
+  </action>
+  <action name="actionSave_settings_to_file">
+   <property name="text">
+    <string>Save settings to file...</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>
