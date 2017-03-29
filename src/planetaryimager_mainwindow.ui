@@ -41,11 +41,6 @@
     <addaction name="action_devices_rescan"/>
     <addaction name="menu_device_load"/>
     <addaction name="actionDisconnect"/>
-    <addaction name="actionControlsSection"/>
-    <addaction name="actionExport_controls_to_file"/>
-    <addaction name="actionImport_controls_from_file"/>
-    <addaction name="actionRecent_Files"/>
-    <addaction name="actionControlsPresets"/>
    </widget>
    <widget class="QMenu" name="menuPanels">
     <property name="title">
@@ -132,7 +127,7 @@
           <x>0</x>
           <y>0</y>
           <width>80</width>
-          <height>153</height>
+          <height>162</height>
          </rect>
         </property>
        </widget>
@@ -330,43 +325,6 @@
   <action name="actionQuit">
    <property name="text">
     <string>Q&amp;uit</string>
-   </property>
-  </action>
-  <action name="actionExport_controls_to_file">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>&amp;Export controls to file</string>
-   </property>
-  </action>
-  <action name="actionImport_controls_from_file">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>&amp;Import controls from file</string>
-   </property>
-  </action>
-  <action name="actionRecent_Files">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>Recent &amp;Files...</string>
-   </property>
-  </action>
-  <action name="actionControlsSection">
-   <property name="text">
-    <string>&amp;Controls</string>
-   </property>
-  </action>
-  <action name="actionControlsPresets">
-   <property name="enabled">
-    <bool>false</bool>
-   </property>
-   <property name="text">
-    <string>&amp;Presets</string>
    </property>
   </action>
   <action name="actionNight_Mode">

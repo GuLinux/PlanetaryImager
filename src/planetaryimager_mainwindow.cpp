@@ -52,7 +52,6 @@
 
 #include "commons/messageslogger.h"
 #include "commons/exposuretimer.h"
-#include "widgets/controlspresetsdialog.h"
 
 using namespace GuLinux;
 using namespace std;
@@ -91,17 +90,10 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   void enableUIWidgets(bool cameraConnected);
     void init_devices_watcher();
   ZoomableImage *image_widget;
-  shared_ptr<ControlsPresetsDialog> controlsPresetsDialog;
   
   void onImagerInitialized(Imager *imager);
   
   enum SelectionMode { NoSelection, ROI, Guide } selection_mode = NoSelection;
-  
-  void pick_controls_file();
-  void pick_controls_save_file();
-  void import_controls(const QString &file_path);
-  void export_controls(const QString &file_path);
-  void populate_recent_control_files();
 };
 
 PlanetaryImagerMainWindow *PlanetaryImagerMainWindow::Private::q = nullptr;
@@ -172,8 +164,6 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
     d->ui.reset(new Ui::PlanetaryImagerMainWindow);
     
     d->ui->setupUi(this);
-    d->ui->actionControlsSection->setSeparator(true);
-    d->ui->actionControlsSection->setText(tr("Controls")); // workaround, since in QtDesigner separators don't seem to be supported
     setWindowIcon(QIcon::fromTheme("planetary_imager"));
     d->ui->recording->setWidget(d->recording_panel = new RecordingPanel{d->configuration, filesystemBrowser});
     d->configurationDialog = new ConfigurationDialog(d->configuration, this);
@@ -218,9 +208,6 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
     connect(d->ui->actionAbout_Qt, &QAction::triggered, &QApplication::aboutQt);
     connect(d->ui->action_devices_rescan, &QAction::triggered, bind(&Private::rescan_devices, d.get()));
     connect(d->ui->actionShow_settings, &QAction::triggered, bind(&QDialog::show, d->configurationDialog));
-    
-    connect(d->ui->actionImport_controls_from_file, &QAction::triggered, this, bind(&Private::pick_controls_file, d.get()));
-    connect(d->ui->actionExport_controls_to_file, &QAction::triggered, this, bind(&Private::pick_controls_save_file, d.get()));
     
     auto dockWidgetToggleVisibility = [=](QDockWidget *widget, bool visible){ widget->setVisible(visible); };
     auto dockWidgetVisibleCheck = [=](QAction *action, QDockWidget *widget) { action->setChecked(widget->isVisible()); };
@@ -308,10 +295,6 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
       d->selection_mode = Private::ROI;
       d->image_widget->startSelectionMode();
     });
-    connect(d->ui->actionControlsPresets, &QAction::triggered, this, [&]{
-      if(d->controlsPresetsDialog)
-        d->controlsPresetsDialog->show();
-    });
     QMap<Private::SelectionMode, function<void(const QRect &)>> handle_selection {
       {Private::NoSelection, [](const QRect&) {}},
       {Private::ROI, [&](const QRect &rect) { d->imager->setROI(rect); }},
@@ -325,8 +308,6 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
       d->statusbar_info_widget->showMessage("Exposure: %1s, remaining: %2s"_q % QString::number(elapsed, 'f', 1) % QString::number(remaining, 'f', 1), 1000);
     });
     connect(&d->exposure_timer, &ExposureTimer::finished, [=]{ d->statusbar_info_widget->clearMessage(); });
-    connect(d->configuration.get(), &Configuration::last_control_files_changed, this, bind(&Private::populate_recent_control_files, d.get()));
-    d->populate_recent_control_files();
 }
 
 void PlanetaryImagerMainWindow::closeEvent(QCloseEvent* event)
@@ -400,7 +381,6 @@ void PlanetaryImagerMainWindow::Private::onImagerInitialized(Imager * imager)
     }
     cameraDisconnected();
     this->imager = imager;
-    controlsPresetsDialog = make_shared<ControlsPresetsDialog>(configuration, imager);
     exposure_timer.set_imager(imager);
     imager->startLive();
     statusbar_info_widget->deviceConnected(imager->name());
@@ -428,7 +408,7 @@ void PlanetaryImagerMainWindow::Private::cameraDisconnected()
   cameraSettingsWidget = nullptr;
   delete cameraInfoWidget;
   cameraInfoWidget = nullptr;
-                                               image_widget->setImage({});
+  image_widget->setImage({});
   statusbar_info_widget->captureFPS(0);
   statusbar_info_widget->temperature(0, true);
 }
@@ -439,10 +419,6 @@ void PlanetaryImagerMainWindow::Private::enableUIWidgets(bool cameraConnected)
   ui->recording->setEnabled(cameraConnected);
   ui->chipInfoWidget->setEnabled(cameraConnected);
   ui->camera_settings->setEnabled(cameraConnected);
-  ui->actionImport_controls_from_file->setEnabled(cameraConnected);
-  ui->actionExport_controls_to_file->setEnabled(cameraConnected);
-  ui->actionRecent_Files->setEnabled(cameraConnected);
-  ui->actionControlsPresets->setEnabled(cameraConnected);
 }
 
 void PlanetaryImagerMainWindow::notify(const QDateTime &when, MessagesLogger::Type notification_type, const QString& title, const QString& message)
@@ -455,59 +431,6 @@ void PlanetaryImagerMainWindow::notify(const QDateTime &when, MessagesLogger::Ty
   types_map[notification_type](title, message);
 }
 
-void PlanetaryImagerMainWindow::Private::import_controls(const QString& file_path)
-{
-  // TODO: error checking
-  if(!imager)
-    return;
-  QFile file{file_path};
-  file.open(QIODevice::ReadOnly);
-  auto json = QJsonDocument::fromJson(file.readAll());
-  QMetaObject::invokeMethod(imager, "import_controls", Qt::QueuedConnection, Q_ARG(QVariantList, json.toVariant().toMap()["controls"].toList()));
-}
-
-void PlanetaryImagerMainWindow::Private::export_controls(const QString& file_path)
-{
-  if(!imager)
-    return;
-  QVariantMap json_map;
-  json_map["controls"] = imager->export_controls();
-  QFile file{file_path};
-  file.open(QIODevice::WriteOnly);
-  file.write(QJsonDocument::fromVariant(json_map).toJson());
-}
-
-
-void PlanetaryImagerMainWindow::Private::pick_controls_file()
-{
-  // TODO: last directory used
-  auto filename = QFileDialog::getOpenFileName(q, tr("Select Planetary Imager controls file"), configuration->last_controls_folder(), tr("Planetary Imager controls file (*.json)") );
-  if(filename.isEmpty())
-    return;
-  configuration->set_last_controls_folder(QFileInfo{filename}.dir().canonicalPath());
-  import_controls(filename);
-  configuration->add_last_control_file(filename);
-}
-
-void PlanetaryImagerMainWindow::Private::pick_controls_save_file()
-{
-  // TODO: last directory used
-  auto filename = QFileDialog::getSaveFileName(q, tr("Export Planetary Imager controls file"), configuration->last_controls_folder(), tr("Planetary Imager controls file (*.json)") );
-  if(filename.isEmpty())
-    return;
-  configuration->set_last_controls_folder(QFileInfo{filename}.dir().canonicalPath());
-  export_controls(filename);
-  configuration->add_last_control_file(filename);
-}
-
-void PlanetaryImagerMainWindow::Private::populate_recent_control_files()
-{
-  delete ui->actionRecent_Files->menu();
-  ui->actionRecent_Files->setMenu(new QMenu);
-  for(auto file: configuration->last_control_files()) {
-    connect(ui->actionRecent_Files->menu()->addAction(file), &QAction::triggered, q, bind(&Private::import_controls, this, file));
-  }
-}
 
 
 #include "planetaryimager_mainwindow.moc"

@@ -30,6 +30,14 @@
 #include "ui_cameracontrolswidget.h"
 #include "Qt/strings.h"
 #include <QMetaObject>
+#include <QMenu>
+#include <QAction>
+#include <QStringListModel>
+#include <QInputDialog>
+#include <QFileDialog>
+#include <QFileInfo>
+#include <QJsonDocument>
+#include "Qt/functional.h"
 
 using namespace std;
 using namespace std::placeholders;
@@ -48,7 +56,7 @@ public:
   void control_updated(const Imager::Control &changed_control);
   bool is_pending() const;
 private:
-
+  
   Imager::Control control;
   Imager::Control new_value;
   Imager *imager;
@@ -57,65 +65,65 @@ private:
   QCheckBox *auto_value_widget;
   QLabel *control_changed_led;
 signals:
-    void changed();
+  void changed();
 };
 
 CameraControl::CameraControl(const Imager::Control& control, Imager* imager, QWidget* parent)
-  : QObject(parent), control{control}, new_value{control}, imager{imager}
+: QObject(parent), control{control}, new_value{control}, imager{imager}
 {
-    if(control.type == Imager::Control::Number) {
-      if(control.is_duration)
-        control_widget = new DurationControlWidget;
-      else
-        control_widget = new NumberControlWidget;
-    }
-    else if(control.type == Imager::Control::Combo)
-      control_widget = new MenuControlWidget;
-    else if(control.type == Imager::Control::Bool)
-      control_widget = new BoolControlWidget;
-    
-    control_widget->update(control);
-    control_changed_led = new QLabel();
-    control_changed_led->setHidden(true);
-
-    auto_value_widget = new QCheckBox("auto");
-    auto_value_widget->setVisible(control.supports_auto);
-    auto_value_widget->setChecked(control.value_auto);
-    
-    connect(control_widget, &ControlWidget::valueChanged, [=](const QVariant &v) {
-      new_value.value = v;
-      emit changed();
-    });
-    connect(auto_value_widget, &QCheckBox::toggled, this, [this](bool checked) {
-      new_value.value_auto = checked;
-      if(! checked)
-        new_value.value = control_widget->value();
-      control_widget->setEnabled(!checked);
-      emit changed();
-    });
-
-    control_widget->setEnabled(!control.readonly && ! control.value_auto);
-    connect(imager, &Imager::changed, this, &CameraControl::control_updated, Qt::QueuedConnection);
+  if(control.type == Imager::Control::Number) {
+    if(control.is_duration)
+      control_widget = new DurationControlWidget;
+    else
+      control_widget = new NumberControlWidget;
+  }
+  else if(control.type == Imager::Control::Combo)
+    control_widget = new MenuControlWidget;
+  else if(control.type == Imager::Control::Bool)
+    control_widget = new BoolControlWidget;
+  
+  control_widget->update(control);
+  control_changed_led = new QLabel();
+  control_changed_led->setHidden(true);
+  
+  auto_value_widget = new QCheckBox("auto");
+  auto_value_widget->setVisible(control.supports_auto);
+  auto_value_widget->setChecked(control.value_auto);
+  
+  connect(control_widget, &ControlWidget::valueChanged, [=](const QVariant &v) {
+    new_value.value = v;
+    emit changed();
+  });
+  connect(auto_value_widget, &QCheckBox::toggled, this, [this](bool checked) {
+    new_value.value_auto = checked;
+    if(! checked)
+      new_value.value = control_widget->value();
+    control_widget->setEnabled(!checked);
+    emit changed();
+  });
+  
+  control_widget->setEnabled(!control.readonly && ! control.value_auto);
+  connect(imager, &Imager::changed, this, &CameraControl::control_updated, Qt::QueuedConnection);
 }
 
 void CameraControl::control_updated(const Imager::Control& changed_control)
 {
-    static QPixmap red_dot{":/resources/dot_red.png"};
-    static QPixmap green_dot{":/resources/dot_green.png"};
-      if(changed_control.id != control.id)
-        return;
-      bool is_expected_value = changed_control.same_value(new_value);
-      qDebug() << "control changed: incoming =" << changed_control;
-      qDebug() << "control changed: expected =" << new_value;
-      qDebug() << "control changed: old value=" << control;
-      qDebug() << "control changed: is same value: " << is_expected_value;
-      control = changed_control;
-      new_value = control;
-      control_widget->update(changed_control);
-      control_changed_led->setPixmap(is_expected_value ? green_dot : red_dot);
-      control_changed_led->show();
-      QTimer::singleShot(5000, this, [this]{ control_changed_led->hide(); });
-      emit changed();
+  static QPixmap red_dot{":/resources/dot_red.png"};
+  static QPixmap green_dot{":/resources/dot_green.png"};
+  if(changed_control.id != control.id)
+    return;
+  bool is_expected_value = changed_control.same_value(new_value);
+  qDebug() << "control changed: incoming =" << changed_control;
+  qDebug() << "control changed: expected =" << new_value;
+  qDebug() << "control changed: old value=" << control;
+  qDebug() << "control changed: is same value: " << is_expected_value;
+  control = changed_control;
+  new_value = control;
+  control_widget->update(changed_control);
+  control_changed_led->setPixmap(is_expected_value ? green_dot : red_dot);
+  control_changed_led->show();
+  QTimer::singleShot(5000, this, [this]{ control_changed_led->hide(); });
+  emit changed();
 }
 
 QString CameraControl::label() const
@@ -149,17 +157,30 @@ void CameraControl::set_value(const Imager::Control &value)
 
 bool CameraControl::is_pending() const
 {
-    return ! control.same_value(new_value);
+  return ! control.same_value(new_value);
 }
 
 
 
 DPTR_IMPL(CameraControlsWidget)
 {
-  CameraControlsWidget *q;
+  Imager *imager;
+  Configuration::ptr configuration;
   unique_ptr<Ui::CameraControlsWidget> ui;
+  unique_ptr<QStringListModel> presetsModel;
+  CameraControlsWidget *q;
   list<CameraControl *> control_widgets;
   void controls_changed();
+  void loadMenuPreset();
+  void saveMenuPreset();
+  void loadPresetFromFile();
+  void savePresetToFile();
+  void removeSelectedPreset();
+  void reloadPresets();
+  void selectionChanged();
+  bool hasSelection() const;
+  QString currentSelection() const;
+  void loadToImager(const QVariantMap &presets);
 };
 
 
@@ -170,10 +191,26 @@ CameraControlsWidget::~CameraControlsWidget()
 
 
 
-CameraControlsWidget::CameraControlsWidget(Imager *imager, const Configuration::ptr &configuration, QWidget *parent) : dptr(this)
+CameraControlsWidget::CameraControlsWidget(Imager *imager, const Configuration::ptr &configuration, QWidget *parent)
+: QWidget{parent}, dptr(imager, configuration, make_unique<Ui::CameraControlsWidget>(), make_unique<QStringListModel>(), this)
 {
-  d->ui.reset(new Ui::CameraControlsWidget);
   d->ui->setupUi(this);
+  d->ui->presetsButton->setMenu(new QMenu);
+  d->ui->presets->setModel(d->presetsModel.get());
+  d->reloadPresets();
+  connect(d->ui->presets, F_PTR(QComboBox, currentIndexChanged, int), this, bind(&Private::selectionChanged, d.get()));
+  
+  auto addPresetAction = [this](auto action, auto slot) {
+    d->ui->presetsButton->menu()->addAction(action);
+    connect(action, &QAction::triggered, this, slot);
+  };
+  addPresetAction(d->ui->actionLoad_selected_preset, bind(&Private::loadMenuPreset, d.get()));
+  addPresetAction(d->ui->actionSave_current_settings_as_presets, bind(&Private::saveMenuPreset, d.get()));
+  addPresetAction(d->ui->actionRemove_selected_preset, bind(&Private::removeSelectedPreset, d.get()));
+  addPresetAction(d->ui->actionLoad_settings_from_file, bind(&Private::loadPresetFromFile, d.get()));
+  addPresetAction(d->ui->actionSave_settings_to_file, bind(&Private::savePresetToFile, d.get()));
+  
+  
   auto grid = new QGridLayout(d->ui->controls_box);
   int row = 0;
   for(auto imager_control: imager->controls()) {
@@ -188,17 +225,105 @@ CameraControlsWidget::CameraControlsWidget(Imager *imager, const Configuration::
     grid->addWidget(control->controlWidget(), row, 2);
     grid->addWidget(control->autoValueWidget(), row++, 3);
   }
-connect(d->ui->restore, &QPushButton::clicked, this, bind(&Private::controls_changed, d.get()));
+  connect(d->ui->restore, &QPushButton::clicked, this, bind(&Private::controls_changed, d.get()));
   grid->addItem(new QSpacerItem(0, 0, QSizePolicy::MinimumExpanding, QSizePolicy::Expanding), row, 0, 3);
   grid->setRowStretch(row, 1);
   grid->setColumnStretch(1, 1);
 }
 
+void CameraControlsWidget::Private::loadMenuPreset()
+{
+  auto preset = configuration->load_preset(currentSelection());
+  qDebug() << "Importing presets name" << currentSelection() << ":" << preset;
+  loadToImager(preset);
+}
+
+void CameraControlsWidget::Private::saveMenuPreset()
+{
+  auto name = QInputDialog::getText(q, tr("Save preset as..."), tr("Enter preset name to save current controls") );
+  if(name.isEmpty())
+    return;
+  auto controls = imager->export_controls();
+  qDebug() << "Exporting controls: " << controls;
+  configuration->add_preset(name, QVariantMap{{"controls", controls}});
+  reloadPresets();
+  qDebug() << "Reloading control: " << configuration->load_preset(name);
+}
+
+void CameraControlsWidget::Private::removeSelectedPreset()
+{
+  configuration->remove_preset(currentSelection());
+  reloadPresets();
+}
+
+void CameraControlsWidget::Private::loadPresetFromFile()
+{
+  // TODO: last directory used
+  auto filename = QFileDialog::getOpenFileName(q, tr("Select Planetary Imager controls file"), configuration->last_controls_folder(), tr("Planetary Imager controls file (*.json)") );
+  if(filename.isEmpty())
+    return;
+  configuration->set_last_controls_folder(QFileInfo{filename}.dir().canonicalPath());
+  QFile file{filename};
+  file.open(QIODevice::ReadOnly);
+  auto json = QJsonDocument::fromJson(file.readAll());
+  loadToImager(json.toVariant().toMap());
+  configuration->add_last_control_file(filename);
+}
+
+void CameraControlsWidget::Private::loadToImager(const QVariantMap& presets)
+{
+  QMetaObject::invokeMethod(imager, "import_controls", Qt::QueuedConnection, Q_ARG(QVariantList, presets["controls"].toList()));
+}
+
+
+void CameraControlsWidget::Private::savePresetToFile()
+{
+  // TODO: last directory used
+  auto filename = QFileDialog::getSaveFileName(q, tr("Export Planetary Imager controls file"), configuration->last_controls_folder(), tr("Planetary Imager controls file (*.json)") );
+  if(filename.isEmpty())
+    return;
+  configuration->set_last_controls_folder(QFileInfo{filename}.dir().canonicalPath());
+  
+  QVariantMap json_map;
+  json_map["controls"] = imager->export_controls();
+  QFile file{filename};
+  file.open(QIODevice::WriteOnly);
+  file.write(QJsonDocument::fromVariant(json_map).toJson());
+  
+  configuration->add_last_control_file(filename);
+  
+}
+
+void CameraControlsWidget::Private::reloadPresets()
+{
+  presetsModel->setStringList(configuration->list_presets());
+  selectionChanged();
+}
+
+void CameraControlsWidget::Private::selectionChanged()
+{
+  ui->actionLoad_selected_preset->setEnabled(hasSelection());
+  ui->actionRemove_selected_preset->setEnabled(hasSelection());
+}
+
+bool CameraControlsWidget::Private::hasSelection() const
+{
+  return ui->presets->currentIndex() != -1;
+}
+
+QString CameraControlsWidget::Private::currentSelection() const
+{
+  if(! hasSelection() )
+    return {};
+  return presetsModel->stringList()[ui->presets->currentIndex()];
+}
+
+
 void CameraControlsWidget::Private::controls_changed()
 {
-    bool any_changed = std::any_of(control_widgets.begin(), control_widgets.end(), bind(&CameraControl::is_pending, _1));
-    ui->apply->setEnabled(any_changed);
-    ui->restore->setEnabled(any_changed);
+  bool any_changed = std::any_of(control_widgets.begin(), control_widgets.end(), bind(&CameraControl::is_pending, _1));
+  ui->apply->setEnabled(any_changed);
+  ui->restore->setEnabled(any_changed);
 }
 
 #include "cameracontrolswidget.moc"
