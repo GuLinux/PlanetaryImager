@@ -36,7 +36,7 @@ RUN cd /tmp && wget --quiet http://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/c
 
 ENV CMAKE_BIN=${MXE_PREFIX}-cmake
 COPY configuration.cmake /
-ENV CMAKE_EXTRA_OPTIONS="-DCMAKE_INCLUDE_EXT_FILE=/configuration.cmake -Dcflags_fpic=Off"
+ENV CMAKE_EXTRA_OPTIONS="-DCMAKE_INCLUDE_EXT_FILE=/configuration.cmake -Dcflags_fpic=Off -DBUILD_DRIVER_simulator=On -DCMAKE_BUILD_TYPE=Release"
 EOF
 #CMAKE_BIN=${MXE_PREFIX}-cmake . ../commons/Dockerfile.opencv.in  
 . ../commons/Dockerfile.workdir.in
