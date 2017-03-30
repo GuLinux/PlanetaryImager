@@ -34,4 +34,6 @@ endif()
 
 add_driver(NAME zwo_asi_imager OS Linux Darwin DEFAULT_ON SRCS ${asi_imager_SRCS} LINK ${asi_driver_library} -lusb-1.0)
 
-install(FILES ${ASI_SDK_DIR}/lib/asi.rules DESTINATION ${UDEVRULES_INSTALL_DIR})
+if(BUILD_DRIVER_zwo_asi_imager)
+    install(FILES ${ASI_SDK_DIR}/lib/asi.rules DESTINATION ${UDEVRULES_INSTALL_DIR})
+endif()

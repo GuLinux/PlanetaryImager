@@ -1,10 +1,18 @@
 UBUNTU_BASE_IMAGE="ubuntu:16.04"
 MXE_PARALLEL_JOBS=${MXE_PARALLEL_JOBS:-3}
 MXE_PARALLEL_CPU_JOBS=${MXE_PARALLEL_CPU_JOBS:-6}
+cat >&2 <<EOF
+MXE Settings:
+
+MXE_PARALLEL_JOBS=$MXE_PARALLEL_JOBS
+MXE_PARALLEL_CPU_JOBS=$MXE_PARALLEL_CPU_JOBS
+Press any key or wait 10 seconds to continue, or CTRL+C to stop
+EOF
+read -t 10 -s -n 1
 
 [[ "$MXE_ARCH" == x32 ]] && MXE_PREFIX=i686-w64-mingw32.shared || MXE_PREFIX=x86_64-w64-mingw32.shared
 cat >configuration.cmake <<EOF
-set(cflags_fpic Off)
+set(CPACK_GENERATOR ZIP CACHE INTERNAL "" FORCE)
 EOF
 cat <<EOF
 FROM ${UBUNTU_BASE_IMAGE}
@@ -20,7 +28,7 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean
 RUN cd / && git clone https://github.com/mxe/mxe.git && cd /mxe && \
     make -j $MXE_PARALLEL_JOBS JOBS=$MXE_PARALLEL_CPU_JOBS MXE_TARGETS='$MXE_PREFIX' MXE_PLUGIN_DIRS='/mxe/plugins/gcc5' \
-        ccfits boost cmake qtbase \
+        nsis ccfits boost cmake qtbase \
         ffmpeg jpeg libpng tiff opencv \ 
     	clean-junk 
 
@@ -33,10 +41,12 @@ RUN cd /tmp && wget --quiet http://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/c
     cd /tmp/cfitsio && ./configure --host=$MXE_PREFIX --prefix=/mxe/usr/$MXE_PREFIX FC=${MXE_PREFIX}-gfortran && make -j$MXE_PARALLEL_CPU_JOBS && make install && \
     cd /tmp/CCfits && ./configure  --host=$MXE_PREFIX --prefix=/mxe/usr/$MXE_PREFIX --build=static --enable-static --disable-shared --with-cfitsio=/mxe/usr/$MXE_PREFIX && \
     make -j$MXE_PARALLEL_CPU_JOBS && make install && cd / && rm -rf /tmp/*
+#RUN ln -s /mxe/usr/bin/${MXE_PREFIX}-makensis /usr/bin/makensis
 
 ENV CMAKE_BIN=${MXE_PREFIX}-cmake
+
 COPY configuration.cmake /
-ENV CMAKE_EXTRA_OPTIONS="-DCMAKE_INCLUDE_EXT_FILE=/configuration.cmake -Dcflags_fpic=Off -DBUILD_DRIVER_simulator=On -DCMAKE_BUILD_TYPE=Release"
+ENV CMAKE_EXTRA_OPTIONS -DCMAKE_INCLUDE_EXT_FILE=/configuration.cmake -Dcflags_fpic=Off -DCMAKE_INSTALL_PREFIX=/
 EOF
 #CMAKE_BIN=${MXE_PREFIX}-cmake . ../commons/Dockerfile.opencv.in  
 . ../commons/Dockerfile.workdir.in

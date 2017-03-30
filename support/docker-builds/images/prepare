@@ -12,7 +12,8 @@ done
 shift
 
 [[ -z "$dirs" ]] && dirs=*
-
+tmpfile=/tmp/$( basename $0).tmp.$$
+rm -f $tmpfile
 for d in $dirs; do
   [[ -d "$d" ]] && ( [[ -r "$d/Dockerfile" ]] || [[ -x "$d/prepare-image" ]] ) || continue
   (
@@ -24,6 +25,10 @@ for d in $dirs; do
       ./prepare-image
     fi
     docker build -t gulinux/planetaryimager_build:${image_name}-${image_version} "$@" .
-    echo "===================================== Finished building $d"
-  ) || exit 1
+    [[ $? == 0 ]] && status=ok || status=error
+    echo "===================================== Finished building $d: $status"
+    echo "Image $d result: [$status]" >> $tmpfile
+  ) 
 done 
+column -t < $tmpfile
+rm -f $tmpfile

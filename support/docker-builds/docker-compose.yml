@@ -13,5 +13,6 @@ services:
             - CMAKE_BUILD_TYPE
             - PACKAGE_VERSION_SUFFIX
             - PACKAGE_NAME_SUFFIX
-            - MAKE_OPTS
+            - MAKE_OPTS=${MAKE_OPTS}
+            - CMAKE_OVERRIDE_OPTIONS=${CMAKE_OVERRIDE_OPTIONS}
 

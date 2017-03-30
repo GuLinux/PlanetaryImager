@@ -80,6 +80,8 @@ set(CMAKE_INCLUDE_EXT_FILE CACHE INTERNAL "Per-environment include file")
 if(CMAKE_INCLUDE_EXT_FILE)
   message("Using cmake environment: ${CMAKE_INCLUDE_EXT_FILE}")
   include(${CMAKE_INCLUDE_EXT_FILE})
+else()
+  message("CMake environment file ${CMAKE_INCLUDE_EXT_FILE} NOT found")
 endif()
 
 message("Extra libraries for linking: ${EXTRA_LIBRARIES}")

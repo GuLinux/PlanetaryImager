@@ -39,7 +39,7 @@ DPTR_IMPL(V4L2Device) {
 
 V4L2Device::V4L2Device(const QString& path) : dptr(path)
 {
-    d->fd = ::open(path.toLatin1(), O_RDWR, O_NONBLOCK, 0);
+    d->fd = ::open(path.toLatin1(), O_RDWR, O_NONBLOCK);
     V4L2_CHECK << d->fd << "opening device '%1'"_q % d->path;
     DESCRIBE_IOCTL(VIDIOC_DQBUF)
     DESCRIBE_IOCTL(VIDIOC_ENUM_FMT)

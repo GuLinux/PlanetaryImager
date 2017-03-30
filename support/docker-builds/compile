@@ -5,11 +5,11 @@ DAILY_TAG_SUFFIX="$(git log --pretty=format:'%h' -n 1)"
 export DEST=/tmp
 COMPILE_ENVS=""
 export MAKE_OPTS=""
-CMAKE_EXTRA_OPTIONS=""
+export CMAKE_EXTRA_OPTS=""
 
 print-help() {
   cat <<EOF
-Usage: $0 [options] [targets-to-compile]
+Usage: $0 [options] [targets-to-compile] [ -- EXTRA_CMAKE_OPTIONS ]
 Options:
     -a|--all                    compile all available targets
     -d|--dest                   destination directory to place archives/packages
@@ -18,7 +18,7 @@ Options:
 EOF
 }
 
-while [ -n "$1" ]; do
+while [[ -n "$1" && "$1" != "--" ]]; do
     param="$1"
     shift
     case "$param" in
@@ -43,6 +43,8 @@ while [ -n "$1" ]; do
             ;;
     esac
 done
+shift
+export CMAKE_OVERRIDE_OPTIONS="$@"
 
 echo "Compile dirs: $COMPILE_ENVS"
 export DAILY_TAG="$( date +%Y%m%d )-$DAILY_TAG_SUFFIX"
