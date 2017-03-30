@@ -8,5 +8,11 @@ ${CMAKE_BIN} /code \
           -DPACKAGE_VERSION_SUFFIX=${PACKAGE_VERSION_SUFFIX} \
           -DPACKAGE_NAME_SUFFIX=${PACKAGE_NAME_SUFFIX} \
           -DCPACK_PACKAGE_DIRECTORY=/dest \
-          ${CMAKE_EXTRA_OPTIONS} && \
+          ${CMAKE_EXTRA_OPTIONS} ${CMAKE_OVERRIDE_OPTIONS} && \
           make ${MAKE_OPTS} && make package
+had_errors=$?
+set +x
+if [[ $had_errors != 0 ]]; then
+    echo "Error on container execution; please touch the file /tmp/on_error_handler to continue"
+    while ! [[ -r /tmp/on_error_handler ]]; do sleep 1; done
+fi
