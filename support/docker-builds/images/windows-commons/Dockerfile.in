@@ -13,6 +13,7 @@ read -t 10 -s -n 1
 [[ "$MXE_ARCH" == x32 ]] && MXE_PREFIX=i686-w64-mingw32.shared || MXE_PREFIX=x86_64-w64-mingw32.shared
 cat >configuration.cmake <<EOF
 set(CPACK_GENERATOR ZIP CACHE INTERNAL "" FORCE)
+include(/deps.cmake)
 EOF
 cat <<EOF
 FROM ${UBUNTU_BASE_IMAGE}
@@ -46,6 +47,7 @@ RUN cd /tmp && wget --quiet http://heasarc.gsfc.nasa.gov/FTP/software/fitsio/c/c
 ENV CMAKE_BIN=${MXE_PREFIX}-cmake
 
 COPY configuration.cmake /
+COPY deps.cmake /
 ENV CMAKE_EXTRA_OPTIONS -DCMAKE_INCLUDE_EXT_FILE=/configuration.cmake -Dcflags_fpic=Off -DCMAKE_INSTALL_PREFIX=/
 EOF
 #CMAKE_BIN=${MXE_PREFIX}-cmake . ../commons/Dockerfile.opencv.in  
