@@ -17,7 +17,13 @@ function(add_frontend_dependencies)
   set(planetary_imager_frontend_DEPS ${planetary_imager_frontend_DEPS} ${ARGN} CACHE INTERNAL "planetary imager frontend deps" FORCE)
 endfunction()
 
-set(drivers_destination ${CMAKE_INSTALL_PREFIX}/lib/${CMAKE_PROJECT_NAME}/drivers)
+set(drivers_destination lib/${CMAKE_PROJECT_NAME}/drivers)
+set(binary_destination bin)
+if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
+  set(drivers_destination drivers)
+  set(binary_destination .)
+endif()
+
 add_definitions(-DDRIVERS_DIRECTORY="${drivers_destination}")
 option(ADD_DRIVERS_BUILD_DIRECTORY "Search for drivers in the current build directory (developer option)" OFF)
 if(ADD_DRIVERS_BUILD_DIRECTORY)
@@ -97,6 +103,6 @@ if(build_network_server)
 endif()
     
 
-install(TARGETS ${install_targets} RUNTIME DESTINATION bin)
+install(TARGETS ${install_targets} RUNTIME DESTINATION ${binary_destination})
 
 
