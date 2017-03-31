@@ -26,7 +26,7 @@
 #include <QProcessEnvironment>
 #include <QCoreApplication>
 #include <QStandardPaths>
-#include <QDir>
+#include <QFileInfo>
 #include <QJsonDocument>
 
 using namespace std;
@@ -46,6 +46,8 @@ Configuration::Configuration() : dptr(make_shared<QSettings>("GuLinux", qApp->ap
 {
   QDir appDataPath{QStandardPaths::writableLocation(QStandardPaths::AppDataLocation)};
   d->profilesPath.setPath(appDataPath.path() + "/profiles");
+  if(! d->profilesPath.exists())
+    d->profilesPath.mkpath(".");
 }
 
 Configuration::~Configuration()
