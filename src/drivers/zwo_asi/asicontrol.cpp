@@ -20,6 +20,8 @@
 #include "zwoexception.h"
 #include "c++/stringbuilder.h"
 #include <set>
+#include <QHash>
+#include <QObject>
 
 using namespace std;
 using namespace GuLinux;
@@ -69,7 +71,32 @@ ASIControl &ASIControl::set(qlonglong new_value, bool write_is_auto)
 
 ASIControl::operator Imager::Control() const
 {
-  auto control = Imager::Control{ static_cast<qlonglong>(caps.ControlType), caps.Description }
+  static QHash<ASI_CONTROL_TYPE, QString> labels{
+    { ASI_GAIN, QObject::tr("Gain") },
+    { ASI_EXPOSURE, QObject::tr("Exposure`") },
+    { ASI_GAMMA, QObject::tr("Gamma") },
+    { ASI_WB_R, QObject::tr("White Balance (R)") },
+    { ASI_WB_B, QObject::tr("White Balance (B)") },
+    { ASI_BRIGHTNESS, QObject::tr("Brightness") },
+    { ASI_BANDWIDTHOVERLOAD, QObject::tr("Bandwidth") },
+    { ASI_OVERCLOCK, QObject::tr("Overclock") },
+    { ASI_TEMPERATURE, QObject::tr("Temperature") },
+    { ASI_FLIP, QObject::tr("Flip") },
+    { ASI_AUTO_MAX_GAIN, QObject::tr("Max gain") },
+    { ASI_AUTO_MAX_EXP, QObject::tr("Max exposure") },
+    { ASI_AUTO_MAX_BRIGHTNESS, QObject::tr("Max brightness") },
+    { ASI_HARDWARE_BIN, QObject::tr("Hardware bin") },
+    { ASI_HIGH_SPEED_MODE, QObject::tr("High speed") },
+    { ASI_COOLER_POWER_PERC, QObject::tr("Cooler power (%)") },
+    { ASI_TARGET_TEMP, QObject::tr("Target temp") },
+    { ASI_COOLER_ON, QObject::tr("Cooler on") },
+    { ASI_MONO_BIN, QObject::tr("Mono bin") },
+    { ASI_FAN_ON, QObject::tr("Fan on") },
+    { ASI_PATTERN_ADJUST, QObject::tr("Pattern adjust") },
+    { ASI_ANTI_DEW_HEATER, QObject::tr("Anti dew heater") },
+    { ASI_AUTO_MAX_EXP_MS, QObject::tr("Auto max exposure") },
+  };
+  auto control = Imager::Control{ static_cast<qlonglong>(caps.ControlType), labels.value(caps.ControlType, caps.Description) }
       .set_range(caps.MinValue, caps.MaxValue, 1l)
       .set_value(value)
       .set_default_value(caps.DefaultValue)
