@@ -104,9 +104,7 @@ ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandler::
     d->properties << Properties::Property{"ASI SDK Version", ASI_SDK_VERSION};
     d->properties << LiveStream << ROI << Temperature;
     ASI_CHECK << ASIOpenCamera(info.CameraID) << "Open Camera";
-#ifdef ASI_CAMERA_REQUIRES_INIT
     ASI_CHECK << ASIInitCamera(info.CameraID) << "Init Camera";
-#endif
     connect(d->reload_temperature_timer.get(), &QTimer::timeout, this, bind(&Private::read_temperature, d.get() ));
     d->reload_temperature_timer->start(5000);
     connect(this, &Imager::exposure_changed, this, bind(&Private::update_worker_exposure_timeout, d.get()));
