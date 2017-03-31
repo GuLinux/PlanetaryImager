@@ -47,7 +47,11 @@ private:
 };
   template<typename T> class LogClassScope : public LogScope {
   public:
+#ifdef Q_OS_WIN
+    LogClassScope() : LogScope( QString::fromStdString(typeid(T).name()), "Create Object", "Delete Object") {}
+#else
     LogClassScope() : LogScope( QString::fromStdString(GuLinux::Demangle(typeid(T).name()).get()), "Create Object", "Delete Object") {}
+#endif
   };
 
 #define LOG_F_SCOPE LogScope log_current_scope(__PRETTY_FUNCTION__);
