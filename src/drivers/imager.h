@@ -115,6 +115,15 @@ struct Imager::Control {
     choices.push_back(choice);
     return *this;
   }
+  
+  // TODO: handle enums in a smarter way? more templates?
+  template<typename T> T get_value_enum() const { return static_cast<T>(value.value<int>()); }
+  template<typename T> Control &set_default_value_enum(const T &value) { return set_default_value(static_cast<int>(value)); }
+  template<typename T> Control &set_value_enum(const T &value) { return set_value(static_cast<int>(value)); }
+  template<typename T> Control &add_choice_enum(const QString &label, const T &value) {
+    return add_choice(label, static_cast<int>(value));
+  }
+  
   Control &set_decimals(const qint16 &decimals) { this->decimals = decimals; return *this; }
   Control &set_is_duration(bool is_duration) { this->is_duration= is_duration; return *this; }
   Control &set_supports_auto(bool supports_auto) { this->supports_auto= supports_auto; return *this; }

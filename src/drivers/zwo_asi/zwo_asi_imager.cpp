@@ -46,7 +46,6 @@ const int64_t ImgTypeControlID = 10000;
 const int64_t BinControlID = 10001;
 }
 
-Q_DECLARE_METATYPE(ASI_IMG_TYPE)
 
 DPTR_IMPL(ZWO_ASI_Imager) {
     ASI_CAMERA_INFO info;
@@ -155,12 +154,12 @@ Imager::Controls ZWO_ASI_Imager::controls() const
         {ASI_IMG_RAW16, "RAW 16bit"},
         {ASI_IMG_Y8, "Y8 (Monochrome)"},
     };
-    auto imageFormat = Control{ImgTypeControlID, "Image Format", Control::Combo}.set_value(d->worker->format());
+    auto imageFormat = Control{ImgTypeControlID, "Image Format", Control::Combo}.set_value_enum(d->worker->format());
     int i = 0;
     while(d->info.SupportedVideoFormat[i] != ASI_IMG_END && i < 8) {
         auto format = d->info.SupportedVideoFormat[i];
         qDebug() << "supported format: " << format << ": " << format_names[format];
-        imageFormat.add_choice(format_names[format], format);
+        imageFormat.add_choice_enum(format_names[format], format);
         ++i;
     }
     controls.push_front(imageFormat);
@@ -180,7 +179,7 @@ void ZWO_ASI_Imager::setControl(const Control& control)
 {
   LOG_F_SCOPE
   if(control.id == ImgTypeControlID) {
-    d->restart_worker(d->worker->bin(), d->worker->roi(), control.get_value<ASI_IMG_TYPE>());
+    d->restart_worker(d->worker->bin(), d->worker->roi(), control.get_value_enum<ASI_IMG_TYPE>());
     emit changed(control);
     return;
   }
