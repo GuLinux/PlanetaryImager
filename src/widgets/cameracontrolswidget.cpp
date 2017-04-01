@@ -196,7 +196,7 @@ DPTR_IMPL(CameraControlsWidget)
   void selectionChanged();
   bool hasSelection() const;
   QString currentSelection() const;
-  void loadToImager(const QVariantMap &presets);
+  void loadToImager(const Configuration::Preset &preset);
   QVariantMap currentPresets() const;
   void reloadRecentlyUsed();
 };
@@ -230,7 +230,11 @@ CameraControlsWidget::CameraControlsWidget(Imager *imager, const Configuration::
   addPresetAction(d->ui->actionLoad_settings_from_file, bind(&Private::pickPresetFromFile, d.get()), &QAction::triggered);
   d->ui->presetsButton->menu()->addMenu(d->loadRecentMenu);
   addPresetAction(d->ui->actionSave_settings_to_file, bind(&Private::savePresetToFile, d.get()), &QAction::triggered);
-  addPresetAction(d->ui->actionShow_only_presets_for_this_camera, [this](bool c) { d->configuration->set_filter_presets_by_camera(c); d->reloadPresets(); }, &QAction::toggled);
+  addPresetAction(d->ui->actionShow_only_presets_for_this_camera, [this](bool c) {
+    d->configuration->set_filter_presets_by_camera(c);
+    d->reloadPresets();
+    d->reloadRecentlyUsed();
+  }, &QAction::toggled);
   
   connect(d->configuration.get(), &Configuration::last_control_files_changed, this, bind(&Private::reloadRecentlyUsed, d.get()));
   d->reloadRecentlyUsed();
@@ -258,7 +262,7 @@ CameraControlsWidget::CameraControlsWidget(Imager *imager, const Configuration::
 void CameraControlsWidget::Private::loadMenuPreset()
 {
   auto preset = configuration->load_preset(currentSelection());
-  qDebug() << "Importing presets name" << currentSelection() << ":" << preset;
+  qDebug() << "Importing presets name" << currentSelection() << ":" << preset.name;
   loadToImager(preset);
 }
 
@@ -269,7 +273,6 @@ void CameraControlsWidget::Private::saveMenuPreset()
     return;
   configuration->add_preset(name, currentPresets());
   reloadPresets();
-  qDebug() << "Reloading control: " << configuration->load_preset(name);
 }
 
 void CameraControlsWidget::Private::removeSelectedPreset()
@@ -289,20 +292,18 @@ void CameraControlsWidget::Private::pickPresetFromFile()
 }
 
 void CameraControlsWidget::Private::loadPresetFromFile(const QString& filename)
-{
-  QFile file{filename};
-  file.open(QIODevice::ReadOnly);
-  auto json = QJsonDocument::fromJson(file.readAll());
-  loadToImager(json.toVariant().toMap());
+{  
+  loadToImager(Configuration::Preset{filename});
   configuration->add_last_control_file(filename);
 }
 
 
-void CameraControlsWidget::Private::loadToImager(const QVariantMap& presets)
+void CameraControlsWidget::Private::loadToImager(const Configuration::Preset& preset)
 {
+  auto controls = preset.load()["controls"].toList();
   for(auto controlWidget: control_widgets)
-    controlWidget->importing(presets["controls"].toList());
-  QMetaObject::invokeMethod(imager, "import_controls", Qt::QueuedConnection, Q_ARG(QVariantList, presets["controls"].toList()));
+    controlWidget->importing(controls);
+  QMetaObject::invokeMethod(imager, "import_controls", Qt::QueuedConnection, Q_ARG(QVariantList, controls));
 }
 
 
@@ -330,9 +331,12 @@ void CameraControlsWidget::Private::reloadPresets()
 {
   auto presets = configuration->list_presets();
   if(configuration->filter_presets_by_camera()) {
-    presets.erase(remove_if(begin(presets), end(presets), [this](const QString &preset) { return configuration->load_preset(preset)["camera"] != imager->name(); }), presets.end());
+    presets.erase(remove_if(begin(presets), end(presets), [this](const auto &preset) { return not preset.isFor(imager->name()); }), presets.end());
   }
-  presetsModel->setStringList(presets);
+  QStringList names;
+  for(const auto &preset: presets)
+    names << preset.name;
+  presetsModel->setStringList(names);
   selectionChanged();
 }
 
@@ -366,6 +370,8 @@ void CameraControlsWidget::Private::reloadRecentlyUsed()
 {
   loadRecentMenu->clear();
   for(auto recentFile: configuration->last_control_files()) {
+    if(configuration->filter_presets_by_camera() && not Configuration::Preset{recentFile}.isFor(imager->name()))
+      continue;
     connect(loadRecentMenu->addAction(recentFile), &QAction::triggered, q, bind(&Private::loadPresetFromFile, this, recentFile));
     qDebug() << "RECENT: " <<recentFile;
   }

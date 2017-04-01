@@ -30,6 +30,7 @@
 #include <QJsonDocument>
 
 using namespace std;
+using namespace std::placeholders;
 DPTR_IMPL(Configuration) {
   shared_ptr<QSettings> settings;
   Configuration *q;
@@ -37,7 +38,7 @@ DPTR_IMPL(Configuration) {
   template<typename T> void set(const QString &key, const T &value);
   mutable QHash<QString, QVariant> values_cache;
   QDir profilesPath;
-  shared_ptr<QFile> openProfile(const QString &name, QFile::OpenMode mode = QFile::NotOpen);
+  QString presetPath(const QString &name) const;
 };
 
 const int Configuration::DefaultServerPort = 19232;
@@ -188,48 +189,79 @@ QStringList Configuration::last_control_files() const
   return controlFiles.mid(0, 10);
 }
 
-void Configuration::add_preset(const QString& name, const QVariantMap& preset)
+void Configuration::add_preset(const QString& name, const QVariantMap& presetValues)
 {
   remove_preset(name);
-  d->settings->setValue("presets", list_presets() << name);
-  auto presetFile = d->openProfile(name, QFile::WriteOnly);
-  presetFile->write(QJsonDocument::fromVariant(preset).toJson());
+  Preset preset = load_preset(name);
+  preset.save(presetValues);
+  auto presets = list_presets();
+  presets.push_front(preset);
+  QStringList presetNames;
+  transform(presets.begin(), presets.end(), back_inserter(presetNames), [](const auto &p) { return p.name; });
+  d->settings->setValue("presets", presetNames);
 }
 
-QStringList Configuration::list_presets() const
+Configuration::Preset::List Configuration::list_presets() const
 {
-  auto presets = d->settings->value("presets").toStringList();
-  QStringList existingPresets;
-  for(auto preset: presets) {
-    if(d->openProfile(preset, QFile::NotOpen)->exists()) {
-      existingPresets << preset;
-    }
-  }
-  return existingPresets;
+  auto presetNames = d->settings->value("presets").toStringList();
+  Preset::List presets;
+  transform(begin(presetNames), end(presetNames), back_inserter(presets), bind(&Configuration::load_preset, this, _1));
+  presets.erase(remove_if(begin(presets), end(presets), [](const auto p){ return !p.isValid();}), end(presets));
+  return presets;
 }
 
-QVariantMap Configuration::load_preset(const QString &name) const
+Configuration::Preset Configuration::load_preset(const QString &name) const
 {
-  auto presetFile = d->openProfile(name, QFile::ReadOnly);
-  return QJsonDocument::fromJson(presetFile->readAll()).toVariant().toMap();
+  return Preset{d->presetPath(name), name};
 }
 
 void Configuration::remove_preset(const QString& name)
 {
-  auto names = list_presets();
+  auto names = d->settings->value("presets").toStringList();
   names.removeAll(name);
   d->settings->setValue("presets", names);
-  d->openProfile(name)->remove();
+  QFile::remove(d->presetPath(name));
 }
 
-shared_ptr<QFile> Configuration::Private::openProfile(const QString& name, QFile::OpenMode mode)
+QString Configuration::Private::presetPath(const QString& name) const
 {
-  auto presetFile = make_shared<QFile>(profilesPath.filePath(name + ".json"));
-  if(mode != QFile::NotOpen && ! presetFile->open(mode)) {
-    throw runtime_error(("Unable to open preset file for %1: %2"_q % (mode == QFile::ReadOnly ? "reading" : "writing") % presetFile->fileName()).toStdString());
-  }
-  return presetFile;
+  return profilesPath.filePath(name + ".json");
 }
+
+QString Configuration::Preset::camera() const
+{
+  return load()["camera"].toString();
+}
+
+bool Configuration::Preset::isFor(const QString& camera) const
+{
+  return this->camera() == camera;
+}
+
+bool Configuration::Preset::isValid() const
+{
+  return QFile::exists(path);
+}
+
+QVariantMap Configuration::Preset::load() const
+{
+  QFile file{path};
+  if(! file.open(QFile::ReadOnly)) {
+    throw runtime_error(("Unable to open file %1 for reading"_q % path).toStdString());
+  }
+  return QJsonDocument::fromJson(file.readAll()).toVariant().toMap();
+}
+
+void Configuration::Preset::save(const QVariantMap& presets)
+{
+  QFile file{path};
+  if(! file.open(QFile::WriteOnly)) {
+    throw runtime_error(("Unable to open file %1 for writing"_q % path).toStdString());
+  }
+  file.write(QJsonDocument::fromVariant(presets).toJson());
+}
+
+ 
 
 
 #include "configuration.moc"
