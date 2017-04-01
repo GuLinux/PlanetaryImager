@@ -174,7 +174,7 @@ QString Configuration::savefile() const
 
 void Configuration::add_last_control_file(const QString& file)
 {
-  auto saved = last_control_files();
+  QStringList saved = d->settings->value("last_control_files").toStringList().mid(0, 20);
   saved.removeAll(file);
   saved.push_front(file);
   d->settings->setValue("last_control_files", saved);
@@ -183,7 +183,9 @@ void Configuration::add_last_control_file(const QString& file)
 
 QStringList Configuration::last_control_files() const
 {
-  return d->settings->value("last_control_files").toStringList().mid(0, 10);
+  auto controlFiles = d->settings->value("last_control_files").toStringList();
+  controlFiles.erase(remove_if(begin(controlFiles), end(controlFiles), [](const QString &f) { return !QFile::exists(f); }), controlFiles.end());
+  return controlFiles.mid(0, 10);
 }
 
 void Configuration::add_preset(const QString& name, const QVariantMap& preset)
