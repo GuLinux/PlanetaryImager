@@ -38,6 +38,7 @@
 #include <QFileInfo>
 #include <QJsonDocument>
 #include "Qt/functional.h"
+#include <QSortFilterProxyModel>
 
 using namespace std;
 using namespace std::placeholders;
@@ -55,6 +56,7 @@ public:
   ControlWidget *controlWidget() const { return control_widget; }
   void control_updated(const Imager::Control &changed_control);
   bool is_pending() const;
+  void importing(const QVariantList &controls);
 private:
   
   Imager::Control control;
@@ -67,6 +69,8 @@ private:
 signals:
   void changed();
 };
+
+
 
 CameraControl::CameraControl(const Imager::Control& control, Imager* imager, QWidget* parent)
 : QObject(parent), control{control}, new_value{control}, imager{imager}
@@ -105,6 +109,16 @@ CameraControl::CameraControl(const Imager::Control& control, Imager* imager, QWi
   control_widget->setEnabled(!control.readonly && ! control.value_auto);
   connect(imager, &Imager::changed, this, &CameraControl::control_updated, Qt::QueuedConnection);
 }
+
+void CameraControl::importing(const QVariantList& controls)
+{
+  auto found = find_if(controls.begin(), controls.end(), [this](const QVariant &v){ return v.toMap()["id"].toLongLong() == control.id; });
+  if(found == controls.end())
+    return;
+  new_value.value = found->toMap()["value"];
+  new_value.value_auto = found->toMap()["auto"].toBool();
+}
+
 
 void CameraControl::control_updated(const Imager::Control& changed_control)
 {
@@ -181,6 +195,7 @@ DPTR_IMPL(CameraControlsWidget)
   bool hasSelection() const;
   QString currentSelection() const;
   void loadToImager(const QVariantMap &presets);
+  QVariantMap currentPresets() const;
 };
 
 
@@ -200,16 +215,17 @@ CameraControlsWidget::CameraControlsWidget(Imager *imager, const Configuration::
   d->reloadPresets();
   connect(d->ui->presets, F_PTR(QComboBox, currentIndexChanged, int), this, bind(&Private::selectionChanged, d.get()));
   
-  auto addPresetAction = [this](auto action, auto slot) {
+  auto addPresetAction = [this](auto action, auto slot, auto signal) {
     d->ui->presetsButton->menu()->addAction(action);
-    connect(action, &QAction::triggered, this, slot);
+    connect(action, signal, this, slot);
   };
-  addPresetAction(d->ui->actionLoad_selected_preset, bind(&Private::loadMenuPreset, d.get()));
-  addPresetAction(d->ui->actionSave_current_settings_as_presets, bind(&Private::saveMenuPreset, d.get()));
-  addPresetAction(d->ui->actionRemove_selected_preset, bind(&Private::removeSelectedPreset, d.get()));
-  addPresetAction(d->ui->actionLoad_settings_from_file, bind(&Private::loadPresetFromFile, d.get()));
-  addPresetAction(d->ui->actionSave_settings_to_file, bind(&Private::savePresetToFile, d.get()));
-  
+  d->ui->actionShow_only_presets_for_this_camera->setChecked(d->configuration->filter_presets_by_camera());
+  addPresetAction(d->ui->actionLoad_selected_preset, bind(&Private::loadMenuPreset, d.get()), &QAction::triggered);
+  addPresetAction(d->ui->actionSave_current_settings_as_presets, bind(&Private::saveMenuPreset, d.get()), &QAction::triggered);
+  addPresetAction(d->ui->actionRemove_selected_preset, bind(&Private::removeSelectedPreset, d.get()), &QAction::triggered);
+  addPresetAction(d->ui->actionLoad_settings_from_file, bind(&Private::loadPresetFromFile, d.get()), &QAction::triggered);
+  addPresetAction(d->ui->actionSave_settings_to_file, bind(&Private::savePresetToFile, d.get()), &QAction::triggered);
+  addPresetAction(d->ui->actionShow_only_presets_for_this_camera, [this](bool c) { d->configuration->set_filter_presets_by_camera(c); d->reloadPresets(); }, &QAction::toggled);
   
   auto grid = new QGridLayout(d->ui->controls_box);
   int row = 0;
@@ -243,9 +259,7 @@ void CameraControlsWidget::Private::saveMenuPreset()
   auto name = QInputDialog::getText(q, tr("Save preset as..."), tr("Enter preset name to save current controls") );
   if(name.isEmpty())
     return;
-  auto controls = imager->export_controls();
-  qDebug() << "Exporting controls: " << controls;
-  configuration->add_preset(name, QVariantMap{{"controls", controls}});
+  configuration->add_preset(name, currentPresets());
   reloadPresets();
   qDebug() << "Reloading control: " << configuration->load_preset(name);
 }
@@ -272,6 +286,8 @@ void CameraControlsWidget::Private::loadPresetFromFile()
 
 void CameraControlsWidget::Private::loadToImager(const QVariantMap& presets)
 {
+  for(auto controlWidget: control_widgets)
+    controlWidget->importing(presets["controls"].toList());
   QMetaObject::invokeMethod(imager, "import_controls", Qt::QueuedConnection, Q_ARG(QVariantList, presets["controls"].toList()));
 }
 
@@ -284,19 +300,25 @@ void CameraControlsWidget::Private::savePresetToFile()
     return;
   configuration->set_last_controls_folder(QFileInfo{filename}.dir().canonicalPath());
   
-  QVariantMap json_map;
-  json_map["controls"] = imager->export_controls();
   QFile file{filename};
   file.open(QIODevice::WriteOnly);
-  file.write(QJsonDocument::fromVariant(json_map).toJson());
-  
+  file.write(QJsonDocument::fromVariant(currentPresets()).toJson());
   configuration->add_last_control_file(filename);
-  
 }
+
+QVariantMap CameraControlsWidget::Private::currentPresets() const
+{
+  return {{"camera", imager->name()}, {"controls", imager->export_controls()}};
+}
+
 
 void CameraControlsWidget::Private::reloadPresets()
 {
-  presetsModel->setStringList(configuration->list_presets());
+  auto presets = configuration->list_presets();
+  if(configuration->filter_presets_by_camera()) {
+    presets.erase(remove_if(begin(presets), end(presets), [this](const QString &preset) { return configuration->load_preset(preset)["camera"] != imager->name(); }), presets.end());
+  }
+  presetsModel->setStringList(presets);
   selectionChanged();
 }
 

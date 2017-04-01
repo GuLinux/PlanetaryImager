@@ -154,6 +154,7 @@ define_setting(server_jpeg_quality, int, 85)
 define_setting(timelapse_mode, bool, false)
 define_setting(timelapse_msecs, qlonglong, 1000)
 
+define_setting(filter_presets_by_camera, bool, true)
 
 QString Configuration::savefile() const
 {
@@ -187,6 +188,7 @@ QStringList Configuration::last_control_files() const
 
 void Configuration::add_preset(const QString& name, const QVariantMap& preset)
 {
+  remove_preset(name);
   d->settings->setValue("presets", list_presets() << name);
   auto presetFile = d->openProfile(name, QFile::WriteOnly);
   presetFile->write(QJsonDocument::fromVariant(preset).toJson());
@@ -194,7 +196,14 @@ void Configuration::add_preset(const QString& name, const QVariantMap& preset)
 
 QStringList Configuration::list_presets() const
 {
-  return d->settings->value("presets").toStringList();
+  auto presets = d->settings->value("presets").toStringList();
+  QStringList existingPresets;
+  for(auto preset: presets) {
+    if(d->openProfile(preset, QFile::NotOpen)->exists()) {
+      existingPresets << preset;
+    }
+  }
+  return existingPresets;
 }
 
 QVariantMap Configuration::load_preset(const QString &name) const

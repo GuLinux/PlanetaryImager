@@ -190,6 +190,14 @@
     <string>Save settings to file...</string>
    </property>
   </action>
+  <action name="actionShow_only_presets_for_this_camera">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Show only presets for this camera</string>
+   </property>
+  </action>
  </widget>
  <resources/>
  <connections/>
