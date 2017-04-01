@@ -106,14 +106,25 @@ public:
     
     declare_setting(filter_presets_by_camera, bool)
     
-    QStringList last_control_files() const;
-    QString savefile() const;
+    struct Preset {
+      QString path;
+      QString name;
+      typedef QList<Preset> List;
+      bool isValid() const;
+      bool isFor(const QString &camera) const;
+      QString camera() const;
+      QVariantMap load() const;
+      void save(const QVariantMap &presets);
+    };
     
-    void add_preset(const QString &name, const QVariantMap &preset);
-    QStringList list_presets() const;
-    QVariantMap load_preset(const QString &name) const;
+    QStringList last_control_files() const;
+    
+    void add_preset(const QString &name, const QVariantMap &presetValues);
+    Preset::List list_presets() const;
+    Preset load_preset(const QString &name) const;
     void remove_preset(const QString &name);
     
+    QString savefile() const;
 public slots:
     void add_last_control_file(const QString &file);
 signals:
