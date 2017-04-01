@@ -104,6 +104,8 @@ public:
     declare_setting(timelapse_mode, bool)
     declare_setting(timelapse_msecs, qlonglong)
     
+    declare_setting(filter_presets_by_camera, bool)
+    
     QStringList last_control_files() const;
     QString savefile() const;
     
