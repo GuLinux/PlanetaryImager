@@ -1,0 +1,18 @@
+
+cat >&2 <<EOF
+You need to copy the MacOSX10.11.sdk.tar.xz into this folder to get the cross compiler working.
+Instructions:
+Download xcode fron https://developer.apple.com/download/more/, choosing version 7.3
+    git clone https://github.com/tpoechtrager/osxcross
+    ./tools/gen_sdk_package_darling_dmg.sh Xcode_7.3.dmg
+EOF
+
+
+cat <<EOF
+FROM ubuntu:16.04
+RUN apt-get update && apt-get install -y git build-essential cmake clang wget && \
+    git clone https://github.com/tpoechtrager/osxcross
+ENV PATH=/osxcross/target/bin:\${PATH} CC=o64-clang CXX=o64-clang++ MACOSX_DEPLOYMENT_TARGET=10.7 UNATTENDED=1
+RUN osxcross-macports install qt56-qtbase opencv libusb cmake
+COPY MacOSX10.11.sdk.tar.xz /osxcross/tarballs/
+EOF
