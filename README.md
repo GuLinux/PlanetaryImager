@@ -52,6 +52,14 @@ If not, please try binary releases first.
     cmake .. -DCMAKE_INSTALL_PREFIX=/usr
     make all && sudo make install
     
+Uninstall
+---------
+
+If you installed PlanetaryImager from a precompiled package, just use your package manager to remove it.
+
+If you installed PlanetaryImager from sources, just go to the source directory where you compiled it, and run the folowing:
+```cat install_manifest.txt  | while read file; do [[ -r $file ]] && ! [[ -d $file ]] && sudo rm -f $file; done```
+    
 Windows version
 ---------------
 
