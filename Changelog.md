@@ -1,13 +1,16 @@
-## 0.7.0 201x-xx-xx
+## 0.7.0 2017-xx-xx
  - feature: adding channel selection to histogram
  - feature: display histogram statistics for clipping detection
- - feature: adding profiles import and export, both in settings and to filesystem
+ - feature: adding camera controls presets
+ - feature: import camera controls from previous recordings
  - feature: daemon mode: adding daemon and frontend executables for remote control.
  - feature: adding timelapse mode
+ - feature: night mode
  - feature: adding new formats for saving: FITS images, and PNG
  - feature: statusbar indicator of time elapsed/left for long exposures
+ - feature: Windows and OSX versions (see README)
  - bugfix: ASI: better handling of exposure timeout
- - updated ASI SDK version (v0.6.0110)
+ - updated ASI SDK version (Linux/OSX: v0.6.0328, Windows: 1.13.0.10)
  
 ## 0.6.2 2016-10-30
  - Fix ASI ROI validation, particularly with USB2 cameras
