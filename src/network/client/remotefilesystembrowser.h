@@ -28,6 +28,8 @@ class RemoteFilesystemBrowser : public FilesystemBrowser
 public:
   RemoteFilesystemBrowser(const NetworkDispatcher::ptr &dispatcher);
   ~RemoteFilesystemBrowser();
+  bool isLocal() const override { return false; }
+public slots:
   void pickDirectory(const QString currentDirectory) const override;
 private:
   DPTR

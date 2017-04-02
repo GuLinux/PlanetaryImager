@@ -27,6 +27,7 @@ class FilesystemBrowser : public QObject
   Q_OBJECT
 public:
   typedef std::shared_ptr<FilesystemBrowser> ptr;
+  virtual bool isLocal() const = 0;
 public slots:
   virtual void pickDirectory(const QString currentDirectory = {}) const = 0;
 signals:

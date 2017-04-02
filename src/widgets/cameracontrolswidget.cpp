@@ -184,7 +184,8 @@ DPTR_IMPL(CameraControlsWidget)
   unique_ptr<QStringListModel> presetsModel;
   CameraControlsWidget *q;
   list<CameraControl *> control_widgets;
-  QMenu *loadRecentMenu;
+  QMenu *recentPresetsMenu = nullptr;
+  QMenu *recentRecordingsMenu = nullptr;
   void controls_changed();
   void loadMenuPreset();
   void saveMenuPreset();
@@ -198,7 +199,9 @@ DPTR_IMPL(CameraControlsWidget)
   QString currentSelection() const;
   void loadToImager(const Configuration::Preset &preset);
   QVariantMap currentPresets() const;
-  void reloadRecentlyUsed();
+  void reloadRecentlyUsedPresets();
+  void reloadRecentRecordings();
+  void reloadRecentFilesMenu(QMenu *menu, const QStringList &files);
 };
 
 
@@ -209,7 +212,7 @@ CameraControlsWidget::~CameraControlsWidget()
 
 
 
-CameraControlsWidget::CameraControlsWidget(Imager *imager, const Configuration::ptr &configuration, QWidget *parent)
+CameraControlsWidget::CameraControlsWidget(Imager *imager, const Configuration::ptr &configuration, const FilesystemBrowser::ptr &filesystemBrowser, QWidget *parent)
 : QWidget{parent}, dptr(imager, configuration, make_unique<Ui::CameraControlsWidget>(), make_unique<QStringListModel>(), this)
 {
   d->ui->setupUi(this);
@@ -222,22 +225,27 @@ CameraControlsWidget::CameraControlsWidget(Imager *imager, const Configuration::
     d->ui->presetsButton->menu()->addAction(action);
     connect(action, signal, this, slot);
   };
-  d->loadRecentMenu = new QMenu(tr("Recently used"), this);
+  d->recentPresetsMenu = new QMenu(tr("Recently used presets"), this);
   d->ui->actionShow_only_presets_for_this_camera->setChecked(d->configuration->filter_presets_by_camera());
   addPresetAction(d->ui->actionLoad_selected_preset, bind(&Private::loadMenuPreset, d.get()), &QAction::triggered);
   addPresetAction(d->ui->actionSave_current_settings_as_presets, bind(&Private::saveMenuPreset, d.get()), &QAction::triggered);
   addPresetAction(d->ui->actionRemove_selected_preset, bind(&Private::removeSelectedPreset, d.get()), &QAction::triggered);
   addPresetAction(d->ui->actionLoad_settings_from_file, bind(&Private::pickPresetFromFile, d.get()), &QAction::triggered);
-  d->ui->presetsButton->menu()->addMenu(d->loadRecentMenu);
+  d->ui->presetsButton->menu()->addMenu(d->recentPresetsMenu);
+  if(filesystemBrowser->isLocal()) {
+    d->ui->presetsButton->menu()->addMenu(d->recentRecordingsMenu = new QMenu(tr("Recent recordings"), this));
+    connect(d->configuration.get(), &Configuration::recording_presets_changed, this, bind(&Private::reloadRecentRecordings, d.get()));
+    d->reloadRecentRecordings();
+  }
   addPresetAction(d->ui->actionSave_settings_to_file, bind(&Private::savePresetToFile, d.get()), &QAction::triggered);
   addPresetAction(d->ui->actionShow_only_presets_for_this_camera, [this](bool c) {
     d->configuration->set_filter_presets_by_camera(c);
     d->reloadPresets();
-    d->reloadRecentlyUsed();
+    d->reloadRecentlyUsedPresets();
   }, &QAction::toggled);
   
-  connect(d->configuration.get(), &Configuration::last_control_files_changed, this, bind(&Private::reloadRecentlyUsed, d.get()));
-  d->reloadRecentlyUsed();
+  connect(d->configuration.get(), &Configuration::presets_changed, this, bind(&Private::reloadRecentlyUsedPresets, d.get()));
+  d->reloadRecentlyUsedPresets();
   
   auto grid = new QGridLayout(d->ui->controls_box);
   int row = 0;
@@ -294,7 +302,7 @@ void CameraControlsWidget::Private::pickPresetFromFile()
 void CameraControlsWidget::Private::loadPresetFromFile(const QString& filename)
 {  
   loadToImager(Configuration::Preset{filename});
-  configuration->add_last_control_file(filename);
+  configuration->preset_saved(filename);
 }
 
 
@@ -318,7 +326,7 @@ void CameraControlsWidget::Private::savePresetToFile()
   QFile file{filename};
   file.open(QIODevice::WriteOnly);
   file.write(QJsonDocument::fromVariant(currentPresets()).toJson());
-  configuration->add_last_control_file(filename);
+  configuration->preset_saved(filename);
 }
 
 QVariantMap CameraControlsWidget::Private::currentPresets() const
@@ -366,15 +374,30 @@ void CameraControlsWidget::Private::controls_changed()
   ui->restore->setEnabled(any_changed);
 }
 
-void CameraControlsWidget::Private::reloadRecentlyUsed()
+void CameraControlsWidget::Private::reloadRecentlyUsedPresets()
 {
-  loadRecentMenu->clear();
-  for(auto recentFile: configuration->last_control_files()) {
+  reloadRecentFilesMenu(recentPresetsMenu, configuration->latest_exported_presets());
+}
+
+void CameraControlsWidget::Private::reloadRecentRecordings()
+{
+  reloadRecentFilesMenu(recentRecordingsMenu, configuration->latest_recording_presets());
+}
+
+
+void CameraControlsWidget::Private::reloadRecentFilesMenu(QMenu* menu, const QStringList &files)
+{
+  if(!menu)
+    return;
+  menu->clear();
+  size_t items_loaded = 0;
+  for(auto recentFile: files) {
     if(configuration->filter_presets_by_camera() && not Configuration::Preset{recentFile}.isFor(imager->name()))
       continue;
-    connect(loadRecentMenu->addAction(recentFile), &QAction::triggered, q, bind(&Private::loadPresetFromFile, this, recentFile));
-    qDebug() << "RECENT: " <<recentFile;
+      connect(menu->addAction(recentFile), &QAction::triggered, q, bind(&Private::loadPresetFromFile, this, recentFile));
+      ++items_loaded;
   }
+  menu->setEnabled(items_loaded > 0);
 }
 
 

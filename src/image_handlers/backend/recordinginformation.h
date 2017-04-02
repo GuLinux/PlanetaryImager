@@ -38,7 +38,7 @@ public:
   ~RecordingInformation();
   void set_writer(const Writer::ptr &writer);
   void set_ended(int total_frames, int width, int height, uint8_t bpp, uint8_t channels);
-  static Writer::ptr json(const QString &file_base_name);
+  static Writer::ptr json(const QString &file_base_name, const Configuration::ptr &configuration);
   static Writer::ptr txt(const QString &file_base_name);
   static Writer::ptr composite(const QList<Writer::ptr> &writers);
 private:

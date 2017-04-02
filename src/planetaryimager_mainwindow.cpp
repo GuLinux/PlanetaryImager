@@ -64,6 +64,7 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   Driver::ptr driver;
   SaveImages::ptr saveImages;
   Configuration::ptr configuration;
+  FilesystemBrowser::ptr filesystemBrowser;
   unique_ptr<QThread> displayImageThread;
   unique_ptr<QThread> imagerThread;
 
@@ -81,7 +82,7 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   CameraInfoWidget* cameraInfoWidget = nullptr;
   HistogramWidget *histogramWidget = nullptr;
   ConfigurationDialog *configurationDialog;
-    
+  
   RecordingPanel* recording_panel;
   ExposureTimer exposure_timer;
   
@@ -158,7 +159,7 @@ void PlanetaryImagerMainWindow::Private::saveState()
 
 
 PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, const SaveImages::ptr &save_images, const Configuration::ptr &configuration, const FilesystemBrowser::ptr &filesystemBrowser, QWidget* parent, Qt::WindowFlags flags)
-  : QMainWindow(parent, flags), dptr(driver, save_images, configuration, make_unique<QThread>(), make_unique<QThread>())
+: QMainWindow(parent, flags), dptr(driver, save_images, configuration, filesystemBrowser, make_unique<QThread>(), make_unique<QThread>())
 {
     Private::q = this;
     d->ui.reset(new Ui::PlanetaryImagerMainWindow);
@@ -388,7 +389,7 @@ void PlanetaryImagerMainWindow::Private::onImagerInitialized(Imager * imager)
     connect(imager, &Imager::fps, statusbar_info_widget, &StatusBarInfoWidget::captureFPS, Qt::QueuedConnection);
     connect(imager, &Imager::temperature, statusbar_info_widget, bind(&StatusBarInfoWidget::temperature, statusbar_info_widget, _1, false), Qt::QueuedConnection);
 
-    ui->settings_container->setWidget(cameraSettingsWidget = new CameraControlsWidget(imager, configuration));
+    ui->settings_container->setWidget(cameraSettingsWidget = new CameraControlsWidget(imager, configuration, filesystemBrowser));
     ui->chipInfoWidget->setWidget(cameraInfoWidget = new CameraInfoWidget(imager));
     enableUIWidgets(true);
     ui->actionSelect_ROI->setEnabled(imager->supports(Imager::ROI));
