@@ -27,5 +27,5 @@ install(FILES
   /mxe/usr/x86_64-w64-mingw32.shared/qt5/bin/Qt5Widgets.dll
   /mxe/usr/x86_64-w64-mingw32.shared/bin/zlib1.dll
 DESTINATION .)
-file(GLOB QT_PLUGINS /mxe/usr/x86_64-w64-mingw32.shared/qt5/plugins)
+file(GLOB QT_PLUGINS /mxe/usr/x86_64-w64-mingw32.shared/qt5/plugins/*)
 install(DIRECTORY ${QT_PLUGINS} DESTINATION .)

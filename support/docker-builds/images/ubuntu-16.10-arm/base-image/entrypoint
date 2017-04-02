@@ -1,2 +1,0 @@
-#!/usr/bin/qemu-arm-static /bin/bash
-"$@"
