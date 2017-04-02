@@ -36,7 +36,7 @@ DPTR_IMPL(NetworkServer) {
   ImageHandler::ptr handler;
   NetworkDispatcher::ptr dispatcher;
   FramesForwarder::ptr framesForwarder;
-  QTcpServer server;
+  unique_ptr<QTcpServer> server;
   DriverForwarder::ptr forwarder;
   FilesystemForwarder::ptr filesystemForwarder;
   void new_connection();
@@ -47,11 +47,11 @@ DPTR_IMPL(NetworkServer) {
 };
 
 NetworkServer::NetworkServer(const Driver::ptr &driver, const ImageHandler::ptr &handler, const NetworkDispatcher::ptr &dispatcher, const SaveFileForwarder::ptr &save_file, const FramesForwarder::ptr &framesForwarder, QObject* parent)
-  : QObject{parent}, NetworkReceiver{dispatcher}, dptr(this, driver, handler, dispatcher, framesForwarder)
+  : QObject{parent}, NetworkReceiver{dispatcher}, dptr(this, driver, handler, dispatcher, framesForwarder, make_unique<QTcpServer>())
 {
-  d->server.setMaxPendingConnections(1);
+  d->server->setMaxPendingConnections(1);
   d->filesystemForwarder = make_shared<FilesystemForwarder>(dispatcher);
-  connect(&d->server, &QTcpServer::newConnection, bind(&Private::new_connection, d.get()));
+  connect(d->server.get(), &QTcpServer::newConnection, bind(&Private::new_connection, d.get()));
   d->forwarder = make_shared<DriverForwarder>(dispatcher, driver, handler, [save_file](Imager *imager) { save_file->setImager(imager); });
   register_handler(NetworkProtocol::Hello, [this](const NetworkPacket::ptr &p){
     DriverProtocol::setFormatParameters(NetworkProtocol::decodeHello(p));
@@ -73,12 +73,12 @@ NetworkServer::~NetworkServer()
 
 void NetworkServer::listen(const QString& address, int port)
 {
-  d->server.listen(QHostAddress{address}, port);
+  d->server->listen(QHostAddress{address}, port);
 }
 
 void NetworkServer::Private::new_connection()
 {
-  auto socket = server.nextPendingConnection();
+  auto socket = server->nextPendingConnection();
   QObject::connect(socket, &QTcpSocket::disconnected, q, [this, socket] {
     qDebug() << "Client disconnected";
     dispatcher->setSocket(nullptr);
@@ -89,11 +89,14 @@ void NetworkServer::Private::new_connection()
   q->wait_for_processed(NetworkProtocol::Hello);
 }
 
+namespace {
+    double to_kb(uint64_t size) { return static_cast<double>(size) / 1024.; }
+    double to_mb(uint64_t size) { return to_kb(size) / 1024.; }
+    double to_secs(qint64 msecs){ return static_cast<double>(msecs)/ 1000.; }
+}
+
 void NetworkServer::Private::bytes_sent(quint64 written, quint64 sent)
 {
-    static auto to_kb = [](uint64_t size) -> double { return static_cast<double>(size) / 1024.; };
-    static auto to_mb = [to_kb](uint64_t size) { return to_kb(size) / 1024.; };
-    static auto to_secs = [](qint64 msecs){ return static_cast<double>(msecs)/ 1000.; };
     qDebug() << "written: %1 MB, sent: %2 MB, cached: %3 MB, rate: %4 MB/sec"_q
       % to_mb(written) % to_mb(sent) % to_mb(written - sent) % ( to_mb(sent - last_sent) / to_secs(elapsed.elapsed()) );
     elapsed.restart();
