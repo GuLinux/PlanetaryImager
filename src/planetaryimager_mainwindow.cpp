@@ -65,7 +65,6 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   SaveImages::ptr saveImages;
   Configuration::ptr configuration;
   FilesystemBrowser::ptr filesystemBrowser;
-  unique_ptr<QThread> displayImageThread;
   unique_ptr<QThread> imagerThread;
 
   
@@ -149,6 +148,7 @@ PlanetaryImagerMainWindow::~PlanetaryImagerMainWindow()
   }
   d->imagerThread->quit();
   d->imagerThread->wait();
+  d->displayImage->quit();
 }
 
 void PlanetaryImagerMainWindow::Private::saveState()
@@ -159,7 +159,7 @@ void PlanetaryImagerMainWindow::Private::saveState()
 
 
 PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, const SaveImages::ptr &save_images, const Configuration::ptr &configuration, const FilesystemBrowser::ptr &filesystemBrowser, QWidget* parent, Qt::WindowFlags flags)
-: QMainWindow(parent, flags), dptr(driver, save_images, configuration, filesystemBrowser, make_unique<QThread>(), make_unique<QThread>())
+: QMainWindow(parent, flags), dptr(driver, save_images, configuration, filesystemBrowser, make_unique<QThread>())
 {
     Private::q = this;
     d->ui.reset(new Ui::PlanetaryImagerMainWindow);
@@ -272,21 +272,10 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
     connect(d->ui->actionQuit, &QAction::triggered, this, &PlanetaryImagerMainWindow::quit);
     d->enableUIWidgets(false);
 
-    d->saveImages->moveToThread(d->displayImageThread.get());
-    connect(d->displayImageThread.get(), &QThread::started, bind(&DisplayImage::create_qimages, d->displayImage));
-    d->displayImageThread->start();
+    QtConcurrent::run(bind(&DisplayImage::create_qimages, d->displayImage));
     d->imagerThread->start();
-    connect(qApp, &QApplication::aboutToQuit, this, [=]{
-      if(d->imager)
-        d->imager->destroy();
-    }, Qt::QueuedConnection);
-    connect(qApp, &QApplication::aboutToQuit, this, [&] {
-      d->displayImage->quit();
-      d->displayImageThread->quit();
-      d->displayImageThread->wait();
-      d->imagerThread->quit();
-      d->imagerThread->wait();
-    });
+
+
     connect(d->ui->actionEdges_Detection, &QAction::toggled, [=](bool detect){
       d->displayImage->detectEdges(detect);
     });
