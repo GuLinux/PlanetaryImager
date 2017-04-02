@@ -16,7 +16,7 @@ DEBIAN_FRONTEND=noninteractive DEBCONF_NONINTERACTIVE_SEEN=true \
 rm -rf $root/debootstrap
 
 cat >"$root"/etc/apt/sources.list <<EOF
-deb http://ports.ubuntu.com/ubuntu-ports xenial main restricted universe multiverse
+deb http://ports.ubuntu.com/ubuntu-ports ${RELEASE} main restricted universe multiverse
 EOF
 
 mkdir -p /target/base-image
