@@ -117,7 +117,8 @@ public:
       void save(const QVariantMap &presets);
     };
     
-    QStringList last_control_files() const;
+    QStringList latest_exported_presets() const;
+    QStringList latest_recording_presets() const;
     
     void add_preset(const QString &name, const QVariantMap &presetValues);
     Preset::List list_presets() const;
@@ -126,9 +127,11 @@ public:
     
     QString savefile() const;
 public slots:
-    void add_last_control_file(const QString &file);
+    void preset_saved(const QString &file);
+    void recording_preset_saved(const QString &file);
 signals:
-  void last_control_files_changed();
+  void presets_changed();
+  void recording_presets_changed();
 private:
     DPTR
 };

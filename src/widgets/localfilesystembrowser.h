@@ -28,6 +28,8 @@ class LocalFilesystemBrowser : public FilesystemBrowser
 public:
   LocalFilesystemBrowser(QObject *parent = nullptr);
   ~LocalFilesystemBrowser();
+  bool isLocal() const override { return true; }
+public slots:
   void pickDirectory(const QString currentDirectory = {}) const override;
 private:
   DPTR

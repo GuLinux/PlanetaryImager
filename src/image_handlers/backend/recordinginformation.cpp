@@ -24,6 +24,7 @@
 #include <QJsonDocument>
 #include "commons/configuration.h"
 #include <QFile>
+#include "Qt/strings.h"
 
 using namespace std;
 
@@ -74,10 +75,12 @@ RecordingInformation::~RecordingInformation()
 namespace {
   class JSONRecordingInformationWriter : public RecordingInformation::Writer {
   public:
-    JSONRecordingInformationWriter(const QString &file_base_name);
+    JSONRecordingInformationWriter(const QString &file_base_name, const Configuration::ptr &configuration);
     virtual void write(const QVariantMap &information);
+    ~JSONRecordingInformationWriter();
   private:
     const QString file_base_name;
+    Configuration::ptr configuration;
   };
   
   class TXTRecordingInformationWriter : public RecordingInformation::Writer {
@@ -122,7 +125,8 @@ namespace {
   }
 }
 
-JSONRecordingInformationWriter::JSONRecordingInformationWriter(const QString &file_base_name) : file_base_name{file_base_name} {
+JSONRecordingInformationWriter::JSONRecordingInformationWriter(const QString &file_base_name, const Configuration::ptr &configuration) 
+  : file_base_name{file_base_name}, configuration{configuration} {
 }
 
 void JSONRecordingInformationWriter::write(const QVariantMap &information) {
@@ -130,6 +134,9 @@ void JSONRecordingInformationWriter::write(const QVariantMap &information) {
   write_recording_info_to_file(file_base_name, "json", json.toJson(QJsonDocument::Indented));
 }
 
+JSONRecordingInformationWriter::~JSONRecordingInformationWriter() {
+  QMetaObject::invokeMethod(configuration.get(), "recording_preset_saved", Q_ARG(QString, "%1.json"_q % file_base_name));
+}
 
 TXTRecordingInformationWriter::TXTRecordingInformationWriter(const QString &file_base_name) : file_base_name{file_base_name} {
 }
@@ -153,9 +160,9 @@ void CompositeRecordingInformationWriter::write(const QVariantMap &information) 
 
 
 
-RecordingInformation::Writer::ptr RecordingInformation::json(const QString& file_base_name)
+RecordingInformation::Writer::ptr RecordingInformation::json(const QString& file_base_name, const Configuration::ptr &configuration)
 {
-  return make_shared<JSONRecordingInformationWriter>(file_base_name);
+  return make_shared<JSONRecordingInformationWriter>(file_base_name, configuration);
 }
 
 RecordingInformation::Writer::ptr RecordingInformation::txt(const QString& file_base_name)

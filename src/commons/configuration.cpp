@@ -39,6 +39,9 @@ DPTR_IMPL(Configuration) {
   mutable QHash<QString, QVariant> values_cache;
   QDir profilesPath;
   QString presetPath(const QString &name) const;
+  
+  QStringList latest_presets(const QString &configName);
+  void preset_added(const QString &path, const QString &configName);
 };
 
 const int Configuration::DefaultServerPort = 19232;
@@ -173,21 +176,44 @@ QString Configuration::savefile() const
     ;
 }
 
-void Configuration::add_last_control_file(const QString& file)
+void Configuration::preset_saved(const QString& file)
 {
-  QStringList saved = d->settings->value("last_control_files").toStringList().mid(0, 20);
-  saved.removeAll(file);
-  saved.push_front(file);
-  d->settings->setValue("last_control_files", saved);
-  emit last_control_files_changed();
+  d->preset_added(file, "latest_preset_files");
+  emit presets_changed();
 }
 
-QStringList Configuration::last_control_files() const
+void Configuration::recording_preset_saved(const QString& file)
 {
-  auto controlFiles = d->settings->value("last_control_files").toStringList();
+  d->preset_added(file, "latest_recording_files");
+  emit recording_presets_changed();
+}
+
+void Configuration::Private::preset_added(const QString& path, const QString& configName)
+{
+  QStringList saved = settings->value(configName).toStringList().mid(0, 20);
+  saved.removeAll(path);
+  saved.push_front(path);
+  settings->setValue(configName, saved);
+}
+
+
+QStringList Configuration::latest_exported_presets() const
+{
+  return d->latest_presets("latest_preset_files");
+}
+
+QStringList Configuration::latest_recording_presets() const
+{
+  return d->latest_presets("latest_recording_files");
+}
+
+QStringList Configuration::Private::latest_presets(const QString& configName)
+{
+  auto controlFiles = settings->value(configName).toStringList();
   controlFiles.erase(remove_if(begin(controlFiles), end(controlFiles), [](const QString &f) { return !QFile::exists(f); }), controlFiles.end());
   return controlFiles.mid(0, 10);
 }
+
 
 void Configuration::add_preset(const QString& name, const QVariantMap& presetValues)
 {

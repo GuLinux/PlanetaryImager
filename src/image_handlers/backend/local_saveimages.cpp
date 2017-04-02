@@ -66,6 +66,7 @@ struct RecordingParameters {
   int64_t max_size;
   bool timelapse;
   qlonglong timelapse_msecs;
+  Configuration::ptr configuration;
   RecordingInformation::Writer::ptr recording_information_writer(const FileWriter::Ptr &file_writer) const;
 };
 
@@ -74,7 +75,7 @@ RecordingInformation::Writer::ptr RecordingParameters::recording_information_wri
   if(write_txt_info)
     writers.push_back(RecordingInformation::txt(file_writer->filename()));
   if(write_json_info)
-    writers.push_back(RecordingInformation::json(file_writer->filename()));
+    writers.push_back(RecordingInformation::json(file_writer->filename(), configuration));
   return RecordingInformation::composite(writers);
 }
 
@@ -275,7 +276,8 @@ void LocalSaveImages::startRecording(Imager *imager)
       d->configuration->save_json_info_file(),
       0,
       d->configuration->timelapse_mode(),
-      d->configuration->timelapse_msecs()
+      d->configuration->timelapse_msecs(),
+      d->configuration
     };    
     QMetaObject::invokeMethod(d->worker, "start", Q_ARG(RecordingParameters, recording), Q_ARG(qlonglong, d->configuration->max_memory_usage() ));    
   }
