@@ -67,10 +67,12 @@ To get a working version, please follow these instructions:
 
  * Install homebrew, following instructions on their website
  * Run the following command to install dependencies:
+ 
     ```brew install git cmake qt5 cfitsio ccfits opencv3 boost```
  * clone the repository (follow the instruction in the "Source download" section)
  * compile (follow instructions in "Compile Howto")
-   * When running cmake, be sure to add the following directive (change Qt version if needed):
+   * When running cmake, be sure to add the following directive (change Qt version if needed)
+   
      ```-DCMAKE_PREFIX_PATH=/usr/local/Cellar/qt5/5.8.0_1```
  * run `planetary_imager` from your command line
  
