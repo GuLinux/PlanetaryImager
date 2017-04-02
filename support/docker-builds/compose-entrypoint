@@ -11,9 +11,10 @@ ${CMAKE_BIN} /code \
           ${CMAKE_EXTRA_OPTIONS} ${CMAKE_OVERRIDE_OPTIONS} && \
           make ${MAKE_OPTS} && make package
 had_errors=$?
-set +x
-if [[ $had_errors != 0 ]]; then
-    echo "Error on container execution; please touch the file /tmp/on_error_handler to continue: "
-    echo "docker exec -it $(hostname) touch /tmp/on_error_handler"
-    while ! [[ -r /tmp/on_error_handler ]]; do sleep 1; done
-fi
+#set +x
+# if [[ $had_errors != 0 ]]; then
+#     echo "Error on container execution; please touch the file /tmp/on_error_handler to continue: "
+#     echo "docker exec -it $(hostname) touch /tmp/on_error_handler"
+#     while ! [[ -r /tmp/on_error_handler ]]; do sleep 1; done
+# fi
+exit $had_errors

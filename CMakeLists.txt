@@ -71,10 +71,7 @@ set(FULL_VERSION ${MAJOR_VERSION}.${MINOR_VERSION}.${PATCH_VERSION}${PACKAGE_VER
  message("Detected architecture: ${PlanetaryImager_ARCH}")
 SET(EXTRA_LIBRARIES "" CACHE STRING "Extra libraries for linking")
 
-
-
 install(FILES README.md Changelog.md DESTINATION share/doc/PlanetaryImager)
-
 
 set(CMAKE_INCLUDE_EXT_FILE CACHE INTERNAL "Per-environment include file")
 if(CMAKE_INCLUDE_EXT_FILE)
