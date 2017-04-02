@@ -1,4 +1,2 @@
-export CMAKE_BUILD_TYPE=RelWithDebInfo
 export PACKAGE_NAME_SUFFIX=_debian-${DEBIAN_VERSION}
 export COMPOSE_IMAGE=gulinux/planetaryimager_build:debian-${DEBIAN_VERSION}-${TARGET_ARCH}
-export PACKAGE_VERSION_SUFFIX=

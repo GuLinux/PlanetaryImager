@@ -1,4 +1,2 @@
-export CMAKE_BUILD_TYPE=Debug
 export PACKAGE_NAME_SUFFIX=_ubuntu-${UBUNTU_VERSION}
 export COMPOSE_IMAGE=gulinux/planetaryimager_build:ubuntu-${UBUNTU_VERSION}-${TARGET_ARCH}
-export PACKAGE_VERSION_SUFFIX=-${DAILY_TAG}
