@@ -59,7 +59,10 @@ If you installed PlanetaryImager from a precompiled package, just use your packa
 
 If you installed PlanetaryImager from sources, just go to the source directory where you compiled it, and run the folowing:
 ```cat install_manifest.txt  | while read file; do [[ -r $file ]] && ! [[ -d $file ]] && sudo rm -f $file; done```
-    
+
+When compiling from sources, it is often advised to uninstall the previous version before installing the new one.
+
+
 Windows version
 ---------------
 
