@@ -13,7 +13,7 @@ Useful Links
 Supported Cameras
 -----------------
 
-Mainly ZWO ASI Cameras (my camera is an ASI178mm), v4l2 (including DMK and Celestron Skyris) and QHY
+Mainly ZWO ASI Cameras (my camera is an ASI178mm), v4l2 (including DMK and Celestron Skyris) and QHY (see footnotes)
 
 
 Requirements
@@ -75,6 +75,18 @@ To get a working version, please follow these instructions:
    
      ```-DCMAKE_PREFIX_PATH=/usr/local/Cellar/qt5/5.8.0_1```
  * run `planetary_imager` from your command line
+ 
+ QHY Cameras support
+ -------------------
+ 
+This application was initially developed around QHY drivers, so this was obviously the first supported camera type.
+Unfortunately, QHY SDK was always very unreliable, the current version is apparently not anymore actively maintained, and the new official support for Linux/OSX users is to sign a NDA agreement, and study the low level protocol.
+ 
+Since I don't have  a QHY camera anymore (this unreliability was one of the main reasons for me to switch to ZWO) and neither the time to read low level USB protocol, it is very likely that QHY cameras aren't going to be really well supported in the future, possibly not supported at all.
+
+For now, the old driver is still in the source tree, but disabled from the default compilation due to linking errors.
+To enable it, please compile PlanetaryImager from sources, adding to cmake the parameter `-DBUILD_DRIVER_qhy=On`.
+ 
  
 Credits
 -------
