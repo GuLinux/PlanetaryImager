@@ -28,30 +28,31 @@ using namespace std;
 
 DPTR_IMPL(NetworkClient) {
   NetworkDispatcher::ptr dispatcher;
-  QTcpSocket socket;
+  unique_ptr<QTcpSocket> socket;
   bool imager_is_running = false;
   NetworkPacket::ptr helloPacket;
 };
 
-NetworkClient::NetworkClient(const NetworkDispatcher::ptr &dispatcher, QObject *parent) : QObject{parent}, NetworkReceiver{dispatcher}, dptr(dispatcher)
+NetworkClient::NetworkClient(const NetworkDispatcher::ptr &dispatcher, QObject *parent)
+  : QObject{parent}, NetworkReceiver{dispatcher}, dptr(dispatcher, make_unique<QTcpSocket>())
 {
   static bool metatypes_registered = false;
   if(!metatypes_registered) {
     metatypes_registered = true;
     qRegisterMetaType<NetworkClient::Status>("NetworkClient::Status");
   }
-  d->dispatcher->setSocket(&d->socket);
-  connect(&d->socket, &QTcpSocket::connected, [this]{
+  d->dispatcher->setSocket(d->socket.get());
+  connect(d->socket.get(), &QTcpSocket::connected, [this]{
     d->dispatcher->send( d->helloPacket );
     DriverProtocol::setFormatParameters(NetworkProtocol::decodeHello(d->helloPacket));
     d->helloPacket.reset();
     wait_for_processed(NetworkProtocol::HelloReply);
     emit connected();
   });
-  connect(&d->socket, F_PTR(QTcpSocket, error, QTcpSocket::SocketError), [this] {
-    emit error(d->socket.errorString());
+  connect(d->socket.get(), F_PTR(QTcpSocket, error, QTcpSocket::SocketError), [this] {
+    emit error(d->socket->errorString());
   });
-  connect(&d->socket, &QTcpSocket::stateChanged, [this] (QTcpSocket::SocketState s) {
+  connect(d->socket.get(), &QTcpSocket::stateChanged, [this] (QTcpSocket::SocketState s) {
     static QHash<QTcpSocket::SocketState, Status> states { 
       {QTcpSocket::ConnectedState, Connected},
       {QTcpSocket::UnconnectedState, Disconnected},
@@ -60,7 +61,7 @@ NetworkClient::NetworkClient(const NetworkDispatcher::ptr &dispatcher, QObject *
     };
     emit statusChanged(states.value(s, Error));
   });
-  d->socket.setSocketOption(QAbstractSocket::LowDelayOption, 1);
+  d->socket->setSocketOption(QAbstractSocket::LowDelayOption, 1);
 } 
 
 NetworkClient::~NetworkClient()
@@ -70,10 +71,10 @@ NetworkClient::~NetworkClient()
 void NetworkClient::connectToHost(const QString& host, int port, const NetworkProtocol::FormatParameters &parameters)
 {
   d->helloPacket = NetworkProtocol::hello(parameters);
-  d->socket.connectToHost(host, port, QTcpSocket::ReadWrite);
+  d->socket->connectToHost(host, port, QTcpSocket::ReadWrite);
   QTimer::singleShot(30000, [=]{
-    if(d->socket.state() == QAbstractSocket::ConnectingState) {
-      d->socket.close();
+    if(d->socket->state() == QAbstractSocket::ConnectingState) {
+      d->socket->close();
       emit error(tr("Connection timeout"));
     }
   });
@@ -81,7 +82,7 @@ void NetworkClient::connectToHost(const QString& host, int port, const NetworkPr
 
 void NetworkClient::disconnectFromHost()
 {
-  d->socket.close();
+  d->socket->close();
 }
 
 
