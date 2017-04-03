@@ -266,6 +266,10 @@
    </property>
   </action>
   <action name="actionShow_settings">
+   <property name="icon">
+    <iconset resource="resources/resources.qrc">
+     <normaloff>:/resources/gear.png</normaloff>:/resources/gear.png</iconset>
+   </property>
    <property name="text">
     <string>&amp;Configuration</string>
    </property>
@@ -310,6 +314,10 @@
    <property name="enabled">
     <bool>false</bool>
    </property>
+   <property name="icon">
+    <iconset resource="resources/resources.qrc">
+     <normaloff>:/resources/roi.png</normaloff>:/resources/roi.png</iconset>
+   </property>
    <property name="text">
     <string>&amp;Select ROI</string>
    </property>
@@ -317,6 +325,10 @@
   <action name="actionClear_ROI">
    <property name="enabled">
     <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="resources/resources.qrc">
+     <normaloff>:/resources/undo_roi.png</normaloff>:/resources/undo_roi.png</iconset>
    </property>
    <property name="text">
     <string>&amp;Clear ROI</string>
@@ -330,6 +342,10 @@
   <action name="actionNight_Mode">
    <property name="checkable">
     <bool>true</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="resources/resources.qrc">
+     <normaloff>:/resources/night_mode.png</normaloff>:/resources/night_mode.png</iconset>
    </property>
    <property name="text">
     <string>Night Mode</string>
