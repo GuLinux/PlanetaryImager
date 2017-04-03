@@ -138,7 +138,7 @@ RecordingPanel::RecordingPanel(const Configuration::ptr & configuration, const F
   });
   connect(d->ui->start_recording, &QPushButton::clicked, this, &RecordingPanel::start);
   connect(d->ui->stop_recording, &QPushButton::clicked, this, &RecordingPanel::stop);
-  d->ui->pause_recording->setVisible(false);
+  //d->ui->pause_recording->setVisible(false);
   connect(d->ui->pause_recording, &QPushButton::toggled, this, &RecordingPanel::setPaused);
   
   auto pickDirectory = d->ui->saveDirectory->addAction(QIcon(":/resources/folder.png"), QLineEdit::TrailingPosition);
