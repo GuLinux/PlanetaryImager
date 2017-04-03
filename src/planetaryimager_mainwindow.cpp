@@ -189,14 +189,20 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
     d->ui->menuView->insertSeparator(d->ui->actionEdges_Detection);
     
     d->image_widget->actions()[ZoomableImage::Actions::ZoomIn]->setShortcut({Qt::CTRL + Qt::Key_Plus});
+    d->image_widget->actions()[ZoomableImage::Actions::ZoomIn]->setIcon(QIcon{":/resources/zoom_in.png"});
     d->image_widget->actions()[ZoomableImage::Actions::ZoomOut]->setShortcut({Qt::CTRL + Qt::Key_Minus});
+    d->image_widget->actions()[ZoomableImage::Actions::ZoomOut]->setIcon(QIcon{":/resources/zoom_out.png"});
     d->image_widget->actions()[ZoomableImage::Actions::ZoomFit]->setShortcut({Qt::CTRL + Qt::Key_Space});
+    d->image_widget->actions()[ZoomableImage::Actions::ZoomFit]->setIcon(QIcon{":/resources/fit_window.png"});
     d->image_widget->actions()[ZoomableImage::Actions::ZoomRealSize]->setShortcut({Qt::CTRL + Qt::Key_Backspace});
+    d->image_widget->actions()[ZoomableImage::Actions::ZoomRealSize]->setIcon(QIcon{":/resources/real_size.png"});
     d->image_widget->toolbar()->setWindowTitle("Image Control");
     addToolBar(d->image_widget->toolbar());
     QToolBar *helpToolBar = new QToolBar;
     helpToolBar->setWindowTitle(tr("Help"));
-    helpToolBar->addAction(QWhatsThis::createAction());
+    auto whatsThis = QWhatsThis::createAction();
+    whatsThis->setIcon(QIcon{":/resources/help.png"});
+    helpToolBar->addAction(whatsThis);
     addToolBar(helpToolBar);
     d->image_widget->toolbar()->setFloatable(true);
     d->image_widget->toolbar()->setMovable(true);

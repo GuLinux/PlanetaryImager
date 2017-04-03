@@ -3,6 +3,17 @@
     <file alias="folder.png">folder.png</file>
     <file>action_edges_detection.png</file>
     <file>target.png</file>
+    <file>gear.png</file>
+    <file>zoom_in.png</file>
+    <file>zoom_out.png</file>
+    <file>fit_window.png</file>
+    <file>real_size.png</file>
+    <file>real_size.png</file>
+    <file>help.png</file>
+    <file alias="night_mode.png">brightness.png</file>
+    <file alias="roi.png">cut.png</file>
+    <file alias="undo_roi.png">resize.png</file>
+    
     <file alias="dot.png">dot_22.png</file>
     <file alias="dot_red.png">dot_16_red.png</file>
     <file alias="dot_green.png">dot_16_green.png</file>
