@@ -35,11 +35,12 @@ public:
 public slots:
   virtual void startRecording(Imager *imager) = 0;
   virtual void endRecording() = 0;
+  virtual void setPaused(bool paused) = 0;
 signals:
   void saveFPS(double fps);
   void meanFPS(double fps);
-  void savedFrames(uint64_t frames);
-  void droppedFrames(uint64_t frames);
+  void savedFrames(long frames);
+  void droppedFrames(long frames);
   void recording(const QString &filename);
   void finished();
 };

@@ -1,4 +1,5 @@
 #!/bin/bash
-file="$1"
-cp "$file" "orig_$file"
-convert "orig_$file"  -level 0%,100%,0.25 "$file"
+for file in "$@"; do
+    cp "$file" "orig_$file"
+    convert "orig_$file"  -level 0%,100%,0.25 "$file"
+done

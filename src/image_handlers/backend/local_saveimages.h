@@ -33,6 +33,7 @@ public:
 public slots:
   void startRecording(Imager *imager);
   void endRecording();
+  void setPaused(bool paused);
 private:
   DPTR
 };

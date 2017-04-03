@@ -239,7 +239,8 @@ FileWriter::Factory LocalSaveImages::Private::writerFactory()
   return FileWriter::factories()[configuration->save_format()];
 }
 
-LocalSaveImages::LocalSaveImages(const Configuration::ptr & configuration, QObject* parent) : dptr(configuration, new WriterThreadWorker(this), new QThread, this)
+LocalSaveImages::LocalSaveImages(const Configuration::ptr & configuration, QObject* parent)
+  : dptr(configuration, new WriterThreadWorker(this), new QThread, this)
 {
   d->worker->moveToThread(d->recordingThread);
   d->recordingThread->start();
@@ -282,6 +283,12 @@ void LocalSaveImages::startRecording(Imager *imager)
     QMetaObject::invokeMethod(d->worker, "start", Q_ARG(RecordingParameters, recording), Q_ARG(qlonglong, d->configuration->max_memory_usage() ));    
   }
 }
+
+void LocalSaveImages::setPaused(bool paused)
+{
+  // TODO
+}
+
 
 
 

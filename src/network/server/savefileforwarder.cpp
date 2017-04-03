@@ -30,11 +30,12 @@ DPTR_IMPL(SaveFileForwarder) {
 SaveFileForwarder::SaveFileForwarder(const SaveImages::ptr& save_images, const NetworkDispatcher::ptr& dispatcher) : NetworkReceiver{dispatcher}, dptr(save_images)
 {
   register_handler(SaveFileProtocol::StartRecording, [this](const NetworkPacket::ptr &) { d->save_images->startRecording(d->imager); });
+  register_handler(SaveFileProtocol::slotSetPaused, [this](const NetworkPacket::ptr &p) { d->save_images->setPaused(p->payloadVariant().toBool()); });
   register_handler(SaveFileProtocol::EndRecording, [this](const NetworkPacket::ptr &) { d->save_images->endRecording(); });
   QObject::connect(save_images.get(), &SaveImages::saveFPS, save_images.get(), [this](double fps) { this->dispatcher()->queue_send(SaveFileProtocol::packetsignalSaveFPS() << QVariant{fps}); } );
   QObject::connect(save_images.get(), &SaveImages::meanFPS, save_images.get(), [this](double fps) { this->dispatcher()->queue_send(SaveFileProtocol::packetsignalMeanFPS() << QVariant{fps}); } );
-  QObject::connect(save_images.get(), &SaveImages::savedFrames, save_images.get(), [this](uint64_t frames) { this->dispatcher()->queue_send(SaveFileProtocol::packetsignalSavedFrames() << QVariant{static_cast<qlonglong>(frames)}); } );
-  QObject::connect(save_images.get(), &SaveImages::droppedFrames, save_images.get(), [this](uint64_t frames) { this->dispatcher()->queue_send(SaveFileProtocol::packetsignalDroppedFrames() << QVariant{static_cast<qlonglong>(frames)}); } );
+  QObject::connect(save_images.get(), &SaveImages::savedFrames, save_images.get(), [this](long frames) { this->dispatcher()->queue_send(SaveFileProtocol::packetsignalSavedFrames() << QVariant{static_cast<qlonglong>(frames)}); } );
+  QObject::connect(save_images.get(), &SaveImages::droppedFrames, save_images.get(), [this](long frames) { this->dispatcher()->queue_send(SaveFileProtocol::packetsignalDroppedFrames() << QVariant{static_cast<qlonglong>(frames)}); } );
   QObject::connect(save_images.get(), &SaveImages::recording, save_images.get(), [this](const QString &file) {
     emit isRecording(true);
     this->dispatcher()->queue_send(SaveFileProtocol::packetsignalRecording() << QVariant{file});
