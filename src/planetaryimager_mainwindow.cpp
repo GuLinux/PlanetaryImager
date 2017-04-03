@@ -233,6 +233,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
     connect(d->configurationDialog, &QDialog::accepted, this, bind(&Histogram::read_settings, d->histogram), Qt::DirectConnection);
     connect(d->recording_panel, &RecordingPanel::start, [=]{d->saveImages->startRecording(d->imager);});
     connect(d->recording_panel, &RecordingPanel::stop, bind(&SaveImages::endRecording, d->saveImages));
+    connect(d->recording_panel, &RecordingPanel::setPaused, bind(&SaveImages::setPaused, d->saveImages, _1));
     
     connect(d->saveImages.get(), &SaveImages::recording, this, bind(&DisplayImage::setRecording, d->displayImage, true), Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::recording, this, bind(&Histogram::setRecording, d->histogram, true), Qt::QueuedConnection);

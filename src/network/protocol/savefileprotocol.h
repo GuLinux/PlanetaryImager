@@ -25,12 +25,14 @@ class SaveFileProtocol : public NetworkProtocol
 public:
   ADD_PROTOCOL_PACKET_NAME(StartRecording)
   ADD_PROTOCOL_PACKET_NAME(EndRecording)
+  ADD_PROTOCOL_PACKET_NAME(slotSetPaused)
   ADD_PROTOCOL_PACKET_NAME(signalSaveFPS)
   ADD_PROTOCOL_PACKET_NAME(signalMeanFPS)
   ADD_PROTOCOL_PACKET_NAME(signalSavedFrames)
   ADD_PROTOCOL_PACKET_NAME(signalDroppedFrames)
   ADD_PROTOCOL_PACKET_NAME(signalRecording)
   ADD_PROTOCOL_PACKET_NAME(signalFinished)
+  static NetworkPacket::ptr setPaused(bool paused);
   
 };
 

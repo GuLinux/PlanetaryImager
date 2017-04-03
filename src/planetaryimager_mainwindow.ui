@@ -37,6 +37,10 @@
      <property name="title">
       <string>&amp;Open</string>
      </property>
+     <property name="icon">
+      <iconset resource="resources/resources.qrc">
+       <normaloff>:/resources/photo.png</normaloff>:/resources/photo.png</iconset>
+     </property>
     </widget>
     <addaction name="action_devices_rescan"/>
     <addaction name="menu_device_load"/>
@@ -189,6 +193,10 @@
    </widget>
   </widget>
   <action name="action_devices_rescan">
+   <property name="icon">
+    <iconset resource="resources/resources.qrc">
+     <normaloff>:/resources/reload.png</normaloff>:/resources/reload.png</iconset>
+   </property>
    <property name="text">
     <string>&amp;Rescan</string>
    </property>

@@ -136,19 +136,17 @@ RecordingPanel::RecordingPanel(const Configuration::ptr & configuration, const F
         break;
     }
   });
-  connect(d->ui->start_stop_recording, &QPushButton::clicked, [=]{
-    if(d->recording)
-      emit stop();
-    else
-      emit start();
-  });
+  connect(d->ui->start_recording, &QPushButton::clicked, this, &RecordingPanel::start);
+  connect(d->ui->stop_recording, &QPushButton::clicked, this, &RecordingPanel::stop);
+  d->ui->pause_recording->setVisible(false);
+  connect(d->ui->pause_recording, &QPushButton::toggled, this, &RecordingPanel::setPaused);
   
   auto pickDirectory = d->ui->saveDirectory->addAction(QIcon(":/resources/folder.png"), QLineEdit::TrailingPosition);
   connect(pickDirectory, &QAction::triggered, d->filesystemBrowser.get(), [=]{ d->filesystemBrowser->pickDirectory(configuration->save_directory()); });
   connect(d->filesystemBrowser.get(), &FilesystemBrowser::directoryPicked, d->ui->saveDirectory, &QLineEdit::setText);
 
   auto check_directory = [&] {
-    d->ui->start_stop_recording->setEnabled(QDir(configuration->save_directory()).exists());
+    d->ui->start_recording->setEnabled(QDir(configuration->save_directory()).exists());
   };
   check_directory();
   connect(d->ui->saveDirectory, &QLineEdit::textChanged, check_directory);
@@ -171,7 +169,8 @@ void RecordingPanel::recording(bool recording, const QString& filename)
   dropped(0);
   d->ui->recordingBox->setVisible(recording);
   d->ui->filename->setText(filename);
-  d->ui->start_stop_recording->setText(recording ? tr("Stop") : tr("Start"));
+  d->ui->recordingButtons->setCurrentIndex(recording ? 1 : 0);
+  //d->ui->start_stop_recording->setText(recording ? tr("Stop") : tr("Start"));
   for(auto widget: QList<QWidget*>{d->ui->saveDirectory, d->ui->filePrefix, d->ui->fileSuffix, d->ui->saveFramesLimit})
     widget->setEnabled(!recording);
   if(recording) {
@@ -193,12 +192,12 @@ void RecordingPanel::meanFPS(double fps)
 }
 
 
-void RecordingPanel::dropped(int frames)
+void RecordingPanel::dropped(long frames)
 {
   d->ui->dropped->setText(QString::number(frames));
 }
 
-void RecordingPanel::saved(int frames)
+void RecordingPanel::saved(long frames)
 {
   d->ui->frames->setText(QString::number(frames));
 }

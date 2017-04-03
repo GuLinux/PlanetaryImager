@@ -34,11 +34,12 @@ public slots:
   void recording(bool recording = false, const QString &filename = {});
   void saveFPS(double fps);
   void meanFPS(double fps);
-  void saved(int frames);
-  void dropped(int frames);
+  void saved(long frames);
+  void dropped(long frames);
 signals:
   void start();
   void stop();
+  void setPaused(bool);
 private:
   DPTR;
 };

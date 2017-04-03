@@ -28,4 +28,10 @@ PROTOCOL_NAME_VALUE(SaveFile, signalSavedFrames);
 PROTOCOL_NAME_VALUE(SaveFile, signalDroppedFrames);
 PROTOCOL_NAME_VALUE(SaveFile, signalRecording);
 PROTOCOL_NAME_VALUE(SaveFile, signalFinished);
+PROTOCOL_NAME_VALUE(SaveFile, slotSetPaused);
 
+
+NetworkPacket::ptr SaveFileProtocol::setPaused(bool paused)
+{
+  return packetslotSetPaused() << paused;
+}
