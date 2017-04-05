@@ -88,6 +88,10 @@ if(BUILD_DRIVER_zwo_asi_imager)
         target_link_libraries(zwo_asi_imager -lusb-1.0)
     endif()
 
+    if(${CMAKE_SYSTEM_NAME} STREQUAL "Darwin")
+        target_link_libraries(zwo_asi_imager "-framework CoreFoundation" "-framework IOKit" -lobjc)
+    endif()
+
     if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
         install(FILES ${asi_driver_library} DESTINATION .)
     endif()
