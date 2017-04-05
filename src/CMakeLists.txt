@@ -45,6 +45,14 @@ message("frontend dependencies: ${planetary_imager_frontend_DEPS}")
 set(install_targets planetary_imager)
 
 add_executable(planetary_imager ${PlanetaryImager_SRCS} )
+
+find_library(CCFITS_LIBRARY NAMES ccfits CCfits)
+if(NOT CCFITS_LIBRARY)
+    message(FATAL_ERROR "Unable to find CCfits library")
+endif()
+
+
+
 target_link_libraries(planetary_imager
     ${planetary_imager_backend_DEPS}
     ${planetary_imager_frontend_DEPS}
@@ -56,7 +64,7 @@ target_link_libraries(planetary_imager
     ${Boost_LIBRARIES}
     ${OpenCV_LIBS}
     Qt5::Widgets
-    CCfits ${CFITSIO_LIBRARIES} # TODO: find_package
+    ${CCFITS_LIBRARY} ${CFITSIO_LDFLAGS}
     ${Qt5_OpenGL_LIBRARIES}
     pthread
     ${EXTRA_LIBRARIES}
@@ -79,7 +87,7 @@ if(build_network_server)
     ${OpenCV_LIBS}
     Qt5::Core
     Qt5::Network
-    CCfits ${CFITSIO_LIBRARIES} # TODO: find_package
+    ${CCFITS_LIBRARY} ${CFITSIO_LDFLAGS} # TODO: find_package
     pthread
     ${EXTRA_LIBRARIES}
   )
@@ -95,7 +103,7 @@ if(build_network_server)
     ${OpenCV_LIBS}
     Qt5::Widgets
     Qt5::Network
-    CCfits ${CFITSIO_LIBRARIES} # TODO: find_package
+    ${CCFITS_LIBRARY} ${CFITSIO_LDFLAGS} # TODO: find_package
     ${Qt5_OpenGL_LIBRARIES}
     pthread
     ${EXTRA_LIBRARIES}
