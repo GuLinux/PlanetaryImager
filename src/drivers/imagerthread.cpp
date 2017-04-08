@@ -117,6 +117,7 @@ void ImagerThread::Private::thread_started()
       }
     } catch(const std::exception &e) {
       qWarning() << e.what();
+      /* TODO: maybe restore after we have a more efficient messages delivery system
       if( (last_error_occured.elapsed() > 3000 || ! last_error_occured.isValid()) && error_messages_since_last_success++ < 4) {
         if(error_messages_since_last_success == 4) {
           MessagesLogger::queue(MessagesLogger::Warning, tr("Error on frame capture"), tr("An error occured while capturing frame for %1:\n%2\nFollowing errors will be quietly ignored, check the console log for more details.") 
@@ -129,6 +130,7 @@ void ImagerThread::Private::thread_started()
         }
         last_error_occured.restart();
       }
+      */
     }
     if(long_exposure_mode)
       imager->long_exposure_ended();
