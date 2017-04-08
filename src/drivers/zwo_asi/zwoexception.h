@@ -29,6 +29,6 @@ public:
   ZWOException(int code, const std::string &where = {});
 };
 
-#define ASI_CHECK C_ERROR_CHECK(std::less<int>, ZWOException, ASI_SUCCESS)
+#define ASI_CHECK C_ERROR_CHECK(std::not_equal_to<int>, ZWOException, ASI_SUCCESS)
 
 #endif // ZWOEXCEPTION_H

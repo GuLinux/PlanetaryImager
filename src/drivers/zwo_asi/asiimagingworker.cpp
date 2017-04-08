@@ -70,7 +70,7 @@ void ASIImagingWorker::calc_exposure_timeout()
   long value;
   ASI_BOOL isAuto;
   ASI_CHECK << ASIGetControlValue(d->info.CameraID, ASI_EXPOSURE, &value, &isAuto) << "Getting exposure value";
-  d->exposure_timeout = std::max(value / 100, 100l); // Should be / 1000, but adding some slack
+  d->exposure_timeout = value*2/1000 + 500;
   qDebug() << "Exposure timeout: " << d->exposure_timeout;
 }
 
