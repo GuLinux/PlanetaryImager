@@ -28,9 +28,8 @@ public:
   typedef std::function<void(QRect &)> Rule;
   typedef std::shared_ptr<ROIValidator> ptr;
   ROIValidator(const std::list<Rule> &rules);
-  ROIValidator(const std::initializer_list<Rule> &rules);
   ~ROIValidator();
-  QRect validate(const QRect & original) const;
+  QRect validate(const QRect & original, QRect currentROI) const;
   static Rule max_resolution(const QRect &max);
   static Rule width_multiple(int factor);
   static Rule height_multiple(int factor);

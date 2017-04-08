@@ -26,9 +26,6 @@ DPTR_IMPL(ROIValidator) {
   static int closest_multiple(int dimension, int factor);
 };
 
-ROIValidator::ROIValidator(const initializer_list<Rule>& rules) : ROIValidator(list<Rule>{rules})
-{
-}
 
 ROIValidator::ROIValidator(const list<Rule> &rules) : dptr(rules)
 {
@@ -39,9 +36,10 @@ ROIValidator::~ROIValidator()
 {
 }
 
-QRect ROIValidator::validate(const QRect& original) const
+QRect ROIValidator::validate(const QRect& original, QRect currentROI) const
 {
   QRect result = original;
+  result.translate(currentROI.x(), currentROI.y());
   int rule_number = 0;
   for(auto rule: d->rules) {
     qDebug() << "rule " << rule_number << ": before=" << result;
