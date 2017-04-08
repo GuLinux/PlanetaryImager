@@ -31,6 +31,7 @@ public:
     ~exception() override;
     exception(const exception &other);
     template<typename A, typename B> class check;
+    virtual bool imagerDisconnected() const { return false; }
 protected:
      exception(int code, const std::unordered_map<int, std::string> codes_map, const std::string &message_prefix = {}, const std::string &where = {});
      exception(int code, const std::string &message, const std::string &message_prefix = {}, const std::string &where = {});
