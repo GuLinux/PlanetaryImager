@@ -40,12 +40,24 @@ TEST(ROIValidatorTest, test_height_multiple) {
 
 TEST(ROIValidatorTest, sequence_test) {
   auto rect = QRect{10, 20, 1245, 421};
-  ROIValidator validator{ROIValidator::width_multiple(8), ROIValidator::height_multiple(2)};
-  auto new_rect = validator.validate(rect);
+  ROIValidator validator{{ROIValidator::width_multiple(8), ROIValidator::height_multiple(2)}};
+  auto new_rect = validator.validate(rect, QRect{});
   ASSERT_EQ(0, new_rect.width() % 8);
   ASSERT_EQ(0, new_rect.height() % 2);
   ASSERT_EQ(10, new_rect.x());
   ASSERT_EQ(20, new_rect.y());
+}
+
+
+TEST(ROIValidatorTest, roi_in_roi_test) {
+  auto rect = QRect{10, 20, 1245, 421};
+  auto currentROI = QRect{30, 45, 2203, 4432};
+  ROIValidator validator{{}};
+  auto new_rect = validator.validate(rect, currentROI);
+  ASSERT_EQ(40, new_rect.x());
+  ASSERT_EQ(65, new_rect.y());
+  ASSERT_EQ(1245, new_rect.width());
+  ASSERT_EQ(421, new_rect.height());
 }
 
 TEST(ROIValidatorTest, area_test) {

@@ -232,12 +232,12 @@ void ZWO_ASI_Imager::clearROI()
 void ZWO_ASI_Imager::setROI(const QRect& roi)
 {
   
-  d->restart_worker(d->worker->bin(), d->roi_validator->validate(roi), d->worker->format());
+  d->restart_worker(d->worker->bin(), d->roi_validator->validate(roi, d->worker->roi()), d->worker->format());
 }
 
 QRect ZWO_ASI_Imager::Private::maxROI(int bin) const
 {
-    return roi_validator->validate({0, 0, static_cast<int>(info.MaxWidth) / bin, static_cast<int>(info.MaxHeight) / bin});
+    return roi_validator->validate({0, 0, static_cast<int>(info.MaxWidth) / bin, static_cast<int>(info.MaxHeight) / bin}, QRect{});
 }
 
 
