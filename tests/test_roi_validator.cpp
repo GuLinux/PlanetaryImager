@@ -38,6 +38,32 @@ TEST(ROIValidatorTest, test_height_multiple) {
   ASSERT_EQ( (QRect{0, 0, 1089,1080}), rect);
 }
 
+
+TEST(ROIValidatorTest, test_hflip) {
+  QRect rect, context;
+  rect.setCoords(1, 0, 7, 9);
+  context.setCoords(0, 0, 9, 9);
+  auto width = rect.width();
+  ROIValidator::flipped(true, false, QRect{0, 0, 10, 10})(rect);
+  ASSERT_EQ( (QRect{2, 0, 7,10}), rect);
+  ASSERT_EQ( width, rect.width());
+  ASSERT_EQ(8, rect.bottomRight().x());
+}
+
+
+
+
+TEST(ROIValidatorTest, test_vflip) {
+  QRect rect, context;
+  rect.setCoords(0, 3, 9, 8);
+  context.setCoords(0, 0, 9, 9);
+  auto height = rect.height();
+  ROIValidator::flipped(false, true, QRect{0, 0, 10, 10})(rect);
+  ASSERT_EQ( (QRect{0, 1, 10,6}), rect);
+  ASSERT_EQ( height, rect.height());
+  ASSERT_EQ(6, rect.bottomRight().y());
+}
+
 TEST(ROIValidatorTest, sequence_test) {
   auto rect = QRect{10, 20, 1245, 421};
   ROIValidator validator{{ROIValidator::width_multiple(8), ROIValidator::height_multiple(2)}};

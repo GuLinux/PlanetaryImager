@@ -122,10 +122,10 @@ ASIControl::operator Imager::Control() const
   if(caps.ControlType == ASI_FLIP) {
     control.type = Imager::Control::Combo;
     control.choices = {
-      {"no", static_cast<double>(ASI_FLIP_NONE)},
-      {"horizontal", static_cast<double>(ASI_FLIP_HORIZ)},
-      {"vertical", static_cast<double>(ASI_FLIP_VERT)},
-      {"horizontal and vertical", static_cast<double>(ASI_FLIP_BOTH)},
+      {"no", static_cast<int>(ASI_FLIP_NONE)},
+      {"horizontal", static_cast<int>(ASI_FLIP_HORIZ)},
+      {"vertical", static_cast<int>(ASI_FLIP_VERT)},
+      {"horizontal and vertical", static_cast<int>(ASI_FLIP_BOTH)},
     };
   }
   control.readonly = !caps.IsWritable;

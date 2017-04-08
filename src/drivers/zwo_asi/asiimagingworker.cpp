@@ -80,7 +80,6 @@ Frame::ptr ASIImagingWorker::shoot()
 {
   // TODO: verify if Frame byteorder is always BigEndian for ASI cameras
   auto frame = make_shared<Frame>( d->format == ASI_IMG_RAW16 ? 16 : 8,  d->colorFormat(), QSize{d->roi.width(), d->roi.height()}, Frame::BigEndian);
-  qDebug() << "frame created with byteorder=" << frame->byteOrder();
   ASI_CHECK << ASIGetVideoData(d->info.CameraID, frame->data(), frame->size(), d->exposure_timeout) << "Capture frame";
   return frame;
 }
