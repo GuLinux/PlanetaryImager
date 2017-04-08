@@ -44,7 +44,7 @@ TEST(ROIValidatorTest, test_hflip) {
   rect.setCoords(1, 0, 7, 9);
   context.setCoords(0, 0, 9, 9);
   auto width = rect.width();
-  ROIValidator::flipped(true, false, QRect{0, 0, 10, 10})(rect);
+  rect = ROIValidator::flipped(rect, true, false, QRect{0, 0, 10, 10});
   ASSERT_EQ( (QRect{2, 0, 7,10}), rect);
   ASSERT_EQ( width, rect.width());
   ASSERT_EQ(8, rect.bottomRight().x());
@@ -58,7 +58,7 @@ TEST(ROIValidatorTest, test_vflip) {
   rect.setCoords(0, 3, 9, 8);
   context.setCoords(0, 0, 9, 9);
   auto height = rect.height();
-  ROIValidator::flipped(false, true, QRect{0, 0, 10, 10})(rect);
+  rect = ROIValidator::flipped(rect, false, true, QRect{0, 0, 10, 10});
   ASSERT_EQ( (QRect{0, 1, 10,6}), rect);
   ASSERT_EQ( height, rect.height());
   ASSERT_EQ(6, rect.bottomRight().y());
