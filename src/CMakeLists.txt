@@ -56,6 +56,7 @@ target_link_libraries(planetary_imager
     ${Boost_LIBRARIES}
     ${OpenCV_LIBS}
     Qt5::Widgets
+    Qt5::Script
     CCfits ${CFITSIO_LIBRARIES} # TODO: find_package
     ${Qt5_OpenGL_LIBRARIES}
     pthread
@@ -79,6 +80,7 @@ if(build_network_server)
     ${OpenCV_LIBS}
     Qt5::Core
     Qt5::Network
+    Qt5::Script
     CCfits ${CFITSIO_LIBRARIES} # TODO: find_package
     pthread
     ${EXTRA_LIBRARIES}
@@ -95,6 +97,7 @@ if(build_network_server)
     ${OpenCV_LIBS}
     Qt5::Widgets
     Qt5::Network
+    Qt5::Script
     CCfits ${CFITSIO_LIBRARIES} # TODO: find_package
     ${Qt5_OpenGL_LIBRARIES}
     pthread
