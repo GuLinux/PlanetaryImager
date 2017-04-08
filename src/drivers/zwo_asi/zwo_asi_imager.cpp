@@ -86,16 +86,6 @@ ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandler::
           ROIValidator::area_multiple(1024, 0, 2, QRect{0, 0, static_cast<int>(info.MaxWidth), static_cast<int>(info.MaxHeight)})(roi);
           qDebug() << "Using ASI 120MM rect roi definition: " << roi;
         }
-      },
-      [=](QRect &roi) {
-        auto currentROI = d->worker->roi();
-        auto flipControl = find_if(d->controls.begin(), d->controls.end(), [](const auto &c) { return c->caps.ControlType == ASI_FLIP; });
-        if( flipControl!= d->controls.end()) {
-          auto flipStatus = (*flipControl)->value;
-          bool hflip = (flipStatus == ASI_FLIP_HORIZ || flipStatus == ASI_FLIP_BOTH);
-          bool vflip = (flipStatus == ASI_FLIP_VERT || flipStatus == ASI_FLIP_BOTH);
-          ROIValidator::flipped(hflip, vflip, currentROI)(roi);
-        }
       }
     });
     d->properties.set_resolution_pixelsize({static_cast<int>(info.MaxWidth), static_cast<int>(info.MaxHeight)}, info.PixelSize, info.PixelSize);
@@ -241,7 +231,17 @@ void ZWO_ASI_Imager::clearROI()
 
 void ZWO_ASI_Imager::setROI(const QRect& roi)
 {
-  d->restart_worker(d->worker->bin(), d->roi_validator->validate(roi, d->worker->roi()), d->worker->format());
+  auto currentROI = d->worker->roi();
+  auto flipControl = find_if(d->controls.begin(), d->controls.end(), [](const auto &c) { return c->caps.ControlType == ASI_FLIP; });
+  bool hflip = false, vflip = false;
+  if( flipControl!= d->controls.end()) {
+    auto flipStatus = (*flipControl)->value;
+    hflip = (flipStatus == ASI_FLIP_HORIZ || flipStatus == ASI_FLIP_BOTH);
+    vflip = (flipStatus == ASI_FLIP_VERT || flipStatus == ASI_FLIP_BOTH);
+  }
+  auto flip = [this, hflip, vflip] (const QRect &r) { return ROIValidator::flipped(r, hflip, vflip, d->maxROI(d->worker->bin())); };
+  QRect newROI = d->roi_validator->validate(roi, flip(currentROI));
+  d->restart_worker(d->worker->bin(), flip(newROI), d->worker->format());
 }
 
 QRect ZWO_ASI_Imager::Private::maxROI(int bin) const
