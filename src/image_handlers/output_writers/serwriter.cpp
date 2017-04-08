@@ -80,6 +80,7 @@ QString SERWriter::filename() const
 void SERWriter::handle ( const Frame::ptr &frame )
 {
   if(! d->header->imageWidth) {
+    d->header->endian = (frame->byteOrder() == Frame::BigEndian ? SER_Header::BigEndian : SER_Header::LittleEndian);
     d->header->set_color_format(frame->colorFormat());
     d->header->pixelDepth = frame->bpp();
     qDebug() << "SER PixelDepth set to " << d->header->pixelDepth << "bpp" << ", bytesPerPixels: " << d->header->bytesPerPixel();
