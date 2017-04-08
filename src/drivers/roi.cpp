@@ -106,3 +106,15 @@ ROIValidator::Rule ROIValidator::area_multiple(int factor, int width_step, int h
   };
 }
 
+
+ROIValidator::Rule ROIValidator::flipped(bool horizontal, bool vertical, const QRect &context)
+{
+  return [=](QRect &roi) {
+    qDebug() << "requested ROI: " << roi << roi.topLeft() << roi.bottomRight();
+    qDebug() << "context   ROI: " << context << context.topLeft() << context.bottomRight();
+    int x = horizontal ? (context.bottomRight().x() - roi.bottomRight().x()) : roi.x();
+    int y = vertical ?   (context.bottomRight().y() - roi.bottomRight().y()) : roi.y();
+    roi.setRect(x, y, roi.width(), roi.height());
+  };
+}
+
