@@ -42,7 +42,7 @@ struct SER_Header {
     };
     qint32 colorId = MONO;
     enum Endian { BigEndian = 0, LittleEndian = 1 };
-    qint32 endian = LittleEndian;
+    qint32 endian = BigEndian;
     quint32 imageWidth = 0;
     quint32 imageHeight = 0;
     quint32 pixelDepth = 0;

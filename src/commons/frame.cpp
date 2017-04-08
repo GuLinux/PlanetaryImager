@@ -21,13 +21,14 @@
 using namespace std;
 
 DPTR_IMPL(Frame) {
-  Private(uint8_t bpp, ColorFormat colorFormat, const QSize &resolution);
-  Private(ColorFormat colorFormat, const cv::Mat &image);
+  Private(uint8_t bpp, ColorFormat colorFormat, const QSize &resolution, ByteOrder byteOrder);
+  Private(ColorFormat colorFormat, const cv::Mat &image, ByteOrder byteOrder);
   const QDateTime created_utc;
   const ColorFormat color_format;
   const uint8_t bpp;
   const QSize resolution;
   cv::Mat mat;
+  ByteOrder byteOrder;
   Seconds exposure = Seconds::zero();
   
   static int cv_type(uint8_t bpp, ColorFormat format);
@@ -41,31 +42,33 @@ int Frame::Private::cv_type(uint8_t bpp, Frame::ColorFormat format)
 
 
 
-Frame::Private::Private(uint8_t bpp, Frame::ColorFormat colorFormat, const QSize &resolution)
+Frame::Private::Private(uint8_t bpp, Frame::ColorFormat colorFormat, const QSize &resolution, ByteOrder byteOrder)
   : created_utc{QDateTime::currentDateTimeUtc()},
   color_format{colorFormat},
   bpp{bpp},
   resolution{resolution},
-  mat{resolution.height(), resolution.width(), Private::cv_type(bpp, colorFormat)}
+  mat{resolution.height(), resolution.width(), Private::cv_type(bpp, colorFormat)},
+  byteOrder{byteOrder}
 {
 }
 
-Frame::Private::Private(Frame::ColorFormat colorFormat, const cv::Mat& image)
+Frame::Private::Private(Frame::ColorFormat colorFormat, const cv::Mat& image, ByteOrder byteOrder)
   : created_utc{QDateTime::currentDateTimeUtc()},
   color_format{colorFormat},
   bpp{image.depth() == CV_8U || image.depth() == CV_8S ? uint8_t{8} : uint8_t{16}},
   resolution{image.cols, image.rows},
-  mat{image}
+  mat{image},
+  byteOrder{byteOrder}
 {
 }
 
 
 
-Frame::Frame(uint8_t bpp, Frame::ColorFormat colorFormat, const QSize& resolution) : dptr(bpp, colorFormat, resolution)
+Frame::Frame(uint8_t bpp, Frame::ColorFormat colorFormat, const QSize& resolution, ByteOrder byteOrder) : dptr(bpp, colorFormat, resolution, byteOrder)
 {
 }
 
-Frame::Frame(Frame::ColorFormat colorFormat, const cv::Mat& image) : dptr(colorFormat, image)
+Frame::Frame(Frame::ColorFormat colorFormat, const cv::Mat& image, ByteOrder byteOrder) : dptr(colorFormat, image, byteOrder)
 {
 }
 
@@ -123,6 +126,11 @@ Frame::Seconds Frame::exposure() const
 void Frame::set_exposure(const Frame::Seconds& exposure)
 {
   d->exposure = exposure;
+}
+
+Frame::ByteOrder Frame::byteOrder() const
+{
+  return d->byteOrder;
 }
 
 
