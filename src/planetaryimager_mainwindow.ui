@@ -78,6 +78,7 @@
     <addaction name="actionShow_settings"/>
     <addaction name="separator"/>
     <addaction name="actionAbout"/>
+    <addaction name="actionScripting"/>
     <addaction name="actionAbout_Qt"/>
     <addaction name="actionQuit"/>
    </widget>
@@ -357,6 +358,11 @@
    </property>
    <property name="text">
     <string>Night Mode</string>
+   </property>
+  </action>
+  <action name="actionScripting">
+   <property name="text">
+    <string>Scripting</string>
    </property>
   </action>
  </widget>
