@@ -22,7 +22,6 @@
 #include <QDateTime>
 #include "commons/ser_header.h"
 
-
 using namespace std;
 using namespace std::placeholders;
 

@@ -20,11 +20,13 @@
 #include <stdint.h>
 #include "frame.h"
 #include <QDateTime>
+#include <QtEndian>
+// TODO: stop using a packed struct, and use accessors + QtEndian helpers for better compat
 
 typedef uint64_t SER_Timestamp;
-struct __attribute__ ((__packed__)) SER_Header {
+struct SER_Header {
     char fileId[14] = {'L', 'U', 'C', 'A', 'M', '-', 'R','E','C','O','R','D','E','R'};
-    int32_t luId = 0;
+    qint32 luId = 0;
     enum ColorId {
         MONO = 0,
         BAYER_RGGB = 8,
@@ -38,13 +40,13 @@ struct __attribute__ ((__packed__)) SER_Header {
         RGB = 100,
         BGR = 101,
     };
-    int32_t colorId = MONO;
+    qint32 colorId = MONO;
     enum Endian { BigEndian = 0, LittleEndian = 1 };
-    int32_t endian = BigEndian;
-    uint32_t imageWidth = 0;
-    uint32_t imageHeight = 0;
-    uint32_t pixelDepth = 0;
-    uint32_t frames = 0;
+    qint32 endian = LittleEndian;
+    quint32 imageWidth = 0;
+    quint32 imageHeight = 0;
+    quint32 pixelDepth = 0;
+    quint32 frames = 0;
     char observer[40] = {};
     char camera[40] = {};
     char telescope[40] = {};
@@ -57,7 +59,7 @@ struct __attribute__ ((__packed__)) SER_Header {
     void set_color_format(const Frame::ColorFormat &format);
     static SER_Timestamp timestamp(const QDateTime &datetime);
     static QDateTime qdatetime(const SER_Timestamp &timestamp);
-};
+} __attribute__ ((__packed__));
 
-
+static_assert(sizeof(SER_Header) == 178, "Wrong SER_Header size");
 #endif
