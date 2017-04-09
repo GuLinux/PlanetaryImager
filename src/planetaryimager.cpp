@@ -36,16 +36,22 @@ int main(int argc, char** argv)
     CrashHandler crash_handler({SIGSEGV, SIGABRT});
     cerr << "Starting PlanetaryImager - version " << PLANETARY_IMAGER_VERSION << " (" << HOST_PROCESSOR << ")" << endl;
     QApplication app(argc, argv);
-    LogHandler log_handler;
     app.setApplicationName("PlanetaryImager");
     app.setApplicationDisplayName("Planetary Imager");
     app.setApplicationVersion(PLANETARY_IMAGER_VERSION);
-    auto configuration = make_shared<Configuration>();
-    
     CommandLine commandLine(app);
     commandLine.backend().process();
+    LogHandler log_handler{commandLine};
     
-    PlanetaryImagerMainWindow mainWindow{make_shared<SupportedDrivers>(commandLine.driversDirectories()), make_shared<LocalSaveImages>(configuration), configuration, make_shared<LocalFilesystemBrowser>()};
+    auto configuration = make_shared<Configuration>();
+    
+    
+    PlanetaryImagerMainWindow mainWindow{
+      make_shared<SupportedDrivers>(commandLine.driversDirectories()),
+      make_shared<LocalSaveImages>(configuration),
+      configuration, make_shared<LocalFilesystemBrowser>(),
+      commandLine.logfile()
+    };
     QObject::connect(&mainWindow, &PlanetaryImagerMainWindow::quit, &app, &QApplication::quit);
     mainWindow.show();
     return app.exec();

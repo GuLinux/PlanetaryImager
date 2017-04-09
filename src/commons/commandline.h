@@ -30,11 +30,14 @@ public:
   ~CommandLine();
   CommandLine &backend();
   CommandLine &daemon();
+  CommandLine &frontend();
   
   CommandLine &process();
   
   QStringList driversDirectories() const;
   int port() const;
+  QString logfile() const;
+  QtMsgType consoleLogLevel() const;
 private:
   DPTR
 };

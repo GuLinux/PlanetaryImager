@@ -20,12 +20,20 @@
 #define LOGHANDLER_H
 #include <QDebug>
 #include "c++/dptr.h"
-
+#include <ostream>
+#include <functional>
+class CommandLine;
 class LogHandler
 {
 public:
-  LogHandler(const QtMsgType &minimumType= QtDebugMsg);
+  struct Output {
+    std::reference_wrapper<std::ostream> stream;
+    QtMsgType level;
+    typedef std::list<Output> list;
+  };
+  LogHandler(const CommandLine &commandLine);
   ~LogHandler();
+  static QHash<QtMsgType, std::string> log_levels();
 private:
   DPTR
 };

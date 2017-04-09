@@ -77,6 +77,7 @@
     </property>
     <addaction name="actionShow_settings"/>
     <addaction name="separator"/>
+    <addaction name="actionOpen_log_file_folder"/>
     <addaction name="actionAbout"/>
     <addaction name="actionAbout_Qt"/>
     <addaction name="actionQuit"/>
@@ -366,6 +367,11 @@
   <action name="actionScripting">
    <property name="text">
     <string>&amp;Scripting</string>
+   </property>
+  </action>
+  <action name="actionOpen_log_file_folder">
+   <property name="text">
+    <string>Open log file folder...</string>
    </property>
   </action>
  </widget>

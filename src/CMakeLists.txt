@@ -43,8 +43,12 @@ message("backend dependencies: ${planetary_imager_backend_DEPS}")
 message("frontend dependencies: ${planetary_imager_frontend_DEPS}")
 
 set(install_targets planetary_imager)
+if(WIN32)
+  set(WIN32_APP_FLAG WIN32)
+  set(PlanetaryImager_SRCS ${PlanetaryImager_SRCS} ${CMAKE_SOURCE_DIR}/files/planetary_imager.rc)
+endif()
 
-add_executable(planetary_imager ${PlanetaryImager_SRCS} )
+add_executable(planetary_imager ${WIN32_APP_FLAG} ${PlanetaryImager_SRCS} )
 target_link_libraries(planetary_imager
     ${planetary_imager_backend_DEPS}
     ${planetary_imager_frontend_DEPS}
@@ -67,7 +71,7 @@ option(build_network_server "Build PlanetaryImager network daemon and frontend" 
 if(build_network_server)
   find_package(Qt5Network REQUIRED )
   add_subdirectory(network)
-  add_executable(planetary_imager_daemon planetaryimager_daemon.cpp )
+  add_executable(planetary_imager_daemon ${WIN32_APP_FLAG} planetaryimager_daemon.cpp )
   target_link_libraries(planetary_imager_daemon
     network_server
     ${planetary_imager_backend_DEPS}
