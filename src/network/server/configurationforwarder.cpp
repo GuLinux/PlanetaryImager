@@ -79,6 +79,7 @@ ConfigurationForwarder::ConfigurationForwarder(const Configuration::ptr& configu
   
   register_conf_function(timelapse_mode, bool)
   register_conf_function(timelapse_msecs, qlonglong)
+  register_conf_function(recording_pause_stops_timer, bool)
 }
 
 ConfigurationForwarder::~ConfigurationForwarder()

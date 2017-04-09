@@ -64,11 +64,14 @@ CommandLine & CommandLine::backend()
   return *this;
 }
 
-CommandLine & CommandLine::daemon()
+CommandLine & CommandLine::daemon(const QString &listenAddress)
 {
   backend();
   d->parser.addOptions({
     { {"p", "port"}, "listening port for server (default: %1)"_q % Configuration::DefaultServerPort, "port", "%1"_q % Configuration::DefaultServerPort},
+  });
+  d->parser.addOptions({
+    { {"a", "address"}, "listening address for server (default: %1)"_q % listenAddress, "address", "%1"_q % listenAddress},
   });
   return *this;
 }
@@ -117,3 +120,9 @@ QString CommandLine::logfile() const
 {
   return d->parser.value("log-file");
 }
+
+QString CommandLine::listenAddress() const
+{
+  return d->parser.value("address");
+}
+

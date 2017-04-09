@@ -29,7 +29,7 @@ public:
   CommandLine(QCoreApplication &app);
   ~CommandLine();
   CommandLine &backend();
-  CommandLine &daemon();
+  CommandLine &daemon(const QString &listenAddress = "0.0.0.0");
   CommandLine &frontend();
   
   CommandLine &process();
@@ -38,6 +38,7 @@ public:
   int port() const;
   QString logfile() const;
   QtMsgType consoleLogLevel() const;
+  QString listenAddress() const;
 private:
   DPTR
 };

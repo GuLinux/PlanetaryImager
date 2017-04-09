@@ -87,6 +87,7 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   RecordingPanel* recording_panel;
   ExposureTimer exposure_timer;
   
+  ImageHandler::ptr imageHandler;
   
   
   void connectCamera(const Driver::Camera::ptr &camera);
@@ -326,12 +327,20 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
       d->statusbar_info_widget->showMessage("Exposure: %1s, remaining: %2s"_q % QString::number(elapsed, 'f', 1) % QString::number(remaining, 'f', 1), 1000);
     });
     connect(&d->exposure_timer, &ExposureTimer::finished, [=]{ d->statusbar_info_widget->clearMessage(); });
+    
+    auto compositeImageHandler = ImageHandler::ptr{new ImageHandlers{d->displayImage, d->saveImages, d->histogram}};
+    d->imageHandler = ImageHandler::ptr{new ThreadImageHandler{compositeImageHandler}};
 }
 
 void PlanetaryImagerMainWindow::closeEvent(QCloseEvent* event)
 {
   QMainWindow::closeEvent(event);
   emit quit();
+}
+
+ImageHandler::ptr PlanetaryImagerMainWindow::imageHandler() const
+{
+  return d->imageHandler;
 }
 
 
@@ -387,10 +396,14 @@ void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::Camera::ptr
 {
     if(imager)
         imager->destroy();
-  auto compositeImageHandler = ImageHandler::ptr{new ImageHandlers{displayImage, saveImages, histogram}};
-  auto threadImageHandler = ImageHandler::ptr{new ThreadImageHandler{compositeImageHandler}};
-  CreateImagerWorker::create(camera, threadImageHandler, imagerThread.get(), q, bind(&Private::onImagerInitialized, this, _1) );
+  CreateImagerWorker::create(camera, imageHandler, imagerThread.get(), q, bind(&Private::onImagerInitialized, this, _1) );
 }
+
+void PlanetaryImagerMainWindow::setImager(Imager* imager)
+{
+  d->onImagerInitialized(imager);
+}
+
 
 void PlanetaryImagerMainWindow::Private::onImagerInitialized(Imager * imager)
 {  
