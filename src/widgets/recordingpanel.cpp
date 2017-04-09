@@ -20,6 +20,7 @@
 #include "ui_recordingpanel.h"
 #include "commons/configuration.h"
 #include "savefileconfiguration.h"
+#include "commons/messageslogger.h"
 #include <Qt/functional.h>
 #include <QDir>
 #include <QDialog>
@@ -66,8 +67,14 @@ RecordingPanel::RecordingPanel(const Configuration::ptr & configuration, const F
   };
   auto current_format_index = std::find(format_combo_index.begin(), format_combo_index.end(), configuration->save_format());
   d->ui->videoOutputType->setCurrentIndex( current_format_index == format_combo_index.end() ? 0 : current_format_index-format_combo_index.begin() );
-  connect(d->ui->videoOutputType, F_PTR(QComboBox, activated, int), [&](int index) {
+  connect(d->ui->videoOutputType, F_PTR(QComboBox, activated, int), [&, configuration](int index) {
     configuration->set_save_format(format_combo_index[index]);
+    if(format_combo_index[index] == Configuration::Video && !configuration->deprecated_video_warning_shown()) {
+      configuration->set_deprecated_video_warning_shown(true);
+      MessagesLogger::instance()->queue(MessagesLogger::Warning, tr("Video encoder"), tr(R"(Saving as video file is not supported, and not recommended.
+Video encoding might fail, due to unavailable codecs, will result in quality loss, and will slow down capture FPS.
+The best file format for planetary imaging is SER. You can also save frames as PNG or TIFF images.)"));
+    }
   });
   connect(d->ui->saveDirectory, &QLineEdit::textChanged, [this, &configuration](const QString &directory){
     configuration->set_save_directory(directory);

@@ -91,7 +91,7 @@ define_setting(main_window_geometry, QByteArray, {})
 define_setting(max_memory_usage, long long, 1024*1024*1024)
 define_setting(buffered_output, bool, true)
 define_setting(max_display_fps, int, 30)
-define_setting(max_display_fps_recording, int, 2)
+define_setting(max_display_fps_recording, int, 15)
 define_setting(limit_fps, bool, true)
 define_setting(debayer, bool, true)
 define_setting(opengl, bool, true)
@@ -117,8 +117,8 @@ define_setting(canny_low_threshold, double, 1)
 define_setting(canny_threshold_ratio, double, 3)
 define_setting(sobel_delta, double, 0)
 define_setting(sobel_scale, double, 1)
-define_setting(canny_kernel_size, int, 3)
-define_setting(canny_blur_size, int, 3)
+define_setting(canny_kernel_size, int, 7)
+define_setting(canny_blur_size, int, 5)
 
 void Configuration::resetCannyAdvancedSettings()
 {
@@ -159,6 +159,7 @@ define_setting(timelapse_mode, bool, false)
 define_setting(timelapse_msecs, qlonglong, 1000)
 
 define_setting(filter_presets_by_camera, bool, true)
+define_setting(deprecated_video_warning_shown, bool, false)
 
 QString Configuration::savefile() const
 {
