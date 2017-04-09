@@ -10,6 +10,7 @@
     <file>help.png</file>
     <file>reload.png</file>
     <file>photo.png</file>
+    <file>delete.png</file>
     <file alias="play.png">video_play.png</file>
     <file alias="stop.png">video_stop.png</file>
     <file alias="pause.png">video_pause.png</file>
