@@ -29,6 +29,7 @@
 #include <QTime>
 #include <QFileInfo>
 #include <QDebug>
+#include "commons/elapsedtimer.h"
 
 using namespace std;
 
@@ -37,7 +38,7 @@ DPTR_IMPL(RecordingPanel) {
     bool recording;
     RecordingPanel *q;
     unique_ptr<Ui::RecordingPanel> ui;
-    QElapsedTimer recording_elapsed;
+    ElapsedTimer recording_elapsed;
     unique_ptr<QTimer> recording_elapsed_timer;
 };
 
@@ -52,7 +53,7 @@ RecordingPanel::RecordingPanel(const Configuration::ptr & configuration, const F
   d->ui->setupUi(this);
   d->recording_elapsed_timer = make_unique<QTimer>();
   connect(d->recording_elapsed_timer.get(), &QTimer::timeout, this, [this]{
-    d->ui->elapsed->setText(QTime{0,0,0}.addMSecs(d->recording_elapsed.elapsed()).toString());
+    d->ui->elapsed->setText(QTime{0,0,0}.addMSecs(d->recording_elapsed.milliseconds()).toString());
   });
   
   recording(false);
@@ -150,6 +151,12 @@ The best file format for planetary imaging is SER. You can also save frames as P
   connect(d->ui->pause_recording, &QPushButton::toggled, this, &RecordingPanel::setPaused);
   connect(this, &RecordingPanel::setPaused, this, [=](bool paused) {
     d->ui->pause_recording->setIcon(QIcon{paused ? ":/resources/play.png" : ":/resources/pause.png"});
+    if(configuration->recording_pause_stops_timer()) {
+      if(paused)
+        d->recording_elapsed.pause();
+      else
+        d->recording_elapsed.resume();
+    }
   });
   
   auto pickDirectory = d->ui->saveDirectory->addAction(QIcon(":/resources/folder.png"), QLineEdit::TrailingPosition);
@@ -189,7 +196,7 @@ void RecordingPanel::recording(bool recording, const QString& filename)
   for(auto widget: QList<QWidget*>{d->ui->saveDirectory, d->ui->filePrefix, d->ui->fileSuffix, d->ui->saveFramesLimit})
     widget->setEnabled(!recording);
   if(recording) {
-    d->recording_elapsed.restart();
+    d->recording_elapsed.start();
     d->recording_elapsed_timer->start(500);
   } else {
     d->recording_elapsed_timer->stop();

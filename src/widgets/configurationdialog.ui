@@ -7,7 +7,7 @@
     <x>0</x>
     <y>0</y>
     <width>486</width>
-    <height>492</height>
+    <height>496</height>
    </rect>
   </property>
   <property name="windowTitle">
@@ -17,7 +17,7 @@
    <item row="1" column="0">
     <widget class="QTabWidget" name="configurationTab">
      <property name="currentIndex">
-      <number>0</number>
+      <number>1</number>
      </property>
      <widget class="QWidget" name="tab">
       <attribute name="title">
@@ -326,6 +326,13 @@
            </spacer>
           </item>
          </layout>
+        </widget>
+       </item>
+       <item row="1" column="0">
+        <widget class="QCheckBox" name="pauseShouldStopRecordingTimeout">
+         <property name="text">
+          <string>Pause button should also pause recording timer</string>
+         </property>
         </widget>
        </item>
       </layout>
