@@ -52,7 +52,10 @@ NetworkServer::NetworkServer(const Driver::ptr &driver, const ImageHandler::ptr 
   d->server->setMaxPendingConnections(1);
   d->filesystemForwarder = make_shared<FilesystemForwarder>(dispatcher);
   connect(d->server.get(), &QTcpServer::newConnection, bind(&Private::new_connection, d.get()));
-  d->forwarder = make_shared<DriverForwarder>(dispatcher, driver, handler, [save_file](Imager *imager) { save_file->setImager(imager); });
+  d->forwarder = make_shared<DriverForwarder>(dispatcher, driver, handler, [this, save_file](Imager *imager) {
+    save_file->setImager(imager);
+    emit imagerConnected(imager);
+  });
   register_handler(NetworkProtocol::Hello, [this](const NetworkPacket::ptr &p){
     DriverProtocol::setFormatParameters(NetworkProtocol::decodeHello(p));
     QVariantMap status;
@@ -73,6 +76,7 @@ NetworkServer::~NetworkServer()
 
 void NetworkServer::listen(const QString& address, int port)
 {
+  qDebug() << "Listening on %1:%2"_q % address % port;
   d->server->listen(QHostAddress{address}, port);
 }
 

@@ -25,7 +25,11 @@ install(FILES
   /mxe/usr/x86_64-w64-mingw32.shared/qt5/bin/Qt5Gui.dll
   /mxe/usr/x86_64-w64-mingw32.shared/qt5/bin/Qt5OpenGL.dll
   /mxe/usr/x86_64-w64-mingw32.shared/qt5/bin/Qt5Widgets.dll
+  /mxe/usr/x86_64-w64-mingw32.shared/qt5/bin/Qt5Qml.dll
+  /mxe/usr/x86_64-w64-mingw32.shared/qt5/bin/Qt5Network.dll
   /mxe/usr/x86_64-w64-mingw32.shared/bin/zlib1.dll
+  /mxe/usr/x86_64-w64-mingw32.shared/bin/libeay32.dll
+  /mxe/usr/x86_64-w64-mingw32.shared/bin/ssleay32.dll
 DESTINATION .)
 file(GLOB QT_PLUGINS /mxe/usr/x86_64-w64-mingw32.shared/qt5/plugins/*)
 install(DIRECTORY ${QT_PLUGINS} DESTINATION .)

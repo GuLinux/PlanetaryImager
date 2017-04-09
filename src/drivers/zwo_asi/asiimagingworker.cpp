@@ -70,7 +70,7 @@ void ASIImagingWorker::calc_exposure_timeout()
   long value;
   ASI_BOOL isAuto;
   ASI_CHECK << ASIGetControlValue(d->info.CameraID, ASI_EXPOSURE, &value, &isAuto) << "Getting exposure value";
-  d->exposure_timeout = std::max(value / 100, 100l); // Should be / 1000, but adding some slack
+  d->exposure_timeout = value*2/1000 + 500;
   qDebug() << "Exposure timeout: " << d->exposure_timeout;
 }
 
@@ -78,7 +78,8 @@ void ASIImagingWorker::calc_exposure_timeout()
 
 Frame::ptr ASIImagingWorker::shoot()
 {
-  auto frame = make_shared<Frame>( d->format == ASI_IMG_RAW16 ? 16 : 8,  d->colorFormat(), QSize{d->roi.width(), d->roi.height()});
+  // TODO: verify if Frame byteorder is always BigEndian for ASI cameras
+  auto frame = make_shared<Frame>( d->format == ASI_IMG_RAW16 ? 16 : 8,  d->colorFormat(), QSize{d->roi.width(), d->roi.height()}, Frame::BigEndian);
   ASI_CHECK << ASIGetVideoData(d->info.CameraID, frame->data(), frame->size(), d->exposure_timeout) << "Capture frame";
   return frame;
 }

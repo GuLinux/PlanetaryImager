@@ -28,7 +28,7 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean
 RUN cd / && git clone https://github.com/mxe/mxe.git && cd /mxe && \
     make -j $MXE_PARALLEL_JOBS JOBS=$MXE_PARALLEL_CPU_JOBS MXE_TARGETS='$MXE_PREFIX' MXE_PLUGIN_DIRS='/mxe/plugins/gcc5' \
-        nsis ccfits boost cmake qtbase \
+        nsis ccfits boost cmake qtbase qtdeclarative \
         ffmpeg jpeg libpng tiff opencv \ 
     	clean-junk 
 

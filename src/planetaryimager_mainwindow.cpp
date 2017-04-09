@@ -46,12 +46,15 @@
 #include <Qt/functional.h>
 #include <QGraphicsScene>
 #include <QFileInfo>
+#include <QDesktopServices>
+
 #include "image_handlers/frontend/displayimage.h"
 #include "image_handlers/saveimages.h"
 #include "image_handlers/threadimagehandler.h"
 
 #include "commons/messageslogger.h"
 #include "commons/exposuretimer.h"
+
 
 using namespace GuLinux;
 using namespace std;
@@ -66,7 +69,6 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   Configuration::ptr configuration;
   FilesystemBrowser::ptr filesystemBrowser;
   unique_ptr<QThread> imagerThread;
-
   
   static PlanetaryImagerMainWindow *q;
   unique_ptr<Ui::PlanetaryImagerMainWindow> ui;
@@ -84,6 +86,9 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   
   RecordingPanel* recording_panel;
   ExposureTimer exposure_timer;
+  
+  ImageHandler::ptr imageHandler;
+  
   
   void connectCamera(const Driver::Camera::ptr &camera);
   void cameraDisconnected();
@@ -158,7 +163,15 @@ void PlanetaryImagerMainWindow::Private::saveState()
 }
 
 
-PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, const SaveImages::ptr &save_images, const Configuration::ptr &configuration, const FilesystemBrowser::ptr &filesystemBrowser, QWidget* parent, Qt::WindowFlags flags)
+PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
+      const Driver::ptr &driver,
+      const SaveImages::ptr &save_images,
+      const Configuration::ptr &configuration,
+      const FilesystemBrowser::ptr &filesystemBrowser,
+      const QString &logFilePath,
+      QWidget* parent,
+      Qt::WindowFlags flags
+  )
 : QMainWindow(parent, flags), dptr(driver, save_images, configuration, filesystemBrowser, make_unique<QThread>())
 {
     Private::q = this;
@@ -253,6 +266,15 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
       tabifyDockWidget(d->ui->chipInfoWidget, d->ui->recording);
       d->configuration->set_widgets_setup_first_run(true);
     }
+    qDebug() << "file " << logFilePath << "exists: " << QFile::exists(logFilePath);
+    d->ui->actionOpen_log_file_folder->setVisible( ! logFilePath.isEmpty() && QFile::exists(logFilePath));
+    connect(d->ui->actionOpen_log_file_folder, &QAction::triggered, this, [=]{
+      auto logFileDirectory = QFileInfo{logFilePath}.dir().path();
+      if(!QDesktopServices::openUrl(logFileDirectory)) {
+        MessagesLogger::instance()->queue(MessagesLogger::Warning, tr("Log file"), tr("Unable to open your log file. You can open it manually at this position: %1") % logFileDirectory);
+      }
+    });
+    
     connect(d->ui->actionHide_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::hide, _1) ); });
     connect(d->ui->actionShow_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::show, _1) ); });
     connect(MessagesLogger::instance(), &MessagesLogger::message, this, bind(&PlanetaryImagerMainWindow::notify, this, _1, _2, _3, _4), Qt::QueuedConnection);
@@ -305,12 +327,20 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
       d->statusbar_info_widget->showMessage("Exposure: %1s, remaining: %2s"_q % QString::number(elapsed, 'f', 1) % QString::number(remaining, 'f', 1), 1000);
     });
     connect(&d->exposure_timer, &ExposureTimer::finished, [=]{ d->statusbar_info_widget->clearMessage(); });
+    
+    auto compositeImageHandler = ImageHandler::ptr{new ImageHandlers{d->displayImage, d->saveImages, d->histogram}};
+    d->imageHandler = ImageHandler::ptr{new ThreadImageHandler{compositeImageHandler}};
 }
 
 void PlanetaryImagerMainWindow::closeEvent(QCloseEvent* event)
 {
   QMainWindow::closeEvent(event);
   emit quit();
+}
+
+ImageHandler::ptr PlanetaryImagerMainWindow::imageHandler() const
+{
+  return d->imageHandler;
 }
 
 
@@ -366,10 +396,14 @@ void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::Camera::ptr
 {
     if(imager)
         imager->destroy();
-  auto compositeImageHandler = ImageHandler::ptr{new ImageHandlers{displayImage, saveImages, histogram}};
-  auto threadImageHandler = ImageHandler::ptr{new ThreadImageHandler{compositeImageHandler}};
-  CreateImagerWorker::create(camera, threadImageHandler, imagerThread.get(), q, bind(&Private::onImagerInitialized, this, _1) );
+  CreateImagerWorker::create(camera, imageHandler, imagerThread.get(), q, bind(&Private::onImagerInitialized, this, _1) );
 }
+
+void PlanetaryImagerMainWindow::setImager(Imager* imager)
+{
+  d->onImagerInitialized(imager);
+}
+
 
 void PlanetaryImagerMainWindow::Private::onImagerInitialized(Imager * imager)
 {  

@@ -20,12 +20,16 @@
 #include "ui_recordingpanel.h"
 #include "commons/configuration.h"
 #include "savefileconfiguration.h"
+#include "commons/messageslogger.h"
 #include <Qt/functional.h>
 #include <QDir>
 #include <QDialog>
 #include <QElapsedTimer>
 #include <QTimer>
 #include <QTime>
+#include <QFileInfo>
+#include <QDebug>
+#include "commons/elapsedtimer.h"
 
 using namespace std;
 
@@ -34,7 +38,7 @@ DPTR_IMPL(RecordingPanel) {
     bool recording;
     RecordingPanel *q;
     unique_ptr<Ui::RecordingPanel> ui;
-    QElapsedTimer recording_elapsed;
+    ElapsedTimer recording_elapsed;
     unique_ptr<QTimer> recording_elapsed_timer;
 };
 
@@ -49,12 +53,11 @@ RecordingPanel::RecordingPanel(const Configuration::ptr & configuration, const F
   d->ui->setupUi(this);
   d->recording_elapsed_timer = make_unique<QTimer>();
   connect(d->recording_elapsed_timer.get(), &QTimer::timeout, this, [this]{
-    d->ui->elapsed->setText(QTime{0,0,0}.addMSecs(d->recording_elapsed.elapsed()).toString());
+    d->ui->elapsed->setText(QTime{0,0,0}.addMSecs(d->recording_elapsed.milliseconds()).toString());
   });
   
   recording(false);
   d->ui->save_recording_info->setCurrentIndex( (configuration->save_json_info_file() ? 1 : 0) + (configuration->save_info_file() ? 2 : 0) );
-  d->ui->saveDirectory->setText(configuration->save_directory());
   d->ui->filePrefix->setCurrentText(configuration->save_file_prefix());
   d->ui->fileSuffix->setCurrentText(configuration->save_file_suffix());
   static vector<Configuration::SaveFormat> format_combo_index {
@@ -65,13 +68,20 @@ RecordingPanel::RecordingPanel(const Configuration::ptr & configuration, const F
   };
   auto current_format_index = std::find(format_combo_index.begin(), format_combo_index.end(), configuration->save_format());
   d->ui->videoOutputType->setCurrentIndex( current_format_index == format_combo_index.end() ? 0 : current_format_index-format_combo_index.begin() );
-  connect(d->ui->videoOutputType, F_PTR(QComboBox, activated, int), [&](int index) {
+  connect(d->ui->videoOutputType, F_PTR(QComboBox, activated, int), [&, configuration](int index) {
     configuration->set_save_format(format_combo_index[index]);
+    if(format_combo_index[index] == Configuration::Video && !configuration->deprecated_video_warning_shown()) {
+      configuration->set_deprecated_video_warning_shown(true);
+      MessagesLogger::instance()->queue(MessagesLogger::Warning, tr("Video encoder"), tr(R"(Saving as video file is not supported, and not recommended.
+Video encoding might fail, due to unavailable codecs, will result in quality loss, and will slow down capture FPS.
+The best file format for planetary imaging is SER. You can also save frames as PNG or TIFF images.)"));
+    }
   });
-  connect(d->ui->saveDirectory, &QLineEdit::textChanged, [&configuration](const QString &directory){
+  connect(d->ui->saveDirectory, &QLineEdit::textChanged, [this, &configuration](const QString &directory){
     configuration->set_save_directory(directory);
   });
   
+  d->ui->saveDirectory->setText(configuration->save_directory());
   
   auto is_reloading_prefix_suffix = make_shared<bool>(false);
   auto change_prefix = [is_reloading_prefix_suffix, &configuration](const QString &prefix){ if(! *is_reloading_prefix_suffix) configuration->set_save_file_prefix(prefix); };
@@ -138,15 +148,28 @@ RecordingPanel::RecordingPanel(const Configuration::ptr & configuration, const F
   });
   connect(d->ui->start_recording, &QPushButton::clicked, this, &RecordingPanel::start);
   connect(d->ui->stop_recording, &QPushButton::clicked, this, &RecordingPanel::stop);
-  //d->ui->pause_recording->setVisible(false);
   connect(d->ui->pause_recording, &QPushButton::toggled, this, &RecordingPanel::setPaused);
+  connect(this, &RecordingPanel::setPaused, this, [=](bool paused) {
+    d->ui->pause_recording->setIcon(QIcon{paused ? ":/resources/play.png" : ":/resources/pause.png"});
+    if(configuration->recording_pause_stops_timer()) {
+      if(paused)
+        d->recording_elapsed.pause();
+      else
+        d->recording_elapsed.resume();
+    }
+  });
   
   auto pickDirectory = d->ui->saveDirectory->addAction(QIcon(":/resources/folder.png"), QLineEdit::TrailingPosition);
   connect(pickDirectory, &QAction::triggered, d->filesystemBrowser.get(), [=]{ d->filesystemBrowser->pickDirectory(configuration->save_directory()); });
   connect(d->filesystemBrowser.get(), &FilesystemBrowser::directoryPicked, d->ui->saveDirectory, &QLineEdit::setText);
 
   auto check_directory = [&] {
-    d->ui->start_recording->setEnabled(QDir(configuration->save_directory()).exists());
+    auto saveDir = QDir(configuration->save_directory());
+    d->ui->start_recording->setEnabled(
+      !configuration->save_directory().isEmpty() && 
+      saveDir.exists() && 
+      QFileInfo(saveDir.path()).isWritable()
+    );
   };
   check_directory();
   connect(d->ui->saveDirectory, &QLineEdit::textChanged, check_directory);
@@ -170,11 +193,10 @@ void RecordingPanel::recording(bool recording, const QString& filename)
   d->ui->recordingBox->setVisible(recording);
   d->ui->filename->setText(filename);
   d->ui->recordingButtons->setCurrentIndex(recording ? 1 : 0);
-  //d->ui->start_stop_recording->setText(recording ? tr("Stop") : tr("Start"));
   for(auto widget: QList<QWidget*>{d->ui->saveDirectory, d->ui->filePrefix, d->ui->fileSuffix, d->ui->saveFramesLimit})
     widget->setEnabled(!recording);
   if(recording) {
-    d->recording_elapsed.restart();
+    d->recording_elapsed.start();
     d->recording_elapsed_timer->start(500);
   } else {
     d->recording_elapsed_timer->stop();

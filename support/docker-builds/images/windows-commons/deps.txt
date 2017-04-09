@@ -23,6 +23,7 @@ libtiff-5.dll
 platforms
 Qt5Core.dll
 Qt5Gui.dll
+Qt5Qml.dll
 Qt5OpenGL.dll
 Qt5Widgets.dll
 zlib1.dll

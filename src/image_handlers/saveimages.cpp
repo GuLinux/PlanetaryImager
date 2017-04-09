@@ -17,6 +17,8 @@
  */
 
 #include "saveimages.h"
+#include <QObject>
+#include "Qt/strings.h"
 
 using namespace std;
 
@@ -28,6 +30,16 @@ SaveImages::SaveImages(QObject* parent) : QObject(parent)
 
 SaveImages::~SaveImages()
 {
+}
+
+SaveImages::Error::Error(const QString &what) : runtime_error(what.toStdString()) {}
+
+SaveImages::Error SaveImages::Error::openingFile(const QString& file, const QString& additionalInfo)
+{
+  auto message = QObject::tr("Unable to open video file %1 for writing") % file;
+  if(!additionalInfo.isEmpty())
+    message = "%1\n%2"_q % message % additionalInfo;
+  return Error(message);
 }
 
 

@@ -105,6 +105,8 @@ public:
     declare_setting(timelapse_msecs, qlonglong)
     
     declare_setting(filter_presets_by_camera, bool)
+    declare_setting(deprecated_video_warning_shown, bool)
+    declare_setting(recording_pause_stops_timer, bool)
     
     struct Preset {
       QString path;

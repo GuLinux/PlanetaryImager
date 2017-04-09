@@ -35,6 +35,8 @@
 #include "recordinginformation.h"
 #include <atomic>
 #include "c++/stlutils.h"
+#include "commons/messageslogger.h"
+#include "commons/elapsedtimer.h"
 
 using namespace std;
 using namespace std::placeholders;
@@ -89,15 +91,15 @@ public:
   bool accepting_frames() const;
   void handle(const Frame::ptr &frame);
   inline void stop() { isRecording = false; }
-  void setPaused(bool paused) { isPaused = paused; }
+  void setPaused(bool paused);
 private:
   const RecordingParameters _parameters;
   LocalSaveImages *saveImagesObject;
   atomic_bool isRecording;
   atomic_bool isPaused;
-  chrono::steady_clock::time_point started;
   fps_counter savefps, meanfps;
   FileWriter::Ptr file_writer;
+  ElapsedTimer elapsed;
   size_t frames = 0;
   Frame::ptr reference;
   QDateTime timelapse_last_shot;
@@ -131,15 +133,24 @@ Recording::Recording(const RecordingParameters &parameters, LocalSaveImages *sav
   saveImagesObject{saveImagesObject},
             isRecording(true),
             isPaused(false),
-  started{chrono::steady_clock::now()},
   savefps{[=](double fps){ emit saveImagesObject->saveFPS(fps);}, fps_counter::Elapsed},
   meanfps{[=](double fps){ emit saveImagesObject->meanFPS(fps);}, fps_counter::Elapsed, 1000, true},
   file_writer{parameters.fileWriterFactory()}
 {
+  elapsed.start();
   _parameters.recording_information->set_writer(_parameters.recording_information_writer(file_writer));
   emit saveImagesObject->recording(file_writer->filename());
 }
 
+void Recording::setPaused(bool paused) {
+  isPaused = paused;
+  if(_parameters.configuration->recording_pause_stops_timer()) {
+    if(paused)
+      elapsed.pause();
+    else
+      elapsed.resume();
+  }
+}
 
 
 void Recording::handle(const Frame::ptr &frame) {
@@ -170,7 +181,7 @@ bool Recording::accepting_frames() const {
         isRecording && (
     _parameters.limit_type == Configuration::Infinite || 
     ( _parameters.limit_type == Configuration::FramesNumber && frames < _parameters.max_frames ) ||
-    ( _parameters.limit_type == Configuration::Duration && chrono::steady_clock::now() - started < _parameters.max_seconds) ||
+    ( _parameters.limit_type == Configuration::Duration && elapsed.seconds() < _parameters.max_seconds.count()) ||
     ( _parameters.limit_type == Configuration::FileSize && (! reference || reference->size() * frames < _parameters.max_size) )
     );
 }
@@ -179,7 +190,6 @@ Recording::~Recording() {
   if(reference)
     _parameters.recording_information->set_ended(frames, reference->resolution().width(), reference->resolution().height(), reference->bpp(), reference->channels());
     isRecording = false;
-  emit saveImagesObject->finished();
 }
 
 WriterThreadWorker::WriterThreadWorker (LocalSaveImages *saveImages, QObject* parent )
@@ -228,16 +238,26 @@ void WriterThreadWorker::start(const RecordingParameters & recording_parameters,
   this->max_memory_usage = static_cast<size_t>(max_memory_usage);
   dropped_frames = 0;
   framesQueue.reset();
-
-  recording = make_unique<Recording>(recording_parameters, saveImages);
-  GuLinux::Scope cleanup{[this]{ recording.reset(); }};
-  while(recording->accepting_frames() ) {
-    Frame::ptr frame;
-    if(framesQueue && framesQueue->pop(frame)) {
-      recording->evaluate(frame);
-    } else {
-      QThread::msleep(1);
+  
+  GuLinux::Scope cleanup{[this]{
+    emit saveImages->finished();
+    recording.reset();
+  }};
+  try {
+    recording = make_unique<Recording>(recording_parameters, saveImages);
+    while(recording->accepting_frames() ) {
+      Frame::ptr frame;
+      if(framesQueue && framesQueue->pop(frame)) {
+          recording->evaluate(frame);
+      } else {
+        QThread::msleep(1);
+      }
     }
+  } catch(const SaveImages::Error &e) {
+    qWarning() << e.what();
+    MessagesLogger::instance()->queue(MessagesLogger::Error, tr("Capture error"), e.what());
+    if(recording)
+      recording->stop();
   }
 }
 

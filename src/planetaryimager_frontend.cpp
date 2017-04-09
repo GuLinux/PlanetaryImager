@@ -24,6 +24,7 @@
 #include "commons/crashhandler.h"
 #include <QMenuBar>
 #include <QMenu>
+#include "commons/commandline.h"
 
 #include "network/client/connectionmanager.h"
 
@@ -36,10 +37,14 @@ int main(int argc, char** argv)
     CrashHandler crash_handler({SIGSEGV, SIGABRT});
     cerr << "Starting PlanetaryImager - version " << PLANETARY_IMAGER_VERSION << " (" << HOST_PROCESSOR << ")" << endl;
     QApplication app(argc, argv);
-    LogHandler log_handler;
-    app.setApplicationName("PlanetaryImager");
+    app.setApplicationName("PlanetaryImager-Frontend");
     app.setApplicationDisplayName("Planetary Imager");
     app.setApplicationVersion(PLANETARY_IMAGER_VERSION);
+    
+    CommandLine commandLine(app);
+    commandLine.frontend().process();
+    
+    LogHandler log_handler{commandLine};
     app.setQuitOnLastWindowClosed(false);
 
     (new ConnectionManager())->show();

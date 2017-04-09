@@ -89,7 +89,8 @@ void ImagerThread::stop()
 
 void ImagerThread::Private::thread_started()
 {
-  QElapsedTimer last_error_occured;
+  QElapsedTimer firstErrorOccured;
+  int errors_since_last_success = 0;
   int error_messages_since_last_success = 0;
   running = true;
   while(running) {
@@ -113,21 +114,34 @@ void ImagerThread::Private::thread_started()
           frame->set_exposure(exposure);
           imageHandler->handle(frame);
         ++fps;
-        error_messages_since_last_success = 0;
+        errors_since_last_success = 0;
       }
-    } catch(const std::exception &e) {
+    } catch(const Imager::exception &e) {
       qWarning() << e.what();
-      if( (last_error_occured.elapsed() > 3000 || ! last_error_occured.isValid()) && error_messages_since_last_success++ < 4) {
-        if(error_messages_since_last_success == 4) {
-          MessagesLogger::queue(MessagesLogger::Warning, tr("Error on frame capture"), tr("An error occured while capturing frame for %1:\n%2\nFollowing errors will be quietly ignored, check the console log for more details.") 
+      if(e.imagerDisconnected()) {
+        running = false;
+        imager->destroy();
+        return;
+      }
+      if(errors_since_last_success++ == 0) {
+        error_messages_since_last_success = 0;
+        firstErrorOccured.restart();
+        continue;
+      }
+      if(firstErrorOccured.elapsed() > 30 * 1000 && error_messages_since_last_success++ == 0) {
+        MessagesLogger::queue(MessagesLogger::Warning, tr("Error on frame capture"), tr("An error occured while capturing frame for %1:\n%2") 
+        % imager->name()
+        % e.what());
+        continue;
+      }
+      
+      if(firstErrorOccured.elapsed() > 90 * 1000) {
+          MessagesLogger::queue(MessagesLogger::Warning, tr("Error on frame capture"), tr("An error occured while capturing frame for %1:\n%2\nDisconnecting camera.") 
             % imager->name()
             % e.what());
-        } else {
-          MessagesLogger::queue(MessagesLogger::Warning, tr("Error on frame capture"), tr("An error occured while capturing frame for %1:\n%2") 
-            % imager->name()
-            % e.what());
-        }
-        last_error_occured.restart();
+          running = false;
+          imager->destroy();
+          return;
       }
     }
     if(long_exposure_mode)

@@ -71,12 +71,12 @@ void SER_Header::set_color_format(const Frame::ColorFormat& format)
  SER_Timestamp SER_Header::timestamp(const QDateTime& datetime)
 {
   static const QDateTime reference{{1, 1, 1}, {0,0,0}};
-  return reference.msecsTo(datetime) * 10000;
+  return qToLittleEndian(reference.msecsTo(datetime) * 10000);
 }
 
 QDateTime SER_Header::qdatetime(const SER_Timestamp& timestamp)
 {
   static const QDateTime reference{{1, 1, 1}, {0,0,0}};
-  return reference.addMSecs(timestamp / 10000);
+  return reference.addMSecs( qFromLittleEndian(timestamp) / 10000);
 }
 
