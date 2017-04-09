@@ -26,6 +26,8 @@
 #include <QElapsedTimer>
 #include <QTimer>
 #include <QTime>
+#include <QFileInfo>
+#include <QDebug>
 
 using namespace std;
 
@@ -54,7 +56,6 @@ RecordingPanel::RecordingPanel(const Configuration::ptr & configuration, const F
   
   recording(false);
   d->ui->save_recording_info->setCurrentIndex( (configuration->save_json_info_file() ? 1 : 0) + (configuration->save_info_file() ? 2 : 0) );
-  d->ui->saveDirectory->setText(configuration->save_directory());
   d->ui->filePrefix->setCurrentText(configuration->save_file_prefix());
   d->ui->fileSuffix->setCurrentText(configuration->save_file_suffix());
   static vector<Configuration::SaveFormat> format_combo_index {
@@ -68,10 +69,11 @@ RecordingPanel::RecordingPanel(const Configuration::ptr & configuration, const F
   connect(d->ui->videoOutputType, F_PTR(QComboBox, activated, int), [&](int index) {
     configuration->set_save_format(format_combo_index[index]);
   });
-  connect(d->ui->saveDirectory, &QLineEdit::textChanged, [&configuration](const QString &directory){
+  connect(d->ui->saveDirectory, &QLineEdit::textChanged, [this, &configuration](const QString &directory){
     configuration->set_save_directory(directory);
   });
   
+  d->ui->saveDirectory->setText(configuration->save_directory());
   
   auto is_reloading_prefix_suffix = make_shared<bool>(false);
   auto change_prefix = [is_reloading_prefix_suffix, &configuration](const QString &prefix){ if(! *is_reloading_prefix_suffix) configuration->set_save_file_prefix(prefix); };
@@ -146,7 +148,12 @@ RecordingPanel::RecordingPanel(const Configuration::ptr & configuration, const F
   connect(d->filesystemBrowser.get(), &FilesystemBrowser::directoryPicked, d->ui->saveDirectory, &QLineEdit::setText);
 
   auto check_directory = [&] {
-    d->ui->start_recording->setEnabled(QDir(configuration->save_directory()).exists());
+    auto saveDir = QDir(configuration->save_directory());
+    d->ui->start_recording->setEnabled(
+      !configuration->save_directory().isEmpty() && 
+      saveDir.exists() && 
+      QFileInfo(saveDir.path()).isWritable()
+    );
   };
   check_directory();
   connect(d->ui->saveDirectory, &QLineEdit::textChanged, check_directory);
