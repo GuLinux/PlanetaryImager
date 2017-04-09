@@ -180,7 +180,6 @@ Recording::~Recording() {
   if(reference)
     _parameters.recording_information->set_ended(frames, reference->resolution().width(), reference->resolution().height(), reference->bpp(), reference->channels());
     isRecording = false;
-  emit saveImagesObject->finished();
 }
 
 WriterThreadWorker::WriterThreadWorker (LocalSaveImages *saveImages, QObject* parent )
@@ -229,22 +228,26 @@ void WriterThreadWorker::start(const RecordingParameters & recording_parameters,
   this->max_memory_usage = static_cast<size_t>(max_memory_usage);
   dropped_frames = 0;
   framesQueue.reset();
-
-  recording = make_unique<Recording>(recording_parameters, saveImages);
-  GuLinux::Scope cleanup{[this]{ recording.reset(); }};
-  while(recording->accepting_frames() ) {
-    Frame::ptr frame;
-    if(framesQueue && framesQueue->pop(frame)) {
-      try {
-        recording->evaluate(frame);
-      } catch(const SaveImages::Error &e) {
-        qWarning() << e.what();
-        MessagesLogger::instance()->queue(MessagesLogger::Error, tr("Capture error"), e.what());
-        recording->stop();
+  
+  GuLinux::Scope cleanup{[this]{
+    emit saveImages->finished();
+    recording.reset();
+  }};
+  try {
+    recording = make_unique<Recording>(recording_parameters, saveImages);
+    while(recording->accepting_frames() ) {
+      Frame::ptr frame;
+      if(framesQueue && framesQueue->pop(frame)) {
+          recording->evaluate(frame);
+      } else {
+        QThread::msleep(1);
       }
-    } else {
-      QThread::msleep(1);
     }
+  } catch(const SaveImages::Error &e) {
+    qWarning() << e.what();
+    MessagesLogger::instance()->queue(MessagesLogger::Error, tr("Capture error"), e.what());
+    if(recording)
+      recording->stop();
   }
 }
 
