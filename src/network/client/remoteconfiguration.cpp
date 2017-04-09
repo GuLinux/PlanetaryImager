@@ -95,3 +95,4 @@ define_setting(telescope, QString)
 
 define_setting(timelapse_mode, bool)
 define_setting(timelapse_msecs, qlonglong)
+define_setting(recording_pause_stops_timer, bool)
