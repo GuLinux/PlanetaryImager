@@ -18,7 +18,7 @@
  */
 
 #include "scriptingengine.h"
-#include <QtScript/QScriptEngine>
+#include <QtQml/QJSEngine>
 #include <QDebug>
 
 using namespace std;
@@ -44,7 +44,7 @@ private:
 DPTR_IMPL(ScriptingEngine) {
   ScriptingEngine *q;
   unique_ptr<ScriptingPlanetaryImager> scriptedImager;
-  QScriptEngine engine;
+  QJSEngine engine;
 };
 
 
@@ -58,7 +58,7 @@ ScriptingEngine::ScriptingEngine(const Configuration::ptr &configuration, const 
 {
   d->scriptedImager = make_unique<ScriptingPlanetaryImager>(configuration, saveImages);
   connect(d->scriptedImager.get(), &ScriptingPlanetaryImager::message, this, [=](const QString &s) { emit reply(s + "\n"); });
-  QScriptValue objectValue = d->engine.newQObject(d->scriptedImager.get());
+  QJSValue objectValue = d->engine.newQObject(d->scriptedImager.get());
   d->engine.globalObject().setProperty("i", objectValue);
 }
 
@@ -68,7 +68,7 @@ ScriptingEngine::~ScriptingEngine()
 
 void ScriptingEngine::run(const QString& script)
 {
-  QScriptValue v = d->engine.evaluate(script);
+  QJSValue v = d->engine.evaluate(script);
   emit reply(v.toString() + "\n");
   qDebug() << v.toString();
 }

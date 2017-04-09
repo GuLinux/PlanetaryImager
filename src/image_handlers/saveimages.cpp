@@ -30,5 +30,5 @@ SaveImages::~SaveImages()
 {
 }
 
-
+SaveImages::Error::Error(const QString &what) : runtime_error(what.toStdString()) {}
 #include "saveimages.moc"

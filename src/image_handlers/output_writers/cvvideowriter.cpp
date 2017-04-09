@@ -17,9 +17,11 @@
  */
 
 #include <QDebug>
+#include <QObject>
 #include "Qt/strings.h"
 #include "cvvideowriter.h"
 #include "commons/opencv_utils.h"
+#include "image_handlers/saveimages.h"
 using namespace std;
 
 DPTR_IMPL(cvVideoWriter) {
@@ -52,8 +54,7 @@ void cvVideoWriter::handle ( const Frame::ptr &frame )
     if(!d->videoWriter.isOpened())
       d->videoWriter.open(d->filename.toStdString(), fourcc(d->configuration->video_codec().toStdString()), 25, size);
     if(! d->videoWriter.isOpened()) {
-      qWarning() << "unable to open video file" << d->filename << size;
-      return;
+      throw SaveImages::Error(QObject::tr("Unable to save video file %1. Check output directory exists, and that the selected video encoder is supported by your system.") % d->filename);
     }
     d->videoWriter << frame->mat();
   } catch(cv::Exception &e) {
