@@ -244,6 +244,10 @@
    <property name="enabled">
     <bool>false</bool>
    </property>
+   <property name="icon">
+    <iconset resource="resources/resources.qrc">
+     <normaloff>:/resources/delete.png</normaloff>:/resources/delete.png</iconset>
+   </property>
    <property name="text">
     <string>&amp;Disconnect</string>
    </property>

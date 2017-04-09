@@ -160,6 +160,7 @@ define_setting(timelapse_msecs, qlonglong, 1000)
 
 define_setting(filter_presets_by_camera, bool, true)
 define_setting(deprecated_video_warning_shown, bool, false)
+define_setting(recording_pause_stops_timer, bool, false)
 
 QString Configuration::savefile() const
 {

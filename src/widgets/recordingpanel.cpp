@@ -147,8 +147,10 @@ The best file format for planetary imaging is SER. You can also save frames as P
   });
   connect(d->ui->start_recording, &QPushButton::clicked, this, &RecordingPanel::start);
   connect(d->ui->stop_recording, &QPushButton::clicked, this, &RecordingPanel::stop);
-  //d->ui->pause_recording->setVisible(false);
   connect(d->ui->pause_recording, &QPushButton::toggled, this, &RecordingPanel::setPaused);
+  connect(this, &RecordingPanel::setPaused, this, [=](bool paused) {
+    d->ui->pause_recording->setIcon(QIcon{paused ? ":/resources/play.png" : ":/resources/pause.png"});
+  });
   
   auto pickDirectory = d->ui->saveDirectory->addAction(QIcon(":/resources/folder.png"), QLineEdit::TrailingPosition);
   connect(pickDirectory, &QAction::triggered, d->filesystemBrowser.get(), [=]{ d->filesystemBrowser->pickDirectory(configuration->save_directory()); });
@@ -184,7 +186,6 @@ void RecordingPanel::recording(bool recording, const QString& filename)
   d->ui->recordingBox->setVisible(recording);
   d->ui->filename->setText(filename);
   d->ui->recordingButtons->setCurrentIndex(recording ? 1 : 0);
-  //d->ui->start_stop_recording->setText(recording ? tr("Stop") : tr("Start"));
   for(auto widget: QList<QWidget*>{d->ui->saveDirectory, d->ui->filePrefix, d->ui->fileSuffix, d->ui->saveFramesLimit})
     widget->setEnabled(!recording);
   if(recording) {
