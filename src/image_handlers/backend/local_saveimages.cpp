@@ -35,6 +35,7 @@
 #include "recordinginformation.h"
 #include <atomic>
 #include "c++/stlutils.h"
+#include "commons/messageslogger.h"
 
 using namespace std;
 using namespace std::placeholders;
@@ -234,7 +235,13 @@ void WriterThreadWorker::start(const RecordingParameters & recording_parameters,
   while(recording->accepting_frames() ) {
     Frame::ptr frame;
     if(framesQueue && framesQueue->pop(frame)) {
-      recording->evaluate(frame);
+      try {
+        recording->evaluate(frame);
+      } catch(const SaveImages::Error &e) {
+        qWarning() << e.what();
+        MessagesLogger::instance()->queue(MessagesLogger::Error, tr("Capture error"), e.what());
+        recording->stop();
+      }
     } else {
       QThread::msleep(1);
     }

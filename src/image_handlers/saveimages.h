@@ -29,6 +29,7 @@ class SaveImages : public QObject, public ImageHandler
   Q_OBJECT
 public:
   typedef std::shared_ptr<SaveImages> ptr;
+  class Error;
     SaveImages(QObject *parent = 0);
     virtual ~SaveImages();
     virtual void handle(const Frame::ptr &frame) = 0;
@@ -43,6 +44,11 @@ signals:
   void droppedFrames(long frames);
   void recording(const QString &filename);
   void finished();
+};
+
+class SaveImages::Error : public std::runtime_error {
+public:
+  Error(const QString &what);
 };
 
 #endif // SAVEIMAGE_H
