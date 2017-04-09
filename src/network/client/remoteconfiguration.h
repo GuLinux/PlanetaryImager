@@ -54,6 +54,8 @@ public:
   declare_setting(telescope, QString)
   declare_setting(timelapse_mode, bool)
   declare_setting(timelapse_msecs, qlonglong)
+  
+  declare_setting(recording_pause_stops_timer, bool)
 private:
     DPTR
 };

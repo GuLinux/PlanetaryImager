@@ -41,12 +41,13 @@ int main(int argc, char** argv)
     CrashHandler crash_handler({SIGSEGV, SIGABRT});
     cerr << "Starting PlanetaryImager Daemon - version " << PLANETARY_IMAGER_VERSION << " (" << HOST_PROCESSOR << ")" << endl;
     QCoreApplication app(argc, argv);
-    LogHandler log_handler;
-    app.setApplicationName("PlanetaryImager");
+    app.setApplicationName("PlanetaryImager-Daemon");
     app.setApplicationVersion(PLANETARY_IMAGER_VERSION);
     
     CommandLine commandLine(app);
-    commandLine.daemon().process();
+    commandLine.daemon("0.0.0.0").process();
+    
+    LogHandler log_handler{commandLine};
     
     auto configuration = make_shared<Configuration>();
     auto driver = make_shared<SupportedDrivers>(commandLine.driversDirectories());
@@ -62,7 +63,7 @@ int main(int argc, char** argv)
     auto server = make_shared<NetworkServer>(driver, imageHandlers, dispatcher, save_files_forwarder, frames_forwarder );
     
 
-    QMetaObject::invokeMethod(server.get(), "listen", Q_ARG(QString, "0.0.0.0"), Q_ARG(int, commandLine.port()));
+    QMetaObject::invokeMethod(server.get(), "listen", Q_ARG(QString, commandLine.listenAddress()), Q_ARG(int, commandLine.port()));
     
     return app.exec();
 }

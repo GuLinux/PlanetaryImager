@@ -26,9 +26,6 @@ DPTR_IMPL(ROIValidator) {
   static int closest_multiple(int dimension, int factor);
 };
 
-ROIValidator::ROIValidator(const initializer_list<Rule>& rules) : ROIValidator(list<Rule>{rules})
-{
-}
 
 ROIValidator::ROIValidator(const list<Rule> &rules) : dptr(rules)
 {
@@ -39,9 +36,10 @@ ROIValidator::~ROIValidator()
 {
 }
 
-QRect ROIValidator::validate(const QRect& original) const
+QRect ROIValidator::validate(const QRect& original, QRect currentROI) const
 {
   QRect result = original;
+  result.translate(currentROI.x(), currentROI.y());
   int rule_number = 0;
   for(auto rule: d->rules) {
     qDebug() << "rule " << rule_number << ": before=" << result;
@@ -106,5 +104,13 @@ ROIValidator::Rule ROIValidator::area_multiple(int factor, int width_step, int h
     if(roi.width() <= 0 || roi.height() <= 0)
       roi = fallback;
   };
+}
+
+
+QRect ROIValidator::flipped(const QRect &roi, bool horizontal, bool vertical, const QRect &context)
+{
+  int x = horizontal ? (context.bottomRight().x() - roi.bottomRight().x()) : roi.x();
+  int y = vertical ?   (context.bottomRight().y() - roi.bottomRight().y()) : roi.y();
+  return QRect{x, y, roi.width(), roi.height()};
 }
 

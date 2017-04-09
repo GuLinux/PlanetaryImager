@@ -22,6 +22,7 @@
 #include <opencv2/opencv.hpp>
 #include <QDir>
 #include <CCfits/CCfits>
+#include "image_handlers/saveimages.h"
 
 using namespace std;
 using namespace std::placeholders;
@@ -34,6 +35,7 @@ DPTR_IMPL(ImageFileWriter) {
   QString savename(const Frame::ptr &frame, const QString &extension) const;
   QDir savedir;
   void saveFITS(const Frame::ptr &frame) const;
+  void saveCV(const Frame::ptr &frame, const QString &extension) const;
 };
 
 ImageFileWriter::ImageFileWriter(ImageFileWriter::Format format, const Configuration::ptr & configuration) : dptr(configuration, configuration->savefile(), this)
@@ -41,7 +43,7 @@ ImageFileWriter::ImageFileWriter(ImageFileWriter::Format format, const Configura
   qDebug() << "Format: " << format;
   switch(format) {
     case PNG:
-      d->writer = [&](const Frame::ptr &frame){ cv::imwrite(d->savename(frame, "png").toStdString(), frame->mat()); };
+      d->writer = bind(&Private::saveCV, d.get(), _1, "png");
       break;
     case FITS:
       d->writer = bind(&Private::saveFITS, d.get(), _1);
@@ -103,24 +105,40 @@ END
 */
 void ImageFileWriter::Private::saveFITS(const Frame::ptr& frame) const
 {
+  auto filename = savename(frame, "fits");
   if(frame->channels() != 1) {
-    qWarning() << "Colour images are currently unsupported for FITS writer";
-    return;
+    throw SaveImages::Error::openingFile(filename, QObject::tr("Colour images are currently unsupported for FITS writer"));
   }
   long naxes[2] = { frame->resolution().width(), frame->resolution().height() };
-  CCfits::FITS fits{savename(frame, "fits").toStdString(), frame->bpp() == 8 ? BYTE_IMG : USHORT_IMG, 2, naxes};
-  valarray<long> data(frame->resolution().width() * frame->resolution().height());
-  auto mat = frame->mat();
-  if(frame->bpp() == 8) {
-    copy(mat.begin<uint8_t>(), mat.end<uint8_t>(), begin(data));
-  } else {
-    copy(mat.begin<uint16_t>(), mat.end<uint16_t>(), begin(data));
+  try {
+    CCfits::FITS fits{filename.toStdString(), frame->bpp() == 8 ? BYTE_IMG : USHORT_IMG, 2, naxes};
+    valarray<long> data(frame->resolution().width() * frame->resolution().height());
+    auto mat = frame->mat();
+    if(frame->bpp() == 8) {
+      copy(mat.begin<uint8_t>(), mat.end<uint8_t>(), begin(data));
+    } else {
+      copy(mat.begin<uint16_t>(), mat.end<uint16_t>(), begin(data));
+    }
+    if(frame->exposure() != Frame::Seconds::zero()) {
+      fits.pHDU().addKey("EXPTIME", frame->exposure().count(), "Total Exposure Time (s)");
+    }
+    fits.pHDU().addKey("DATE-OBS", frame->created_utc().toString(Qt::ISODate).toStdString(), "UTC start date of observation");
+    fits.pHDU().write(1, data.size(), data);
+    fits.flush();
   }
-  if(frame->exposure() != Frame::Seconds::zero()) {
-    fits.pHDU().addKey("EXPTIME", frame->exposure().count(), "Total Exposure Time (s)");
+  catch(const CCfits::FitsException &e) {
+    throw SaveImages::Error(QString::fromStdString(e.message()));
   }
-  fits.pHDU().addKey("DATE-OBS", frame->created_utc().toString(Qt::ISODate).toStdString(), "UTC start date of observation");
-  fits.pHDU().write(1, data.size(), data);
-  fits.flush();
+}
+
+void ImageFileWriter::Private::saveCV(const Frame::ptr& frame, const QString& extension) const
+{
+  const QString filename = savename(frame, extension);
+  try {
+    if(!cv::imwrite(filename.toStdString(), frame->mat()))
+      throw SaveImages::Error::openingFile(filename);
+  } catch(const exception &e) {
+    throw SaveImages::Error(QString::fromStdString(e.what()));
+  }
 }
 

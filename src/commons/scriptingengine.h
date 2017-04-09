@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2016  Marco Gulino <marco@gulinux.net>
+ * GuLinux Planetary Imager - https://github.com/GuLinux/PlanetaryImager
+ * Copyright (C) 2017  Marco Gulino <marco@gulinux.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,26 +17,29 @@
  *
  */
 
-#ifndef LOGHANDLER_H
-#define LOGHANDLER_H
-#include <QDebug>
+#ifndef SCRIPTINGENGINE_H
+#define SCRIPTINGENGINE_H
+
+#include <QObject>
 #include "c++/dptr.h"
-#include <ostream>
-#include <functional>
-class CommandLine;
-class LogHandler
+#include "configuration.h"
+#include "image_handlers/saveimages.h"
+#include "drivers/imager.h"
+
+class ScriptingEngine : public QObject
 {
+    Q_OBJECT
 public:
-  struct Output {
-    std::reference_wrapper<std::ostream> stream;
-    QtMsgType level;
-    typedef std::list<Output> list;
-  };
-  LogHandler(const CommandLine &commandLine);
-  ~LogHandler();
-  static QHash<QtMsgType, std::string> log_levels();
+  ScriptingEngine(const Configuration::ptr &configuration, const SaveImages::ptr &saveImages, QObject *parent = nullptr);
+  ~ScriptingEngine();
+  typedef std::shared_ptr<ScriptingEngine> ptr;
+  void setImager(Imager *imager);
+public slots:
+  void run(const QString &script);
+signals:
+  void reply(const QString &);
 private:
   DPTR
 };
 
-#endif // LOGHANDLER_H
+#endif // SCRIPTINGENGINE_H

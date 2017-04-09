@@ -51,6 +51,8 @@ ConfigurationDialog::ConfigurationDialog(const Configuration::ptr & configuratio
     connect(d->ui->opengl, &QCheckBox::toggled, bind(&Configuration::set_opengl, configuration.get(), _1));
     d->ui->debayer->setChecked(configuration->debayer());
     d->ui->opengl->setChecked(configuration->opengl());
+    d->ui->pauseShouldStopRecordingTimeout->setChecked(configuration->recording_pause_stops_timer());
+    connect(d->ui->pauseShouldStopRecordingTimeout, &QCheckBox::toggled, bind(&Configuration::set_recording_pause_stops_timer, configuration.get(), _1));
     
     auto edge_settings = [=] {
       d->ui->cannySettingsBox->setVisible(d->configuration->edge_algorithm() == Configuration::Canny);

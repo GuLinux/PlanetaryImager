@@ -23,14 +23,28 @@
 #include "Qt/strings.h"
 #include <QCommandLineParser>
 #include <iostream>
+#include "loghandler.h"
+#include <QStandardPaths>
 
 using namespace std;
+using namespace std::placeholders;
 
 DPTR_IMPL(CommandLine) {
   QCoreApplication &app;
   CommandLine *q;
   QCommandLineParser parser;
+  void loggingOptions();
 };
+#include <iostream>
+void CommandLine::Private::loggingOptions()
+{
+  auto levels_string = LogHandler::log_levels().values();
+  QStringList levels;
+  transform(begin(levels_string), end(levels_string), back_inserter(levels), bind(&QString::fromStdString, _1));
+  parser.addOption({"console-log-level", "Console logging level (one of %1)"_q % levels.join(", "), "level", QString::fromStdString(LogHandler::log_levels()[QtWarningMsg]) });
+  parser.addOption({"log-file", "Log file path", "log_file", "%1/%2.log"_q % QStandardPaths::writableLocation(QStandardPaths::CacheLocation) % app.applicationName() });
+}
+
 
 CommandLine::CommandLine(QCoreApplication& app) : dptr(app, this)
 {
@@ -46,15 +60,25 @@ CommandLine::~CommandLine()
 CommandLine & CommandLine::backend()
 {
   d->parser.addOption({"drivers", "Drivers directory", "drivers_directory_path", DRIVERS_DIRECTORY});
+  d->loggingOptions();
   return *this;
 }
 
-CommandLine & CommandLine::daemon()
+CommandLine & CommandLine::daemon(const QString &listenAddress)
 {
   backend();
   d->parser.addOptions({
     { {"p", "port"}, "listening port for server (default: %1)"_q % Configuration::DefaultServerPort, "port", "%1"_q % Configuration::DefaultServerPort},
   });
+  d->parser.addOptions({
+    { {"a", "address"}, "listening address for server (default: %1)"_q % listenAddress, "address", "%1"_q % listenAddress},
+  });
+  return *this;
+}
+
+CommandLine & CommandLine::frontend()
+{
+  d->loggingOptions();
   return *this;
 }
 
@@ -86,3 +110,19 @@ int CommandLine::port() const
   }
   return port;
 }
+
+QtMsgType CommandLine::consoleLogLevel() const
+{
+  return LogHandler::log_levels().key(d->parser.value("console-log-level").toUpper().toStdString());
+}
+
+QString CommandLine::logfile() const
+{
+  return d->parser.value("log-file");
+}
+
+QString CommandLine::listenAddress() const
+{
+  return d->parser.value("address");
+}
+

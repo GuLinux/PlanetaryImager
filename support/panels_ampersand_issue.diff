@@ -1,0 +1,40 @@
+diff --git a/src/planetaryimager_mainwindow.ui b/src/planetaryimager_mainwindow.ui
+index 179d9d7..777f970 100644
+--- a/src/planetaryimager_mainwindow.ui
++++ b/src/planetaryimager_mainwindow.ui
+@@ -96,7 +96,7 @@
+     <set>QDockWidget::AllDockWidgetFeatures</set>
+    </property>
+    <property name="windowTitle">
+-    <string>&amp;Camera Information</string>
++    <string>Camera Information</string>
+    </property>
+    <attribute name="dockWidgetArea">
+     <number>2</number>
+@@ -107,7 +107,7 @@
+   </widget>
+   <widget class="QDockWidget" name="camera_settings">
+    <property name="windowTitle">
+-    <string>Settin&amp;gs</string>
++    <string>Camera Controls</string>
+    </property>
+    <attribute name="dockWidgetArea">
+     <number>2</number>
+@@ -142,7 +142,7 @@
+   </widget>
+   <widget class="QDockWidget" name="recording">
+    <property name="windowTitle">
+-    <string>&amp;Recording</string>
++    <string>Recording</string>
+    </property>
+    <attribute name="dockWidgetArea">
+     <number>2</number>
+@@ -183,7 +183,7 @@
+     <bool>false</bool>
+    </property>
+    <property name="windowTitle">
+-    <string>Histogra&amp;m</string>
++    <string>Histogram</string>
+    </property>
+    <attribute name="dockWidgetArea">
+     <number>2</number>

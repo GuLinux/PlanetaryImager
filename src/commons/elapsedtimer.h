@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2016  Marco Gulino <marco@gulinux.net>
+ * GuLinux Planetary Imager - https://github.com/GuLinux/PlanetaryImager
+ * Copyright (C) 2017  Marco Gulino <marco@gulinux.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,26 +17,27 @@
  *
  */
 
-#ifndef LOGHANDLER_H
-#define LOGHANDLER_H
-#include <QDebug>
+#ifndef ELAPSEDTIMER_H
+#define ELAPSEDTIMER_H
+
 #include "c++/dptr.h"
-#include <ostream>
-#include <functional>
-class CommandLine;
-class LogHandler
+#include <chrono>
+
+class ElapsedTimer
 {
 public:
-  struct Output {
-    std::reference_wrapper<std::ostream> stream;
-    QtMsgType level;
-    typedef std::list<Output> list;
-  };
-  LogHandler(const CommandLine &commandLine);
-  ~LogHandler();
-  static QHash<QtMsgType, std::string> log_levels();
+    ElapsedTimer();
+    ~ElapsedTimer();
+    void start();
+    void reset();
+    void pause();
+    void resume();
+    std::chrono::microseconds elapsed() const;
+    long microseconds() const;
+    long milliseconds() const;
+    long seconds() const;
 private:
   DPTR
 };
 
-#endif // LOGHANDLER_H
+#endif // ELAPSEDTIMER_H

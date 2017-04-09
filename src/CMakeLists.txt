@@ -43,8 +43,12 @@ message("backend dependencies: ${planetary_imager_backend_DEPS}")
 message("frontend dependencies: ${planetary_imager_frontend_DEPS}")
 
 set(install_targets planetary_imager)
+if(WIN32)
+  set(WIN32_APP_FLAG WIN32)
+  set(PlanetaryImager_SRCS ${PlanetaryImager_SRCS} ${CMAKE_SOURCE_DIR}/files/planetary_imager.rc)
+endif()
 
-add_executable(planetary_imager ${PlanetaryImager_SRCS} )
+add_executable(planetary_imager ${WIN32_APP_FLAG} ${PlanetaryImager_SRCS} )
 
 find_library(CCFITS_LIBRARY NAMES ccfits CCfits)
 if(NOT CCFITS_LIBRARY)
@@ -54,6 +58,7 @@ endif()
 
 
 target_link_libraries(planetary_imager
+    network_server
     ${planetary_imager_backend_DEPS}
     ${planetary_imager_frontend_DEPS}
     ${planetary_imager_commons_DEPS}
@@ -64,7 +69,9 @@ target_link_libraries(planetary_imager
     ${Boost_LIBRARIES}
     ${OpenCV_LIBS}
     Qt5::Widgets
+    Qt5::Qml
     ${CCFITS_LIBRARY} ${CFITSIO_LDFLAGS}
+    CCfits ${CFITSIO_LIBRARIES} # TODO: find_package
     ${Qt5_OpenGL_LIBRARIES}
     pthread
     ${EXTRA_LIBRARIES}
@@ -74,7 +81,7 @@ option(build_network_server "Build PlanetaryImager network daemon and frontend" 
 if(build_network_server)
   find_package(Qt5Network REQUIRED )
   add_subdirectory(network)
-  add_executable(planetary_imager_daemon planetaryimager_daemon.cpp )
+  add_executable(planetary_imager_daemon ${WIN32_APP_FLAG} planetaryimager_daemon.cpp )
   target_link_libraries(planetary_imager_daemon
     network_server
     ${planetary_imager_backend_DEPS}
@@ -87,7 +94,8 @@ if(build_network_server)
     ${OpenCV_LIBS}
     Qt5::Core
     Qt5::Network
-    ${CCFITS_LIBRARY} ${CFITSIO_LDFLAGS} # TODO: find_package
+    Qt5::Qml
+    ${CCFITS_LIBRARY} ${CFITSIO_LDFLAGS}
     pthread
     ${EXTRA_LIBRARIES}
   )
@@ -103,7 +111,8 @@ if(build_network_server)
     ${OpenCV_LIBS}
     Qt5::Widgets
     Qt5::Network
-    ${CCFITS_LIBRARY} ${CFITSIO_LDFLAGS} # TODO: find_package
+    Qt5::Qml
+    ${CCFITS_LIBRARY} ${CFITSIO_LDFLAGS}
     ${Qt5_OpenGL_LIBRARIES}
     pthread
     ${EXTRA_LIBRARIES}

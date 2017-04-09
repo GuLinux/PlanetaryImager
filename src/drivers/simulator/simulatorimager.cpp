@@ -48,6 +48,7 @@ public:
   Frame::ptr shoot() override;
   void setROI(const QRect &roi);
   enum ImageType{ BGR = 0, Mono = 10, Bayer = 20};
+  QRect ROI() const { return roi; }
 private:
   SimulatorSettings &settings;
   QHash<int, cv::Mat> images;
@@ -223,7 +224,7 @@ void SimulatorImager::clearROI()
 
 void SimulatorImager::setROI(const QRect &roi)
 {
-  d->worker->setROI(d->roi_validator->validate(roi));
+  d->worker->setROI(d->roi_validator->validate(roi, d->worker->ROI()));
 }
 
 void SimulatorImagerWorker::setROI(const QRect& roi)

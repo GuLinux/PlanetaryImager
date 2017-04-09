@@ -30,7 +30,7 @@ class Frame
 {
 public:
   typedef std::shared_ptr<Frame> ptr;
-    enum ColorFormat {
+  enum ColorFormat {
       Mono,
       RGB,
       BGR,
@@ -39,8 +39,9 @@ public:
       Bayer_GBRG,
       Bayer_BGGR,
     };
-  Frame(ColorFormat colorFormat, const cv::Mat &image);
-  Frame(uint8_t bpp, ColorFormat colorFormat, const QSize &resolution);
+  enum ByteOrder { BigEndian, LittleEndian };
+  Frame(ColorFormat colorFormat, const cv::Mat &image, ByteOrder byteOrder = BigEndian);
+  Frame(uint8_t bpp, ColorFormat colorFormat, const QSize &resolution, ByteOrder byteOrder = BigEndian);
   ~Frame();
   std::size_t size() const;
   uint8_t *data();
@@ -50,6 +51,7 @@ public:
   uint8_t bpp() const;
   QDateTime created_utc() const;
   ColorFormat colorFormat() const;
+  ByteOrder byteOrder() const;
   
   QVariantMap const as_variant();
   static ptr from_variant(const QVariantMap &map);

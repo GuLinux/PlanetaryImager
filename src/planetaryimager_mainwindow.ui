@@ -77,6 +77,7 @@
     </property>
     <addaction name="actionShow_settings"/>
     <addaction name="separator"/>
+    <addaction name="actionOpen_log_file_folder"/>
     <addaction name="actionAbout"/>
     <addaction name="actionAbout_Qt"/>
     <addaction name="actionQuit"/>
@@ -96,7 +97,7 @@
     <set>QDockWidget::AllDockWidgetFeatures</set>
    </property>
    <property name="windowTitle">
-    <string>&amp;Camera Information</string>
+    <string>Camera Information</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>2</number>
@@ -107,7 +108,7 @@
   </widget>
   <widget class="QDockWidget" name="camera_settings">
    <property name="windowTitle">
-    <string>Settin&amp;gs</string>
+    <string>Camera Controls</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>2</number>
@@ -142,7 +143,7 @@
   </widget>
   <widget class="QDockWidget" name="recording">
    <property name="windowTitle">
-    <string>&amp;Recording</string>
+    <string>Recording</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>2</number>
@@ -183,7 +184,7 @@
     <bool>false</bool>
    </property>
    <property name="windowTitle">
-    <string>Histogra&amp;m</string>
+    <string>Histogram</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>2</number>
@@ -243,6 +244,10 @@
   <action name="actionDisconnect">
    <property name="enabled">
     <bool>false</bool>
+   </property>
+   <property name="icon">
+    <iconset resource="resources/resources.qrc">
+     <normaloff>:/resources/delete.png</normaloff>:/resources/delete.png</iconset>
    </property>
    <property name="text">
     <string>&amp;Disconnect</string>
@@ -357,6 +362,16 @@
    </property>
    <property name="text">
     <string>Night Mode</string>
+   </property>
+  </action>
+  <action name="actionScripting">
+   <property name="text">
+    <string>&amp;Scripting</string>
+   </property>
+  </action>
+  <action name="actionOpen_log_file_folder">
+   <property name="text">
+    <string>Open log file folder...</string>
    </property>
   </action>
  </widget>

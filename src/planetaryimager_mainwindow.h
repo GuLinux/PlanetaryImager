@@ -36,9 +36,11 @@ class PlanetaryImagerMainWindow : public QMainWindow
   Q_OBJECT
 public:
   ~PlanetaryImagerMainWindow();
-  PlanetaryImagerMainWindow(const Driver::ptr &driver, const SaveImages::ptr &save_images, const Configuration::ptr &configuration, const FilesystemBrowser::ptr &filesystemBrowser, QWidget* parent = 0, Qt::WindowFlags flags = 0);
+  PlanetaryImagerMainWindow(const Driver::ptr &driver, const SaveImages::ptr &save_images, const Configuration::ptr &configuration, const FilesystemBrowser::ptr &filesystemBrowser, const QString &logFilePath = {}, QWidget* parent = 0, Qt::WindowFlags flags = 0);
   void connectCamera(const Driver::Camera::ptr &camera);
+  ImageHandler::ptr imageHandler() const;
 public slots:
+  void setImager(Imager *imager);
   void notify(const QDateTime &when, MessagesLogger::Type notification_type, const QString &title, const QString &message);
 protected:
   void closeEvent(QCloseEvent *event) override;
