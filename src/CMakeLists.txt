@@ -50,6 +50,7 @@ endif()
 
 add_executable(planetary_imager ${WIN32_APP_FLAG} ${PlanetaryImager_SRCS} )
 target_link_libraries(planetary_imager
+    network_server
     ${planetary_imager_backend_DEPS}
     ${planetary_imager_frontend_DEPS}
     ${planetary_imager_commons_DEPS}

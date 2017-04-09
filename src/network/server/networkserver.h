@@ -33,6 +33,8 @@ public:
   ~NetworkServer();
 public slots:
   void listen(const QString &address, int port);
+signals:
+  void imagerConnected(Imager *imager);
 private:
   DPTR
 };
