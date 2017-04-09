@@ -35,6 +35,7 @@ add_subdirectory(drivers)
 add_subdirectory(image_handlers)
 add_subdirectory(widgets)
 add_subdirectory(commons)
+add_subdirectory(network)
 
 
 message(STATUS "********* ExtraLibraries: ${EXTRA_LIBRARIES}")
@@ -79,8 +80,6 @@ target_link_libraries(planetary_imager
 
 option(build_network_server "Build PlanetaryImager network daemon and frontend" Off)
 if(build_network_server)
-  find_package(Qt5Network REQUIRED )
-  add_subdirectory(network)
   add_executable(planetary_imager_daemon ${WIN32_APP_FLAG} planetaryimager_daemon.cpp )
   target_link_libraries(planetary_imager_daemon
     network_server
