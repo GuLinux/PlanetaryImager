@@ -20,6 +20,7 @@
 #include <QFile>
 #include <QDebug>
 #include <QDateTime>
+#include "image_handlers/saveimages.h"
 #include "commons/ser_header.h"
 
 using namespace std;
@@ -38,12 +39,15 @@ SERWriter::SERWriter ( const QString& deviceName, const Configuration::ptr & con
 {
   d->file.setFileName(configuration->savefile());
   qDebug() << "Using buffered output: " << configuration->buffered_output();
+  bool couldOpen = false;
   if(configuration->buffered_output()) {
-    d->file.open(QIODevice::ReadWrite);
+    couldOpen = d->file.open(QIODevice::ReadWrite);
   }
   else {
-    d->file.open(QIODevice::ReadWrite | QIODevice::Unbuffered);
+    couldOpen = d->file.open(QIODevice::ReadWrite | QIODevice::Unbuffered);
   }
+  if(! couldOpen)
+    throw SaveImages::Error::openingFile(d->file.fileName());
   SER_Header empty_header;
   empty_header.datetime = SER_Header::timestamp(QDateTime::currentDateTime());
   empty_header.datetime_utc = SER_Header::timestamp(QDateTime::currentDateTimeUtc());

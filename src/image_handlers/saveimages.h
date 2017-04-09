@@ -49,6 +49,7 @@ signals:
 class SaveImages::Error : public std::runtime_error {
 public:
   Error(const QString &what);
+  static Error openingFile(const QString &file, const QString &additionalInfo = {});
 };
 
 #endif // SAVEIMAGE_H
