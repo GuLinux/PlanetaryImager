@@ -46,6 +46,8 @@
 #include <Qt/functional.h>
 #include <QGraphicsScene>
 #include <QFileInfo>
+#include <QDesktopServices>
+
 #include "image_handlers/frontend/displayimage.h"
 #include "image_handlers/saveimages.h"
 #include "image_handlers/threadimagehandler.h"
@@ -160,7 +162,15 @@ void PlanetaryImagerMainWindow::Private::saveState()
 }
 
 
-PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, const SaveImages::ptr &save_images, const Configuration::ptr &configuration, const FilesystemBrowser::ptr &filesystemBrowser, QWidget* parent, Qt::WindowFlags flags)
+PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
+      const Driver::ptr &driver,
+      const SaveImages::ptr &save_images,
+      const Configuration::ptr &configuration,
+      const FilesystemBrowser::ptr &filesystemBrowser,
+      const QString &logFilePath,
+      QWidget* parent,
+      Qt::WindowFlags flags
+  )
 : QMainWindow(parent, flags), dptr(driver, save_images, configuration, filesystemBrowser, make_unique<QThread>())
 {
     Private::q = this;
@@ -255,6 +265,14 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(const Driver::ptr &driver, 
       tabifyDockWidget(d->ui->chipInfoWidget, d->ui->recording);
       d->configuration->set_widgets_setup_first_run(true);
     }
+    qDebug() << "file " << logFilePath << "exists: " << QFile::exists(logFilePath);
+    d->ui->actionOpen_log_file_folder->setVisible( ! logFilePath.isEmpty() && QFile::exists(logFilePath));
+    connect(d->ui->actionOpen_log_file_folder, &QAction::triggered, this, [=]{
+      auto logFileDirectory = QFileInfo{logFilePath}.dir().path();
+      if(!QDesktopServices::openUrl(logFileDirectory)) {
+        MessagesLogger::instance()->queue(MessagesLogger::Warning, tr("Log file"), tr("Unable to open your log file. You can open it manually at this position: %1") % logFileDirectory);
+      }
+    });
     
     connect(d->ui->actionHide_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::hide, _1) ); });
     connect(d->ui->actionShow_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::show, _1) ); });

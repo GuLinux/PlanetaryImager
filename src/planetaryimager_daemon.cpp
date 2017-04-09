@@ -41,12 +41,13 @@ int main(int argc, char** argv)
     CrashHandler crash_handler({SIGSEGV, SIGABRT});
     cerr << "Starting PlanetaryImager Daemon - version " << PLANETARY_IMAGER_VERSION << " (" << HOST_PROCESSOR << ")" << endl;
     QCoreApplication app(argc, argv);
-    LogHandler log_handler;
-    app.setApplicationName("PlanetaryImager");
+    app.setApplicationName("PlanetaryImager-Daemon");
     app.setApplicationVersion(PLANETARY_IMAGER_VERSION);
     
     CommandLine commandLine(app);
     commandLine.daemon().process();
+    
+    LogHandler log_handler{commandLine};
     
     auto configuration = make_shared<Configuration>();
     auto driver = make_shared<SupportedDrivers>(commandLine.driversDirectories());

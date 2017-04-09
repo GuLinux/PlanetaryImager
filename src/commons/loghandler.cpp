@@ -21,49 +21,77 @@
 #include <QDebug>
 #include <QHash>
 #include <functional>
+#include <fstream>
+#include <QFileInfo>
+#include <QDir>
+#include "commons/commandline.h"
+
 using namespace std;
 using namespace std::placeholders;
 
 DPTR_IMPL(LogHandler) {
-   static QtMsgType minimumType;
+   static Output::list outputs;
    static void log_handler(QtMsgType type, const QMessageLogContext &context, const QString &msg);
+   static Output output(std::ostream &stream, QtMsgType level);
+   ofstream logfile;
 };
 
-QtMsgType LogHandler::Private::minimumType = QtCriticalMsg;
+LogHandler::Output::list LogHandler::Private::outputs = {};
 
-void LogHandler::Private::log_handler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+QHash<QtMsgType, string> LogHandler::log_levels()
 {
-  static QHash<QtMsgType, string> log_levels {
+  static QHash<QtMsgType, string> levels {
     {QtFatalMsg   , "FATAL"},
     {QtCriticalMsg, "CRITICAL"},
     {QtWarningMsg , "WARNING"},
     {QtDebugMsg   , "DEBUG"},
+    {QtInfoMsg   , "INFO"},
   };
+  return levels;
+}
+
+
+void LogHandler::Private::log_handler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
+{
   static QHash<QtMsgType, int> priority {
     {QtFatalMsg   , 10},
     {QtCriticalMsg, 20},
     {QtWarningMsg , 30},
-    {QtDebugMsg   , 40},
+    {QtInfoMsg    , 40},
+    {QtDebugMsg   , 50},
   };
-  if(priority[type] > priority[minimumType])
-    return;
-  QString position;
-  if(context.file && context.line) {
-    position = QString("%1:%2").arg(context.file).arg(context.line).replace(SRC_DIR, "");
+  for(auto output: outputs) {
+    if(priority[type] > priority[output.level])
+      continue;
+    QString position;
+    if(context.file && context.line) {
+      position = QString("%1:%2").arg(context.file).arg(context.line).replace(SRC_DIR, "");
+    }
+    QString function = context.function ? context.function : "";
+    output.stream.get() << setw(8) << LogHandler::log_levels()[type] << " - " /*<< qPrintable(position) << "@"*/<< qPrintable(function) << " " << qPrintable(msg) << endl;
+    output.stream.get().flush();
   }
-  QString function = context.function ? context.function : "";
-  cerr << setw(8) << log_levels[type] << " - " /*<< qPrintable(position) << "@"*/<< qPrintable(function) << " " << qPrintable(msg) << endl;
-  cerr.flush();
 }
 
 
-LogHandler::LogHandler(const QtMsgType &minimumType) : dptr()
+LogHandler::LogHandler(const CommandLine &commandLine) : dptr()
 {
-  Private::minimumType = minimumType;
+  d->outputs.push_back(LogHandler::Private::output(cerr, commandLine.consoleLogLevel()));
+  cerr << "Writing full output to logfile: " << commandLine.logfile().toStdString() << endl;
+  QFileInfo{commandLine.logfile()}.dir().mkpath(".");
+  d->logfile.open(commandLine.logfile().toStdString(), ios::out | ios::trunc);
+  
+  d->outputs.push_back(LogHandler::Private::output(d->logfile, QtDebugMsg));
   qInstallMessageHandler(&Private::log_handler);
 }
 
 LogHandler::~LogHandler()
 {
   qInstallMessageHandler(nullptr);
+}
+
+
+LogHandler::Output LogHandler::Private::output(std::ostream& stream, QtMsgType level)
+{
+  return {std::ref(stream), level};
 }
