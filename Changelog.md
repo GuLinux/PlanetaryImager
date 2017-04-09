@@ -11,6 +11,11 @@
  - feature: Windows and OSX versions (see README)
  - feature: allow to pause/resume recordings
  - bugfix: ASI: better handling of exposure timeout
+ - bugfix: ASI: ROI fixes for flipped and ROI in ROI
+ - bugfix: ASI: fix flashing screen on frames capture timeout
+ - bugfix: Windows: fix SER recording
+ - bugfix: better error management
+ - ui fixes
  - updated ASI SDK version (Linux/OSX: v0.6.0328, Windows: 1.13.0.10)
  
 ## 0.6.2 2016-10-30
