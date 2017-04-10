@@ -1,33 +1,42 @@
 #!/bin/bash
 
-
-
 get_deps() {
     file="$1"
-    otool -L "$file" | grep '/opt' | awk '{ print $1 }' | while read lib; do
+    otool -L "$file"  | awk '{ print $1 }' | while read lib; do
         if [[ -r $lib ]]; then
             echo $lib
         fi
     done
 }
+app="$( basename "$0" )"
+analysed="/tmp/$app.analysed.tmp"
+to_be_analysed="/tmp/$app.to_be_analysed.tmp"
 
-tmpfile="/tmp/tmp1.$$"
-tmpfile2="/tmp/tmp2.$$"
-results="/tmp/result.$$"
+rm -f "$analysed" "$to_be_analysed"
 
-get_deps "$1" | tee $results > $tmpfile
+recursive_deps_analyse() {
+    tmpfile="/tmp/$app.tmp"
+    rm -f "$tmpfile"
 
-while [[ $( wc -l <$tmpfile ) -gt 0 ]]; do
-    rm -f $tmpfile2
-
-    while read dep < $tmpfile; do
-        get_deps "$dep" | tee -a $results >> $tmpfile2
+    cat "$to_be_analysed" | sort | uniq | while read library; do
+#        echo "Analysing $library" >&2
+        [[ -r "$analysed" ]] && grep -q "$library" "$analysed" && continue 
+        get_deps "$library" >> "$tmpfile" 
+        echo "$library" >> "$analysed"
     done
 
-    cp $tmpfile2 $tmpfile
+    if ! [[ -r "$tmpfile" ]]; then
+        rm $to_be_analysed
+        return
+    fi
+    cp "$tmpfile" "$to_be_analysed"
+    rm -f "$tmpfile"
+}
+
+get_deps "$1" > "$to_be_analysed"
+
+while [[ -r "$to_be_analysed" && "$( wc -l "$to_be_analysed" | awk '{ print $1}' )" -gt 0 ]]; do
+    recursive_deps_analyse
 done
 
-cat $results
-rm -f $results $tmpfile $tmpfile2
-
-    
+cat "$analysed" | sort | uniq
