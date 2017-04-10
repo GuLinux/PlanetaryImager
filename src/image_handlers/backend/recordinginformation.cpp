@@ -106,7 +106,7 @@ namespace {
     file.write(data);
     file.close();
   }
-  
+
   QList<QPair<QString, QString>> recording_map_to_strings(const QVariantMap &map, const QString &prefix = "") {
     QList<QPair<QString,QString>> result;
     for(auto key: map.keys()) {
@@ -116,8 +116,14 @@ namespace {
         continue;
       }
       if(value.type() == QVariant::List) {
-        qDebug() << "to be implemented: QVariant::List to recording info (" << prefix << ", " << key << ")";
-        // TODO: handle. Currently not in use
+        int index = 0;
+        QVariantMap transformed;
+        for(auto subvalue: value.toList()) {
+            transformed["[%1]"_q % index++] = subvalue;
+        }
+        
+        result.append(recording_map_to_strings(transformed, prefix + key + "_"));
+        continue;
       }
       result.append({prefix + key, value.toString()});
     }
