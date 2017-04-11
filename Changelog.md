@@ -15,6 +15,7 @@
  - bugfix: ASI: fix flashing screen on frames capture timeout
  - bugfix: Windows: fix SER recording
  - bugfix: better error management
+ - bugfix: add missing information to TXT recording information
  - ui fixes
  - updated ASI SDK version (Linux/OSX: v0.6.0328, Windows: 1.13.0.10)
  
