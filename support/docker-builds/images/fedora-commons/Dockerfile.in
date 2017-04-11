@@ -7,6 +7,7 @@ RUN yum install -y \
     autoconf \
     automake \
     qt5-qtbase-devel \
+    qt5-qtdeclarative-devel \
     gcc-c++ \
     cmake \
     opencv-devel \

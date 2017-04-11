@@ -4,6 +4,7 @@ FROM ${DEB_BASE_IMAGE}
 RUN apt-get update && apt-get install -y \
     autoconf \
     qtbase5-dev \
+    qtdeclarative5-dev \
     build-essential \
     cmake \
     libopencv-dev \
