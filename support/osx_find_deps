@@ -1,8 +1,12 @@
 #!/bin/bash
+file="$1"
+grep_expression="${2:-/}"
 
-get_deps() {
+
+
+get_deps_osx() {
     file="$1"
-    otool -L "$file"  | awk '{ print $1 }' | while read lib; do
+    otool -L "$file" | grep -Ee "${grep_expression}" | awk '{ print $1 }' | while read lib; do
         if [[ -r $lib ]]; then
             echo $lib
         fi
