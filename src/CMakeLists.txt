@@ -31,6 +31,13 @@ option(ADD_DRIVERS_BUILD_DIRECTORY "Search for drivers in the current build dire
 if(ADD_DRIVERS_BUILD_DIRECTORY)
   add_definitions(-DADDITIONAL_DRIVERS_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}/drivers")
 endif()
+
+option(DEVELOPER_MODE "Force logging mode to debug" OFF)
+
+if(DEVELOPER_MODE)
+  add_definitions(-DDEVELOPER_MODE)
+endif()
+
 add_subdirectory(drivers)
 add_subdirectory(image_handlers)
 add_subdirectory(widgets)
@@ -44,7 +51,7 @@ message("backend dependencies: ${planetary_imager_backend_DEPS}")
 message("frontend dependencies: ${planetary_imager_frontend_DEPS}")
 
 set(install_targets planetary_imager)
-if(WIN32)
+if(WIN32 AND NOT DEVELOPER_MODE)
   set(WIN32_APP_FLAG WIN32)
   set(PlanetaryImager_SRCS ${PlanetaryImager_SRCS} ${CMAKE_SOURCE_DIR}/files/planetary_imager.rc)
 endif()

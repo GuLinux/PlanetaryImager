@@ -60,17 +60,25 @@ Imager::Properties & Imager::Properties::support(Imager::Capability capability)
 
 Imager::Properties & Imager::Properties::set_chip_size(double width, double height)
 {
-    return *this << Property{"chip_size", QVariantMap{ {"width", width}, {"height", height} },  "Chip size", "%1x%2 mm"_q % width% height };
+    return *this << Property{"chip_size", QVariantMap{ {"width", width}, {"height", height} },  QObject::tr("Chip size"), "%1x%2 mm"_q % width% height };
 }
 
 Imager::Properties & Imager::Properties::set_pixel_size(double width, double height)
 {
-  return *this << Property{"pixel_size", QVariantMap{ {"width", width}, {"height", width} },  "Pixel size", "%1x%2 um"_q % width% width };
+  return *this << Property{"pixel_size", QVariantMap{ {"width", width}, {"height", width} },  QObject::tr("Pixel size"), "%1x%2 um"_q % width% width };
 }
 
 Imager::Properties & Imager::Properties::set_resolution(const QSize& resolution)
 {
-    return *this << Property{"resolution", resolution,  "Resolution", "%1x%2"_q % resolution.width() % resolution.height() };
+    return *this << Property{"resolution", resolution,  QObject::tr("Resolution"), "%1x%2"_q % resolution.width() % resolution.height() };
+}
+
+QSize Imager::Properties::resolution() const
+{
+  auto resolution_property_it = find_if(begin(properties), end(properties), [](const auto &p){ return p.name == "resolution";});
+  if(resolution_property_it != properties.end())
+    return (*resolution_property_it).value.toSize();
+  return {};
 }
 
 

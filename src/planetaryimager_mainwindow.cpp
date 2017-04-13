@@ -48,6 +48,8 @@
 #include <QFileInfo>
 #include <QDesktopServices>
 
+#include "widgets/editroidialog.h"
+
 #include "image_handlers/frontend/displayimage.h"
 #include "image_handlers/saveimages.h"
 #include "image_handlers/threadimagehandler.h"
@@ -83,6 +85,7 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   CameraInfoWidget* cameraInfoWidget = nullptr;
   HistogramWidget *histogramWidget = nullptr;
   ConfigurationDialog *configurationDialog;
+  EditROIDialog *editROIDialog;
   
   RecordingPanel* recording_panel;
   ExposureTimer exposure_timer;
@@ -93,7 +96,8 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   void connectCamera(const Driver::Camera::ptr &camera);
   void cameraDisconnected();
   void enableUIWidgets(bool cameraConnected);
-    void init_devices_watcher();
+  void init_devices_watcher();
+  void editROI();
   ZoomableImage *image_widget;
   
   void onImagerInitialized(Imager *imager);
@@ -314,6 +318,8 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
       d->selection_mode = Private::ROI;
       d->image_widget->startSelectionMode();
     });
+    
+    connect(d->ui->actionEdit_ROI, &QAction::triggered, this, bind(&Private::editROI, d.get()));
     QMap<Private::SelectionMode, function<void(const QRect &)>> handle_selection {
       {Private::NoSelection, [](const QRect&) {}},
       {Private::ROI, [&](const QRect &rect) { d->imager->setROI(rect); }},
@@ -330,6 +336,8 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     
     auto compositeImageHandler = ImageHandler::ptr{new ImageHandlers{d->displayImage, d->saveImages, d->histogram}};
     d->imageHandler = ImageHandler::ptr{new ThreadImageHandler{compositeImageHandler}};
+    d->editROIDialog = new EditROIDialog(this);
+    connect(d->editROIDialog, &EditROIDialog::roiSelected, this, [=](const QRect &roi){ d->imager->setROI(roi); });
 }
 
 void PlanetaryImagerMainWindow::closeEvent(QCloseEvent* event)
@@ -423,6 +431,7 @@ void PlanetaryImagerMainWindow::Private::onImagerInitialized(Imager * imager)
     ui->chipInfoWidget->setWidget(cameraInfoWidget = new CameraInfoWidget(imager));
     enableUIWidgets(true);
     ui->actionSelect_ROI->setEnabled(imager->supports(Imager::ROI));
+    ui->actionEdit_ROI->setEnabled(imager->supports(Imager::ROI));
     ui->actionClear_ROI->setEnabled(imager->supports(Imager::ROI));
 }
 
@@ -432,7 +441,8 @@ void PlanetaryImagerMainWindow::Private::cameraDisconnected()
   imager = nullptr;
   qDebug() << "camera disconnected";
   enableUIWidgets(false);
-    ui->actionSelect_ROI->setEnabled(false);
+  ui->actionSelect_ROI->setEnabled(false);
+  ui->actionEdit_ROI->setEnabled(false);
   ui->actionClear_ROI->setEnabled(false);
   
   delete cameraSettingsWidget;
@@ -460,6 +470,16 @@ void PlanetaryImagerMainWindow::notify(const QDateTime &when, MessagesLogger::Ty
     {MessagesLogger::Info, [](const QString &title, const QString &message) { QMessageBox::information(nullptr, title, message); }},
   };
   types_map[notification_type](title, message);
+}
+
+
+void PlanetaryImagerMainWindow::Private::editROI()
+{
+  auto resolution = imager->properties().resolution();
+  editROIDialog->setResolution(resolution);
+  editROIDialog->show();
+  //TODO check for resolution not existing
+  // TODO check for current ROI
 }
 
 
