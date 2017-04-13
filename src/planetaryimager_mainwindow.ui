@@ -167,6 +167,9 @@
    <addaction name="actionShow_settings"/>
   </widget>
   <widget class="QToolBar" name="ROIToolbar">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
    <property name="windowTitle">
     <string>ROI</string>
    </property>
@@ -376,6 +379,9 @@
    </property>
   </action>
   <action name="actionEdit_ROI">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
    <property name="text">
     <string>Edit ROI</string>
    </property>

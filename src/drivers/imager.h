@@ -150,6 +150,7 @@ struct Imager::Properties {
     Properties &set_resolution(const QSize &resolution);
     Properties &set_pixel_size(double width, double height);
     Properties &set_chip_size(double width, double height);
+    QSize resolution() const;
 //   double width, height, pixelwidth, pixelheight;
 //   uint32_t xres, yres, bpp;
   struct Property {

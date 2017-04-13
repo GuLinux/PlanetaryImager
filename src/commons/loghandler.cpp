@@ -61,8 +61,10 @@ void LogHandler::Private::log_handler(QtMsgType type, const QMessageLogContext &
     {QtDebugMsg   , 50},
   };
   for(auto output: outputs) {
+#ifndef DEVELOPER_MODE
     if(priority[type] > priority[output.level])
       continue;
+#endif
     QString position;
     if(context.file && context.line) {
       position = QString("%1:%2").arg(context.file).arg(context.line).replace(SRC_DIR, "");
