@@ -177,6 +177,7 @@
     <bool>false</bool>
    </attribute>
    <addaction name="actionSelect_ROI"/>
+   <addaction name="actionEdit_ROI"/>
    <addaction name="actionClear_ROI"/>
   </widget>
   <widget class="QDockWidget" name="histogram">
@@ -371,7 +372,12 @@
   </action>
   <action name="actionOpen_log_file_folder">
    <property name="text">
-    <string>Open log file folder...</string>
+    <string>&amp;Open log file folder...</string>
+   </property>
+  </action>
+  <action name="actionEdit_ROI">
+   <property name="text">
+    <string>Edit ROI</string>
    </property>
   </action>
  </widget>
