@@ -17,7 +17,7 @@
  */
 
 #include "remotefilesystembrowser.h"
-#include "remotefilesystem.h"
+#include "network/client/remotefilesystem.h"
 #include "pickdirectory.h"
 
 using namespace std;

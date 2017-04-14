@@ -35,7 +35,7 @@
 #include "commons/utils.h"
 
 #include "network/protocol/protocol.h"
-#include "network/client/remotefilesystembrowser.h"
+#include "network/client/gui/remotefilesystembrowser.h"
 #include "commons/configuration.h"
 
 using namespace std;

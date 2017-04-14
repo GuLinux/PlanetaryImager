@@ -15,38 +15,35 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#include <QApplication>
+#include <QCoreApplication>
 #include "commons/version.h"
 #include <iostream>
 #include <QDebug>
-#include "commons/frame.h"
 #include "commons/loghandler.h"
-#include "commons/crashhandler.h"
-#include <QMenuBar>
-#include <QMenu>
+//#include "commons/crashhandler.h"
 #include "commons/commandline.h"
 
-#include "network/client/gui/connectionmanager.h"
+#include "network/client/networkclient.h"
+#include "network/networkdispatcher.h"
+
 
 using namespace std;
 
 
 int main(int argc, char** argv)
 {
-    qRegisterMetaType<Frame::ptr>("Frame::ptr");
-    CrashHandler crash_handler({SIGSEGV, SIGABRT});
-    cerr << "Starting PlanetaryImager - version " << PLANETARY_IMAGER_VERSION << " (" << HOST_PROCESSOR << ")" << endl;
-    QApplication app(argc, argv);
-    app.setApplicationName("PlanetaryImager-Frontend");
-    app.setApplicationDisplayName("Planetary Imager");
-    app.setApplicationVersion(PLANETARY_IMAGER_VERSION);
-    
-    CommandLine commandLine(app);
-    commandLine.frontend().process();
-    
-    LogHandler log_handler{commandLine};
-    app.setQuitOnLastWindowClosed(false);
-
-    (new ConnectionManager())->show();
-    return app.exec();
+//   CrashHandler crash_handler({SIGSEGV, SIGABRT});
+  cerr << "PlanetaryImager Scripting - version " << PLANETARY_IMAGER_VERSION << " (" << HOST_PROCESSOR << ")" << endl;
+  QCoreApplication app(argc, argv);
+  app.setApplicationName("PlanetaryImager-Scripting");
+  app.setApplicationVersion(PLANETARY_IMAGER_VERSION);
+  
+  CommandLine commandLine(app);
+  //commandLine.frontend().process();
+  auto dispatcher = make_shared<NetworkDispatcher>();
+  auto client = make_shared<NetworkClient>(dispatcher);
+  
+  LogHandler log_handler{commandLine};
+  
+  return app.exec();
 }
