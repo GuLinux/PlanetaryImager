@@ -19,12 +19,14 @@
 
 #include "scriptingclient.h"
 #include <iostream>
+#include <QDebug>
 #include "protocol/scriptingprotocol.h"
+#include <QtConcurrent/QtConcurrent>
 using namespace std;
 
 DPTR_IMPL(ScriptingClient) {
   NetworkDispatcher::ptr dispatcher;
-  unique_ptr<QTextStream> stream;
+  unique_ptr<QTextStream> outStream;
   ScriptingClient *q;
 };
 
@@ -33,19 +35,38 @@ ScriptingClient::~ScriptingClient()
 }
 
 ScriptingClient::ScriptingClient(const NetworkDispatcher::ptr &dispatcher, QObject *parent)
-  : QObject{parent}, NetworkReceiver(dispatcher), dptr(dispatcher, make_unique<QTextStream>(stdout), this)
+: QObject{parent}, NetworkReceiver(dispatcher), dptr(dispatcher, make_unique<QTextStream>(stdout, QIODevice::WriteOnly), this)
 {
   register_handler(ScriptingProtocol::ScriptReply, [this](const NetworkPacket::ptr &packet) {
-    *d->stream << packet->payloadVariant().toString() << "\n";
+    *d->outStream << packet->payloadVariant().toString() << "\n";
+    d->outStream->flush();
   });
 }
 
 void ScriptingClient::console()
 {
-  QString line;
-  while(line != "quit" && line != "exit") {
-    if(! line.isEmpty())
-      d->dispatcher->send(ScriptingProtocol::packetScript() << line);
-    line = d->stream->readLine();
-  }
+  qDebug() << "starting scripting console";
+  QtConcurrent::run([=]{
+    QString line;
+    QTextStream input{stdin, QIODevice::ReadOnly};
+    bool readLineOk;
+    QStringList lines;
+    while(readLineOk = input.readLineInto(&line) && line != "quit" && line != "exit") {
+      if(line.endsWith("\\")) {
+        lines << line.left(line.length()-2);
+        continue;
+      }
+      if(! line.isEmpty()) {
+        lines << line;
+        QMetaObject::invokeMethod(this, "sendScript", Qt::QueuedConnection, Q_ARG(QString, lines.join("\n")));
+        lines.clear();
+      }
+    }
+    qApp->quit();
+  });
+}
+
+void ScriptingClient::sendScript(const QString& script)
+{
+  d->dispatcher->send(ScriptingProtocol::packetScript() << script);
 }

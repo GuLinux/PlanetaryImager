@@ -32,6 +32,7 @@ public:
     typedef std::shared_ptr<ScriptingClient> ptr;
 public slots:
   void console();
+  void sendScript(const QString &script);
 private:
   DPTR
 };

@@ -42,6 +42,22 @@ private:
   Imager *imager= nullptr;
 };
 
+class ScriptingConsole : public QObject {
+  Q_OBJECT
+public:
+  ScriptingConsole(const NetworkDispatcher::ptr &dispatcher, QObject *parent = nullptr) : QObject{parent}, dispatcher{dispatcher} {}
+public slots:
+  void log(const QJSValue &v);
+private:
+  NetworkDispatcher::ptr dispatcher;
+};
+
+void ScriptingConsole::log(const QJSValue& v)
+{
+  dispatcher->send(ScriptingProtocol::packetScriptReply() << v.toString());
+}
+
+
 DPTR_IMPL(ScriptingEngine) {
   ScriptingEngine *q;
   unique_ptr<ScriptingPlanetaryImager> scriptedImager;
@@ -61,7 +77,9 @@ ScriptingEngine::ScriptingEngine(const Configuration::ptr &configuration, const 
   d->scriptedImager = make_unique<ScriptingPlanetaryImager>(configuration, saveImages);
   connect(d->scriptedImager.get(), &ScriptingPlanetaryImager::message, this, [=](const QString &s) { emit reply(s + "\n"); });
   QJSValue objectValue = d->engine.newQObject(d->scriptedImager.get());
-  d->engine.globalObject().setProperty("i", objectValue);
+  d->engine.globalObject().setProperty("pi", objectValue);
+  QJSValue console = d->engine.newQObject(new ScriptingConsole(dispatcher, this));
+  d->engine.globalObject().setProperty("console", console);
   register_handler(ScriptingProtocol::Script, [this](const NetworkPacket::ptr &packet) {
     run(packet->payloadVariant().toString());
   });
@@ -76,8 +94,10 @@ ScriptingEngine::~ScriptingEngine()
 
 void ScriptingEngine::run(const QString& script)
 {
+  qDebug() << "Running script: " << script;
   QJSValue v = d->engine.evaluate(script);
-  emit reply(v.toString());
+  if(v.isError())
+    emit reply(v.toString());
 }
 
 void ScriptingEngine::setImager(Imager* imager)
@@ -88,7 +108,7 @@ void ScriptingEngine::setImager(Imager* imager)
 void ScriptingPlanetaryImager::startRecording()
 {
   if(! imager) {
-    emit message("Error: you must select a cameraa first");
+    emit message("Error: you must select a camera first");
     return;
   }
   saveImages->startRecording(imager);
