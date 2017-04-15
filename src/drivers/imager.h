@@ -44,7 +44,6 @@ public:
   virtual QString name() const = 0;
   virtual Properties properties() const = 0;
   bool supports(Capability capability) const;
-  QVariantList export_controls() const;
   
 protected:
   void restart(const ImagerThread::Worker::factory &worker);
@@ -63,6 +62,7 @@ public slots:
   void import_controls(const QVariantList &controls, bool by_id = true);
   virtual void startLive() = 0;
   virtual void destroy();
+  QVariantList export_controls() const;
 signals:
   void fps(double rate);
   void temperature(double celsius);

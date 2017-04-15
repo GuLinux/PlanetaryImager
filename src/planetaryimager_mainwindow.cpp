@@ -55,6 +55,7 @@
 #include "image_handlers/threadimagehandler.h"
 
 #include "commons/messageslogger.h"
+#include "c++/stlutils.h"
 #include "commons/exposuretimer.h"
 
 
@@ -379,6 +380,11 @@ void PlanetaryImagerMainWindow::Private::init_devices_watcher()
 #endif
 }
 
+Imager * PlanetaryImagerMainWindow::imager() const
+{
+  return d->imager;
+}
+
 
 void PlanetaryImagerMainWindow::Private::rescan_devices()
 {
@@ -415,6 +421,7 @@ void PlanetaryImagerMainWindow::setImager(Imager* imager)
 
 void PlanetaryImagerMainWindow::Private::onImagerInitialized(Imager * imager)
 {  
+    GuLinux::Scope scope{[=]{  emit q->imagerChanged(); }};
     if(!imager) {
       return;
     }

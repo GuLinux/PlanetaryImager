@@ -70,6 +70,9 @@ int main(int argc, char** argv)
     }};
     auto server = make_shared<NetworkServer>(drivers, imageHandlers, dispatcher, save_files_forwarder, frames_forwarder, scriptingengine );
     
+    // TODO also forward connection to server drivers
+    // TODO copy to daemon
+    QObject::connect(&mainWindow, &PlanetaryImagerMainWindow::imagerChanged, scriptingengine.get(), [&]{ scriptingengine->setImager(mainWindow.imager()); });
     
     QMetaObject::invokeMethod(server.get(), "listen", Q_ARG(QString, commandLine.address()), Q_ARG(int, commandLine.port()));
     

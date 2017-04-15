@@ -27,8 +27,8 @@ using namespace std;
 class ScriptingPlanetaryImager : public QObject {
   Q_OBJECT
 public:
-  ScriptingPlanetaryImager(const Configuration::ptr &configuration, const SaveImages::ptr &saveImages);
-  void setImager(Imager *imager) { this->imager = imager; }
+  ScriptingPlanetaryImager(const Configuration::ptr &configuration, const SaveImages::ptr &saveImages, QJSEngine &jsEngine);
+  void setImager(Imager *imager);
   
 public slots:
   void startRecording();
@@ -39,7 +39,10 @@ signals:
 private:
   Configuration::ptr configuration;
   SaveImages::ptr saveImages;
+  QJSEngine &jsEngine;
   Imager *imager= nullptr;
+  QJSValue jsValue;
+  QJSValue imagerJsValue;
 };
 
 class ScriptingConsole : public QObject {
@@ -65,19 +68,32 @@ DPTR_IMPL(ScriptingEngine) {
 };
 
 
-ScriptingPlanetaryImager::ScriptingPlanetaryImager(const Configuration::ptr& configuration, const SaveImages::ptr& saveImages)
-  : configuration{configuration}, saveImages{saveImages}
+ScriptingPlanetaryImager::ScriptingPlanetaryImager(const Configuration::ptr& configuration, const SaveImages::ptr& saveImages, QJSEngine &jsEngine)
+  : configuration{configuration}, saveImages{saveImages}, jsEngine{jsEngine}
 {
+  jsValue = jsEngine.newQObject(this);
+  jsEngine.globalObject().setProperty("pi", jsValue);
 }
+
+void ScriptingPlanetaryImager::setImager(Imager* imager)
+{
+  qDebug() << "Setting imager object" << imager;
+  this->imager = imager;
+  if(imager) {
+    imagerJsValue = jsEngine.newQObject(imager);
+    jsValue.setProperty("imager", imagerJsValue);
+  } else {
+    jsValue.deleteProperty("imager");
+  }
+}
+
 
 
 ScriptingEngine::ScriptingEngine(const Configuration::ptr &configuration, const SaveImages::ptr &saveImages, const NetworkDispatcher::ptr &dispatcher, QObject *parent) 
 : QObject(parent),  NetworkReceiver{dispatcher}, dptr(this)
 {
-  d->scriptedImager = make_unique<ScriptingPlanetaryImager>(configuration, saveImages);
+  d->scriptedImager = make_unique<ScriptingPlanetaryImager>(configuration, saveImages, d->engine);
   connect(d->scriptedImager.get(), &ScriptingPlanetaryImager::message, this, [=](const QString &s) { emit reply(s + "\n"); });
-  QJSValue objectValue = d->engine.newQObject(d->scriptedImager.get());
-  d->engine.globalObject().setProperty("pi", objectValue);
   QJSValue console = d->engine.newQObject(new ScriptingConsole(dispatcher, this));
   d->engine.globalObject().setProperty("console", console);
   register_handler(ScriptingProtocol::Script, [this](const NetworkPacket::ptr &packet) {
