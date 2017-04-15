@@ -20,6 +20,7 @@
 #include "scriptingengine.h"
 #include <QtQml/QJSEngine>
 #include <QDebug>
+#include "protocol/scriptingprotocol.h"
 
 using namespace std;
 
@@ -61,6 +62,12 @@ ScriptingEngine::ScriptingEngine(const Configuration::ptr &configuration, const 
   connect(d->scriptedImager.get(), &ScriptingPlanetaryImager::message, this, [=](const QString &s) { emit reply(s + "\n"); });
   QJSValue objectValue = d->engine.newQObject(d->scriptedImager.get());
   d->engine.globalObject().setProperty("i", objectValue);
+  register_handler(ScriptingProtocol::Script, [this](const NetworkPacket::ptr &packet) {
+    run(packet->payloadVariant().toString());
+  });
+  connect(this, &ScriptingEngine::reply, this, [dispatcher](const QString &message) {
+    dispatcher->send(ScriptingProtocol::packetScriptReply() << message);
+  });
 }
 
 ScriptingEngine::~ScriptingEngine()
@@ -70,8 +77,7 @@ ScriptingEngine::~ScriptingEngine()
 void ScriptingEngine::run(const QString& script)
 {
   QJSValue v = d->engine.evaluate(script);
-  emit reply(v.toString() + "\n");
-  qDebug() << v.toString();
+  emit reply(v.toString());
 }
 
 void ScriptingEngine::setImager(Imager* imager)

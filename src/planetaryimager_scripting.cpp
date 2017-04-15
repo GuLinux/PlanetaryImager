@@ -24,6 +24,7 @@
 #include "commons/commandline.h"
 
 #include "network/client/networkclient.h"
+#include "network/client/scriptingclient.h"
 #include "network/networkdispatcher.h"
 
 
@@ -42,6 +43,8 @@ int main(int argc, char** argv)
   commandLine.scripting().process();
   auto dispatcher = make_shared<NetworkDispatcher>();
   auto client = make_shared<NetworkClient>(dispatcher);
+  auto scriptingClient = make_shared<ScriptingClient>(dispatcher);
+  QObject::connect(client.get(), &NetworkClient::connected, scriptingClient.get(), &ScriptingClient::console);
   client->connectToHost(commandLine.address(), commandLine.port(), {Configuration::Network_NoImage});
   
   LogHandler log_handler{commandLine};
