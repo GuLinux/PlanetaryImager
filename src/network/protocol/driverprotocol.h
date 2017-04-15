@@ -46,6 +46,8 @@ public:
   ADD_PROTOCOL_PACKET_NAME(signalControlChanged)
   ADD_PROTOCOL_PACKET_NAME(signalDisconnected)
   
+  // TODO: remove all the static methods, particularly since most of them are stateful
+  
   static NetworkPacket::ptr sendCameraListReply(const Driver::Cameras &cameras);
   typedef std::function<Driver::Camera::ptr(const QString &, qlonglong)> CameraFactory;
   static void decode(Driver::Cameras &cameras, const NetworkPacket::ptr &packet, const CameraFactory &factory);
@@ -63,6 +65,8 @@ public:
   static void setFormatParameters(const FormatParameters &parameters);
   static NetworkPacket::ptr sendFrame(const Frame::ptr &frame);
   static Frame::ptr decodeFrame(const NetworkPacket::ptr &packet);
+  
+  static bool isForwardingEnabled();
   
   struct DriverStatus {
     bool imager_running;

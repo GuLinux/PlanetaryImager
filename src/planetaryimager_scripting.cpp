@@ -39,9 +39,10 @@ int main(int argc, char** argv)
   app.setApplicationVersion(PLANETARY_IMAGER_VERSION);
   
   CommandLine commandLine(app);
-  //commandLine.frontend().process();
+  commandLine.scripting().process();
   auto dispatcher = make_shared<NetworkDispatcher>();
   auto client = make_shared<NetworkClient>(dispatcher);
+  client->connectToHost(commandLine.address(), commandLine.port(), {Configuration::Network_NoImage});
   
   LogHandler log_handler{commandLine};
   

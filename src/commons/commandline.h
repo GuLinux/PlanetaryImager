@@ -31,6 +31,7 @@ public:
   CommandLine &backend();
   CommandLine &daemon(const QString &listenAddress = "0.0.0.0");
   CommandLine &frontend();
+  CommandLine &scripting();
   
   CommandLine &process();
   
@@ -38,7 +39,7 @@ public:
   int port() const;
   QString logfile() const;
   QtMsgType consoleLogLevel() const;
-  QString listenAddress() const;
+  QString address() const;
 private:
   DPTR
 };

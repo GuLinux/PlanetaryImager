@@ -54,7 +54,8 @@ ScriptingPlanetaryImager::ScriptingPlanetaryImager(const Configuration::ptr& con
 }
 
 
-ScriptingEngine::ScriptingEngine(const Configuration::ptr &configuration, const SaveImages::ptr &saveImages, QObject *parent) : QObject(parent), dptr(this)
+ScriptingEngine::ScriptingEngine(const Configuration::ptr &configuration, const SaveImages::ptr &saveImages, const NetworkDispatcher::ptr &dispatcher, QObject *parent) 
+: QObject(parent),  NetworkReceiver{dispatcher}, dptr(this)
 {
   d->scriptedImager = make_unique<ScriptingPlanetaryImager>(configuration, saveImages);
   connect(d->scriptedImager.get(), &ScriptingPlanetaryImager::message, this, [=](const QString &s) { emit reply(s + "\n"); });

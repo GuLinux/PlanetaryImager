@@ -46,7 +46,14 @@ DPTR_IMPL(NetworkServer) {
   bool paused = false;
 };
 
-NetworkServer::NetworkServer(const Driver::ptr &driver, const ImageHandler::ptr &handler, const NetworkDispatcher::ptr &dispatcher, const SaveFileForwarder::ptr &save_file, const FramesForwarder::ptr &framesForwarder, QObject* parent)
+NetworkServer::NetworkServer(
+  const Driver::ptr &driver,
+  const ImageHandler::ptr &handler,
+  const NetworkDispatcher::ptr &dispatcher,
+  const SaveFileForwarder::ptr &save_file,
+  const FramesForwarder::ptr &framesForwarder,
+  const ScriptingEngine::ptr &scriptingEngine,
+  QObject* parent)
   : QObject{parent}, NetworkReceiver{dispatcher}, dptr(this, driver, handler, dispatcher, framesForwarder, make_unique<QTcpServer>())
 {
   d->server->setMaxPendingConnections(1);

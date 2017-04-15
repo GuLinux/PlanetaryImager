@@ -111,6 +111,11 @@ void DriverProtocol::setFormatParameters(const FormatParameters& parameters)
   }
 }
 
+bool DriverProtocol::isForwardingEnabled()
+{
+  return format_parameters.format != Configuration::Network_NoImage;
+}
+
 
 NetworkPacket::ptr DriverProtocol::sendCameraListReply(const Driver::Cameras& cameras)
 {
@@ -189,9 +194,13 @@ void DriverProtocol::decode(Imager::Controls& controls, const NetworkPacket::ptr
 
 NetworkPacket::ptr DriverProtocol::sendFrame(const Frame::ptr& frame)
 {
+  if(format_parameters.format == Configuration::Network_NoImage)
+    return {};
+  
   vector<uint8_t> data;
   QByteArray image;
   string extension;
+  
   
   if(format_parameters.format == Configuration::Network_JPEG) {
     extension = ".jpg";

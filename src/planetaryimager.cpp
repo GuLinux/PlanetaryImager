@@ -28,6 +28,7 @@
 #include "commons/commandline.h"
 #include "network/server/networkserver.h"
 #include "network/server/configurationforwarder.h"
+#include "network/server/scriptingengine.h"
 
 using namespace std;
 
@@ -54,6 +55,7 @@ int main(int argc, char** argv)
     auto save_files_forwarder = make_shared<SaveFileForwarder>(save_images, dispatcher);
     auto configuration_forwarder = make_shared<ConfigurationForwarder>(configuration, dispatcher);
     auto frames_forwarder = make_shared<FramesForwarder>(dispatcher);
+    auto scriptingengine = make_shared<ScriptingEngine>(configuration, save_images, dispatcher);
     
     PlanetaryImagerMainWindow mainWindow{
       drivers,
@@ -66,10 +68,10 @@ int main(int argc, char** argv)
       frames_forwarder,
       save_images,
     }};
-    auto server = make_shared<NetworkServer>(drivers, imageHandlers, dispatcher, save_files_forwarder, frames_forwarder );
+    auto server = make_shared<NetworkServer>(drivers, imageHandlers, dispatcher, save_files_forwarder, frames_forwarder, scriptingengine );
     
     
-    QMetaObject::invokeMethod(server.get(), "listen", Q_ARG(QString, commandLine.listenAddress()), Q_ARG(int, commandLine.port()));
+    QMetaObject::invokeMethod(server.get(), "listen", Q_ARG(QString, commandLine.address()), Q_ARG(int, commandLine.port()));
     
     QObject::connect(server.get(), &NetworkServer::imagerConnected, &mainWindow, [&](Imager *imager) {
       mainWindow.setImager(imager);

@@ -93,7 +93,7 @@ public:
     declare_setting(server_host, QString)
     declare_setting(server_port, int)
     
-    enum NetworkImageFormat { Network_RAW, Network_JPEG };
+    enum NetworkImageFormat { Network_RAW, Network_JPEG, Network_NoImage };
     declare_setting(server_image_format, NetworkImageFormat)
     declare_setting(server_compression, bool)
     declare_setting(server_force8bit, bool)
