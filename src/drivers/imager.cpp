@@ -29,6 +29,7 @@ DPTR_IMPL(Imager) {
   ImagerThread::ptr imager_thread;
   LOG_C_SCOPE(Imager);
   unique_ptr<QHash<Imager::Capability, bool>> capabilities;
+  bool destroyed = false;
 };
 
 Imager::Imager(const ImageHandler::ptr& image_handler) : QObject(nullptr), dptr(image_handler)
@@ -43,7 +44,7 @@ Imager::Imager(const ImageHandler::ptr& image_handler) : QObject(nullptr), dptr(
 
 Imager::~Imager()
 {
-  destroy();
+    destroy();
 }
 
 void Imager::import_controls(const QVariantList& controls, bool by_id)
@@ -90,9 +91,12 @@ QVariantList Imager::export_controls() const
 
 void Imager::destroy()
 {
+  if(d->destroyed)
+    return;
   d->imager_thread.reset();
   emit disconnected();
   this->deleteLater();
+  d->destroyed = true;
 }
 
 void Imager::restart(const ImagerThread::Worker::factory& worker)
