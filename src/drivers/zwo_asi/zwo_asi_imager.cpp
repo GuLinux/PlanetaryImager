@@ -74,6 +74,8 @@ void ZWO_ASI_Imager::Private::read_temperature() {
 }
 
 
+
+
 ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandler::ptr &imageHandler) : Imager{imageHandler}, dptr(info, make_shared<QTimer>(), this)
 {
     d->roi_validator = make_shared<ROIValidator>(initializer_list<ROIValidator::Rule>{
@@ -111,6 +113,11 @@ ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandler::
 
 ZWO_ASI_Imager::~ZWO_ASI_Imager()
 {
+}
+
+void ZWO_ASI_Imager::destroy() {
+    Imager::destroy();
+    d->worker.reset();
     d->reload_temperature_timer->stop();
     ASI_CHECK << ASICloseCamera(d->info.CameraID) << "Close Camera";
 }
