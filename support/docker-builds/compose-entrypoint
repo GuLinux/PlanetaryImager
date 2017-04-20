@@ -7,7 +7,6 @@ ${CMAKE_BIN} /code \
           -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE} \
           -DPACKAGE_VERSION_SUFFIX=${PACKAGE_VERSION_SUFFIX} \
           -DPACKAGE_NAME_SUFFIX=${PACKAGE_NAME_SUFFIX} \
-#          -DCPACK_PACKAGE_DIRECTORY=/dest \
           ${CMAKE_EXTRA_OPTIONS} ${CMAKE_OVERRIDE_OPTIONS} && \
           make ${MAKE_OPTS} && make package
 had_errors=$?
@@ -18,7 +17,11 @@ fi
 . package_name.cfg
 
 cp "${CPACK_PACKAGE_FILENAME}" /dest/
-chown 1000:1000 "/dest/$CPACK_PACKAGE_FILENAME}"
+chown 1000:1000 "/dest/${CPACK_PACKAGE_FILENAME}"
+if [[ -n "${TEST_PACKAGE_CMD}" ]]; then
+    "${TEST_PACKAGE_CMD}" "${CPACK_PACKAGE_FILENAME}"
+fi
+
 #set +x
 # if [[ $had_errors != 0 ]]; then
 #     echo "Error on container execution; please touch the file /tmp/on_error_handler to continue: "
