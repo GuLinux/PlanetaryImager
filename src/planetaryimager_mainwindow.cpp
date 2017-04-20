@@ -159,6 +159,7 @@ PlanetaryImagerMainWindow::~PlanetaryImagerMainWindow()
   d->imagerThread->quit();
   d->imagerThread->wait();
   d->displayImage->quit();
+  d->driver->aboutToQuit();
 }
 
 void PlanetaryImagerMainWindow::Private::saveState()

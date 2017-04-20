@@ -19,3 +19,6 @@
 
 using namespace std;
 
+void Driver::aboutToQuit()
+{
+}

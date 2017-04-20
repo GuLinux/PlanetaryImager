@@ -27,8 +27,9 @@ class QHYDriver : public Driver
 public:
   DECLARE_DRIVER_PLUGIN
     QHYDriver();
-    ~QHYDriver();
-    virtual Cameras cameras() const;
+    virtual ~QHYDriver();
+    Cameras cameras() const override;
+    void aboutToQuit() override;
 private:
   DPTR
 };

@@ -33,6 +33,7 @@
 #include "qhyimagingworker.h"
 #include <chrono>
 #include "c++/stlutils.h"
+#include <boost/lexical_cast.hpp>
 
 using namespace std;
 using namespace std::placeholders;
@@ -55,7 +56,7 @@ QHYCCDImager::QHYCCDImager(const QString &cameraName, const char *id, const Imag
 {
   qDebug() << "Opening QHY camera " << cameraName << ", id=" << id;
   d->handle = OpenQHYCCD(const_cast<char*>(id));
-  QHY_CHECK << reinterpret_cast<long>(d->handle) << "Opening Camera %1"_q % cameraName;
+  QHY_CHECK << boost::lexical_cast<int>(d->handle) << "Opening Camera %1"_q % cameraName;
   qDebug() << "initializing camera...";
   QHY_CHECK << InitQHYCCD(d->handle) << "Initializing Camera %1"_q % cameraName;
   qDebug() << "camera initialized";
