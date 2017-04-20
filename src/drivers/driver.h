@@ -34,7 +34,7 @@ public:
     virtual Imager *imager(const ImageHandler::ptr &imageHandler) const = 0;
   };
   typedef QList<Camera::ptr> Cameras; 
-  
+  virtual void aboutToQuit();
   virtual Cameras cameras() const = 0;
 };
 typedef QList<Driver::ptr> Drivers;

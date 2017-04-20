@@ -25,6 +25,7 @@
 #include <QRegularExpression>
 #include "Qt/strings.h"
 #include "qhyexception.h"
+#include <QThread>
 
 using namespace std;
 
@@ -49,13 +50,17 @@ public:
 
 QHYDriver::QHYDriver() : dptr(this)
 {
-  qDebug() << "Initializing QHY Driver";
+  qDebug() << "Initializing QHY Driver" << QThread::currentThreadId();
   QHY_CHECK << InitQHYCCDResource() << "initializing QHY Driver";
 }
 
 QHYDriver::~QHYDriver()
 {
-  qDebug() << "Releasing QHY Driver";
+}
+
+void QHYDriver::aboutToQuit()
+{
+  qDebug() << "Releasing QHY Driver" << QThread::currentThreadId();
   QHY_CHECK << ReleaseQHYCCDResource() << "releasing QHY Driver";
 }
 
