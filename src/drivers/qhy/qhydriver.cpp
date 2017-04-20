@@ -49,11 +49,13 @@ public:
 
 QHYDriver::QHYDriver() : dptr(this)
 {
+  qDebug() << "Initializing QHY Driver";
   QHY_CHECK << InitQHYCCDResource() << "initializing QHY Driver";
 }
 
 QHYDriver::~QHYDriver()
 {
+  qDebug() << "Releasing QHY Driver";
   QHY_CHECK << ReleaseQHYCCDResource() << "releasing QHY Driver";
 }
 
