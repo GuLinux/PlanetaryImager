@@ -33,6 +33,7 @@ DPTR_IMPL(SupportedDrivers) {
   QList<shared_ptr<QPluginLoader>> drivers;
   void find_drivers(const QString &directory);
   void load_driver(const QString &filename);
+  list<Driver*> instances() const;
 };
 
 
@@ -75,12 +76,28 @@ SupportedDrivers::~SupportedDrivers()
 {
 }
 
+void SupportedDrivers::aboutToQuit()
+{
+  for(auto driver: d->instances())
+    driver->aboutToQuit();
+}
+
 
 Driver::Cameras SupportedDrivers::cameras() const
 {
   Cameras cameras;
-  list<Driver*> drivers;
-  transform(begin(d->drivers), end(d->drivers), back_inserter(drivers), [](const auto &p) -> Driver* {
+  for(auto driver: d->instances()) {
+    if(driver)
+      cameras.append(driver->cameras());
+  }
+
+  return cameras;
+}
+
+list<Driver *> SupportedDrivers::Private::instances() const
+{
+  list<Driver*> instances;
+  transform(begin(drivers), end(drivers), back_inserter(instances), [](const auto &p) -> Driver* {
     qDebug() << "Initializing driver" << p->fileName();
     try {
       return qobject_cast<Driver*>(p->instance());
@@ -89,10 +106,5 @@ Driver::Cameras SupportedDrivers::cameras() const
       return nullptr;
     }
   });
-  for(auto driver: drivers) {
-    if(driver)
-      cameras.append(driver->cameras());
-  }
-
-  return cameras;
+  return instances;
 }
