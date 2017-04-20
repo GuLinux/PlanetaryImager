@@ -322,7 +322,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     connect(d->ui->actionEdit_ROI, &QAction::triggered, this, bind(&Private::editROI, d.get()));
     QMap<Private::SelectionMode, function<void(const QRect &)>> handle_selection {
       {Private::NoSelection, [](const QRect&) {}},
-      {Private::ROI, [&](const QRect &rect) { d->imager->setROI(rect); }},
+      {Private::ROI, [&](const QRect &rect) { d->imager->setROI(rect.normalized()); }},
     };
     connect(d->image_widget, &ZoomableImage::selectedROI, [this, handle_selection](const QRectF &rect) {
       handle_selection[d->selection_mode](rect.toRect());
