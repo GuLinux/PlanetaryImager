@@ -24,6 +24,7 @@
 #include <QFileInfo>
 #include <QDirIterator>
 #include <QJsonDocument>
+#include "drivers/imagerexception.h"
 
 using namespace std;
 
@@ -59,13 +60,13 @@ void SupportedDrivers::Private::load_driver(const QString& filename)
   auto getClassName = [](const auto &p) { return p->metaData().value("className"); };
   if(plugin->metaData().value("IID").toString() == DRIVER_IID && 
         find_if(drivers.begin(), drivers.end(), [&](const auto &p) { return getClassName(p) == getClassName(plugin); }) == drivers.end() ) {
-    if(plugin->load()) {
-      auto metadata = QJsonDocument{plugin->metaData()}.toVariant().toMap();
-      qInfo() << "driver " << plugin->fileName() << "loaded:" << metadata["className"].toString() << metadata["MetaData"].toMap()["description"].toString();
-      drivers.push_back(plugin);
-    } else {
-      qWarning() << "Error loading driver " << plugin->fileName() << ": " << plugin->errorString();
-    }
+      if(plugin->load()) {
+        auto metadata = QJsonDocument{plugin->metaData()}.toVariant().toMap();
+        qInfo() << "driver " << plugin->fileName() << "loaded:" << metadata["className"].toString() << metadata["MetaData"].toMap()["description"].toString();
+        drivers.push_back(plugin);
+      } else {
+        qWarning() << "Error loading driver " << plugin->fileName() << ": " << plugin->errorString();
+      }
   }
 }
 
@@ -79,7 +80,15 @@ Driver::Cameras SupportedDrivers::cameras() const
 {
   Cameras cameras;
   list<Driver*> drivers;
-  transform(begin(d->drivers), end(d->drivers), back_inserter(drivers), [](const auto &p) { return qobject_cast<Driver*>(p->instance()); });
+  transform(begin(d->drivers), end(d->drivers), back_inserter(drivers), [](const auto &p) -> Driver* {
+    qDebug() << "Initializing driver" << p->fileName();
+    try {
+      return qobject_cast<Driver*>(p->instance());
+    } catch(const Imager::exception &e) {
+      qWarning() << "Error loading driver: " << e.what();
+      return nullptr;
+    }
+  });
   for(auto driver: drivers) {
     if(driver)
       cameras.append(driver->cameras());
