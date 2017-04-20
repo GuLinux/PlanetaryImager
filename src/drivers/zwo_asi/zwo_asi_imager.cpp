@@ -57,12 +57,15 @@ DPTR_IMPL(ZWO_ASI_Imager) {
     ASIControl::vector controls;
     ASIControl::ptr temperature_control;
     
-    ASIImagingWorker::ptr worker;
+    weak_ptr<ASIImagingWorker> worker;
     ROIValidator::ptr roi_validator;
     QRect maxROI(int bin) const;
     void restart_worker(int bin, const QRect &roi, ASI_IMG_TYPE format);
     void read_temperature();
     void update_worker_exposure_timeout();
+    ASI_IMG_TYPE format() { return worker.expired() ? ASI_IMG_END : worker.lock()->format(); }
+    int bin() { return worker.expired() ? -1 : worker.lock()->bin(); }
+    QRect roi() { return worker.expired() ? QRect{} : worker.lock()->roi(); }
 };
 
 void ZWO_ASI_Imager::Private::read_temperature() {
@@ -72,6 +75,8 @@ void ZWO_ASI_Imager::Private::read_temperature() {
       emit q->temperature(temperature_control->reload().control().value.toDouble());
     });
 }
+
+
 
 
 ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandler::ptr &imageHandler) : Imager{imageHandler}, dptr(info, make_shared<QTimer>(), this)
@@ -111,6 +116,11 @@ ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandler::
 
 ZWO_ASI_Imager::~ZWO_ASI_Imager()
 {
+}
+
+void ZWO_ASI_Imager::destroy() {
+    Imager::destroy();
+    d->worker.reset();
     d->reload_temperature_timer->stop();
     ASI_CHECK << ASICloseCamera(d->info.CameraID) << "Close Camera";
 }
@@ -127,8 +137,8 @@ QString ZWO_ASI_Imager::name() const
 
 void ZWO_ASI_Imager::Private::update_worker_exposure_timeout()
 {
-  if(worker)
-    worker->calc_exposure_timeout();
+  if(!worker.expired())
+    worker.lock()->calc_exposure_timeout();
 }
 
 
@@ -154,7 +164,7 @@ Imager::Controls ZWO_ASI_Imager::controls() const
         {ASI_IMG_RAW16, "RAW 16bit"},
         {ASI_IMG_Y8, "Y8 (Monochrome)"},
     };
-    auto imageFormat = Control{ImgTypeControlID, "Image Format", Control::Combo}.set_value_enum(d->worker->format());
+    auto imageFormat = Control{ImgTypeControlID, "Image Format", Control::Combo}.set_value_enum(d->format());
     int i = 0;
     while(d->info.SupportedVideoFormat[i] != ASI_IMG_END && i < 8) {
         auto format = d->info.SupportedVideoFormat[i];
@@ -164,7 +174,7 @@ Imager::Controls ZWO_ASI_Imager::controls() const
     }
     controls.push_front(imageFormat);
 
-    auto bin = Control{BinControlID, "Bin", Control::Combo}.set_value(d->worker->bin());
+    auto bin = Control{BinControlID, "Bin", Control::Combo}.set_value(d->bin());
     i = 0;
     while(d->info.SupportedBins[i] != 0) {
         auto bin_value = d->info.SupportedBins[i++];
@@ -179,13 +189,13 @@ void ZWO_ASI_Imager::setControl(const Control& control)
 {
   LOG_F_SCOPE
   if(control.id == ImgTypeControlID) {
-    d->restart_worker(d->worker->bin(), d->worker->roi(), control.get_value_enum<ASI_IMG_TYPE>());
+    d->restart_worker(d->bin(), d->roi(), control.get_value_enum<ASI_IMG_TYPE>());
     emit changed(control);
     return;
   }
   if(control.id == BinControlID) {
     auto bin =control.get_value<int>();
-    d->restart_worker(bin, d->maxROI(bin), d->worker->format());
+    d->restart_worker(bin, d->maxROI(bin), d->format());
     emit changed(control);
     return;
   }
@@ -208,7 +218,9 @@ void ZWO_ASI_Imager::setControl(const Control& control)
 void ZWO_ASI_Imager::Private::restart_worker(int bin, const QRect& roi, ASI_IMG_TYPE format)
 {
   auto factory = [=] {
-    return worker = make_shared<ASIImagingWorker>(roi, bin, info, format);
+    auto worker = make_shared<ASIImagingWorker>(roi, bin, info, format);
+    this->worker = worker;
+    return worker;
   };
   worker.reset();
   q->restart(factory);
@@ -226,12 +238,12 @@ void ZWO_ASI_Imager::startLive()
 
 void ZWO_ASI_Imager::clearROI()
 {
-  d->restart_worker(d->worker->bin(), d->maxROI(d->worker->bin()), d->worker->format());
+  d->restart_worker(d->bin(), d->maxROI(d->bin()), d->format());
 }
 
 void ZWO_ASI_Imager::setROI(const QRect& roi)
 {
-  auto currentROI = d->worker->roi();
+  auto currentROI = d->roi();
   auto flipControl = find_if(d->controls.begin(), d->controls.end(), [](const auto &c) { return c->caps.ControlType == ASI_FLIP; });
   bool hflip = false, vflip = false;
   if( flipControl!= d->controls.end()) {
@@ -239,9 +251,9 @@ void ZWO_ASI_Imager::setROI(const QRect& roi)
     hflip = (flipStatus == ASI_FLIP_HORIZ || flipStatus == ASI_FLIP_BOTH);
     vflip = (flipStatus == ASI_FLIP_VERT || flipStatus == ASI_FLIP_BOTH);
   }
-  auto flip = [this, hflip, vflip] (const QRect &r) { return ROIValidator::flipped(r, hflip, vflip, d->maxROI(d->worker->bin())); };
+  auto flip = [this, hflip, vflip] (const QRect &r) { return ROIValidator::flipped(r, hflip, vflip, d->maxROI(d->bin())); };
   QRect newROI = d->roi_validator->validate(roi, flip(currentROI));
-  d->restart_worker(d->worker->bin(), flip(newROI), d->worker->format());
+  d->restart_worker(d->bin(), flip(newROI), d->format());
 }
 
 QRect ZWO_ASI_Imager::Private::maxROI(int bin) const
