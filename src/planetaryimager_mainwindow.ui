@@ -382,6 +382,10 @@
    <property name="enabled">
     <bool>false</bool>
    </property>
+   <property name="icon">
+    <iconset resource="resources/resources.qrc">
+     <normaloff>:/resources/edit_roi.png</normaloff>:/resources/edit_roi.png</iconset>
+   </property>
    <property name="text">
     <string>Edit ROI</string>
    </property>
