@@ -61,7 +61,7 @@ void SupportedDrivers::Private::load_driver(const QString& filename)
         find_if(drivers.begin(), drivers.end(), [&](const auto &p) { return getClassName(p) == getClassName(plugin); }) == drivers.end() ) {
     if(plugin->load()) {
       auto metadata = QJsonDocument{plugin->metaData()}.toVariant().toMap();
-      qInfo() << "driver " << plugin->fileName() << "loaded:" << metadata["className"].toString() << metadata["description"].toString();
+      qInfo() << "driver " << plugin->fileName() << "loaded:" << metadata["className"].toString() << metadata["MetaData"].toMap()["description"].toString();
       drivers.push_back(plugin);
     } else {
       qWarning() << "Error loading driver " << plugin->fileName() << ": " << plugin->errorString();
