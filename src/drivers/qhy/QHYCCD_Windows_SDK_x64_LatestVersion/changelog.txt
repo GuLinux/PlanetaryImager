@@ -1,0 +1,141 @@
+
+//-----------2017-03-01-------------------------
+V7.4.16.0
+Fixed: the wrong pixel size value for some cameras.
+Added: QHY165,QHY168,QHY247,QHY367 can output he OB area in ASCOM.
+Updated: used 'cache first then read ' mode in the single frame mode for QHY178.
+Fixed: the image block issue when changed the resolution for QHY5III290 and QHY178.
+Added: hardware ROI supporting for QHY165,QHY168,QHY247 and QHY367.
+Fixed: the gain issue under long exposure mode for QHY165,QHY168,QHY247 and QHY367.
+Fixed: the upper black belt problem for QHY168.
+Updated: corrected the resolution of QHY163.
+修复：某些相机像素尺寸信息错误的问题；
+添加：QHY165,QHY168,QHY247,QHY367在ASCOM中可控制输出OB区域；
+更新：QHY178单帧模式强制使用先缓存再读取方式；
+修复：QHY5III290,QHY178切换分辨率时图像分块问题；
+添加：QHY165,QHY168,QHY247,QHY367硬件roi支持； 
+修复：QHY165,QHY168,QHY247,QHY367长曝光下增益问题；
+修复：QHY168上部黑带问题；
+更新：修正163分辨率；
+
+//-----------2017-01-19-------------------------
+V7.4.15.10
+Added: QHY165 supporting;
+Added: QHY247 supporting;
+Added: QHY168 supporting.
+Updated: Optimized QHY367.
+添加：QHY165相机支持；
+添加：QHY247相机支持；
+添加：QHY168相机支持；
+更新：QHY367相机优化。
+
+//-----------2017-01-13-------------------------
+V7.4.15.3
+Updated: set the R G B Gain values to the same for QHY183.
+Updated: set the R G B Gain values to the same for QHY163.
+Fixed: QHY5LII and minicam5 will be stuck in long time exposure.
+Fixed: program quit problem due to exceptions for QHY163.
+Updated: Optimized QHY163 camera to make it work stable on usb2.0 port.
+
+//-----------2017-01-09-------------------------
+V7.4.14.8
+Added: supported QHY11.
+Fixed: change the range of offset to 0-1023 for QHY178.
+
+//-----------2017-01-06-------------------------
+V7.4.14.7
+Updated: Change the max exposure time to 36000s for MiniCam5 cameras.
+Updated: Change the Gain range to 1-100 for MiniCam5 cameras.
+Fixed: QHY163 usbtraffic setting has no effect on usb2.0.
+Fixed: QHY367 can not turn on live broadcast function.
+Updated: Optimized the single frame mode of QHY163,make it more stable on different environment.
+Fixed: Program exit exception when called ReleaseQHYCCDResource for QHY163,QHY367 cameras.
+Added: DDR_BUFFER_CAPACITY control to check the DDR buffer capacity.
+Updated: Optimized QHY5LII series to make it more stable on different enviroment.
+Updated: Supported more than 9-position filter wheel.
+
+
+//-----------2016-12-23-------------------------
+V7.4.14.0
+Updated: Optimized the framework of QHY163.
+Fixed: The binning setting of QHY5LII will be reset after you called StopQHYCCDLive.
+Added: Row Noise reducation for QHY5-II camera.(only use in single frame mode at present)
+Update: Optimized the framework of QHY5II series cameras.
+Fixed: Minicam5 can not download image data when exposure duration is greater than 10s.
+Fixed: The STD value of QHY163 camera is abnormal when capture frame at long intervals.
+Fixed: The image show a checkerboard pattern for QHY5L-II-M camera.
+Added: Supported QHY367 camera.
+
+
+//-----------2016-12-13-------------------------
+V7.4.13.4    Major updates:
+1. Fixed: The ouput data in 8bits and single frame mode was wrong for QHY5II series cameras.
+
+
+//-----------2016-12-05-------------------------
+V7.4.13.1    Major updates:
+1. Fixed: The gray level of RAW16 image data was inaccurate for QHY5II series cameras.
+2. Fixed: Turn live broadcast on for QHY5III color cameras will cause software crash.
+3. Fixed: The exposure of QHY163 will be reset to 1s from the second frame when capture with a long exposure time.
+4. Updated : Reduced the hot noise of QHY163;
+5. Updated : improved transmission stability of QHY163 camera.
+6. Fixed: the top half black and bottom half white issue of IC8300;
+
+
+//-----------2016-11-08-------------------------
+V7.4.12.0.   Major updates:
+1. Updated : MiniCam5 control temperature independent;
+2. Fixed : Minicam5F can not detect the CFW using IsQHYCCDCFWPlugged.
+3. Updated : Optimized the framework of QHY183 and QHY163.
+4. Fixed : Program will lock up if call CloseQHYCCD directly after OpenQHYCCD for QHY-A series cameras.
+5. Added : Supporting QHY16803A camera.
+
+
+//-----------2016-10-21-------------------------
+V7.4.11.2  - important update:
+1. Fixed the delay or stuck issue when connected camera or changed the resolution.
+
+
+//-----------2016-10-14-------------------------
+V7.4.11.0  - Major update:
+1. Removed the stop cooler opration from CloseQHYCCD.
+2. Fixed the AMPV will out of control when exposure less then 50ms for QHY5III174.
+3. Solved a conflict between reading temperature and setting temperature.
+4. Modified the way to achieve temperature control for QHY695A,QHY90A,QHY16200A,QHY814A.
+5. Fixed the horizontal stripe issue when changed bits mode from 16bit to 8bit for QHY163.
+6. Fixed sometimes QHY163 will stuck in reading data in the single frame mode and roi shooting.
+7. Adjusted the output image height of QHY163, to make sure it can be divisible by 4.
+8. Fixed the red channel and blue channel in the white balance was opposite for QHY163.
+9. Fixed the default debayer format of QHY163 was incorrect.
+10. Adjusted the offset range of QHY163 to [0-511];
+11. Adjusted the Gain range of QHY163 to [0-58];
+
+
+//-----------2016-09-08-------------------------
+V7.4.10.1.   - Major update:
+1. Added QHY163 camera supporting.
+2. Corrected the unit of Gain to dB for QHY174, QHY178, QHY290, QHY224 cameras.
+3. Added the CAM_LIGHT_PERFORMANCE_MODE to control light performance mode.
+4. Added  the CONTROL_DDR to turn DDR on/off.
+5. Fixed QHY290-M need more than 1minutes to get the frame data at the first time.
+
+
+//-----------2016-08-11-------------------------
+V7.4.9.10.   - Major update:
+1. Fixed：FW version display error in USB2.0 camera
+2. Added：support QHY5III coldmos series cameras checking the filters postion and total number of filters.
+      The IsQHYCCDCFWPlugged() used to check whether the filter wheel plugg in to the port.
+      The CONTROL_CFWSLOTSNUM used to get the total number of filters. Make sure filter wheel plugged in when you want to check the number.
+      Note: the CFW will be reset at first when you plug it in to the camera port. During this time, the IsCFWPlugged() will return QHYCCD_ERROR if you call it. After cfw finish reset, the isCFWPlugged will return QHYCCD_SUCCESS if you call it. 
+3. Improved：QHY695A QHY90A QHY16200A use some method to make ASCOM forcestop and exit smoothly
+4. Fixed: program crashed when using MiniCam5S-M to capture frame.
+5. Fixed: ControlQHYCCDShutter returned not correct for QHY695A QHY90A QHY16200A.
+6. Added: stop the cooler when cooling camera be closed.
+7. Fixed: CFWPORT returned true in IsQHYCCDControlAvailable for Minicam5S.
+8. Fixed: Temperature of MiniCamn5 can not go to the lowest when set the power to 100% directly.
+9. Fixed: program crashed when connect to QHY5II series color cameras.
+10. Improved: the frame rate of QHY5III185 in 16bits mode.
+11. Fixed: the AMPV functions did not work for QHY174.
+
+
+
