@@ -1,0 +1,18 @@
+#!/bin/bash
+set -x
+
+cut_version() {
+    grep "set(${1}_VERSION" /code/CMakeLists.txt | awk '{ print $2 }' | tr -d ')'
+}
+
+MAJOR="$( cut_version MAJOR )"
+MINOR="$( cut_version MINOR )"
+PATCH="$( cut_version PATCH )"
+
+PACKAGE_VERSION="${MAJOR}.${MINOR}.${PATCH}"
+PACKAGE_NAME="PlanetaryImager-${PACKAGE_VERSION}${PACKAGE_VERSION_SUFFIX}"
+PACKAGE_FULL_NAME="${PACKAGE_NAME}-sources.tar.gz"
+
+tar --exclude='/code/.git' --exclude='/code/build*' -czvf "$PACKAGE_FULL_NAME" /code --transform="s/code/${PACKAGE_NAME}/"
+cp "$PACKAGE_FULL_NAME" /dest && chown 1000:1000 /dest/"$PACKAGE_FULL_NAME"
+

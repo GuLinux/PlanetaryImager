@@ -1,4 +1,10 @@
 #!/bin/bash
+
+if [[ -n "$COMPOSE_ENTRYPOINT_OVERRIDE" ]]; then
+  "$COMPOSE_ENTRYPOINT_OVERRIDE" "$@"
+  exit $?
+fi
+
 CMAKE_BIN="${CMAKE_BIN:-cmake}"
 set -x
 ${CMAKE_BIN} /code \

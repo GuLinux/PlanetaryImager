@@ -22,6 +22,8 @@ Options:
 EOF
 }
 
+[[ -r "$HOME/.config/planetaryimager_packaging_default.conf" ]] && . "$HOME/.config/planetaryimager_packaging_default.conf"
+
 while [[ -n "$1" && "$1" != "--" ]]; do
     param="$1"
     shift
