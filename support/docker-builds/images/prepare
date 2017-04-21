@@ -1,5 +1,7 @@
 #!/bin/bash
 
+[[ -r "$HOME/.config/planetaryimager_packaging_images_env.conf" ]] && . "$HOME/.config/planetaryimager_packaging_images_env.conf"
+
 dirs=""
 while [[ -n "$1" ]] && [[ "$1" != "--" ]]; do
   case "$1" in
