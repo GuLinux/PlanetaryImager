@@ -9,6 +9,7 @@ if ! [[ -r "$PACKAGE" ]]; then
 fi
 echo "**** Testing installation for $PACKAGE"
 yum install -y "$PACKAGE"
+yum reinstall -y "$PACKAGE"
 EOF
 
 chmod a+x rpm-package-checker.sh
