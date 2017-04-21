@@ -9,6 +9,7 @@
  - feature: adding new formats for saving: FITS images, and PNG
  - feature: statusbar indicator of time elapsed/left for long exposures
  - feature: Windows and OSX versions (see README)
+ - feature: Add manual selection of ROI
  - feature: allow to pause/resume recordings
  - bugfix: ASI: better handling of exposure timeout
  - bugfix: ASI: ROI fixes for flipped and ROI in ROI
@@ -16,6 +17,8 @@
  - bugfix: Windows: fix SER recording
  - bugfix: better error management
  - bugfix: add missing information to TXT recording information
+ - bugfix: fix disconnection/closing crashes with ZWO cameras
+ - fixed QHYCCD SDK compilation
  - ui fixes
  - updated ASI SDK version (Linux/OSX: v0.6.0328, Windows: 1.13.0.10)
  
