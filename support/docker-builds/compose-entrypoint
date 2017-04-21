@@ -16,11 +16,13 @@ fi
 
 . package_name.cfg
 
-cp "${CPACK_PACKAGE_FILENAME}" /dest/
+
 chown 1000:1000 "/dest/${CPACK_PACKAGE_FILENAME}"
 if [[ -n "${TEST_PACKAGE_CMD}" ]]; then
-    "${TEST_PACKAGE_CMD}" "${CPACK_PACKAGE_FILENAME}"
+    "${TEST_PACKAGE_CMD}" "${CPACK_PACKAGE_FILENAME}" || exit 1
 fi
+
+cp "${CPACK_PACKAGE_FILENAME}" /dest/
 
 #set +x
 # if [[ $had_errors != 0 ]]; then
