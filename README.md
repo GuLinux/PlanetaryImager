@@ -7,7 +7,8 @@ Useful Links
 ------------
 
  * [Project Homepage - Full description, screenshots](http://blog.gulinux.net/en/planetary-imager)
- * [Releases and Downloads](https://github.com/GuLinux/PlanetaryImager/releases)
+ * [Stable Releases and Downloads](https://github.com/GuLinux/PlanetaryImager/releases)
+ * [Development releases](https://www.dropbox.com/sh/7ofjp0s6gbelff4/AAAmNhLU4sDKuTKPojSxA-P7a/development?dl=0&lst=)
  * [Report a bug](https://github.com/GuLinux/PlanetaryImager/issues)
 
 Supported Cameras
