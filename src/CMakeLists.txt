@@ -79,7 +79,6 @@ target_link_libraries(planetary_imager
     Qt5::Widgets
     Qt5::Qml
     ${CCFITS_LIBRARY} ${CFITSIO_LDFLAGS}
-    CCfits ${CFITSIO_LIBRARIES} # TODO: find_package
     ${Qt5_OpenGL_LIBRARIES}
     pthread
     ${EXTRA_LIBRARIES}
