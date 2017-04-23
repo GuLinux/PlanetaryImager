@@ -41,6 +41,7 @@ include(FindPkgConfig)
 pkg_check_modules(CFITSIO REQUIRED cfitsio)
 
 include_directories(${CFITSIO_INCLUDEDIR})
+message("CFITSIO: ${CFITSIO_LDFLAGS}")
 
 if(NOT WIN32)
   pkg_check_modules(LIBUSB libusb-1.0 REQUIRED)
