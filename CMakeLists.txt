@@ -105,4 +105,4 @@ add_subdirectory(support)
 include(packaging.cmake)
 
 
-message("Done configuring PlanetaryImager-${FULL_VERSION}-${PlanetaryImager_ARCH}")
+message("Done configuring PlanetaryImager-${FULL_VERSION}-${PlanetaryImager_ARCH} for ${CMAKE_SYSTEM_NAME}")

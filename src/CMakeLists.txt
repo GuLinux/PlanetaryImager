@@ -60,12 +60,10 @@ endif()
 
 add_executable(planetary_imager ${WIN32_APP_FLAG} ${PlanetaryImager_SRCS} )
 
-find_library(CCFITS_LIBRARY NAMES ccfits CCfits)
+find_library(CCFITS_LIBRARY NAMES ccfits CCfits HINTS ${CCFITS_LIBRARY_PATH})
 if(NOT CCFITS_LIBRARY)
     message(FATAL_ERROR "Unable to find CCfits library")
 endif()
-
-
 
 target_link_libraries(planetary_imager
     network_server
