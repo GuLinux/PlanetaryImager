@@ -21,6 +21,38 @@ EOF
 LIBUSB_CONFIGURE_OPTS="--host=x86_64-apple-darwin15"
 . ../commons/Dockerfile.libusb.in
 
+cat <<EOF
+    
+RUN mkdir /build
+    
+RUN mkdir /opt/Qt5-includes && \
+    ln -s /osxcross/target/macports/pkgs/opt/local/libexec/qt5/lib/QtGui.framework/Headers /opt/Qt5-includes/QtGui && \
+    ln -s /osxcross/target/macports/pkgs/opt/local/libexec/qt5/lib/QtCore.framework/Headers /opt/Qt5-includes/QtCore && \
+    ln -s /osxcross/target/macports/pkgs/opt/local/libexec/qt5/lib/QtWidgets.framework/Headers /opt/Qt5-includes/QtWidgets && \
+    ln -s /osxcross/target/macports/pkgs/opt/local/libexec/qt5/lib/QtNetwork.framework/Headers /opt/Qt5-includes/QtNetwork && \
+    ln -s /osxcross/target/macports/pkgs/opt/local/libexec/qt5/lib/QtConcurrent.framework/Headers /opt/Qt5-includes/QtConcurrent && \
+    ln -s /osxcross/target/macports/pkgs/opt/local/libexec/qt5/lib/QtOpenGL.framework/Headers /opt/Qt5-includes/QtOpenGL && \
+    ln -s /osxcross/target/macports/pkgs/opt/local/libexec/qt5/lib/QtQml.framework/Headers /opt/Qt5-includes/QtQml && \
+    ln -s /osxcross/target/macports/pkgs/opt/local/ /opt/ && \
+    ln -s /osxcross/target/SDK/MacOSX10.11.sdk/System/ /
+
+RUN cd / && \
+    wget -q https://heasarc.gsfc.nasa.gov/fitsio/CCfits-2.4/CCfits-2.4.tar.gz && \
+    tar xf CCfits-2.4.tar.gz && \
+    rm -f CCfits-2.4.tar.gz && \
+    cd /CCfits && \
+    ./configure --host=i386-apple-darwin12 --prefix=/opt/local --with-cfitsio=/osxcross/target/macports/pkgs/opt/local/ && \
+    make install && \
+    cd / && \
+    rm -rf /CCfits
+
+RUN apt-get install -y qtbase5-dev-tools
+
+RUN find  /osxcross/target/macports/pkgs/opt/local/libexec/qt5/lib/cmake/ -name *.cmake -exec sed -i 's|"/opt|"/osxcross/target/macports/pkgs/opt|g' {} \;
+
+COPY osxcross-toolchain.cmake /
+
+EOF
 
 #QT_MAJOR_MINOR="5.8"
 #QT_VERSION="${QT_MAJOR_MINOR}.0"
