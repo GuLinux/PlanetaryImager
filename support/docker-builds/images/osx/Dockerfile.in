@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y git build-essential cmake clang wget au
     git clone https://github.com/tpoechtrager/osxcross
 COPY MacOSX10.11.sdk.tar.xz /osxcross/tarballs/
 RUN cd /osxcross && UNATTENDED=1 ./build.sh
-ENV PATH=/osxcross/target/bin:\${PATH} CC=o64-clang CXX=o64-clang++-libc++ MACOSX_DEPLOYMENT_TARGET=10.7 UNATTENDED=1
+ENV PATH=/osxcross/target/bin:\${PATH} CC=o64-clang CXX=o64-clang++-libc++ MACOSX_DEPLOYMENT_TARGET=10.7 UNATTENDED=1 AR=x86_64-apple-darwin15-ar
 RUN osxcross-macports install openssl qt5 opencv boost
 EOF
 
