@@ -4,6 +4,9 @@ set(CMAKE_OSX_DEPLOYMENT_TARGET "10.11" CACHE STRING "Minimum OS X deployment ve
 set(TOOLCHAIN_PREFIX x86_64-apple-darwin15)
 set(CMAKE_C_COMPILER ${TOOLCHAIN_PREFIX}-clang)
 set(CMAKE_CXX_COMPILER ${TOOLCHAIN_PREFIX}-clang++-libc++)
+set(CMAKE_AR x86_64-apple-darwin15-ar CACHE STRING "CMAKE AR")
+set(CMAKE_RANLIB x86_64-apple-darwin15-ranlib CACHE STRING "CMAKE ranlib")
+
 set(CMAKE_FIND_ROOT_PATH "/osxcross/target/SDK/MacOSX10.11.sdk/usr/include/")
 set(CMAKE_FIND_ROOT_PATH_MODE_PROGRAM BOTH)
 set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
@@ -46,8 +49,7 @@ set_property(TARGET Qt5::rcc PROPERTY IMPORTED_LOCATION ${QT_RCC_EXECUTABLE})
 set(CCFITS_LIBRARY_PATH /opt/CCfits/lib/ CACHE PATH "CCfits find_library include path")
 include_directories(/opt/CCfits/include/)
 link_directories(/opt/CCfits/lib)
-set(CMAKE_PREFIX_PATH "/osxcross/target/macports/pkgs/opt/local/libexec/qt5/;/osxcross/target/macports/pkgs/opt/local;/opt/CCfits;/opt/cfitsio")
-
+set(CMAKE_PREFIX_PATH "/osxcross/target/macports/pkgs/opt/local/libexec/qt5/;/osxcross/target/macports/pkgs/opt/local;/opt/CCfits;/opt/cfitsio;/opt/opencv")
 
 # run with -DCMAKE_TOOLCHAIN_FILE=/osxcross-toolchain.cmake
 
