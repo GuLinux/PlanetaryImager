@@ -14,8 +14,8 @@ RUN apt-get update && apt-get install -y git build-essential cmake clang wget au
     git clone https://github.com/tpoechtrager/osxcross
 COPY MacOSX10.11.sdk.tar.xz /osxcross/tarballs/
 RUN cd /osxcross && UNATTENDED=1 ./build.sh
-ENV PATH=/osxcross/target/bin:\${PATH} CC=o64-clang CXX=o64-clang++-libc++ MACOSX_DEPLOYMENT_TARGET=10.7 UNATTENDED=1 AR=x86_64-apple-darwin15-ar
-RUN osxcross-macports install openssl qt5 opencv boost
+ENV PATH=/osxcross/target/bin:\${PATH} CC=o64-clang CXX=o64-clang++-libc++ MACOSX_DEPLOYMENT_TARGET=10.7 UNATTENDED=1 AR=x86_64-apple-darwin15-ar RANLIB=x86_64-apple-darwin15-ranlib
+RUN osxcross-macports install openssl qt5 boost
 EOF
 
 LIBUSB_CONFIGURE_OPTS="--host=x86_64-apple-darwin15"
@@ -30,7 +30,7 @@ RUN cd / && \
     rm cfitsio3410.tar.gz && \
     cd /cfitsio && \
     ./configure --host=x86_64-apple-darwin12 --prefix=/opt/cfitsio && \
-    make shared install && \
+    make install && \
     cd / && rm -rf cfitsio
     
 RUN cd / && \
@@ -48,6 +48,13 @@ RUN apt-get install -y qtbase5-dev-tools
 RUN find  /osxcross/target/macports/pkgs/opt/local/libexec/qt5/lib/cmake/ -name *.cmake -exec sed -i 's|"/opt|"/osxcross/target/macports/pkgs/opt|g' {} \;
 
 COPY osxcross-toolchain.cmake /
+
+RUN cd / && wget -q https://github.com/opencv/opencv/archive/3.2.0.tar.gz && \
+    tar xf 3.2.0.tar.gz && rm -f 3.2.0.tar.gz && \
+    cd opencv-3.2.0 && mkdir build && cd build && \
+    cmake ../ -DCMAKE_TOOLCHAIN_FILE=/osxcross-toolchain.cmake -DCMAKE_INSTALL_PREFIX=/opt/opencv -DCMAKE_BUILD_TYPE=Release -DBUILD_PERF_TESTS=Off -DBUILD_TESTS=Off && \
+    make all install && \
+    cd / && rm -rf opencv-3.2.0
 
 #TODO: remove this
 RUN apt-get install -y vim
