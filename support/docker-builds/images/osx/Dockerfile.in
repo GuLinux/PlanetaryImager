@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y git build-essential cmake clang wget au
     git clone https://github.com/tpoechtrager/osxcross
 COPY MacOSX10.11.sdk.tar.xz /osxcross/tarballs/
 RUN cd /osxcross && UNATTENDED=1 ./build.sh
-ENV PATH=/osxcross/target/bin:\${PATH} CC=o64-clang CXX=o64-clang++-libc++ MACOSX_DEPLOYMENT_TARGET=10.7 UNATTENDED=1 AR=x86_64-apple-darwin15-ar RANLIB=x86_64-apple-darwin15-ranlib
+ENV PATH=/osxcross/target/bin:\${PATH} CC=o64-clang CXX=o64-clang++-libc++ MACOSX_DEPLOYMENT_TARGET=10.11 UNATTENDED=1 AR=x86_64-apple-darwin15-ar RANLIB=x86_64-apple-darwin15-ranlib
 RUN osxcross-macports install openssl qt5 boost
 EOF
 
@@ -60,21 +60,11 @@ RUN cd / && wget -q https://github.com/opencv/opencv/archive/3.2.0.tar.gz && \
 RUN apt-get install -y vim
 WORKDIR /build
 COPY osx-packaging /build/
+COPY fix_libraries.py /
 ENV CMAKE_EXTRA_OPTIONS -DCMAKE_INSTALL_PREFIX=/ -DCMAKE_TOOLCHAIN_FILE=/osxcross-toolchain.cmake
 ENV PACKAGE_COMMAND=./osx-packaging
+RUN ln -s /osxcross/target/macports/pkgs/opt/local /opt/local
 EOF
-
-#QT_MAJOR_MINOR="5.8"
-#QT_VERSION="${QT_MAJOR_MINOR}.0"
-#cat <<EOF
-#COPY macx-clang-qmake.conf /
-#RUN cd / && wget http://download.qt.io/official_releases/qt/${QT_MAJOR_MINOR}/${QT_VERSION}/single/qt-everywhere-opensource-src-${QT_VERSION}.tar.gz && \
-#    tar xf qt-everywhere-opensource-src-${QT_VERSION}.tar.gz && \
-#    rm -f qt-everywhere-opensource-src-${QT_VERSION}.tar.gz && \
-#    mv /macx-clang-qmake.conf /qt-everywhere-opensource-src-${QT_VERSION}/qtbase/mkspecs/macx-clang/qmake.conf && \ 
-#    cd /qt-everywhere-opensource-src-${QT_VERSION} && \
-#    ./configure -opensource -c++std c++11 -confirm-license -xplatform macx-clang -recheck-all -device-option CROSS_COMPILE=apple-darwin15 -nomake examples -nomake tests -no-cups -no-glib  -no-sql-db2 -no-sql-ibase -no-sql-oci -no-sql-tds -no-sql-mysql -no-sql-psql -no-sql-odbc -no-sql-sqlite2 -prefix /opt/qt5 -qt-libpng   -qt-libjpeg   -qt-zlib   -qt-pcre  --ssl -openssl-linked -release -no-pch -qt-zlib -qt-pcre -optimized-qmake -no-reduce-relocations 
-#EOF
 
 #http://stackoverflow.com/questions/286419/how-to-build-a-dmg-mac-os-x-file-on-a-non-mac-platform
 
