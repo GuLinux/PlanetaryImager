@@ -38,7 +38,7 @@ RUN cd / && \
     tar xf CCfits-2.5.tar.gz && \
     rm -f CCfits-2.5.tar.gz && \
     cd /CCfits && \
-    ./configure --host=x86_64-apple-darwin12 --prefix=/opt/CCfits --with-cfitsio=/opt/cfitsio && \
+    ./configure --host=x86_64-apple-darwin12 --prefix=/opt/CCfits --with-cfitsio=/opt/cfitsio --enable-static --disable-shared && \
     make install && \
     cd / && \
     rm -rf /CCfits
@@ -52,7 +52,7 @@ COPY osxcross-toolchain.cmake /
 RUN cd / && wget -q https://github.com/opencv/opencv/archive/3.2.0.tar.gz && \
     tar xf 3.2.0.tar.gz && rm -f 3.2.0.tar.gz && \
     cd opencv-3.2.0 && mkdir build && cd build && \
-    cmake ../ -DCMAKE_TOOLCHAIN_FILE=/osxcross-toolchain.cmake -DCMAKE_INSTALL_PREFIX=/opt/opencv -DCMAKE_BUILD_TYPE=Release -DBUILD_PERF_TESTS=Off -DBUILD_TESTS=Off && \
+    cmake ../ -DCMAKE_TOOLCHAIN_FILE=/osxcross-toolchain.cmake -DCMAKE_INSTALL_PREFIX=/opt/opencv -DCMAKE_BUILD_TYPE=Release -DBUILD_PERF_TESTS=Off -DBUILD_TESTS=Off -DBUILD_SHARED_LIBS=Off && \
     make all install && \
     cd / && rm -rf opencv-3.2.0
 
@@ -73,3 +73,8 @@ EOF
 #    cd /qt-everywhere-opensource-src-${QT_VERSION} && \
 #    ./configure -opensource -c++std c++11 -confirm-license -xplatform macx-clang -recheck-all -device-option CROSS_COMPILE=apple-darwin15 -nomake examples -nomake tests -no-cups -no-glib  -no-sql-db2 -no-sql-ibase -no-sql-oci -no-sql-tds -no-sql-mysql -no-sql-psql -no-sql-odbc -no-sql-sqlite2 -prefix /opt/qt5 -qt-libpng   -qt-libjpeg   -qt-zlib   -qt-pcre  --ssl -openssl-linked -release -no-pch -qt-zlib -qt-pcre -optimized-qmake -no-reduce-relocations 
 #EOF
+
+#http://stackoverflow.com/questions/286419/how-to-build-a-dmg-mac-os-x-file-on-a-non-mac-platform
+
+#genisoimage -V progname -D -R -apple -no-pad -o progname.dmg dmgdir 
+
