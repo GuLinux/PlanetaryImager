@@ -1,0 +1,6 @@
+#!/bin/bash
+mkdir PlanetaryImager.app
+make install DESTDIR="$PWD/PlanetaryImager.app"
+tar czf  PlanetaryImager.app.tar.gz PlanetaryImager.app
+echo "CPACK_PACKAGE_FILENAME=PlanetaryImager.app.tar.gz" > package_name.cfg
+
