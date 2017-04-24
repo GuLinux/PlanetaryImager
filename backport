@@ -1,0 +1,18 @@
+#!/bin/bash
+commit="$1"
+if [[ -z "$commit" ]]; then
+    echo "Usage: $0 commit_id [current_branch] [next_branch]"
+    exit 1
+fi
+working_branch="${2:-v0.7}"
+next_branch="${3:-v0.8}"
+git checkout master
+git pull origin master
+git pull origin "$working_branch"
+git push origin master
+git checkout "$next_branch"
+git pull origin "$next_branch"
+git cherry-pick "$commit"
+git push origin "$next_branch"
+git checkout "$working_branch"
+

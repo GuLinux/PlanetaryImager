@@ -13,7 +13,8 @@ set(CMAKE_FIND_ROOT_PATH_MODE_LIBRARY BOTH)
 set(CMAKE_FIND_ROOT_PATH_MODE_INCLUDE BOTH)
 set(CMAKE_FIND_ROOT_PATH "/osxcross/target/macports/pkgs/opt/local/")
 set(CMAKE_INSTALL_FRAMEWORK_PREFIX "/osxcross/target/SDK/MacOSX10.11.sdk/System/Library/Frameworks")
-
+set(MACOSX_RPATH On)
+set(CMAKE_MACOSX_RPATH On)
 set(CMAKE_SHARED_LIBRARY_RUNTIME_C_FLAG "-Wl,-rpath,")
 set(CMAKE_SHARED_LIBRARY_RUNTIME_C_FLAG_SEP ":")
 # more linking variables
