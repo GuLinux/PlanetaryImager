@@ -57,11 +57,11 @@ RUN cd / && wget -q https://github.com/opencv/opencv/archive/3.2.0.tar.gz && \
     cd / && rm -rf opencv-3.2.0
 
 #TODO: remove this
-RUN apt-get install -y vim
+RUN apt-get install -y vim genisoimage
 WORKDIR /build
 COPY osx-packaging /build/
 COPY fix_libraries.py /
-ENV CMAKE_EXTRA_OPTIONS -DCMAKE_INSTALL_PREFIX=/ -DCMAKE_TOOLCHAIN_FILE=/osxcross-toolchain.cmake
+ENV CMAKE_EXTRA_OPTIONS -DCMAKE_INSTALL_PREFIX=/Contents -DCMAKE_TOOLCHAIN_FILE=/osxcross-toolchain.cmake
 ENV PACKAGE_COMMAND=./osx-packaging
 RUN ln -s /osxcross/target/macports/pkgs/opt/local /opt/local
 EOF

@@ -5,31 +5,40 @@ make install DESTDIR="$PWD/PlanetaryImager.app"
 fix_libraries() {
     binary="$1"
     python /fix_libraries.py \
-                            --libs-dest PlanetaryImager.app/lib \
+                            --libs-dest PlanetaryImager.app/Contents/lib \
                             --otool x86_64-apple-darwin15-otool \
                             --install-name-tool x86_64-apple-darwin15-install_name_tool \
                             "$binary"
 
 }
 
-fix_libraries PlanetaryImager.app/bin/planetary_imager
+fix_libraries PlanetaryImager.app/Contents/bin/planetary_imager
 
-cp -av /opt/local/libexec/qt5/plugins/platforms PlanetaryImager.app/bin
-cp -av /opt/local/libexec/qt5/plugins/imageformats PlanetaryImager.app/bin
+cp -av /opt/local/libexec/qt5/plugins/platforms PlanetaryImager.app/Contents/bin
+cp -av /opt/local/libexec/qt5/plugins/imageformats PlanetaryImager.app/Contents/bin
 
-find PlanetaryImager.app/lib -type f -name *.dylib | while read file; do
+find PlanetaryImager.app/Contents/lib -type f -name *.dylib | while read file; do
     fix_libraries "$file"
 done
 
-find PlanetaryImager.app/lib/PlanetaryImager/drivers -type f -name *.so | while read file; do
+find PlanetaryImager.app/Contents/lib/PlanetaryImager/drivers -type f -name *.so | while read file; do
     fix_libraries "$file"
 done
 
 
-find PlanetaryImager.app/bin -type f -name *.dylib | while read file; do
+find PlanetaryImager.app/Contents/bin -type f -name *.dylib | while read file; do
     fix_libraries "$file"
 done
 
-tar czf  PlanetaryImager.app.tar.gz PlanetaryImager.app
-echo "CPACK_PACKAGE_FILENAME=PlanetaryImager.app.tar.gz" > package_name.cfg
+# Package as an old .tar.gz archive... less nice
+# tar czf PlanetaryImager.tar.gz PlanetaryImager.app && rm -rf PlanetaryImager.app
+# echo "CPACK_PACKAGE_FILENAME=PlanetaryImager.tar.gz" > package_name.cfg
+
+# Create a native "dmg" image.. nice, but doesn't really work in the end, for some reason
+mkdir dmg
+mv PlanetaryImager.app dmg/Planetary\ Imager.app
+ln -s /Applications dmg/
+
+genisoimage -V "PlanetaryImager" -D  -no-pad -apple -R -o PlanetaryImager.dmg dmg && rm -rf dmg
+echo "CPACK_PACKAGE_FILENAME=PlanetaryImager.dmg" > package_name.cfg
 
