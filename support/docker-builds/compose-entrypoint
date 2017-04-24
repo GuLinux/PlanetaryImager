@@ -6,6 +6,7 @@ if [[ -n "$COMPOSE_ENTRYPOINT_OVERRIDE" ]]; then
 fi
 
 CMAKE_BIN="${CMAKE_BIN:-cmake}"
+PACKAGE_COMMAND="${PACKAGE_COMMAND:-make package}"
 set -x
 ${CMAKE_BIN} /code \
           -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH} \
@@ -14,7 +15,7 @@ ${CMAKE_BIN} /code \
           -DPACKAGE_VERSION_SUFFIX=${PACKAGE_VERSION_SUFFIX} \
           -DPACKAGE_NAME_SUFFIX=${PACKAGE_NAME_SUFFIX} \
           ${CMAKE_EXTRA_OPTIONS} ${CMAKE_OVERRIDE_OPTIONS} && \
-          make ${MAKE_OPTS} && make package
+          make ${MAKE_OPTS} && $PACKAGE_COMMAND
 had_errors=$?
 if [[ "$had_errors" != 0 ]]; then
     exit ${had_errors}
