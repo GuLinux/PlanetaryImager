@@ -59,7 +59,9 @@ RUN cd / && wget -q https://github.com/opencv/opencv/archive/3.2.0.tar.gz && \
 #TODO: remove this
 RUN apt-get install -y vim
 WORKDIR /build
-
+COPY osx-packaging /build/
+ENV CMAKE_EXTRA_OPTIONS -DCMAKE_INSTALL_PREFIX=/ -DCMAKE_TOOLCHAIN_FILE=/osxcross-toolchain.cmake
+ENV PACKAGE_COMMAND=./osx-packaging
 EOF
 
 #QT_MAJOR_MINOR="5.8"
