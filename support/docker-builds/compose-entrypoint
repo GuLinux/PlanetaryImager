@@ -24,12 +24,14 @@ fi
 . package_name.cfg
 
 
-chown 1000:1000 "/dest/${CPACK_PACKAGE_FILENAME}"
-if [[ -n "${TEST_PACKAGE_CMD}" ]]; then
-    "${TEST_PACKAGE_CMD}" "${CPACK_PACKAGE_FILENAME}" || exit 1
+if [[ -n "${TEST_PACKAGE_CMD}" ]] && ! "${TEST_PACKAGE_CMD}" "${CPACK_PACKAGE_FILENAME}"; then
+    cp "${CPACK_PACKAGE_FILENAME}" "/dest/${CPACK_PACKAGE_FILENAME}.failedcheck"
+    chown 1000:1000 "/dest/${CPACK_PACKAGE_FILENAME}.failedcheck"
+    exit 1
 fi
 
 cp "${CPACK_PACKAGE_FILENAME}" /dest/
+
 
 #set +x
 # if [[ $had_errors != 0 ]]; then

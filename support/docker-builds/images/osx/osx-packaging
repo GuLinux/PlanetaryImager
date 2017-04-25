@@ -44,7 +44,11 @@ else
   mkdir dmg
   mv PlanetaryImager.app dmg/Planetary\ Imager.app
   ln -s /Applications dmg/
-  genisoimage -V "PlanetaryImager" -D  -no-pad -apple -R -o "$CPACK_PACKAGE_FILENAME" dmg && rm -rf dmg
+  cp /DS_Store dmg/.DS_Store
+  set -x
+  genisoimage -V "PlanetaryImager" -D  -no-pad -apple -R -o "PlanetaryImager-uncompressed.dmg" dmg && rm -rf dmg
+  dmg dmg PlanetaryImager-uncompressed.dmg "$CPACK_PACKAGE_FILENAME" >/dev/null 2>&1
+  set +x
 fi
 
 echo "CPACK_PACKAGE_FILENAME=$CPACK_PACKAGE_FILENAME" > package_name.cfg
