@@ -273,12 +273,26 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
       d->configuration->set_widgets_setup_first_run(true);
     }
     qDebug() << "file " << logFilePath << "exists: " << QFile::exists(logFilePath);
+    d->ui->actionOpen_log_file_folder->setMenuRole(QAction::ApplicationSpecificRole);
     d->ui->actionOpen_log_file_folder->setVisible( ! logFilePath.isEmpty() && QFile::exists(logFilePath));
     connect(d->ui->actionOpen_log_file_folder, &QAction::triggered, this, [=]{
-      auto logFileDirectory = QFileInfo{logFilePath}.dir().path();
-      if(!QDesktopServices::openUrl(logFileDirectory)) {
-        MessagesLogger::instance()->queue(MessagesLogger::Warning, tr("Log file"), tr("Unable to open your log file. You can open it manually at this position: %1") % logFileDirectory);
-      }
+#ifdef Q_OS_MAC
+        QStringList args;
+        args << "-e";
+        args << "tell application \"Finder\"";
+        args << "-e";
+        args << "activate";
+        args << "-e";
+        args << "select POSIX file \""+logFilePath+"\"";
+        args << "-e";
+        args << "end tell";
+        QProcess::startDetached("osascript", args);
+#else
+          auto logFileDirectory = QFileInfo{logFilePath}.dir().path();
+          if(!QDesktopServices::openUrl(logFileDirectory)) {
+            MessagesLogger::instance()->queue(MessagesLogger::Warning, tr("Log file"), tr("Unable to open your log file. You can open it manually at this position: %1") % logFileDirectory);
+          }
+#endif
     });
     
     connect(d->ui->actionHide_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::hide, _1) ); });
