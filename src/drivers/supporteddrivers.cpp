@@ -58,6 +58,7 @@ void SupportedDrivers::Private::find_drivers(const QString& directory)
 void SupportedDrivers::Private::load_driver(const QString& filename)
 {
   auto plugin = make_shared<QPluginLoader>(filename);
+  qDebug() << "trying " << filename << ": " << plugin->metaData();
   auto getClassName = [](const auto &p) { return p->metaData().value("className"); };
   if(plugin->metaData().value("IID").toString() == DRIVER_IID && 
         find_if(drivers.begin(), drivers.end(), [&](const auto &p) { return getClassName(p) == getClassName(plugin); }) == drivers.end() ) {
