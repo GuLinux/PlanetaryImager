@@ -10,8 +10,14 @@ EOF
 
 cat <<EOF
 FROM ubuntu:16.10
-RUN apt-get update && apt-get install -y git build-essential cmake clang wget autoconf automake libtool-bin libtool pkg-config genisoimage && \
-    git clone https://github.com/tpoechtrager/osxcross
+RUN apt-get update && apt-get install -y git build-essential cmake clang wget autoconf automake libtool-bin libtool pkg-config genisoimage libz-dev python-pip qtbase5-dev-tools && \
+    git clone https://github.com/tpoechtrager/osxcross && \
+    git clone https://github.com/planetbeing/libdmg-hfsplus && \
+    cd /libdmg-hfsplus && mkdir build && cd build && \
+    cmake .. -DCMAKE_INSTALL_PREFIX=/usr/bin && \
+    make && make install && cd / && \
+    pip install ds-store mac_alias
+
 COPY MacOSX10.11.sdk.tar.xz /osxcross/tarballs/
 RUN cd /osxcross && UNATTENDED=1 ./build.sh
 ENV PATH=/osxcross/target/bin:\${PATH} CC=o64-clang CXX=o64-clang++-libc++ MACOSX_DEPLOYMENT_TARGET=10.11 UNATTENDED=1 AR=x86_64-apple-darwin15-ar RANLIB=x86_64-apple-darwin15-ranlib
@@ -43,11 +49,9 @@ RUN cd / && \
     cd / && \
     rm -rf /CCfits
 
-RUN apt-get install -y qtbase5-dev-tools
-
 RUN find  /osxcross/target/macports/pkgs/opt/local/libexec/qt5/lib/cmake/ -name *.cmake -exec sed -i 's|"/opt|"/osxcross/target/macports/pkgs/opt|g' {} \;
 
-COPY osxcross-toolchain.cmake osx-packaging fix_libraries.py /
+COPY osxcross-toolchain.cmake osx-packaging fix_libraries.py DS_Store /
 
 RUN cd / && wget -q https://github.com/opencv/opencv/archive/3.2.0.tar.gz && \
     tar xf 3.2.0.tar.gz && rm -f 3.2.0.tar.gz && \
