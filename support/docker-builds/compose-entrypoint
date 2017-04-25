@@ -32,6 +32,7 @@ if [[ -n "${TEST_PACKAGE_CMD}" ]] && ! "${TEST_PACKAGE_CMD}" "${CPACK_PACKAGE_FI
 fi
 
 cp "${CPACK_PACKAGE_FILENAME}" /dest/
+chown 1000:1000 "/dest/${CPACK_PACKAGE_FILENAME}"
 
 
 #set +x
