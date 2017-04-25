@@ -28,7 +28,7 @@ if(BUILD_DRIVER_qhy)
 
   configure_file(qhyexception.cpp.in qhyexception.cpp)
   set(qhy_GENERATED_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/qhyexception.cpp)
-  file(GLOB qhy_SOURCES *.cpp)
+  set(qhy_SOURCES qhyccdimager.cpp qhydriver.cpp qhyexception.cpp qhyimagingworker.cpp)
 
 
   set(QHY_LIBRARY_armv6 ${QHY_LIBS_DIRECTORY}/libqhy_arm_v6.bin)
