@@ -84,7 +84,7 @@ target_link_libraries(planetary_imager
     ${EXTRA_LIBRARIES}
 )
 
-option(build_network_server "Build PlanetaryImager network daemon and frontend" Off)
+option(build_network_server "Build PlanetaryImager network daemon and frontend" On)
 if(build_network_server)
   add_executable(planetary_imager_daemon ${WIN32_APP_FLAG} planetaryimager_daemon.cpp )
   target_link_libraries(planetary_imager_daemon
