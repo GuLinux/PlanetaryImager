@@ -39,6 +39,8 @@ signals:
 public slots:
   void create_qimages();
   void detectEdges(bool detect);
+  void histogramEqualization(bool enable);
+  void maximumSaturation(bool enable);
   void quit();
   void read_settings();
 private:

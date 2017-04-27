@@ -63,6 +63,8 @@
      <string>V&amp;iew</string>
     </property>
     <addaction name="actionEdges_Detection"/>
+    <addaction name="actionStretch_histogram"/>
+    <addaction name="actionStretch_colour_saturation"/>
    </widget>
    <widget class="QMenu" name="menuROI">
     <property name="title">
@@ -388,6 +390,22 @@
    </property>
    <property name="text">
     <string>Edit ROI</string>
+   </property>
+  </action>
+  <action name="actionStretch_histogram">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Histogram equalization</string>
+   </property>
+  </action>
+  <action name="actionStretch_colour_saturation">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Stretch colour saturation</string>
    </property>
   </action>
  </widget>

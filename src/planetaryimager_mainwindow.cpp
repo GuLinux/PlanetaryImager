@@ -325,9 +325,11 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     d->imagerThread->start();
 
 
-    connect(d->ui->actionEdges_Detection, &QAction::toggled, [=](bool detect){
-      d->displayImage->detectEdges(detect);
-    });
+    connect(d->ui->actionEdges_Detection, &QAction::toggled, d->displayImage.get(), &DisplayImage::detectEdges);
+    connect(d->ui->actionStretch_histogram, &QAction::toggled, d->displayImage.get(), &DisplayImage::histogramEqualization);
+    connect(d->ui->actionStretch_colour_saturation, &QAction::toggled, d->displayImage.get(), &DisplayImage::maximumSaturation);
+
+    
     d->init_devices_watcher();
     connect(d->ui->actionClear_ROI, &QAction::triggered, [&] { d->imager->clearROI(); });
     connect(d->ui->actionSelect_ROI, &QAction::triggered, [&] { 
