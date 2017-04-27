@@ -99,7 +99,7 @@
     <set>QDockWidget::AllDockWidgetFeatures</set>
    </property>
    <property name="windowTitle">
-    <string>Camera Information</string>
+    <string>&amp;Camera Information</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>2</number>
@@ -110,7 +110,7 @@
   </widget>
   <widget class="QDockWidget" name="camera_settings">
    <property name="windowTitle">
-    <string>Camera Controls</string>
+    <string>Ca&amp;mera Controls</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>2</number>
@@ -145,7 +145,7 @@
   </widget>
   <widget class="QDockWidget" name="recording">
    <property name="windowTitle">
-    <string>Recording</string>
+    <string>Recor&amp;ding</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>2</number>
