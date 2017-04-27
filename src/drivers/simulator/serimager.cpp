@@ -79,7 +79,8 @@ Frame::ptr SERImagerWorker::shoot()
   file.read(reinterpret_cast<char*>(frame->data()), frame_size);
   if(current_frame >= header.frames)
     current_frame = 0;
-  QThread::currentThread()->msleep( (1.0 / fps * 1000.) - elapsed.elapsed() );
+  auto sleep_time = (1.0 / fps * 1000.) - elapsed.elapsed();
+  QThread::currentThread()->msleep( max(1, static_cast<int>(sleep_time)) );
   return frame;
 }
 
