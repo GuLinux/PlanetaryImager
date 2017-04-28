@@ -17,17 +17,11 @@
 
 #include "qhyexception.h"
 #include "qhyccderr.h"
+#include "Qt/strings.h"
 
 using namespace std;
 
 QHYException::QHYException(int code, const string& where)
-  : Imager::exception{
-  code,
-  unordered_map<int, string>{
-    ${qhy_error_codes}
-  }, 
-  "QHY error ",
-  where
-}
+  : Imager::exception{code, ("QHY library returned error: %1"_q % code).toStdString(), "QHY error ",  where}
 {
 }

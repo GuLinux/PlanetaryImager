@@ -1,2 +1,0 @@
-#!/bin/bash
-sed -i "s|libusb-1.0/libusb.h|libusb.h|g" "$@"

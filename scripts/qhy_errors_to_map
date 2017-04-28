@@ -1,3 +1,0 @@
-#!/bin/bash
-grep QHYCCD_ERROR "$1" | awk '{ print "#ifdef " $2 "\n{ " $2 ", \"" $2 "\" },\n#endif"}'
-
