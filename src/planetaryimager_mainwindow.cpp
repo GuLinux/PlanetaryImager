@@ -57,7 +57,7 @@
 #include "commons/messageslogger.h"
 #include "c++/stlutils.h"
 #include "commons/exposuretimer.h"
-
+#include "Qt/functional.h"
 
 using namespace GuLinux;
 using namespace std;
@@ -406,7 +406,8 @@ Imager * PlanetaryImagerMainWindow::imager() const
 void PlanetaryImagerMainWindow::Private::rescan_devices()
 {
   ui->menu_device_load->clear();
-  Thread::Run<Driver::Cameras>([=]{ return driver->cameras(); }, [=]( const Driver::Cameras &cameras){
+  
+  GuLinux::qAsyncR<Driver::Cameras>([this] { return driver->cameras(); }, [this](const Driver::Cameras &cameras) {
     for(auto device: cameras) {
       auto message = tr("Found %1 devices").arg(cameras.size());
       qDebug() << message;
@@ -414,7 +415,7 @@ void PlanetaryImagerMainWindow::Private::rescan_devices()
       QAction *action = ui->menu_device_load->addAction(device->name());
       QObject::connect(action, &QAction::triggered, bind(&Private::connectCamera, this, device));
     }
-  });
+  }, q);
 }
 
 void PlanetaryImagerMainWindow::connectCamera(const Driver::Camera::ptr& camera)

@@ -37,7 +37,7 @@ if(WIN32 AND NOT DEVELOPER_MODE)
   set(PlanetaryImager_SRCS ${PlanetaryImager_SRCS} ${CMAKE_SOURCE_DIR}/files/planetary_imager.rc)
 endif()
 
-add_executable(planetary_imager ${WIN32_APP_FLAG} ${PlanetaryImager_SRCS} )
+add_executable(planetary_imager ${WIN32_APP_FLAG} ${PlanetaryImager_SRCS} planetaryimager.cpp )
 
 
 target_link_libraries(planetary_imager
@@ -60,7 +60,7 @@ target_link_libraries(planetary_imager
 )
 
 if(build_network_server)
-  add_executable(planetary_imager_daemon ${WIN32_APP_FLAG} planetaryimager_daemon.cpp )
+  add_executable(planetary_imager_daemon ${WIN32_APP_FLAG} planetaryimager_daemon.cpp planetaryimager.cpp)
   target_link_libraries(planetary_imager_daemon
     network_server
     ${planetary_imager_backend_DEPS}
@@ -79,7 +79,7 @@ if(build_network_server)
     ${EXTRA_LIBRARIES}
   )
   
-  add_executable(planetary_imager_frontend planetaryimager_frontend.cpp ${PlanetaryImager_GUI_SRCS})
+  add_executable(planetary_imager_frontend planetaryimager_frontend.cpp planetaryimager.cpp ${PlanetaryImager_GUI_SRCS})
   target_link_libraries(planetary_imager_frontend
     network_client_gui
     network_client
