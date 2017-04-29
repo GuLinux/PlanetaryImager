@@ -66,6 +66,8 @@ private:
   ControlWidget *control_widget;
   QCheckBox *auto_value_widget;
   QLabel *control_changed_led;
+private slots:
+  void auto_changed(bool isAuto);
 signals:
   void changed();
 };
@@ -98,17 +100,22 @@ CameraControl::CameraControl(const Imager::Control& control, Imager* imager, QWi
     new_value.value = v;
     emit changed();
   });
-  connect(auto_value_widget, &QCheckBox::toggled, this, [this](bool checked) {
-    new_value.value_auto = checked;
-    if(! checked)
-      new_value.value = control_widget->value();
-    control_widget->setEnabled(!checked);
-    emit changed();
-  });
+  connect(auto_value_widget, &QCheckBox::toggled, this, &CameraControl::auto_changed);
   
   control_widget->setEnabled(!control.readonly && ! control.value_auto);
   connect(imager, &Imager::changed, this, &CameraControl::control_updated, Qt::QueuedConnection);
 }
+
+void CameraControl::auto_changed(bool isAuto)
+{
+  new_value.value_auto = isAuto;
+  if(! isAuto)
+    new_value.value = control_widget->value();
+  control_widget->setEnabled(!isAuto);
+  auto_value_widget->setChecked(isAuto);
+  emit changed();
+}
+
 
 void CameraControl::importing(const QVariantList& controls)
 {
@@ -134,6 +141,9 @@ void CameraControl::control_updated(const Imager::Control& changed_control)
   control = changed_control;
   new_value = control;
   control_widget->update(changed_control);
+  if(changed_control.supports_auto) {
+    auto_changed(changed_control.value_auto);
+  }
   control_changed_led->setPixmap(is_expected_value ? green_dot : red_dot);
   control_changed_led->show();
   QTimer::singleShot(5000, this, [this]{ control_changed_led->hide(); });
