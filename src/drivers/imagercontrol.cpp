@@ -37,7 +37,7 @@ QDebug operator<<(QDebug dbg, const Imager::Control& setting)
     {Imager::Control::Combo, "Combo"},
     {Imager::Control::Bool, "Bool"},
   };
-  dbg.nospace() << "{ id:" << setting.id << ", name: " << setting.name << ", range: " << setting.range << ", value: " << setting.value 
+  dbg.nospace() << "{ id:" << setting.id << ", name: " << setting.name << ", range: " << setting.range << ", value: " << setting.value << ", auto: " << setting.value_auto
   << ", type: " << types_map[setting.type] << ", choices: " << setting.choices << ", default: " << setting.default_value << " }";
   return dbg.space();
 }
