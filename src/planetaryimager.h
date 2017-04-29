@@ -44,6 +44,7 @@ public slots:
   Driver::Cameras cameras() const;
   Imager *imager() const;
   void open(const Driver::Camera::ptr &camera);
+  void closeImager();
   
   void record();
   void setRecordingPaused(bool paused);

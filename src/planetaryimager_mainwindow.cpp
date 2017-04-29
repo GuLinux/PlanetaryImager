@@ -59,6 +59,8 @@
 #include "commons/exposuretimer.h"
 #include "Qt/functional.h"
 
+#include "planetaryimager.h"
+
 using namespace GuLinux;
 using namespace std;
 using namespace std::placeholders;
@@ -71,7 +73,6 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   SaveImages::ptr saveImages;
   Configuration::ptr configuration;
   FilesystemBrowser::ptr filesystemBrowser;
-  unique_ptr<QThread> imagerThread;
   
   static PlanetaryImagerMainWindow *q;
   unique_ptr<Ui::PlanetaryImagerMainWindow> ui;
@@ -93,60 +94,19 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   
   ImageHandler::ptr imageHandler;
   
+  PlanetaryImager::ptr planetaryImager;
   
-  void connectCamera(const Driver::Camera::ptr &camera);
   void cameraDisconnected();
   void enableUIWidgets(bool cameraConnected);
-  void init_devices_watcher();
   void editROI();
   ZoomableImage *image_widget;
   
   void onImagerInitialized(Imager *imager);
-  
+  void onCamerasFound();
   enum SelectionMode { NoSelection, ROI, Guide } selection_mode = NoSelection;
 };
 
 PlanetaryImagerMainWindow *PlanetaryImagerMainWindow::Private::q = nullptr;
-
-class CreateImagerWorker : public QObject {
-  Q_OBJECT
-public:
-  typedef std::function<void(Imager *)> Slot;
-  static void create(const Driver::Camera::ptr& camera, const ImageHandler::ptr& imageHandler, QThread* thread, QObject *context, Slot on_created);
-private slots:
-  void exec();
-private:
-  explicit CreateImagerWorker(const Driver::Camera::ptr& camera, const ImageHandler::ptr& imageHandler);
-  Driver::Camera::ptr camera;
-  ImageHandler::ptr imageHandler;
-signals:
-  void imager(Imager *imager);
-};
-
-CreateImagerWorker::CreateImagerWorker(const Driver::Camera::ptr& camera, const ImageHandler::ptr &imageHandler)
-  : QObject(nullptr), camera{camera}, imageHandler{imageHandler}
-{
-}
-
-void CreateImagerWorker::create(const Driver::Camera::ptr& camera, const ImageHandler::ptr& imageHandler, QThread* thread, QObject *context, Slot on_created)
-{
-  auto create_imager = new CreateImagerWorker(camera, imageHandler);
-  create_imager->moveToThread(thread);
-  connect(create_imager, &CreateImagerWorker::imager, context, on_created, Qt::QueuedConnection);
-  QMetaObject::invokeMethod(create_imager, "exec", Qt::QueuedConnection);
-}
-
-void CreateImagerWorker::exec()
-{
-  try {
-    auto imager = camera->imager(imageHandler);
-    if(imager)
-      emit this->imager(imager);
-  } catch(const std::exception &e) {
-    MessagesLogger::queue(MessagesLogger::Error, tr("Initialization Error"), tr("Error initializing imager %1: \n%2") % camera->name() % e.what());
-  }
-  deleteLater();
-}
 
 
 PlanetaryImagerMainWindow::~PlanetaryImagerMainWindow()
@@ -156,8 +116,6 @@ PlanetaryImagerMainWindow::~PlanetaryImagerMainWindow()
   if(d->imager) {
       d->imager->destroy();
   }
-  d->imagerThread->quit();
-  d->imagerThread->wait();
   d->displayImage->quit();
   d->driver->aboutToQuit();
 }
@@ -178,7 +136,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
       QWidget* parent,
       Qt::WindowFlags flags
   )
-: QMainWindow(parent, flags), dptr(driver, save_images, configuration, filesystemBrowser, make_unique<QThread>())
+: QMainWindow(parent, flags), dptr(driver, save_images, configuration, filesystemBrowser)
 {
     Private::q = this;
     d->ui.reset(new Ui::PlanetaryImagerMainWindow);
@@ -192,6 +150,13 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     d->ui->histogram->setWidget(d->histogramWidget = new HistogramWidget(d->histogram, d->configuration));
     d->ui->statusbar->addPermanentWidget(d->statusbar_info_widget = new StatusBarInfoWidget(), 1);
 
+    
+    auto compositeImageHandler = ImageHandler::ptr{new ImageHandlers{d->displayImage, d->saveImages, d->histogram}};
+    d->imageHandler = ImageHandler::ptr{new ThreadImageHandler{compositeImageHandler}};
+    
+    d->planetaryImager = make_shared<PlanetaryImager>(d->driver, d->imageHandler, d->saveImages, d->configuration);
+    connect(d->planetaryImager.get(), &PlanetaryImager::camerasChanged, this, bind(&Private::onCamerasFound, d.get()));
+    connect(d->planetaryImager.get(), &PlanetaryImager::cameraConnected, this, [=]{ d->onImagerInitialized(d->planetaryImager->imager()); });
     d->ui->image->setLayout(new QGridLayout);
     d->ui->image->layout()->setMargin(0);
     d->ui->image->layout()->setSpacing(0);
@@ -298,7 +263,6 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     connect(d->ui->actionHide_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::hide, _1) ); });
     connect(d->ui->actionShow_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::show, _1) ); });
     connect(MessagesLogger::instance(), &MessagesLogger::message, this, bind(&PlanetaryImagerMainWindow::notify, this, _1, _2, _3, _4), Qt::QueuedConnection);
-    d->rescan_devices();
     connect(d->displayImage.get(), &DisplayImage::gotImage, this, bind(&ZoomableImage::setImage, d->image_widget, _1), Qt::QueuedConnection);
     
     connect(d->ui->actionNight_Mode, &QAction::toggled, this, [=](bool checked) {
@@ -313,16 +277,13 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     connect(d->saveImages.get(), &SaveImages::meanFPS, d->recording_panel, &RecordingPanel::meanFPS, Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::savedFrames, d->recording_panel, &RecordingPanel::saved, Qt::QueuedConnection);
     connect(d->saveImages.get(), &SaveImages::droppedFrames, d->recording_panel, &RecordingPanel::dropped, Qt::QueuedConnection);
-    connect(d->ui->actionDisconnect, &QAction::triggered, this, [=]{
-      QMetaObject::invokeMethod(d->imager, "destroy", Qt::QueuedConnection);
-    });
+    connect(d->ui->actionDisconnect, &QAction::triggered, d->planetaryImager.get(), &PlanetaryImager::closeImager);
 
     connect(d->ui->actionQuit, &QAction::triggered, this, &QWidget::close);
     connect(d->ui->actionQuit, &QAction::triggered, this, &PlanetaryImagerMainWindow::quit);
     d->enableUIWidgets(false);
 
     QtConcurrent::run(bind(&DisplayImage::create_qimages, d->displayImage));
-    d->imagerThread->start();
 
 
     connect(d->ui->actionEdges_Detection, &QAction::toggled, d->displayImage.get(), &DisplayImage::detectEdges);
@@ -330,7 +291,6 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     connect(d->ui->actionStretch_colour_saturation, &QAction::toggled, d->displayImage.get(), &DisplayImage::maximumSaturation);
 
     
-    d->init_devices_watcher();
     connect(d->ui->actionClear_ROI, &QAction::triggered, [&] { d->imager->clearROI(); });
     connect(d->ui->actionSelect_ROI, &QAction::triggered, [&] { 
       d->selection_mode = Private::ROI;
@@ -352,10 +312,9 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     });
     connect(&d->exposure_timer, &ExposureTimer::finished, [=]{ d->statusbar_info_widget->clearMessage(); });
     
-    auto compositeImageHandler = ImageHandler::ptr{new ImageHandlers{d->displayImage, d->saveImages, d->histogram}};
-    d->imageHandler = ImageHandler::ptr{new ThreadImageHandler{compositeImageHandler}};
     d->editROIDialog = new EditROIDialog(this);
     connect(d->editROIDialog, &EditROIDialog::roiSelected, this, [=](const QRect &roi){ d->imager->setROI(roi); });
+    d->rescan_devices();
 }
 
 void PlanetaryImagerMainWindow::closeEvent(QCloseEvent* event)
@@ -370,33 +329,6 @@ ImageHandler::ptr PlanetaryImagerMainWindow::imageHandler() const
 }
 
 
-#include <iostream>
-
-// TODO: extract to external class
-void PlanetaryImagerMainWindow::Private::init_devices_watcher()
-{
-#ifdef Q_OS_LINUX
-  auto notifyTimer = new QTimer(q);
-  QString usbfsdir;
-  for(auto path: QStringList{"/proc/bus/usb/devices", "/sys/bus/usb/devices"}) {
-    if(QDir(path).exists())
-      usbfsdir = path;
-  }
-  if(usbfsdir.isEmpty())
-    return;
-  connect(notifyTimer, &QTimer::timeout, [=]{
-    static QStringList entries;
-    auto current = QDir(usbfsdir).entryList();
-    if(current != entries) {
-      qDebug() << "usb devices changed";
-      entries = current;
-      rescan_devices();
-    }
-  });
-  notifyTimer->start(1500);
-#endif
-}
-
 Imager * PlanetaryImagerMainWindow::imager() const
 {
   return d->imager;
@@ -406,30 +338,27 @@ Imager * PlanetaryImagerMainWindow::imager() const
 void PlanetaryImagerMainWindow::Private::rescan_devices()
 {
   ui->menu_device_load->clear();
-  
-  GuLinux::qAsyncR<Driver::Cameras>([this] { return driver->cameras(); }, [this](const Driver::Cameras &cameras) {
-    for(auto device: cameras) {
-      auto message = tr("Found %1 devices").arg(cameras.size());
-      qDebug() << message;
-      statusbar_info_widget->showMessage(message, 10'000);
-      QAction *action = ui->menu_device_load->addAction(device->name());
-      QObject::connect(action, &QAction::triggered, bind(&Private::connectCamera, this, device));
-    }
-  }, q);
+  planetaryImager->scanCameras();
 }
+
+void PlanetaryImagerMainWindow::Private::onCamerasFound()
+{
+  ui->menu_device_load->clear();
+  auto message = tr("Found %1 devices").arg(planetaryImager->cameras().size());
+  for(auto device: planetaryImager->cameras()) {
+    qDebug() << message;
+    statusbar_info_widget->showMessage(message, 10'000);
+    QAction *action = ui->menu_device_load->addAction(device->name());
+    QObject::connect(action, &QAction::triggered, bind(&PlanetaryImager::open, planetaryImager.get(), device));
+  }
+}
+
 
 void PlanetaryImagerMainWindow::connectCamera(const Driver::Camera::ptr& camera)
 {
-  d->connectCamera(camera);
+  d->planetaryImager->open(camera);
 }
 
-
-void PlanetaryImagerMainWindow::Private::connectCamera(const Driver::Camera::ptr& camera)
-{
-    if(imager)
-        imager->destroy();
-  CreateImagerWorker::create(camera, imageHandler, imagerThread.get(), q, bind(&Private::onImagerInitialized, this, _1) );
-}
 
 void PlanetaryImagerMainWindow::setImager(Imager* imager)
 {
@@ -440,10 +369,6 @@ void PlanetaryImagerMainWindow::setImager(Imager* imager)
 void PlanetaryImagerMainWindow::Private::onImagerInitialized(Imager * imager)
 {  
     GuLinux::Scope scope{[=]{  emit q->imagerChanged(); }};
-    if(!imager) {
-      return;
-    }
-    cameraDisconnected();
     this->imager = imager;
     exposure_timer.set_imager(imager);
     imager->startLive();
@@ -460,7 +385,7 @@ void PlanetaryImagerMainWindow::Private::onImagerInitialized(Imager * imager)
     ui->actionClear_ROI->setEnabled(imager->supports(Imager::ROI));
 }
 
-
+// TODO: sync issues when images are sent after the imagerDisconnected signal
 void PlanetaryImagerMainWindow::Private::cameraDisconnected()
 {
   imager = nullptr;
@@ -474,9 +399,9 @@ void PlanetaryImagerMainWindow::Private::cameraDisconnected()
   cameraSettingsWidget = nullptr;
   delete cameraInfoWidget;
   cameraInfoWidget = nullptr;
-  image_widget->setImage({});
   statusbar_info_widget->captureFPS(0);
   statusbar_info_widget->temperature(0, true);
+  image_widget->setImage({});
 }
 
 void PlanetaryImagerMainWindow::Private::enableUIWidgets(bool cameraConnected)

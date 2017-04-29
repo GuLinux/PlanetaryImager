@@ -19,6 +19,9 @@
 
 #include "planetaryimager.h"
 #include "Qt/functional.h"
+#include "commons/messageslogger.h"
+#include <QThread>
+#include <QTimer>
 
 DPTR_IMPL(PlanetaryImager) {
   Driver::ptr driver;
@@ -29,6 +32,8 @@ DPTR_IMPL(PlanetaryImager) {
   
   Driver::Cameras cameras;
   Imager *imager = nullptr;
+  
+  void initDevicesWatcher();
 };
 
 PlanetaryImager::PlanetaryImager(
@@ -38,7 +43,7 @@ PlanetaryImager::PlanetaryImager(
   const Configuration::ptr &configuration
 ) : QObject{}, dptr(driver, imageHandler, saveImages, configuration, this)
 {
-
+  d->initDevicesWatcher();
 }
 
 PlanetaryImager::~PlanetaryImager()
@@ -80,6 +85,57 @@ void PlanetaryImager::scanCameras()
 
 void PlanetaryImager::open(const Driver::Camera::ptr& camera)
 {
+  if(d->imager)
+    d->imager->destroy();
+  
+  auto openImager = [this, camera] {
+    try {
+      return camera->imager(d->imageHandler);
+    } catch(const std::exception &e) {
+      MessagesLogger::queue(MessagesLogger::Error, tr("Initialization Error"), tr("Error initializing imager %1: \n%2") % camera->name() % e.what());
+    }
+  };
+  
+  auto onImagerOpened = [this](Imager *imager) {
+    d->imager = imager;
+    if(imager) {
+      imager->moveToThread(QThread::currentThread());
+      connect(imager, &Imager::disconnected, this, &PlanetaryImager::cameraDisconnected);
+      emit cameraConnected();
+    }
+  };
+  GuLinux::qAsyncR<Imager *>(openImager, onImagerOpened, this);
 }
 
+void PlanetaryImager::closeImager()
+{
+  if(! d->imager)
+    return;
+  d->imager->destroy();
+}
+
+
+void PlanetaryImager::Private::initDevicesWatcher()
+{
+  #ifdef Q_OS_LINUX
+  auto notifyTimer = new QTimer(q);
+  QString usbfsdir;
+  for(auto path: QStringList{"/proc/bus/usb/devices", "/sys/bus/usb/devices"}) {
+    if(QDir(path).exists())
+      usbfsdir = path;
+  }
+  if(usbfsdir.isEmpty())
+    return;
+  connect(notifyTimer, &QTimer::timeout, [=]{
+    static QStringList entries;
+    auto current = QDir(usbfsdir).entryList();
+    if(current != entries) {
+      qDebug() << "usb devices changed";
+      entries = current;
+      q->scanCameras();
+    }
+  });
+  notifyTimer->start(1500);
+  #endif
+}
 
