@@ -101,8 +101,10 @@ namespace {
 
 void NetworkServer::Private::bytes_sent(quint64 written, quint64 sent)
 {
+#ifdef DEVELOPER_MODE
     qDebug() << "written: %1 MB, sent: %2 MB, cached: %3 MB, rate: %4 MB/sec"_q
       % to_mb(written) % to_mb(sent) % to_mb(written - sent) % ( to_mb(sent - last_sent) / to_secs(elapsed.elapsed()) );
+#endif
     elapsed.restart();
     last_sent = sent;
     if(written - sent > 100'000'000) {
