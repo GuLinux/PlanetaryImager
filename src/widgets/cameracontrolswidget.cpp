@@ -165,7 +165,7 @@ void CameraControl::set_value(const Imager::Control &value)
     return;
   }
   qDebug() << "GUI: setting control " << control << " to " << value;
-  QMetaObject::invokeMethod(imager, "setControl", Qt::QueuedConnection, Q_ARG(Imager::Control, value));
+  imager->setControl(value);
   control_widget->update(value);
 }
 
@@ -311,7 +311,7 @@ void CameraControlsWidget::Private::loadToImager(const Configuration::Preset& pr
   auto controls = preset.load()["controls"].toList();
   for(auto controlWidget: control_widgets)
     controlWidget->importing(controls);
-  QMetaObject::invokeMethod(imager, "import_controls", Qt::QueuedConnection, Q_ARG(QVariantList, controls));
+  imager->import_controls(controls);
 }
 
 
