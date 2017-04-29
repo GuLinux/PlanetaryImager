@@ -57,7 +57,7 @@ bool Imager::Control::valid() const
 bool Imager::Control::same_value(const Imager::Control& other) const
 {
     if(supports_auto && (value_auto || other.value_auto) ) {
-      qDebug() << "comparing auto values only";
+      qDebug() << "comparing auto values only for control " << name << "[" << id << "]";
       return other.value_auto == value_auto;
     }
     return value == other.value;
@@ -96,6 +96,7 @@ QVariantMap Imager::Control::asMap() const
 void Imager::Control::import(const QVariantMap& data, bool full_import)
 {
   value = data["value"];
+  value_auto = data["auto"].toBool();
   if(!full_import)
     return;
   name = data["name"].toString();
@@ -108,5 +109,4 @@ void Imager::Control::import(const QVariantMap& data, bool full_import)
     {"duration", [&]{ type = Number; is_duration = true; } },
   };
   types_map[data["type"].toString()]();
-  value_auto = data["auto"].toBool();
 }
