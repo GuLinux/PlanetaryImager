@@ -30,6 +30,11 @@ find PlanetaryImager.app/Contents/bin -type f -name *.dylib | while read file; d
     fix_libraries "$file"
 done
 
+
+find PlanetaryImager.app/Contents/bin -type f -name planetary_imager_* | while read file; do
+    fix_libraries "$file"
+done
+
 . package_name.cfg
 CPACK_BASE_PACKAGE_FILENAME="$( basename "$CPACK_PACKAGE_FILENAME" .tar.gz | sed 's/Darwin/MacOSX/g')"
 
