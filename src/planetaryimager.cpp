@@ -55,12 +55,23 @@ Imager * PlanetaryImager::imager() const
   return d->imager;
 }
 
+SaveImages::ptr PlanetaryImager::saveImages() const
+{
+  return d->saveImages;
+}
+
+Configuration::ptr PlanetaryImager::configuration() const
+{
+  return d->configuration;
+}
+
+
 Driver::Cameras PlanetaryImager::cameras() const
 {
   return d->cameras;
 }
 
-void PlanetaryImager::record()
+void PlanetaryImager::startRecording()
 {
   d->saveImages->startRecording(d->imager);
 }
@@ -137,5 +148,10 @@ void PlanetaryImager::Private::initDevicesWatcher()
   });
   notifyTimer->start(1500);
   #endif
+}
+
+void PlanetaryImager::quit()
+{
+  d->driver->aboutToQuit();
 }
 

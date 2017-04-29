@@ -21,11 +21,10 @@
 
 #include <QMainWindow>
 #include "dptr.h"
-#include "drivers/driver.h"
 #include "commons/messageslogger.h"
-#include "commons/configuration.h"
 #include "commons/filesystembrowser.h"
-#include "image_handlers/saveimages.h"
+#include "image_handlers/imagehandler.h"
+#include "planetaryimager.h"
 namespace Ui
 {
 class PlanetaryImagerMainWindow;
@@ -36,7 +35,14 @@ class PlanetaryImagerMainWindow : public QMainWindow
   Q_OBJECT
 public:
   ~PlanetaryImagerMainWindow();
-  PlanetaryImagerMainWindow(const Driver::ptr &driver, const SaveImages::ptr &save_images, const Configuration::ptr &configuration, const FilesystemBrowser::ptr &filesystemBrowser, const QString &logFilePath = {}, QWidget* parent = 0, Qt::WindowFlags flags = 0);
+  PlanetaryImagerMainWindow(
+      const PlanetaryImager::ptr &planetaryImager,
+      const ImageHandlers::ptr &imageHandlers,
+      const FilesystemBrowser::ptr &filesystemBrowser,
+      const QString &logFilePath = {},
+      QWidget* parent = 0,
+      Qt::WindowFlags flags = 0
+  );
   void connectCamera(const Driver::Camera::ptr &camera);
   ImageHandler::ptr imageHandler() const;
   Imager *imager() const;

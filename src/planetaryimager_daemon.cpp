@@ -55,10 +55,7 @@ int main(int argc, char** argv)
     auto dispatcher = make_shared<NetworkDispatcher>();
     auto save_images = make_shared<LocalSaveImages>(configuration);
     auto frames_forwarder = make_shared<FramesForwarder>(dispatcher);
-    auto imageHandlers = ImageHandler::ptr{new ImageHandlers{
-      frames_forwarder,
-      save_images,
-    }};
+    auto imageHandlers = make_shared<ImageHandlers>(QList<ImageHandler::ptr>{frames_forwarder, save_images});
     auto configuration_forwarder = make_shared<ConfigurationForwarder>(configuration, dispatcher);
     auto save_files_forwarder = make_shared<SaveFileForwarder>(save_images, dispatcher);
     auto scriptingengine = make_shared<ScriptingEngine>(configuration, save_images, dispatcher);

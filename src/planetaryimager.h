@@ -43,17 +43,20 @@ public slots:
   void scanCameras();
   Driver::Cameras cameras() const;
   Imager *imager() const;
+  SaveImages::ptr saveImages() const;
+  Configuration::ptr configuration() const;
+  
   void open(const Driver::Camera::ptr &camera);
   void closeImager();
   
-  void record();
+  void startRecording();
   void setRecordingPaused(bool paused);
   void stopRecording();
+  void quit();
 signals:
   void camerasChanged();
   void cameraConnected();
   void cameraDisconnected();
-  void recordingFinished();
 private:
   DPTR
 };

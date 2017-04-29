@@ -29,6 +29,7 @@
 #include "network/server/networkserver.h"
 #include "network/server/configurationforwarder.h"
 #include "network/server/scriptingengine.h"
+#include "image_handlers/threadimagehandler.h"
 
 using namespace std;
 
@@ -57,18 +58,15 @@ int main(int argc, char** argv)
     auto frames_forwarder = make_shared<FramesForwarder>(dispatcher);
     auto scriptingengine = make_shared<ScriptingEngine>(configuration, save_images, dispatcher);
     
-    PlanetaryImagerMainWindow mainWindow{
-      drivers,
-      save_images,
-      configuration, make_shared<LocalFilesystemBrowser>(),
-      commandLine.logfile()
-    };
-    auto imageHandlers = ImageHandler::ptr{new ImageHandlers{
-      mainWindow.imageHandler(),
-      frames_forwarder,
-      save_images,
-    }};
-    auto server = make_shared<NetworkServer>(drivers, imageHandlers, dispatcher, save_files_forwarder, frames_forwarder, scriptingengine );
+    auto compositeImageHandler = make_shared<ImageHandlers>(QList<ImageHandler::ptr>{save_images, frames_forwarder});
+    auto threadedImageHandler = ImageHandler::ptr{new ThreadImageHandler{compositeImageHandler}};
+    
+    auto planetaryImager = make_shared<PlanetaryImager>(drivers, threadedImageHandler, save_images, configuration);
+    
+    
+    
+    PlanetaryImagerMainWindow mainWindow{planetaryImager, compositeImageHandler, make_shared<LocalFilesystemBrowser>(), commandLine.logfile() };
+    auto server = make_shared<NetworkServer>(drivers, compositeImageHandler, dispatcher, save_files_forwarder, frames_forwarder, scriptingengine );
     
     // TODO also forward connection to server drivers
     // TODO copy to daemon

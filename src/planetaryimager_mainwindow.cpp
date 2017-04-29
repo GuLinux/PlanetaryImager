@@ -17,7 +17,6 @@
  */
 
 #include "planetaryimager_mainwindow.h"
-#include "drivers/driver.h"
 #include "drivers/imager.h"
 #include "ui_planetaryimager_mainwindow.h"
 #include <functional>
@@ -69,9 +68,7 @@ using namespace std::placeholders;
 Q_DECLARE_METATYPE(cv::Mat)
 
 DPTR_IMPL(PlanetaryImagerMainWindow) {
-  Driver::ptr driver;
-  SaveImages::ptr saveImages;
-  Configuration::ptr configuration;
+  PlanetaryImager::ptr planetaryImager;
   FilesystemBrowser::ptr filesystemBrowser;
   
   static PlanetaryImagerMainWindow *q;
@@ -94,7 +91,6 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   
   ImageHandler::ptr imageHandler;
   
-  PlanetaryImager::ptr planetaryImager;
   
   void cameraDisconnected();
   void enableUIWidgets(bool cameraConnected);
@@ -117,44 +113,41 @@ PlanetaryImagerMainWindow::~PlanetaryImagerMainWindow()
       d->imager->destroy();
   }
   d->displayImage->quit();
-  d->driver->aboutToQuit();
+  d->planetaryImager->quit();
 }
 
 void PlanetaryImagerMainWindow::Private::saveState()
 {
-  configuration->set_dock_status(q->saveState());
-  configuration->set_main_window_geometry(q->saveGeometry());
+  planetaryImager->configuration()->set_dock_status(q->saveState());
+  planetaryImager->configuration()->set_main_window_geometry(q->saveGeometry());
 }
 
 
 PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
-      const Driver::ptr &driver,
-      const SaveImages::ptr &save_images,
-      const Configuration::ptr &configuration,
+      const PlanetaryImager::ptr &planetaryImager,
+      const ImageHandlers::ptr &imageHandlers,
       const FilesystemBrowser::ptr &filesystemBrowser,
       const QString &logFilePath,
       QWidget* parent,
       Qt::WindowFlags flags
   )
-: QMainWindow(parent, flags), dptr(driver, save_images, configuration, filesystemBrowser)
+: QMainWindow(parent, flags), dptr(planetaryImager, filesystemBrowser)
 {
     Private::q = this;
     d->ui.reset(new Ui::PlanetaryImagerMainWindow);
     
     d->ui->setupUi(this);
     setWindowIcon(QIcon::fromTheme("planetary_imager"));
-    d->ui->recording->setWidget(d->recording_panel = new RecordingPanel{d->configuration, filesystemBrowser});
-    d->configurationDialog = new ConfigurationDialog(d->configuration, this);
-    d->displayImage = make_shared<DisplayImage>(d->configuration);
-    d->histogram = make_shared<Histogram>(d->configuration);
-    d->ui->histogram->setWidget(d->histogramWidget = new HistogramWidget(d->histogram, d->configuration));
+    d->ui->recording->setWidget(d->recording_panel = new RecordingPanel{d->planetaryImager->configuration(), filesystemBrowser});
+    d->configurationDialog = new ConfigurationDialog(d->planetaryImager->configuration(), this);
+    d->displayImage = make_shared<DisplayImage>(d->planetaryImager->configuration());
+    d->histogram = make_shared<Histogram>(d->planetaryImager->configuration());
+    d->ui->histogram->setWidget(d->histogramWidget = new HistogramWidget(d->histogram, d->planetaryImager->configuration()));
     d->ui->statusbar->addPermanentWidget(d->statusbar_info_widget = new StatusBarInfoWidget(), 1);
 
+    imageHandlers->push_back(d->displayImage);
+    imageHandlers->push_back(d->histogram);
     
-    auto compositeImageHandler = ImageHandler::ptr{new ImageHandlers{d->displayImage, d->saveImages, d->histogram}};
-    d->imageHandler = ImageHandler::ptr{new ThreadImageHandler{compositeImageHandler}};
-    
-    d->planetaryImager = make_shared<PlanetaryImager>(d->driver, d->imageHandler, d->saveImages, d->configuration);
     connect(d->planetaryImager.get(), &PlanetaryImager::camerasChanged, this, bind(&Private::onCamerasFound, d.get()));
     connect(d->planetaryImager.get(), &PlanetaryImager::cameraConnected, this, [=]{ d->onImagerInitialized(d->planetaryImager->imager()); });
     d->ui->image->setLayout(new QGridLayout);
@@ -162,7 +155,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     d->ui->image->layout()->setSpacing(0);
     d->ui->image->layout()->addWidget(d->image_widget = new ZoomableImage(false));
 #ifdef HAVE_QT5_OPENGL // TODO: make configuration item
-    if(d->configuration->opengl())
+    if(d->planetaryImager->configuration()->opengl())
       d->image_widget->setOpenGL();
 #endif
     d->image_widget->scene()->setBackgroundBrush(QBrush{Qt::black, Qt::Dense4Pattern});
@@ -191,8 +184,8 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     d->image_widget->toolbar()->setFloatable(true);
     d->image_widget->toolbar()->setMovable(true);
     
-    restoreGeometry(d->configuration->main_window_geometry());
-    restoreState(d->configuration->dock_status());
+    restoreGeometry(d->planetaryImager->configuration()->main_window_geometry());
+    restoreState(d->planetaryImager->configuration()->dock_status());
     connect(d->ui->actionAbout, &QAction::triggered, bind(&QMessageBox::about, this, tr("About"),
 							  tr("%1 version %2.\nFast imaging capture software for planetary imaging").arg(qApp->applicationDisplayName())
 							 .arg(qApp->applicationVersion())));
@@ -215,15 +208,15 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
 
     connect(d->configurationDialog, &QDialog::accepted, this, bind(&DisplayImage::read_settings, d->displayImage), Qt::DirectConnection);
     connect(d->configurationDialog, &QDialog::accepted, this, bind(&Histogram::read_settings, d->histogram), Qt::DirectConnection);
-    connect(d->recording_panel, &RecordingPanel::start, [=]{d->saveImages->startRecording(d->imager);});
-    connect(d->recording_panel, &RecordingPanel::stop, bind(&SaveImages::endRecording, d->saveImages));
-    connect(d->recording_panel, &RecordingPanel::setPaused, bind(&SaveImages::setPaused, d->saveImages, _1));
+    connect(d->recording_panel, &RecordingPanel::start, [=]{d->planetaryImager->saveImages()->startRecording(d->imager);});
+    connect(d->recording_panel, &RecordingPanel::stop, bind(&SaveImages::endRecording, d->planetaryImager->saveImages()));
+    connect(d->recording_panel, &RecordingPanel::setPaused, bind(&SaveImages::setPaused, d->planetaryImager->saveImages(), _1));
     
-    connect(d->saveImages.get(), &SaveImages::recording, this, bind(&DisplayImage::setRecording, d->displayImage, true), Qt::QueuedConnection);
-    connect(d->saveImages.get(), &SaveImages::recording, this, bind(&Histogram::setRecording, d->histogram, true), Qt::QueuedConnection);
-    connect(d->saveImages.get(), &SaveImages::recording, d->recording_panel, bind(&RecordingPanel::recording, d->recording_panel, true, _1), Qt::QueuedConnection);
-    connect(d->saveImages.get(), &SaveImages::finished, d->recording_panel, bind(&RecordingPanel::recording, d->recording_panel, false, QString{}), Qt::QueuedConnection);
-    connect(d->saveImages.get(), &SaveImages::finished, this, [=]{
+    connect(d->planetaryImager->saveImages().get(), &SaveImages::recording, this, bind(&DisplayImage::setRecording, d->displayImage, true), Qt::QueuedConnection);
+    connect(d->planetaryImager->saveImages().get(), &SaveImages::recording, this, bind(&Histogram::setRecording, d->histogram, true), Qt::QueuedConnection);
+    connect(d->planetaryImager->saveImages().get(), &SaveImages::recording, d->recording_panel, bind(&RecordingPanel::recording, d->recording_panel, true, _1), Qt::QueuedConnection);
+    connect(d->planetaryImager->saveImages().get(), &SaveImages::finished, d->recording_panel, bind(&RecordingPanel::recording, d->recording_panel, false, QString{}), Qt::QueuedConnection);
+    connect(d->planetaryImager->saveImages().get(), &SaveImages::finished, this, [=]{
         QTimer::singleShot(5000,  bind(&DisplayImage::setRecording, d->displayImage, false));
         QTimer::singleShot(5000,  bind(&Histogram::setRecording, d->histogram, false));
     }, Qt::QueuedConnection);
@@ -231,11 +224,11 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     setupDockWidget(d->ui->actionCamera_Settings, d->ui->camera_settings);
     setupDockWidget(d->ui->actionRecording, d->ui->recording);
     setupDockWidget(d->ui->actionHistogram, d->ui->histogram);
-    if(! d->configuration->widgets_setup_first_run() ) {
+    if(! d->planetaryImager->configuration()->widgets_setup_first_run() ) {
       tabifyDockWidget(d->ui->chipInfoWidget, d->ui->camera_settings);
       tabifyDockWidget(d->ui->chipInfoWidget, d->ui->histogram);
       tabifyDockWidget(d->ui->chipInfoWidget, d->ui->recording);
-      d->configuration->set_widgets_setup_first_run(true);
+      d->planetaryImager->configuration()->set_widgets_setup_first_run(true);
     }
     qDebug() << "file " << logFilePath << "exists: " << QFile::exists(logFilePath);
     d->ui->actionOpen_log_file_folder->setMenuRole(QAction::ApplicationSpecificRole);
@@ -273,10 +266,10 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
 
     
     connect(d->displayImage.get(), &DisplayImage::displayFPS, d->statusbar_info_widget, &StatusBarInfoWidget::displayFPS, Qt::QueuedConnection);
-    connect(d->saveImages.get(), &SaveImages::saveFPS, d->recording_panel, &RecordingPanel::saveFPS, Qt::QueuedConnection);
-    connect(d->saveImages.get(), &SaveImages::meanFPS, d->recording_panel, &RecordingPanel::meanFPS, Qt::QueuedConnection);
-    connect(d->saveImages.get(), &SaveImages::savedFrames, d->recording_panel, &RecordingPanel::saved, Qt::QueuedConnection);
-    connect(d->saveImages.get(), &SaveImages::droppedFrames, d->recording_panel, &RecordingPanel::dropped, Qt::QueuedConnection);
+    connect(d->planetaryImager->saveImages().get(), &SaveImages::saveFPS, d->recording_panel, &RecordingPanel::saveFPS, Qt::QueuedConnection);
+    connect(d->planetaryImager->saveImages().get(), &SaveImages::meanFPS, d->recording_panel, &RecordingPanel::meanFPS, Qt::QueuedConnection);
+    connect(d->planetaryImager->saveImages().get(), &SaveImages::savedFrames, d->recording_panel, &RecordingPanel::saved, Qt::QueuedConnection);
+    connect(d->planetaryImager->saveImages().get(), &SaveImages::droppedFrames, d->recording_panel, &RecordingPanel::dropped, Qt::QueuedConnection);
     connect(d->ui->actionDisconnect, &QAction::triggered, d->planetaryImager.get(), &PlanetaryImager::closeImager);
 
     connect(d->ui->actionQuit, &QAction::triggered, this, &QWidget::close);
@@ -377,7 +370,7 @@ void PlanetaryImagerMainWindow::Private::onImagerInitialized(Imager * imager)
     connect(imager, &Imager::fps, statusbar_info_widget, &StatusBarInfoWidget::captureFPS, Qt::QueuedConnection);
     connect(imager, &Imager::temperature, statusbar_info_widget, bind(&StatusBarInfoWidget::temperature, statusbar_info_widget, _1, false), Qt::QueuedConnection);
 
-    ui->settings_container->setWidget(cameraSettingsWidget = new CameraControlsWidget(imager, configuration, filesystemBrowser));
+    ui->settings_container->setWidget(cameraSettingsWidget = new CameraControlsWidget(imager, planetaryImager->configuration(), filesystemBrowser));
     ui->chipInfoWidget->setWidget(cameraInfoWidget = new CameraInfoWidget(imager));
     enableUIWidgets(true);
     ui->actionSelect_ROI->setEnabled(imager->supports(Imager::ROI));
