@@ -26,15 +26,15 @@
 #include "network/networkdispatcher.h"
 #include "network/server/scriptingengine.h"
 #include "framesforwarder.h"
+#include "planetaryimager.h"
+
 class NetworkServer : public QObject, public NetworkReceiver
 {
     Q_OBJECT
 public:
   NetworkServer(
-    const Driver::ptr &driver,
-    const ImageHandler::ptr &handler,
+    const PlanetaryImager::ptr &planetaryImager,
     const NetworkDispatcher::ptr &dispatcher,
-    const SaveFileForwarder::ptr &save_file,
     const FramesForwarder::ptr &framesForwarder,
     const ScriptingEngine::ptr &scriptingEngine,
     QObject *parent = nullptr

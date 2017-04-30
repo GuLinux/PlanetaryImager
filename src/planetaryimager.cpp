@@ -101,7 +101,10 @@ void PlanetaryImager::open(const Driver::Camera::ptr& camera)
   
   auto openImager = [this, camera] {
     try {
-      return camera->imager(d->imageHandler);
+      auto imager = camera->imager(d->imageHandler);
+      imager->moveToThread(this->thread());
+      imager->setParent(this);
+      return imager;
     } catch(const std::exception &e) {
       MessagesLogger::queue(MessagesLogger::Error, tr("Initialization Error"), tr("Error initializing imager %1: \n%2") % camera->name() % e.what());
     }
@@ -110,7 +113,6 @@ void PlanetaryImager::open(const Driver::Camera::ptr& camera)
   auto onImagerOpened = [this](Imager *imager) {
     d->imager = imager;
     if(imager) {
-      imager->moveToThread(QThread::currentThread());
       connect(imager, &Imager::disconnected, this, &PlanetaryImager::cameraDisconnected);
       emit cameraConnected();
     }
@@ -123,6 +125,8 @@ void PlanetaryImager::closeImager()
   if(! d->imager)
     return;
   d->imager->destroy();
+  d->imager->deleteLater();
+  d->imager = nullptr;
 }
 
 

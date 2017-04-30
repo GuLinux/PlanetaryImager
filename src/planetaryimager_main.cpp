@@ -66,7 +66,9 @@ int main(int argc, char** argv)
     
     
     PlanetaryImagerMainWindow mainWindow{planetaryImager, compositeImageHandler, make_shared<LocalFilesystemBrowser>(), commandLine.logfile() };
-    auto server = make_shared<NetworkServer>(drivers, compositeImageHandler, dispatcher, save_files_forwarder, frames_forwarder, scriptingengine );
+    auto server = make_shared<NetworkServer>(planetaryImager, dispatcher, frames_forwarder, scriptingengine);
+    QObject::connect(save_files_forwarder.get(), &SaveFileForwarder::isRecording, frames_forwarder.get(), &FramesForwarder::recordingMode);
+    
     
     // TODO also forward connection to server drivers
     // TODO copy to daemon

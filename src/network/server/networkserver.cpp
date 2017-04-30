@@ -32,8 +32,7 @@ using namespace std::placeholders;
 
 DPTR_IMPL(NetworkServer) {
   NetworkServer *q;
-  Driver::ptr driver;
-  ImageHandler::ptr handler;
+  PlanetaryImager::ptr planetaryImager;
   NetworkDispatcher::ptr dispatcher;
   FramesForwarder::ptr framesForwarder;
   unique_ptr<QTcpServer> server;
@@ -47,22 +46,17 @@ DPTR_IMPL(NetworkServer) {
 };
 
 NetworkServer::NetworkServer(
-  const Driver::ptr &driver,
-  const ImageHandler::ptr &handler,
+  const PlanetaryImager::ptr &planetaryImager,
   const NetworkDispatcher::ptr &dispatcher,
-  const SaveFileForwarder::ptr &save_file,
   const FramesForwarder::ptr &framesForwarder,
   const ScriptingEngine::ptr &scriptingEngine,
-  QObject* parent)
-  : QObject{parent}, NetworkReceiver{dispatcher}, dptr(this, driver, handler, dispatcher, framesForwarder, make_unique<QTcpServer>())
+  QObject *parent)
+  : QObject{parent}, NetworkReceiver{dispatcher}, dptr(this, planetaryImager, dispatcher, framesForwarder, make_unique<QTcpServer>())
 {
   d->server->setMaxPendingConnections(1);
   d->filesystemForwarder = make_shared<FilesystemForwarder>(dispatcher);
   connect(d->server.get(), &QTcpServer::newConnection, bind(&Private::new_connection, d.get()));
-  d->forwarder = make_shared<DriverForwarder>(dispatcher, driver, handler, [this, save_file](Imager *imager) {
-    save_file->setImager(imager);
-    emit imagerConnected(imager);
-  });
+  d->forwarder = make_shared<DriverForwarder>(dispatcher, planetaryImager);
   register_handler(NetworkProtocol::Hello, [this](const NetworkPacket::ptr &p){
     DriverProtocol::setFormatParameters(NetworkProtocol::decodeHello(p));
     QVariantMap status;
@@ -73,7 +67,6 @@ NetworkServer::NetworkServer(
       d->elapsed.restart();
   });
   connect(d->dispatcher.get(), &NetworkDispatcher::bytes, this, bind(&Private::bytes_sent, d.get(), _1, _2));
-  connect(save_file.get(), &SaveFileForwarder::isRecording, framesForwarder.get(), &FramesForwarder::recordingMode);
 }
 
 

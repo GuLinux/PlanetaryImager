@@ -32,7 +32,7 @@ public:
   QString name() const override;
   Properties properties() const override;
 public slots:
-  void setROI(const QRect &) override;
+  void setROI(const QRect &roi) override;
   void clearROI() override;
   void setControl(const Imager::Control &control) override;
   void startLive() override;

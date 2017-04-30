@@ -41,10 +41,12 @@ PROTOCOL_NAME_VALUE(Driver, GetControls);
 PROTOCOL_NAME_VALUE(Driver, GetControlsReply);
 PROTOCOL_NAME_VALUE(Driver, SendFrame);
 PROTOCOL_NAME_VALUE(Driver, SetControl);
+PROTOCOL_NAME_VALUE(Driver, SetROI);
 PROTOCOL_NAME_VALUE(Driver, signalFPS);
 PROTOCOL_NAME_VALUE(Driver, signalTemperature);
 PROTOCOL_NAME_VALUE(Driver, signalControlChanged);
 PROTOCOL_NAME_VALUE(Driver, signalDisconnected);
+PROTOCOL_NAME_VALUE(Driver, CloseCamera);
 
 namespace {
   QVariant control2variant(const Imager::Control &control) {
