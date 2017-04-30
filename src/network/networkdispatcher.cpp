@@ -123,7 +123,7 @@ void NetworkDispatcher::setSocket(QTcpSocket* socket)
 }
 
 void NetworkDispatcher::send(const NetworkPacket::ptr &packet) {
-  if(! is_connected())
+  if(! is_connected() || ! packet)
     return;
   //qDebug() << packet->name();
   auto written = packet->sendTo(d->socket);
@@ -132,7 +132,8 @@ void NetworkDispatcher::send(const NetworkPacket::ptr &packet) {
 
 void NetworkDispatcher::queue_send(const NetworkPacket::ptr& packet)
 {
-  QMetaObject::invokeMethod(this, "send", Q_ARG(NetworkPacket::ptr, packet) );
+  if(packet)
+    QMetaObject::invokeMethod(this, "send", Q_ARG(NetworkPacket::ptr, packet) );
 }
 
 

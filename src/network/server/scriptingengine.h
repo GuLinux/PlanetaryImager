@@ -22,19 +22,16 @@
 
 #include <QObject>
 #include "c++/dptr.h"
-#include "commons/configuration.h"
-#include "image_handlers/saveimages.h"
-#include "drivers/imager.h"
+#include "planetaryimager.h"
 #include "network/networkdispatcher.h"
 
 class ScriptingEngine : public QObject, public NetworkReceiver
 {
     Q_OBJECT
 public:
-  ScriptingEngine(const Configuration::ptr &configuration, const SaveImages::ptr &saveImages, const NetworkDispatcher::ptr &dispatcher, QObject *parent = nullptr);
+  ScriptingEngine(const PlanetaryImager::ptr &planetaryImager, const NetworkDispatcher::ptr &dispatcher, QObject *parent = nullptr);
   ~ScriptingEngine();
   typedef std::shared_ptr<ScriptingEngine> ptr;
-  void setImager(Imager *imager);
 public slots:
   void run(const QString &script);
 signals:

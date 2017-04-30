@@ -36,7 +36,6 @@ public:
     const PlanetaryImager::ptr &planetaryImager,
     const NetworkDispatcher::ptr &dispatcher,
     const FramesForwarder::ptr &framesForwarder,
-    const ScriptingEngine::ptr &scriptingEngine,
     QObject *parent = nullptr
   );
   ~NetworkServer();

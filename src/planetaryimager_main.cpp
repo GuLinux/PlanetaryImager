@@ -56,23 +56,19 @@ int main(int argc, char** argv)
     auto save_files_forwarder = make_shared<SaveFileForwarder>(save_images, dispatcher);
     auto configuration_forwarder = make_shared<ConfigurationForwarder>(configuration, dispatcher);
     auto frames_forwarder = make_shared<FramesForwarder>(dispatcher);
-    auto scriptingengine = make_shared<ScriptingEngine>(configuration, save_images, dispatcher);
     
     auto compositeImageHandler = make_shared<ImageHandlers>(QList<ImageHandler::ptr>{save_images, frames_forwarder});
     auto threadedImageHandler = ImageHandler::ptr{new ThreadImageHandler{compositeImageHandler}};
     
     auto planetaryImager = make_shared<PlanetaryImager>(drivers, threadedImageHandler, save_images, configuration);
     
+    auto scriptingengine = make_shared<ScriptingEngine>(planetaryImager, dispatcher);
     
     
     PlanetaryImagerMainWindow mainWindow{planetaryImager, compositeImageHandler, make_shared<LocalFilesystemBrowser>(), commandLine.logfile() };
-    auto server = make_shared<NetworkServer>(planetaryImager, dispatcher, frames_forwarder, scriptingengine);
+    auto server = make_shared<NetworkServer>(planetaryImager, dispatcher, frames_forwarder);
     QObject::connect(save_files_forwarder.get(), &SaveFileForwarder::isRecording, frames_forwarder.get(), &FramesForwarder::recordingMode);
     
-    
-    // TODO also forward connection to server drivers
-    // TODO copy to daemon
-    QObject::connect(&mainWindow, &PlanetaryImagerMainWindow::imagerChanged, scriptingengine.get(), [&]{ scriptingengine->setImager(mainWindow.imager()); });
     
     QMetaObject::invokeMethod(server.get(), "listen", Q_ARG(QString, commandLine.address()), Q_ARG(int, commandLine.port()));
     

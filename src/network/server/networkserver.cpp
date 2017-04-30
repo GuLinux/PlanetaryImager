@@ -49,7 +49,6 @@ NetworkServer::NetworkServer(
   const PlanetaryImager::ptr &planetaryImager,
   const NetworkDispatcher::ptr &dispatcher,
   const FramesForwarder::ptr &framesForwarder,
-  const ScriptingEngine::ptr &scriptingEngine,
   QObject *parent)
   : QObject{parent}, NetworkReceiver{dispatcher}, dptr(this, planetaryImager, dispatcher, framesForwarder, make_unique<QTcpServer>())
 {
