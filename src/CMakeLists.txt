@@ -104,6 +104,7 @@ endif()
 if(build_scripting_client)
   add_executable(planetary_imager_scripting planetaryimager_scripting.cpp)
   target_link_libraries(planetary_imager_scripting
+    network_scripting_client
     network_client
     ${planetary_imager_commons_DEPS}
     ${OpenCV_LIBS}
@@ -113,6 +114,8 @@ if(build_scripting_client)
     Qt5::Network
     Qt5::Qml
     pthread
+    readline
+    history
     ${EXTRA_LIBRARIES}
 )
 endif()

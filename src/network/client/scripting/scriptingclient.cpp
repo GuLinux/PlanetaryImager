@@ -22,6 +22,12 @@
 #include <QDebug>
 #include "protocol/scriptingprotocol.h"
 #include <QtConcurrent/QtConcurrent>
+#include <cstdio>
+#include <cstdlib>
+extern "C" {
+#include <readline/readline.h>
+#include <readline/history.h>
+}
 using namespace std;
 
 DPTR_IMPL(ScriptingClient) {
@@ -49,9 +55,20 @@ void ScriptingClient::console()
   QtConcurrent::run([=]{
     QString line;
     QTextStream input{stdin, QIODevice::ReadOnly};
-    bool readLineOk;
     QStringList lines;
-    while(readLineOk = input.readLineInto(&line) && line != "quit" && line != "exit") {
+    
+    auto readLine = [&] {
+      char *cline = readline("> ");
+      if(cline == nullptr)
+        return false;
+      line = QString{cline};
+      if(! line.isEmpty())
+        add_history(cline);
+      free(cline);
+      return true;
+    };
+    
+    while( readLine() && line != "quit" && line != "exit") {
       if(line.endsWith("\\")) {
         lines << line.left(line.length()-2);
         continue;

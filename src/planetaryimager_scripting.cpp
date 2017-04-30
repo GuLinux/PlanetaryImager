@@ -24,7 +24,7 @@
 #include "commons/commandline.h"
 
 #include "network/client/networkclient.h"
-#include "network/client/scriptingclient.h"
+#include "network/client/scripting/scriptingclient.h"
 #include "network/networkdispatcher.h"
 
 
@@ -48,6 +48,12 @@ int main(int argc, char** argv)
     cerr << "Scripting client connected\n";
   });
   QObject::connect(client.get(), &NetworkClient::connected, scriptingClient.get(), &ScriptingClient::console);
+  QObject::connect(client.get(), &NetworkClient::statusChanged, scriptingClient.get(), [&](auto status){
+    if(status == NetworkClient::Disconnected) {
+      cerr << "PlanetaryImager disconnected\n";
+      app.quit();
+    }
+  });
   client->connectToHost(commandLine.address(), commandLine.port(), {Configuration::Network_NoImage});
   LogHandler log_handler{commandLine};
   cerr << "Starting app...\n";
