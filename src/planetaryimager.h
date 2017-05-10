@@ -39,16 +39,15 @@ public:
         const Configuration::ptr &configuration
     );
     ~PlanetaryImager();
-public slots:
-  void scanCameras();
   Driver::Cameras cameras() const;
   Imager *imager() const;
   SaveImages::ptr saveImages() const;
   Configuration::ptr configuration() const;
   
+public slots:
+  void scanCameras();
   void open(const Driver::Camera::ptr &camera);
   void closeImager();
-  
   void startRecording();
   void setRecordingPaused(bool paused);
   void stopRecording();

@@ -1,6 +1,6 @@
 /*
  * GuLinux Planetary Imager - https://github.com/GuLinux/PlanetaryImager
- * Copyright (C) 2016  Marco Gulino <marco@gulinux.net>
+ * Copyright (C) 2017  Marco Gulino <marco@gulinux.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,34 +17,26 @@
  *
  */
 
-#ifndef NETWORKSERVER_H
-#define NETWORKSERVER_H
+#ifndef PLANETARYIMAGERSCRIPTINGPROXY_H
+#define PLANETARYIMAGERSCRIPTINGPROXY_H
+
 #include <QObject>
 #include "c++/dptr.h"
-#include "drivers/driver.h"
-#include "network/server/savefileforwarder.h"
-#include "network/networkdispatcher.h"
-#include "network/server/scripting/scriptingengine.h"
-#include "framesforwarder.h"
 #include "planetaryimager.h"
+#include <QtQml/QJSValue>
+#include <QtQml/QJSEngine>
 
-class NetworkServer : public QObject, public NetworkReceiver
+class PlanetaryImagerScriptingProxy : public QObject
 {
     Q_OBJECT
 public:
-  NetworkServer(
-    const PlanetaryImager::ptr &planetaryImager,
-    const NetworkDispatcher::ptr &dispatcher,
-    const FramesForwarder::ptr &framesForwarder,
-    QObject *parent = nullptr
-  );
-  ~NetworkServer();
+    PlanetaryImagerScriptingProxy(const PlanetaryImager::ptr &planetaryImager, QJSEngine *engine);
+    ~PlanetaryImagerScriptingProxy();
+    QJSValue jsValue() const;
 public slots:
-  void listen(const QString &address, int port);
-signals:
-  void imagerConnected(Imager *imager);
+  QJSValue cameras();
 private:
   DPTR
 };
 
-#endif // NETWORKSERVER_H
+#endif // PLANETARYIMAGERSCRIPTINGPROXY_H

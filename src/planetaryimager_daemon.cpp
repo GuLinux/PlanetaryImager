@@ -29,7 +29,7 @@
 #include "network/server/savefileforwarder.h"
 #include "network/server/framesforwarder.h"
 #include "drivers/supporteddrivers.h"
-#include "network/server/scriptingengine.h"
+#include "network/server/scripting/scriptingengine.h"
 #include "planetaryimager.h"
 #include "Qt/strings.h"
 #include "commons/commandline.h"

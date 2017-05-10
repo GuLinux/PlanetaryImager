@@ -21,6 +21,7 @@
 #include <QtQml/QJSEngine>
 #include <QDebug>
 #include "protocol/scriptingprotocol.h"
+#include "planetaryimagerscriptingproxy.h"
 
 using namespace std;
 
@@ -54,8 +55,7 @@ ScriptingEngine::ScriptingEngine(const PlanetaryImager::ptr &planetaryImager, co
 : QObject(parent),  NetworkReceiver{dispatcher}, dptr(planetaryImager, this)
 {
   QJSValue console = d->engine.newQObject(new ScriptingConsole(dispatcher, this));
-  QJSValue planetaryImagerJs = d->engine.newQObject(planetaryImager.get());
-  d->engine.globalObject().setProperty("planetaryImager", planetaryImagerJs);
+  d->engine.globalObject().setProperty("planetaryImager", (new PlanetaryImagerScriptingProxy(planetaryImager, &d->engine))->jsValue());
   d->engine.globalObject().setProperty("console", console);
   register_handler(ScriptingProtocol::Script, [this](const NetworkPacket::ptr &packet) {
     run(packet->payloadVariant().toString());

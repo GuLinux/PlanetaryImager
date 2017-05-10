@@ -28,7 +28,7 @@
 #include "commons/commandline.h"
 #include "network/server/networkserver.h"
 #include "network/server/configurationforwarder.h"
-#include "network/server/scriptingengine.h"
+#include "network/server/scripting/scriptingengine.h"
 #include "image_handlers/threadimagehandler.h"
 
 using namespace std;
