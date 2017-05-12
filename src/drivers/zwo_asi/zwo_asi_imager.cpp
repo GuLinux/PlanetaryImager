@@ -49,7 +49,6 @@ const int64_t BinControlID = 10001;
 
 DPTR_IMPL(ZWO_ASI_Imager) {
     ASI_CAMERA_INFO info;
-    shared_ptr<QTimer> reload_temperature_timer;
     ZWO_ASI_Imager *q;
 
     Properties properties;
@@ -61,25 +60,14 @@ DPTR_IMPL(ZWO_ASI_Imager) {
     ROIValidator::ptr roi_validator;
     QRect maxROI(int bin) const;
     void restart_worker(int bin, const QRect &roi, ASI_IMG_TYPE format);
-    void read_temperature();
     void update_worker_exposure_timeout();
     ASI_IMG_TYPE format() { return worker.expired() ? ASI_IMG_END : worker.lock()->format(); }
     int bin() { return worker.expired() ? -1 : worker.lock()->bin(); }
     QRect roi() { return worker.expired() ? QRect{} : worker.lock()->roi(); }
 };
 
-void ZWO_ASI_Imager::Private::read_temperature() {
-  qDebug() << "Refreshing ASI_TEMPERATURE if found..";
-  if(temperature_control)
-    q->push_job_on_thread([=]{
-      emit q->temperature(temperature_control->reload().control().value.toDouble());
-    });
-}
 
-
-
-
-ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandler::ptr &imageHandler) : Imager{imageHandler}, dptr(info, make_shared<QTimer>(), this)
+ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandler::ptr &imageHandler) : Imager{imageHandler}, dptr(info, this)
 {
     d->roi_validator = make_shared<ROIValidator>(initializer_list<ROIValidator::Rule>{
       ROIValidator::x_multiple(2),
@@ -109,8 +97,6 @@ ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandler::
     d->properties << LiveStream << ROI << Temperature;
     ASI_CHECK << ASIOpenCamera(info.CameraID) << "Open Camera";
     ASI_CHECK << ASIInitCamera(info.CameraID) << "Init Camera";
-    connect(d->reload_temperature_timer.get(), &QTimer::timeout, this, bind(&Private::read_temperature, d.get() ));
-    d->reload_temperature_timer->start(5000);
     connect(this, &Imager::exposure_changed, this, bind(&Private::update_worker_exposure_timeout, d.get()));
 }
 
@@ -121,8 +107,15 @@ ZWO_ASI_Imager::~ZWO_ASI_Imager()
 void ZWO_ASI_Imager::destroy() {
     Imager::destroy();
     d->worker.reset();
-    d->reload_temperature_timer->stop();
     ASI_CHECK << ASICloseCamera(d->info.CameraID) << "Close Camera";
+}
+
+void ZWO_ASI_Imager::readTemperature() {
+    qDebug() << "Refreshing ASI_TEMPERATURE if found..";
+    if(d->temperature_control)
+        push_job_on_thread([=]{
+           emit temperature(d->temperature_control->reload().control().value.toDouble());
+        });
 }
 
 Imager::Properties ZWO_ASI_Imager::properties() const

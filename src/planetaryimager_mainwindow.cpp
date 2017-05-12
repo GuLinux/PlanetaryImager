@@ -353,6 +353,12 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     d->imageHandler = ImageHandler::ptr{new ThreadImageHandler{compositeImageHandler}};
     d->editROIDialog = new EditROIDialog(this);
     connect(d->editROIDialog, &EditROIDialog::roiSelected, this, [=](const QRect &roi){ d->imager->setROI(roi); });
+    auto readTemperature = new QTimer{this};
+    connect(readTemperature, &QTimer::timeout, this, [=] {
+        if(d->imager)
+            QMetaObject::invokeMethod(d->imager, "readTemperature", Qt::QueuedConnection);
+    });
+    readTemperature->start(2000);
 }
 
 void PlanetaryImagerMainWindow::closeEvent(QCloseEvent* event)

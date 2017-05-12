@@ -36,7 +36,8 @@ public slots:
     void startLive() override;
     void setROI(const QRect &) override;
     void clearROI() override;
-    virtual void destroy();
+    void destroy() override;
+    void readTemperature() override;
 private:
     DPTR
 };

@@ -63,6 +63,7 @@ public slots:
   void import_controls(const QVariantList &controls, bool by_id = true);
   virtual void startLive() = 0;
   virtual void destroy();
+  virtual void readTemperature();
 signals:
   void fps(double rate);
   void temperature(double celsius);
