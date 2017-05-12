@@ -1,21 +1,7 @@
 set(PlanetaryImager_GUI_SRCS planetaryimager_mainwindow.cpp planetaryimager_mainwindow.ui resources/resources.qrc)
-set(PlanetaryImager_SRCS planetaryimager.cpp ${PlanetaryImager_GUI_SRCS})
+set(PlanetaryImager_SRCS planetaryimager_main.cpp ${PlanetaryImager_GUI_SRCS})
 
 
-unset(planetary_imager_commons_DEPS CACHE)
-unset(planetary_imager_backend_DEPS CACHE)
-unset(planetary_imager_frontend_DEPS CACHE)
-
-function(add_imager_dependencies)
-  set(planetary_imager_commons_DEPS ${planetary_imager_commons_DEPS} ${ARGN} CACHE INTERNAL "planetary imager common deps" FORCE)
-endfunction()
-
-function(add_backend_dependencies)
-  set(planetary_imager_backend_DEPS ${planetary_imager_backend_DEPS} ${ARGN} CACHE INTERNAL "planetary imager backend deps" FORCE)
-endfunction()
-function(add_frontend_dependencies)
-  set(planetary_imager_frontend_DEPS ${planetary_imager_frontend_DEPS} ${ARGN} CACHE INTERNAL "planetary imager frontend deps" FORCE)
-endfunction()
 
 set(drivers_destination lib/${CMAKE_PROJECT_NAME}/drivers)
 set(binary_destination bin)
@@ -29,15 +15,8 @@ endif()
 
 SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${drivers_destination};$ORIGIN")
 
-option(ADD_DRIVERS_BUILD_DIRECTORY "Search for drivers in the current build directory (developer option)" OFF)
 if(ADD_DRIVERS_BUILD_DIRECTORY)
   add_definitions(-DADDITIONAL_DRIVERS_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}/drivers")
-endif()
-
-option(DEVELOPER_MODE "Force logging mode to debug" OFF)
-
-if(DEVELOPER_MODE)
-  add_definitions(-DDEVELOPER_MODE)
 endif()
 
 add_subdirectory(drivers)
@@ -58,12 +37,8 @@ if(WIN32 AND NOT DEVELOPER_MODE)
   set(PlanetaryImager_SRCS ${PlanetaryImager_SRCS} ${CMAKE_SOURCE_DIR}/files/planetary_imager.rc)
 endif()
 
-add_executable(planetary_imager ${WIN32_APP_FLAG} ${PlanetaryImager_SRCS} )
+add_executable(planetary_imager ${WIN32_APP_FLAG} ${PlanetaryImager_SRCS} planetaryimager.cpp )
 
-find_library(CCFITS_LIBRARY NAMES ccfits CCfits HINTS ${CCFITS_LIBRARY_PATH})
-if(NOT CCFITS_LIBRARY)
-    message(FATAL_ERROR "Unable to find CCfits library")
-endif()
 
 target_link_libraries(planetary_imager
     network_server
@@ -84,9 +59,8 @@ target_link_libraries(planetary_imager
     ${EXTRA_LIBRARIES}
 )
 
-option(build_network_server "Build PlanetaryImager network daemon and frontend" On)
 if(build_network_server)
-  add_executable(planetary_imager_daemon ${WIN32_APP_FLAG} planetaryimager_daemon.cpp )
+  add_executable(planetary_imager_daemon ${WIN32_APP_FLAG} planetaryimager_daemon.cpp planetaryimager.cpp)
   target_link_libraries(planetary_imager_daemon
     network_server
     ${planetary_imager_backend_DEPS}
@@ -105,7 +79,7 @@ if(build_network_server)
     ${EXTRA_LIBRARIES}
   )
   
-  add_executable(planetary_imager_frontend planetaryimager_frontend.cpp ${PlanetaryImager_GUI_SRCS})
+  add_executable(planetary_imager_frontend planetaryimager_frontend.cpp planetaryimager.cpp ${PlanetaryImager_GUI_SRCS})
   target_link_libraries(planetary_imager_frontend
     network_client_gui
     network_client
@@ -127,10 +101,10 @@ if(build_network_server)
   set(install_targets ${install_targets} planetary_imager_daemon planetary_imager_frontend)
 endif()
 
-option(build_scripting_client "Build PlanetaryImager scripting client" Off)
 if(build_scripting_client)
   add_executable(planetary_imager_scripting planetaryimager_scripting.cpp)
   target_link_libraries(planetary_imager_scripting
+    network_scripting_client
     network_client
     ${planetary_imager_commons_DEPS}
     ${OpenCV_LIBS}
@@ -140,10 +114,11 @@ if(build_scripting_client)
     Qt5::Network
     Qt5::Qml
     pthread
+    readline
+    history
     ${EXTRA_LIBRARIES}
 )
 endif()
-    
 
 install(TARGETS ${install_targets} RUNTIME DESTINATION ${binary_destination})
 

@@ -20,7 +20,7 @@
 #ifndef NETWORKDRIVER_H
 #define NETWORKDRIVER_H
 
-#include "drivers/driver.h"
+#include "planetaryimager.h"
 #include "network/networkdispatcher.h"
 #include "c++/dptr.h"
 
@@ -28,7 +28,7 @@ class DriverForwarder : public NetworkReceiver
 {
 public:
     typedef std::function<void(Imager *)> OnImagerChanged;
-    DriverForwarder(const NetworkDispatcher::ptr &dispatcher, const Driver::ptr &driver, const ImageHandler::ptr &handler, OnImagerChanged on_imager_changed = {});
+    DriverForwarder(const NetworkDispatcher::ptr &dispatcher, const PlanetaryImager::ptr &planetaryImager);
     ~DriverForwarder();
     typedef std::shared_ptr<DriverForwarder> ptr;
     void getStatus(QVariantMap &status);

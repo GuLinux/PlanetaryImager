@@ -70,6 +70,10 @@ DPTR_IMPL(DisplayImage) {
   boost::lockfree::spsc_queue<Frame::ptr, boost::lockfree::capacity<50>> queue;
   atomic_bool detectEdges;
   QVector<QRgb> grayScale;
+  
+  atomic_bool histogramEqualization;
+  atomic_bool maximumSaturation;
+  
   bool should_display_frame() const;
   void canny(cv::Mat& source, int lowThreshold = 1, int ratio = 3, int kernel_size = 3, int blurSize = 3);
   void sobel( cv::Mat& source, int blur_size = 3, int ker_size = 3, int scale = 1, int delta = 0 );
@@ -94,6 +98,8 @@ DisplayImage::DisplayImage(const Configuration::ptr & configuration, QObject* pa
   d->capture_fps.reset(new fps_counter([=](double fps){ emit displayFPS(fps);}, fps_counter::Elapsed) );
   d->running = true;
   d->detectEdges = false;
+  d->maximumSaturation = false;
+  d->histogramEqualization = false;
   setRecording(false);
   for(int i=0; i<0xff; i++)
     d->grayScale.push_back(qRgb(i, i, i));
@@ -181,6 +187,23 @@ void DisplayImage::create_qimages()
         d->canny(*cv_image, d->canny_low_threshold, d->canny_threshold_ratio, d->canny_kernel_size, d->canny_blur);
       }
     }
+    if(d->histogramEqualization) {
+      vector<cv::Mat> r_g_b;
+      cv::split(*cv_image, r_g_b);
+      for(auto &channel: r_g_b) {
+        cv::equalizeHist(channel, channel);
+      }
+      cv::merge(r_g_b, *cv_image);
+    }
+    if(d->maximumSaturation) {
+      cv::Mat hsv;
+      cv::cvtColor(*cv_image, hsv, CV_RGB2HSV);
+      vector<cv::Mat> h_s_v;
+      cv::split(hsv, h_s_v);
+      h_s_v[1].setTo(cv::Scalar(255));
+      cv::merge(h_s_v, hsv);
+      cv::cvtColor(hsv, *cv_image, CV_HSV2RGB);
+    }
     QImage image{cv_image->data, cv_image->cols, cv_image->rows, static_cast<int>(cv_image->step), cv_image->channels() == 1 ? QImage::Format_Grayscale8: QImage::Format_RGB888, 
       [](void *data){ delete reinterpret_cast<cv::Mat*>(data); }, cv_image};
     if(cv_image->channels() == 1) {
@@ -238,6 +261,16 @@ void DisplayImage::quit()
 void DisplayImage::detectEdges(bool detect)
 {
   d->detectEdges = detect;
+}
+
+void DisplayImage::histogramEqualization(bool enable)
+{
+  d->histogramEqualization = enable;
+}
+
+void DisplayImage::maximumSaturation(bool enable)
+{
+  d->maximumSaturation = enable;
 }
 
 void DisplayImage::Private::canny( cv::Mat &source, int lowThreshold, int ratio, int kernel_size, int blurSize )

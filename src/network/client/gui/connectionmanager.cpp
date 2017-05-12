@@ -37,6 +37,7 @@
 #include "network/protocol/protocol.h"
 #include "network/client/gui/remotefilesystembrowser.h"
 #include "commons/configuration.h"
+#include "planetaryimager.h"
 
 using namespace std;
 
@@ -123,7 +124,9 @@ ConnectionManager::~ConnectionManager()
 void ConnectionManager::Private::onConnected()
 {
   ui->status->clear();
-  mainWindow = new PlanetaryImagerMainWindow{remoteDriver, make_shared<RemoteSaveImages>(dispatcher), configuration, make_shared<RemoteFilesystemBrowser>(dispatcher)};
+  auto imageHandlers = make_shared<ImageHandlers>();
+  auto planetaryImager = make_shared<PlanetaryImager>(remoteDriver, imageHandlers, make_shared<RemoteSaveImages>(dispatcher), configuration);
+  mainWindow = new PlanetaryImagerMainWindow{planetaryImager, imageHandlers, make_shared<RemoteFilesystemBrowser>(dispatcher)};
   mainWindow->show();
   q->hide();
   if(auto running_camera = remoteDriver->existing_running_camera()) {

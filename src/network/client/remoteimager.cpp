@@ -75,9 +75,11 @@ RemoteImager::RemoteImager(const ImageHandler::ptr& image_handler, const Network
 }
 
 #define LOG_TO_IMPLEMENT qDebug() << "***** TODO: implement " << __PRETTY_FUNCTION__;
+
+
 RemoteImager::~RemoteImager()
 {
-  LOG_TO_IMPLEMENT
+  dispatcher()->queue_send(DriverProtocol::packetCloseCamera());
 }
 
 
@@ -115,9 +117,9 @@ void RemoteImager::setControl(const Imager::Control& control)
   dispatcher()->queue_send(DriverProtocol::setControl(control) );
 }
 
-void RemoteImager::setROI(const QRect&)
+void RemoteImager::setROI(const QRect &roi)
 {
-  LOG_TO_IMPLEMENT
+  dispatcher()->queue_send(DriverProtocol::packetSetROI() << roi);
 }
 
 

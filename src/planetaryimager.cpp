@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2016  Marco Gulino <marco@gulinux.net>
+ * GuLinux Planetary Imager - https://github.com/GuLinux/PlanetaryImager
+ * Copyright (C) 2017  Marco Gulino <marco@gulinux.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -15,71 +16,146 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  *
  */
-#include <QApplication>
-#include "planetaryimager_mainwindow.h"
-#include "commons/version.h"
-#include <iostream>
-#include <QDebug>
-#include "drivers/supporteddrivers.h"
-#include "commons/loghandler.h"
-#include "commons/crashhandler.h"
-#include "image_handlers/backend/local_saveimages.h"
-#include "widgets/localfilesystembrowser.h"
-#include "commons/commandline.h"
-#include "network/server/networkserver.h"
-#include "network/server/configurationforwarder.h"
-#include "network/server/scriptingengine.h"
 
-using namespace std;
+#include "planetaryimager.h"
+#include "Qt/functional.h"
+#include "commons/messageslogger.h"
+#include <QThread>
+#include <QTimer>
 
+DPTR_IMPL(PlanetaryImager) {
+  Driver::ptr driver;
+  ImageHandler::ptr imageHandler;
+  SaveImages::ptr saveImages;
+  Configuration::ptr configuration;
+  PlanetaryImager *q;
+  
+  Driver::Cameras cameras;
+  Imager *imager = nullptr;
+  
+  void initDevicesWatcher();
+};
 
-int main(int argc, char** argv)
+PlanetaryImager::PlanetaryImager(
+  const Driver::ptr &driver,
+  const ImageHandler::ptr &imageHandler,
+  const SaveImages::ptr &saveImages,
+  const Configuration::ptr &configuration
+) : QObject{}, dptr(driver, imageHandler, saveImages, configuration, this)
 {
-    qRegisterMetaType<Frame::ptr>("Frame::ptr");
-    qRegisterMetaType<Imager*>("Imager*");
-    CrashHandler crash_handler({SIGSEGV, SIGABRT});
-    cerr << "Starting PlanetaryImager - version " << PLANETARY_IMAGER_VERSION << " (" << HOST_PROCESSOR << ")" << endl;
-    QApplication app(argc, argv);
-    app.setApplicationName("PlanetaryImager");
-    app.setApplicationDisplayName("Planetary Imager");
-    app.setApplicationVersion(PLANETARY_IMAGER_VERSION);
-    CommandLine commandLine(app);
-    commandLine.backend().daemon("127.0.0.1").process();
-    LogHandler log_handler{commandLine};
-    
-    auto configuration = make_shared<Configuration>();
-    auto save_images = make_shared<LocalSaveImages>(configuration);
-    auto drivers = make_shared<SupportedDrivers>(commandLine.driversDirectories());
-    
-    auto dispatcher = make_shared<NetworkDispatcher>();
-    auto save_files_forwarder = make_shared<SaveFileForwarder>(save_images, dispatcher);
-    auto configuration_forwarder = make_shared<ConfigurationForwarder>(configuration, dispatcher);
-    auto frames_forwarder = make_shared<FramesForwarder>(dispatcher);
-    auto scriptingengine = make_shared<ScriptingEngine>(configuration, save_images, dispatcher);
-    
-    PlanetaryImagerMainWindow mainWindow{
-      drivers,
-      save_images,
-      configuration, make_shared<LocalFilesystemBrowser>(),
-      commandLine.logfile()
-    };
-    auto imageHandlers = ImageHandler::ptr{new ImageHandlers{
-      mainWindow.imageHandler(),
-      frames_forwarder,
-      save_images,
-    }};
-    auto server = make_shared<NetworkServer>(drivers, imageHandlers, dispatcher, save_files_forwarder, frames_forwarder, scriptingengine );
-    
-    // TODO also forward connection to server drivers
-    // TODO copy to daemon
-    QObject::connect(&mainWindow, &PlanetaryImagerMainWindow::imagerChanged, scriptingengine.get(), [&]{ scriptingengine->setImager(mainWindow.imager()); });
-    
-    QMetaObject::invokeMethod(server.get(), "listen", Q_ARG(QString, commandLine.address()), Q_ARG(int, commandLine.port()));
-    
-    QObject::connect(server.get(), &NetworkServer::imagerConnected, &mainWindow, [&](Imager *imager) {
-      mainWindow.setImager(imager);
-    });
-    QObject::connect(&mainWindow, &PlanetaryImagerMainWindow::quit, &app, &QApplication::quit);
-    mainWindow.show();
-    return app.exec();
+  d->initDevicesWatcher();
 }
+
+PlanetaryImager::~PlanetaryImager()
+{
+}
+
+Imager * PlanetaryImager::imager() const
+{
+  return d->imager;
+}
+
+SaveImages::ptr PlanetaryImager::saveImages() const
+{
+  return d->saveImages;
+}
+
+Configuration::ptr PlanetaryImager::configuration() const
+{
+  return d->configuration;
+}
+
+
+Driver::Cameras PlanetaryImager::cameras() const
+{
+  return d->cameras;
+}
+
+void PlanetaryImager::startRecording()
+{
+  d->saveImages->startRecording(d->imager);
+}
+
+void PlanetaryImager::setRecordingPaused(bool paused)
+{
+  d->saveImages->setPaused(paused);
+}
+
+void PlanetaryImager::stopRecording()
+{
+  d->saveImages->endRecording();
+}
+
+void PlanetaryImager::scanCameras()
+{
+  GuLinux::qAsyncR<Driver::Cameras>([this] { return d->driver->cameras(); }, [this](const Driver::Cameras &cameras) {
+    d->cameras = cameras;
+    emit camerasChanged();
+  }, this);
+}
+
+void PlanetaryImager::open(const Driver::Camera::ptr& camera)
+{
+  if(d->imager)
+    d->imager->destroy();
+  
+  auto openImager = [this, camera] {
+    try {
+      auto imager = camera->imager(d->imageHandler);
+      imager->moveToThread(this->thread());
+      imager->setParent(this);
+      return imager;
+    } catch(const std::exception &e) {
+      MessagesLogger::queue(MessagesLogger::Error, tr("Initialization Error"), tr("Error initializing imager %1: \n%2") % camera->name() % e.what());
+    }
+  };
+  
+  auto onImagerOpened = [this](Imager *imager) {
+    d->imager = imager;
+    if(imager) {
+      connect(imager, &Imager::disconnected, this, &PlanetaryImager::cameraDisconnected);
+      emit cameraConnected();
+    }
+  };
+  GuLinux::qAsyncR<Imager *>(openImager, onImagerOpened, this);
+}
+
+void PlanetaryImager::closeImager()
+{
+  if(! d->imager)
+    return;
+  d->imager->destroy();
+  d->imager->deleteLater();
+  d->imager = nullptr;
+}
+
+
+void PlanetaryImager::Private::initDevicesWatcher()
+{
+  #ifdef Q_OS_LINUX
+  auto notifyTimer = new QTimer(q);
+  QString usbfsdir;
+  for(auto path: QStringList{"/proc/bus/usb/devices", "/sys/bus/usb/devices"}) {
+    if(QDir(path).exists())
+      usbfsdir = path;
+  }
+  if(usbfsdir.isEmpty())
+    return;
+  connect(notifyTimer, &QTimer::timeout, [=]{
+    static QStringList entries;
+    auto current = QDir(usbfsdir).entryList();
+    if(current != entries) {
+      qDebug() << "usb devices changed";
+      entries = current;
+      q->scanCameras();
+    }
+  });
+  notifyTimer->start(1500);
+  #endif
+}
+
+void PlanetaryImager::quit()
+{
+  d->driver->aboutToQuit();
+}
+

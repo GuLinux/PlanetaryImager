@@ -63,8 +63,10 @@ void Imager::import_controls(const QVariantList& controls, bool by_id)
       Control changed = control;
       qDebug() << "Importing control: " << control.id << ", " << control.name;
       changed.import(controls_mapped[key]);
-      if(! changed.same_value(control))
+      if(! changed.same_value(control)) {
+        qDebug() << "control " << control << " has changed to " << changed;
         changed_controls.push_back(changed);
+      }
     }
   }
   setControls(changed_controls);

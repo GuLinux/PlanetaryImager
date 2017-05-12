@@ -29,8 +29,8 @@
 #include "network/server/savefileforwarder.h"
 #include "network/server/framesforwarder.h"
 #include "drivers/supporteddrivers.h"
-#include "network/server/scriptingengine.h"
-
+#include "network/server/scripting/scriptingengine.h"
+#include "planetaryimager.h"
 #include "Qt/strings.h"
 #include "commons/commandline.h"
 using namespace std;
@@ -55,15 +55,14 @@ int main(int argc, char** argv)
     auto dispatcher = make_shared<NetworkDispatcher>();
     auto save_images = make_shared<LocalSaveImages>(configuration);
     auto frames_forwarder = make_shared<FramesForwarder>(dispatcher);
-    auto imageHandlers = ImageHandler::ptr{new ImageHandlers{
-      frames_forwarder,
-      save_images,
-    }};
+    auto imageHandlers = make_shared<ImageHandlers>(QList<ImageHandler::ptr>{frames_forwarder, save_images});
     auto configuration_forwarder = make_shared<ConfigurationForwarder>(configuration, dispatcher);
     auto save_files_forwarder = make_shared<SaveFileForwarder>(save_images, dispatcher);
-    auto scriptingengine = make_shared<ScriptingEngine>(configuration, save_images, dispatcher);
+    auto planetaryImager = make_shared<PlanetaryImager>(driver, imageHandlers, save_images, configuration);
+    auto scriptingengine = make_shared<ScriptingEngine>(planetaryImager, dispatcher);
+    auto server = make_shared<NetworkServer>(planetaryImager, dispatcher, frames_forwarder);
+    QObject::connect(save_files_forwarder.get(), &SaveFileForwarder::isRecording, frames_forwarder.get(), &FramesForwarder::recordingMode);
     
-    auto server = make_shared<NetworkServer>(driver, imageHandlers, dispatcher, save_files_forwarder, frames_forwarder, scriptingengine);
     
 
     QMetaObject::invokeMethod(server.get(), "listen", Q_ARG(QString, commandLine.address()), Q_ARG(int, commandLine.port()));

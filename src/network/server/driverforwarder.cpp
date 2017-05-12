@@ -21,26 +21,26 @@
 #include <QObject>
 #include "driverforwarder.h"
 #include "network/protocol/driverprotocol.h"
+#include "Qt/functional.h"
 
 using namespace std;
 using namespace std::placeholders;
 
 #define DECLARE_HANDLER(name) void name(const NetworkPacket::ptr &p);
 DPTR_IMPL(DriverForwarder) {
-  Driver::ptr driver;
-  ImageHandler::ptr handler;
-  OnImagerChanged on_imager_changed;
+  PlanetaryImager::ptr planetaryImager;
   DriverForwarder *q;
   Driver::Cameras cameras;
-  Imager *imager = nullptr;
   DECLARE_HANDLER(CameraList)
   DECLARE_HANDLER(ConnectCamera)
   DECLARE_HANDLER(GetCameraName)
   DECLARE_HANDLER(GetProperties)
   DECLARE_HANDLER(StartLive)
   DECLARE_HANDLER(ClearROI)
+  DECLARE_HANDLER(SetROI)
   DECLARE_HANDLER(GetControls)
   DECLARE_HANDLER(SetControl)
+  DECLARE_HANDLER(CloseCamera)
   void sendFPS(double fps);
   void sendTemperature(double temperature);
   void sendDisconnected();
@@ -49,8 +49,8 @@ DPTR_IMPL(DriverForwarder) {
 
 #define REGISTER_HANDLER(protocol, name) register_handler(protocol::name, bind(&Private::name, d.get(), _1));
 
-DriverForwarder::DriverForwarder(const NetworkDispatcher::ptr &dispatcher, const Driver::ptr& driver, const ImageHandler::ptr &handler, OnImagerChanged on_imager_changed) 
-  : NetworkReceiver{dispatcher}, dptr(driver, handler, on_imager_changed, this)
+DriverForwarder::DriverForwarder(const NetworkDispatcher::ptr &dispatcher, const PlanetaryImager::ptr &planetaryImager) 
+  : NetworkReceiver{dispatcher}, dptr(planetaryImager, this)
 {
   REGISTER_HANDLER(DriverProtocol, CameraList)
   REGISTER_HANDLER(DriverProtocol, ConnectCamera)
@@ -58,8 +58,21 @@ DriverForwarder::DriverForwarder(const NetworkDispatcher::ptr &dispatcher, const
   REGISTER_HANDLER(DriverProtocol, GetProperties)
   REGISTER_HANDLER(DriverProtocol, StartLive)
   REGISTER_HANDLER(DriverProtocol, ClearROI)
+  REGISTER_HANDLER(DriverProtocol, SetROI)
   REGISTER_HANDLER(DriverProtocol, GetControls)
   REGISTER_HANDLER(DriverProtocol, SetControl)
+  REGISTER_HANDLER(DriverProtocol, CloseCamera)
+  QObject::connect(planetaryImager.get(), &PlanetaryImager::camerasChanged, dispatcher.get(), [this] {
+    d->cameras = d->planetaryImager->cameras();
+    this->dispatcher()->send(DriverProtocol::sendCameraListReply(d->cameras));
+  });
+  QObject::connect(planetaryImager.get(), &PlanetaryImager::cameraConnected, dispatcher.get(), [this] {
+    this->dispatcher()->send(DriverProtocol::packetConnectCameraReply()); // TODO: add status
+    QObject::connect(d->planetaryImager->imager(), &Imager::fps, this->dispatcher().get(), bind(&Private::sendFPS, d.get(), _1));
+    QObject::connect(d->planetaryImager->imager(), &Imager::temperature, this->dispatcher().get(), bind(&Private::sendTemperature, d.get(), _1));
+    QObject::connect(d->planetaryImager->imager(), &Imager::disconnected, this->dispatcher().get(), bind(&Private::sendDisconnected, d.get()));
+    QObject::connect(d->planetaryImager->imager(), &Imager::changed, this->dispatcher().get(), bind(&Private::sendControlChanged, d.get(), _1));
+  });
 }
 
 DriverForwarder::~DriverForwarder()
@@ -68,57 +81,54 @@ DriverForwarder::~DriverForwarder()
 
 void DriverForwarder::Private::CameraList(const NetworkPacket::ptr& p)
 {
-      cameras = driver->cameras();
-      q->dispatcher()->send(DriverProtocol::sendCameraListReply(cameras));
+  planetaryImager->scanCameras();
 }
 
 void DriverForwarder::Private::ConnectCamera(const NetworkPacket::ptr& p)
 {
-  delete imager;
-  imager = nullptr;
   auto address = reinterpret_cast<Driver::Camera *>(p->payloadVariant().toLongLong());
-  if(count_if(begin(cameras), end(cameras), [address](const Driver::Camera::ptr &p){ return p.get() == address; }) == 1) {
-    imager = address->imager(handler);
+  auto camera = find_if(begin(cameras), end(cameras), [address](const Driver::Camera::ptr &p){ return p.get() == address; });
+  if(camera != cameras.end()) {
+    planetaryImager->open(*camera);
   }
-  if(on_imager_changed)
-    on_imager_changed(imager);
-  q->dispatcher()->send(DriverProtocol::packetConnectCameraReply()); // TODO: add status
-  QObject::connect(imager, &Imager::fps, q->dispatcher().get(), bind(&Private::sendFPS, this, _1));
-  QObject::connect(imager, &Imager::temperature, q->dispatcher().get(), bind(&Private::sendTemperature, this, _1));
-  QObject::connect(imager, &Imager::disconnected, q->dispatcher().get(), bind(&Private::sendDisconnected, this));
-  QObject::connect(imager, &Imager::changed, q->dispatcher().get(), bind(&Private::sendControlChanged, this, _1), Qt::QueuedConnection);
 }
 
 void DriverForwarder::Private::GetCameraName(const NetworkPacket::ptr& p)
 {
-  q->dispatcher()->send(DriverProtocol::packetGetCameraNameReply() << imager->name().toLatin1());
+  q->dispatcher()->send(DriverProtocol::packetGetCameraNameReply() << planetaryImager->imager()->name().toLatin1());
 }
+
+void DriverForwarder::Private::CloseCamera(const NetworkPacket::ptr& p)
+{
+  planetaryImager->closeImager();
+}
+
 
 void DriverForwarder::Private::ClearROI(const NetworkPacket::ptr& p)
 {
-  imager->clearROI();
+  planetaryImager->imager()->clearROI();
 }
 
 
 void DriverForwarder::Private::GetProperties(const NetworkPacket::ptr& p)
 {
-  q->dispatcher()->send( DriverProtocol::sendGetPropertiesReply(imager->properties() ) );
+  q->dispatcher()->send( DriverProtocol::sendGetPropertiesReply(planetaryImager->imager()->properties() ) );
 }
 
 void DriverForwarder::Private::StartLive(const NetworkPacket::ptr& p)
 {
-  imager->startLive();
+  planetaryImager->imager()->startLive();
   q->dispatcher()->send( DriverProtocol::packetStartLiveReply() );
 }
 
 void DriverForwarder::Private::GetControls(const NetworkPacket::ptr& p)
 {
-  q->dispatcher()->send(DriverProtocol::sendGetControlsReply(imager->controls()));
+  q->dispatcher()->send(DriverProtocol::sendGetControlsReply(planetaryImager->imager()->controls()));
 }
 
 void DriverForwarder::Private::SetControl(const NetworkPacket::ptr& p)
 {
-  imager->setControl(DriverProtocol::decodeControl(p));
+  planetaryImager->imager()->setControl(DriverProtocol::decodeControl(p));
 }
 
 
@@ -135,8 +145,6 @@ void DriverForwarder::Private::sendTemperature(double temperature)
 void DriverForwarder::Private::sendDisconnected()
 {
   q->dispatcher()->send( DriverProtocol::packetsignalDisconnected());
-  imager->deleteLater();
-  imager = nullptr;
 }
 
 void DriverForwarder::Private::sendControlChanged(const Imager::Control &control)
@@ -146,6 +154,12 @@ void DriverForwarder::Private::sendControlChanged(const Imager::Control &control
 
 void DriverForwarder::getStatus(QVariantMap& status)
 {
-  DriverProtocol::encodeStatus({static_cast<bool>(d->imager)}, status);
+  DriverProtocol::encodeStatus({static_cast<bool>(d->planetaryImager->imager())}, status);
+}
+
+void DriverForwarder::Private::SetROI(const NetworkPacket::ptr& p)
+{
+  QRect roi = p->payloadVariant().toRect();
+  planetaryImager->imager()->setROI(roi);
 }
 

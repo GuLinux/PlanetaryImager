@@ -19,6 +19,7 @@
 #include "asiimagingworker.h"
 #include "zwoexception.h"
 #include <atomic>
+
 using namespace std;
 
 DPTR_IMPL(ASIImagingWorker) {
@@ -70,8 +71,11 @@ void ASIImagingWorker::calc_exposure_timeout()
   long value;
   ASI_BOOL isAuto;
   ASI_CHECK << ASIGetControlValue(d->info.CameraID, ASI_EXPOSURE, &value, &isAuto) << "Getting exposure value";
-  d->exposure_timeout = value*2/1000 + 500;
-  qDebug() << "Exposure timeout: " << d->exposure_timeout;
+  if(isAuto)
+    d->exposure_timeout = -1;
+  else
+    d->exposure_timeout = value*2 / 1000 + 500;
+  qDebug() << "Exposure timeout: exposure=" << value << ", timeout=" << d->exposure_timeout;
 }
 
 

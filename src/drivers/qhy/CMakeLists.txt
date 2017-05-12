@@ -9,12 +9,16 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
 endif()
 execute_process(COMMAND ${CMAKE_SOURCE_DIR}/scripts/qhy_errors_to_map ${QHY_INCLUDE_DIRECTORY}/qhyccderr.h OUTPUT_VARIABLE qhy_error_codes)
 
+add_custom_command(
+  OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/qhyccdstruct.h 
+  COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/qhy_fix_libusb_include.py ${QHY_INCLUDE_DIRECTORY}/qhyccdstruct.h ${CMAKE_CURRENT_BINARY_DIR}/qhyccdstruct.h
+)
+add_custom_target(qhyccdstruct DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/qhyccdstruct.h )
+
 if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
   configure_file(${QHY_INCLUDE_DIRECTORY}/qhyccd.h ${CMAKE_CURRENT_BINARY_DIR}/ COPYONLY)
   configure_file(${QHY_INCLUDE_DIRECTORY}/qhyccdcamdef.h ${CMAKE_CURRENT_BINARY_DIR}/ COPYONLY)
-  configure_file(${QHY_INCLUDE_DIRECTORY}/qhyccdstruct.h ${CMAKE_CURRENT_BINARY_DIR}/ COPYONLY)
   configure_file(${QHY_INCLUDE_DIRECTORY}/qhyccderr.h ${CMAKE_CURRENT_BINARY_DIR}/ COPYONLY)
-  execute_process(COMMAND ${CMAKE_SOURCE_DIR}/scripts/qhy_fix_libusb_include ${CMAKE_CURRENT_BINARY_DIR}/qhyccdstruct.h)
   include_directories(${CMAKE_CURRENT_BINARY_DIR})
 endif()
 
@@ -25,9 +29,7 @@ set(LIBQHY_SOVERSION "0")
 #TODO replace this script invokation
 
 
-configure_file(qhyexception.cpp.in qhyexception.cpp)
-set(qhy_GENERATED_SOURCES ${CMAKE_CURRENT_BINARY_DIR}/qhyexception.cpp)
-set(qhy_SOURCES qhyccdimager.cpp qhydriver.cpp qhyimagingworker.cpp)
+set(qhy_SOURCES qhyccdimager.cpp qhydriver.cpp qhyimagingworker.cpp qhyexception.cpp)
 
 set(QHY_LIBRARY_armv6 ${QHY_LIBS_DIRECTORY}/libqhy_arm_v6.bin)
 set(QHY_LIBRARY_armv7 ${QHY_LIBS_DIRECTORY}/libqhy_arm_v7.bin)
@@ -58,3 +60,6 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   install(FILES ${QHY_LIBRARY} DESTINATION .)
 endif()
 add_driver(NAME qhy OS Linux Windows DEFAULT_ON SRCS ${qhy_SOURCES} ${qhy_GENERATED_SOURCES} LINK ${QHY_LIBRARY})
+if(BUILD_DRIVER_qhy)
+  add_dependencies(qhy qhyccdstruct)
+endif()
