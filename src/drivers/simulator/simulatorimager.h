@@ -38,6 +38,7 @@ public slots:
     void setROI(const QRect &) override;
     void clearROI() override;
     void setControl(const Control& setting) override;
+    void readTemperature() override;
 private:
   DPTR
 };

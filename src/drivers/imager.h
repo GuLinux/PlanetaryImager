@@ -63,6 +63,7 @@ public slots:
   virtual void startLive() = 0;
   virtual void destroy();
   QVariantList export_controls() const;
+  virtual void readTemperature();
 signals:
   void fps(double rate);
   void temperature(double celsius);

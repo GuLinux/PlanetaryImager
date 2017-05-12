@@ -99,6 +99,10 @@ void Imager::destroy()
   d->destroyed = true;
 }
 
+void Imager::readTemperature()
+{
+}
+
 void Imager::restart(const ImagerThread::Worker::factory& worker)
 {
   LOG_F_SCOPE
