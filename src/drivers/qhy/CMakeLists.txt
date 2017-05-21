@@ -1,11 +1,11 @@
 #TODO replace this script invokation
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
-  set(QHY_INCLUDE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/QHYCCD_Linux)
-  set(QHY_LIBS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/QHYCCD_Linux)
-elseif(CMAKE_SYSTEM_NAME STREQUAL "Windows")
+if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   set(QHY_INCLUDE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/QHYCCD_Windows_SDK_x64_LatestVersion/x64/include)
   set(QHY_DLL_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/QHYCCD_Windows_SDK_x64_LatestVersion/x64/dll)
   include_directories(${QHY_INCLUDE_DIRECTORY})
+else()
+  set(QHY_INCLUDE_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/QHYCCD_Linux)
+  set(QHY_LIBS_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/QHYCCD_Linux)
 endif()
 execute_process(COMMAND ${CMAKE_SOURCE_DIR}/scripts/qhy_errors_to_map ${QHY_INCLUDE_DIRECTORY}/qhyccderr.h OUTPUT_VARIABLE qhy_error_codes)
 
@@ -15,7 +15,7 @@ add_custom_command(
 )
 add_custom_target(qhyccdstruct DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/qhyccdstruct.h )
 
-if(CMAKE_SYSTEM_NAME STREQUAL "Linux")
+if(NOT CMAKE_SYSTEM_NAME STREQUAL "Windows")
   configure_file(${QHY_INCLUDE_DIRECTORY}/qhyccd.h ${CMAKE_CURRENT_BINARY_DIR}/ COPYONLY)
   configure_file(${QHY_INCLUDE_DIRECTORY}/qhyccdcamdef.h ${CMAKE_CURRENT_BINARY_DIR}/ COPYONLY)
   configure_file(${QHY_INCLUDE_DIRECTORY}/qhyccderr.h ${CMAKE_CURRENT_BINARY_DIR}/ COPYONLY)
@@ -29,7 +29,7 @@ set(LIBQHY_SOVERSION "0")
 #TODO replace this script invokation
 
 
-set(qhy_SOURCES qhyccdimager.cpp qhydriver.cpp qhyimagingworker.cpp qhyexception.cpp)
+set(qhy_SOURCES qhyccdimager.cpp qhydriver.cpp qhyimagingworker.cpp qhyexception.cpp qhycontrol.cpp)
 
 set(QHY_LIBRARY_armv6 ${QHY_LIBS_DIRECTORY}/libqhy_arm_v6.bin)
 set(QHY_LIBRARY_armv7 ${QHY_LIBS_DIRECTORY}/libqhy_arm_v7.bin)
@@ -40,6 +40,10 @@ set(QHY_LIBRARY ${QHY_LIBRARY_${PlanetaryImager_ARCH}})
 
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   set(QHY_LIBRARY ${QHY_DLL_DIRECTORY}/qhyccd.dll)
+endif()
+if(CMAKE_SYSTEM_NAME STREQUAL "Darwin")
+  set(QHY_LIBRARY ${QHY_LIBS_DIRECTORY}/libqhy_osx.a)
+  set(QHY_EXTRA_LIBRARIES usb-1.0  "-framework CoreFoundation" "-framework IOKit" objc)
 endif()
 
 
@@ -59,7 +63,7 @@ endif()
 if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
   install(FILES ${QHY_LIBRARY} DESTINATION .)
 endif()
-add_driver(NAME qhy OS Linux Windows DEFAULT_ON SRCS ${qhy_SOURCES} ${qhy_GENERATED_SOURCES} LINK ${QHY_LIBRARY})
+add_driver(NAME qhy OS Linux Windows Darwin DEFAULT_ON SRCS ${qhy_SOURCES} ${qhy_GENERATED_SOURCES} LINK ${QHY_LIBRARY} ${QHY_EXTRA_LIBRARIES})
 if(BUILD_DRIVER_qhy)
   add_dependencies(qhy qhyccdstruct)
 endif()
