@@ -4,7 +4,7 @@
 #include "c++/stringbuilder.h"
 #include "qhyccd.h"
 #include <QMap>
-#include "qt/strings.h"
+#include "Qt/strings.h"
 using namespace std;
 using namespace std::placeholders;
 using namespace GuLinux;
