@@ -20,6 +20,7 @@
 #include "ASICamera2.h"
 #include "zwo_asi_imager.h"
 #include "zwoexception.h"
+#include <QDebug>
 
 using namespace std;
 
@@ -69,7 +70,8 @@ Driver::Cameras ZWO_ASI_Driver::cameras() const
   int index=0;
   for(int index=0; index<ncams; index++) {
     ASI_CAMERA_INFO info;
-    ASI_CHECK << ASIGetCameraProperty(&info, index++) << string{"Get Camera Property"};
+    ASI_CHECK << ASIGetCameraProperty(&info, index) << string{"Get Camera Property"};
+    qDebug() << "ZWO camera index" << index << "is a" << info.Name;
     cameras.push_back(make_shared<ZWO_ASI_Camera>(info));
   }
   return cameras;
