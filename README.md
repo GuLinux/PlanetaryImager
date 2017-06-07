@@ -14,7 +14,7 @@ Useful Links
 Supported Cameras
 -----------------
 
-Mainly ZWO ASI Cameras (my camera is an ASI178mm), v4l2 (including DMK and Celestron Skyris) and QHY
+Mainly ZWO ASI Cameras (my camera is an ASI178mm), v4l2 (including DMK and Celestron Skyris), QHY, IIDC (including all FLIR/Point Grey FireWire and USB 2/3 models).
 
 
 Requirements
@@ -26,6 +26,7 @@ Requirements
  * boost (libboost-all-dev)
  * fxload (to load firmware on QHY cameras)
  * ccfits
+ * libdc1394 (for IIDC driver)
 
 Source download
 ---------------
@@ -52,7 +53,15 @@ If not, please try binary releases first.
     cd build
     cmake .. -DCMAKE_INSTALL_PREFIX=/usr
     make all && sudo make install
-    
+
+To enable a driver not enabled by default, either add `DEFAULT_ON` as argument to `add_driver()` in driver's CMakeLists.txt file, or set `BUILD_DRIVER_xxx:BOOL=ON` in CMakeCache.txt in the build directory.
+
+To run without installing, you must specify the drivers location as a parameter. E.g. when in build directory, use:
+
+
+    src/planetary_imager --drivers .
+
+
 Uninstall
 ---------
 
@@ -88,6 +97,15 @@ To get a working version, please follow these instructions:
      ```-DCMAKE_PREFIX_PATH=/usr/local/Cellar/qt5/5.8.0_1```
  * run `planetary_imager` from your command line
  
+
+IIDC (libdc1394)
+----------------
+
+If you camera is not detected, you may need to use a newer version of libdc1394. In case of building the library on your own, the supported USB device ids are hard-coded in usb/control.c in `usb_products[]`. You can check your camera's VID/PID by calling `lsusb`, e.g. (for the Firefly MV camera):
+
+    ...
+    Bus 002 Device 003: ID 1e10:2001 Point Grey Research, Inc.
+    ...
 
  
 Credits

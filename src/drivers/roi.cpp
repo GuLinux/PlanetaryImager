@@ -106,6 +106,19 @@ ROIValidator::Rule ROIValidator::area_multiple(int factor, int width_step, int h
   };
 }
 
+ROIValidator::Rule ROIValidator::within_rect(const QRect &bounds)
+{
+    return [=](QRect &roi) {
+        if (roi.left() < bounds.left())
+            roi.setLeft(bounds.left());
+        if (roi.right() > bounds.right())
+            roi.setRight(bounds.right());
+        if (roi.top() < bounds.top())
+            roi.setTop(bounds.top());
+        if (roi.bottom() > bounds.bottom())
+            roi.setBottom(bounds.bottom());
+    };
+}
 
 QRect ROIValidator::flipped(const QRect &roi, bool horizontal, bool vertical, const QRect &context)
 {

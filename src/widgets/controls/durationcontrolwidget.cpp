@@ -46,7 +46,7 @@ DurationControlWidget::DurationControlWidget(QWidget *parent) : ControlWidget(pa
   connect(d->unit_combo, F_PTR(QComboBox, activated, int), this, bind(&Private::updateWidgets, d.get() ));
   d->unit_combo->addItem("s", 1.);
   d->unit_combo->addItem("ms", 1./1000.);
-  d->unit_combo->addItem("us", 1./1000./1000.);
+  d->unit_combo->addItem("\u00B5s", 1./1000./1000.); // \u00B5 = micro sign
 }
 
 DurationControlWidget::~DurationControlWidget()

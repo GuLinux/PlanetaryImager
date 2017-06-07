@@ -11,6 +11,7 @@ add_subdirectory(zwo_asi)
 add_subdirectory(simulator)
 add_subdirectory(qhy)
 add_subdirectory(v4l2)
+add_subdirectory(iidc)
 
 
 message(STATUS "Will build the following drivers:")
