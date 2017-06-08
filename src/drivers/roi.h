@@ -36,6 +36,7 @@ public:
   static Rule x_multiple(int factor);
   static Rule y_multiple(int factor);
   static Rule area_multiple(int factor, int width_step, int height_step, const QRect &fallback = QRect{});
+  static Rule within_rect(const QRect &bounds);
   static QRect flipped(const QRect &rect, bool horizontal, bool vertical, const QRect &context);
 private:
   DPTR

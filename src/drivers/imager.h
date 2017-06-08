@@ -98,6 +98,8 @@ struct Imager::Control {
   bool readonly = false;
   std::chrono::duration<double> duration_unit;
   bool is_exposure = false;
+  bool supports_onOff = false;
+  bool value_onOff = false;
   
   Control &set_id(const qlonglong &id) { this->id = id; return *this; }
   Control &set_name(const QString &name) { this->name= name; return *this; }

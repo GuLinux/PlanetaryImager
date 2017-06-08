@@ -16,6 +16,7 @@
  *
  */
 
+#include <boost/endian/conversion.hpp>
 #include "displayimage.h"
 #include "commons/configuration.h"
 #include "commons/fps_counter.h"
@@ -82,6 +83,9 @@ DPTR_IMPL(DisplayImage) {
   void bgr2rgb(const Frame::ptr &frame, cv::Mat &image);
   void rgb2rgb(const Frame::ptr &frame, cv::Mat &image);
   void gray2rgb(const Frame::ptr &frame, cv::Mat &image);
+
+  /// If 'src's endianess is not native, returns a copy of 'src' with bytes swapped; otherwise, returns 'src'
+  cv::Mat getEndianCorrectMat(const cv::Mat &src, Frame::ByteOrder srcByteOrder);
 };
 
 
@@ -215,6 +219,35 @@ void DisplayImage::create_qimages()
   QThread::currentThread()->quit();
 }
 
+cv::Mat DisplayImage::Private::getEndianCorrectMat(const cv::Mat &src, Frame::ByteOrder srcByteOrder)
+{
+    if (src.depth() == CV_16U &&
+        (boost::endian::order::native == boost::endian::order::little && srcByteOrder == Frame::ByteOrder::BigEndian ||
+         boost::endian::order::native == boost::endian::order::big    && srcByteOrder == Frame::ByteOrder::LittleEndian))
+    {
+        cv::Mat srcSwapped(src.rows, src.cols, src.type());
+
+        const uint16_t *srcRow = (const uint16_t *)src.data;
+        const ptrdiff_t srcStep = src.step[0];
+
+        uint16_t *destRow = (uint16_t *)srcSwapped.data;
+        const ptrdiff_t destStep = srcSwapped.step[0];
+
+        for (int row = 0; row < src.rows; row++)
+        {
+            for (int valIdx = 0; valIdx < src.cols * src.channels(); valIdx++)
+                destRow[valIdx] = boost::endian::endian_reverse(srcRow[valIdx]);
+
+            srcRow = (const uint16_t *)((const uint8_t *)srcRow + srcStep);
+            destRow = (uint16_t *)((uint8_t *)destRow + destStep);
+        }
+
+        return srcSwapped;
+    }
+    else
+        return src;
+}
+
 void DisplayImage::Private::bayer2rgb(const Frame::ptr& frame, cv::Mat& image)
 {
   if(! debayer) {
@@ -228,22 +261,22 @@ void DisplayImage::Private::bayer2rgb(const Frame::ptr& frame, cv::Mat& image)
     {Frame::Bayer_GRBG, CV_BayerGR2BGR},
     {Frame::Bayer_BGGR, CV_BayerBG2BGR},
   };
-  cv::cvtColor(frame->mat(), image, bayer_patterns[frame->colorFormat()]);
+  cv::cvtColor(getEndianCorrectMat(frame->mat(), frame->byteOrder()), image, bayer_patterns[frame->colorFormat()]);
 }
 
 void DisplayImage::Private::bgr2rgb(const Frame::ptr& frame, cv::Mat& image)
 {
-  cv::cvtColor(frame->mat(), image, CV_BGR2RGB);
+  cv::cvtColor(getEndianCorrectMat(frame->mat(), frame->byteOrder()), image, CV_BGR2RGB);
 }
 
 void DisplayImage::Private::gray2rgb(const Frame::ptr& frame, cv::Mat& image)
 {
-  cv::cvtColor(frame->mat(), image, CV_GRAY2RGB);
+  cv::cvtColor(getEndianCorrectMat(frame->mat(), frame->byteOrder()), image, CV_GRAY2RGB);
 }
 
 void DisplayImage::Private::rgb2rgb(const Frame::ptr& frame, cv::Mat& image)
 {
-  frame->mat().copyTo(image);
+  getEndianCorrectMat(frame->mat(), frame->byteOrder()).copyTo(image);
 }
 
 

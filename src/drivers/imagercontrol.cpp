@@ -56,11 +56,17 @@ bool Imager::Control::valid() const
 
 bool Imager::Control::same_value(const Imager::Control& other) const
 {
+    bool autoChanged = false;
+
     if(supports_auto && (value_auto || other.value_auto) ) {
       qDebug() << "comparing auto values only for control " << name << "[" << id << "]";
-      return other.value_auto == value_auto;
+
+      autoChanged = (other.value_auto != value_auto);
     }
-    return value == other.value;
+
+    const bool onOffChanged = (value_onOff != other.value_onOff);
+
+    return !autoChanged && !onOffChanged && value == other.value;
 }
 
 QVariantMap Imager::Control::asMap() const

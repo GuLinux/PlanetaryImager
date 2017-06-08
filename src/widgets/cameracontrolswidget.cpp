@@ -52,6 +52,7 @@ public:
   void restore();
   QString label() const;
   QCheckBox *autoValueWidget() const { return auto_value_widget; }
+  QCheckBox *onOffValueWidget() const { return on_off_value_widget; }
   QLabel *controlChangedLed() const { return control_changed_led; }
   ControlWidget *controlWidget() const { return control_widget; }
   void control_updated(const Imager::Control &changed_control);
@@ -65,9 +66,11 @@ private:
   void set_value(const Imager::Control & value);
   ControlWidget *control_widget;
   QCheckBox *auto_value_widget;
+  QCheckBox *on_off_value_widget;
   QLabel *control_changed_led;
 private slots:
   void auto_changed(bool isAuto);
+  void on_off_changed(bool isOn);
 signals:
   void changed();
 };
@@ -95,14 +98,19 @@ CameraControl::CameraControl(const Imager::Control& control, Imager* imager, QWi
   auto_value_widget = new QCheckBox("auto");
   auto_value_widget->setVisible(control.supports_auto);
   auto_value_widget->setChecked(control.value_auto);
+
+  on_off_value_widget = new QCheckBox("on");
+  on_off_value_widget->setVisible(control.supports_onOff);
+  on_off_value_widget->setChecked(control.value_onOff);
   
   connect(control_widget, &ControlWidget::valueChanged, [=](const QVariant &v) {
     new_value.value = v;
     emit changed();
   });
   connect(auto_value_widget, &QCheckBox::toggled, this, &CameraControl::auto_changed);
+  connect(on_off_value_widget, &QCheckBox::toggled, this, &CameraControl::on_off_changed);
   
-  control_widget->setEnabled(!control.readonly && ! control.value_auto);
+  control_widget->setEnabled(!control.readonly && ! control.value_auto && !(control.supports_onOff && !control.value_onOff));
   connect(imager, &Imager::changed, this, &CameraControl::control_updated, Qt::QueuedConnection);
 }
 
@@ -116,6 +124,14 @@ void CameraControl::auto_changed(bool isAuto)
   emit changed();
 }
 
+void CameraControl::on_off_changed(bool isOn)
+{
+    new_value.value_onOff = isOn;
+    control_widget->setEnabled(isOn && !auto_value_widget->isChecked());
+    auto_value_widget->setEnabled(isOn);
+    on_off_value_widget->setChecked(isOn);
+    emit changed();
+}
 
 void CameraControl::importing(const QVariantList& controls)
 {
@@ -269,7 +285,8 @@ CameraControlsWidget::CameraControlsWidget(Imager *imager, const Configuration::
     grid->addWidget(control->controlChangedLed(), row, 0);
     grid->addWidget(new QLabel(control->label()), row, 1);
     grid->addWidget(control->controlWidget(), row, 2);
-    grid->addWidget(control->autoValueWidget(), row++, 3);
+    grid->addWidget(control->autoValueWidget(), row, 3);
+    grid->addWidget(control->onOffValueWidget(), row++, 4);
   }
   connect(d->ui->restore, &QPushButton::clicked, this, bind(&Private::controls_changed, d.get()));
   grid->addItem(new QSpacerItem(0, 0, QSizePolicy::MinimumExpanding, QSizePolicy::Expanding), row, 0, 3);
