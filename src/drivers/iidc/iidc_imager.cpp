@@ -41,7 +41,13 @@ enum ControlID: qlonglong
     FrameRate
 };
 
-static std::map<dc1394color_coding_t, const char *> COLOR_CODING_NAME
+struct EnumHash
+{
+    template <typename T>
+    size_t operator()(T t) const { return static_cast<size_t>(t); }
+};
+
+static std::unordered_map<dc1394color_coding_t, const char *, EnumHash> COLOR_CODING_NAME
 {
     { DC1394_COLOR_CODING_MONO8,   "Mono 8-bit"           },
     { DC1394_COLOR_CODING_YUV411,  "YUV411"               },
@@ -65,8 +71,8 @@ DPTR_IMPL(IIDCImager)
 
     dc1394video_modes_t videoModes;
     dc1394video_mode_t currentVidMode;
-    std::unordered_map<dc1394video_mode_t, dc1394framerates_t> frameRates; ///< Key: non-scalable video mode from 'videoModes'
-    std::unordered_map<dc1394video_mode_t, dc1394format7mode_t> fmt7Info; ///< Key: scalable video mode form 'videoModes'
+    std::unordered_map<dc1394video_mode_t, dc1394framerates_t, EnumHash> frameRates; ///< Key: non-scalable video mode from 'videoModes'
+    std::unordered_map<dc1394video_mode_t, dc1394format7mode_t, EnumHash> fmt7Info; ///< Key: scalable video mode form 'videoModes'
 
     dc1394featureset_t features;
     std::unordered_map<dc1394feature_t, bool> hasAbsoluteControl;
