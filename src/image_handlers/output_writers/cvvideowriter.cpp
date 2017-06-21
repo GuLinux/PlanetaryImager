@@ -26,12 +26,12 @@ using namespace std;
 
 DPTR_IMPL(cvVideoWriter) {
   QString filename;
-  Configuration::ptr configuration;
+  const Configuration &configuration;
   cvVideoWriter *q;
   cv::VideoWriter videoWriter;
 };
 
-cvVideoWriter::cvVideoWriter(const Configuration::ptr & configuration ) : dptr(configuration->savefile(), configuration, this)
+cvVideoWriter::cvVideoWriter(const Configuration &configuration ) : dptr(configuration.savefile(), configuration, this)
 {
   qDebug() << "writing to " << filename();
 }
@@ -52,7 +52,7 @@ void cvVideoWriter::handle ( const Frame::ptr &frame )
   auto size = cv::Size{frame->mat().cols, frame->mat().rows};
   try {
     if(!d->videoWriter.isOpened())
-      d->videoWriter.open(d->filename.toStdString(), fourcc(d->configuration->video_codec().toStdString()), 25, size);
+      d->videoWriter.open(d->filename.toStdString(), fourcc(d->configuration.video_codec().toStdString()), 25, size);
     if(! d->videoWriter.isOpened()) {
       throw SaveImages::Error::openingFile(d->filename, QObject::tr("Check that output directory exists, and that the selected video encoder is supported by your system."));
     }

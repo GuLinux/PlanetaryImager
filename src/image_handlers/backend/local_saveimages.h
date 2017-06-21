@@ -27,7 +27,7 @@ class LocalSaveImages : public SaveImages
 {
   Q_OBJECT
 public:
-    LocalSaveImages(const Configuration::ptr &configuration, QObject *parent = 0);
+    LocalSaveImages(Configuration &configuration, QObject *parent = 0);
     ~LocalSaveImages();
     virtual void handle(const Frame::ptr &frame);
 public slots:

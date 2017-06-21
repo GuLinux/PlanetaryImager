@@ -25,7 +25,7 @@
 class cvVideoWriter : public FileWriter
 {
 public:
- cvVideoWriter(const Configuration::ptr &configuration);
+ cvVideoWriter(const Configuration &configuration);
  ~cvVideoWriter();
  QString filename() const override;
  void handle(const Frame::ptr &frame) override;

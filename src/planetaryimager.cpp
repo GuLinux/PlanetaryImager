@@ -27,7 +27,7 @@ DPTR_IMPL(PlanetaryImager) {
   Driver::ptr driver;
   ImageHandler::ptr imageHandler;
   SaveImages::ptr saveImages;
-  Configuration::ptr configuration;
+  Configuration &configuration;
   PlanetaryImager *q;
   
   Driver::Cameras cameras;
@@ -40,7 +40,7 @@ PlanetaryImager::PlanetaryImager(
   const Driver::ptr &driver,
   const ImageHandler::ptr &imageHandler,
   const SaveImages::ptr &saveImages,
-  const Configuration::ptr &configuration
+  Configuration &configuration
 ) : QObject{}, dptr(driver, imageHandler, saveImages, configuration, this)
 {
   d->initDevicesWatcher();
@@ -60,7 +60,7 @@ SaveImages::ptr PlanetaryImager::saveImages() const
   return d->saveImages;
 }
 
-Configuration::ptr PlanetaryImager::configuration() const
+Configuration &PlanetaryImager::configuration() const
 {
   return d->configuration;
 }

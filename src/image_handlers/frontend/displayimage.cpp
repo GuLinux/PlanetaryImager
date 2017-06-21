@@ -40,7 +40,7 @@ using namespace std;
 using namespace std::placeholders;
 
 DPTR_IMPL(DisplayImage) {
-  Configuration::ptr configuration;
+  const Configuration &configuration;
   DisplayImage *q;
   unique_ptr<fps_counter> capture_fps;
   atomic_bool recording;
@@ -64,7 +64,7 @@ DPTR_IMPL(DisplayImage) {
   
   atomic_bool debayer;
   
-//         d->sobel(*cv_image, d->configuration->sobel_blur_size(), d->configuration->sobel_kernel(), d->configuration->sobel_scale(), d->configuration->sobel_delta());
+//         d->sobel(*cv_image, d->configuration.sobel_blur_size(), d->configuration.sobel_kernel(), d->configuration.sobel_scale(), d->configuration.sobel_delta());
 
   QElapsedTimer elapsed;
   QRect imageRect;
@@ -96,7 +96,7 @@ DisplayImage::~DisplayImage()
 
 }
 
-DisplayImage::DisplayImage(const Configuration::ptr & configuration, QObject* parent)
+DisplayImage::DisplayImage(const Configuration &configuration, QObject* parent)
   : QObject(parent), dptr(configuration, this)
 {
   d->capture_fps.reset(new fps_counter([=](double fps){ emit displayFPS(fps);}, fps_counter::Elapsed) );
@@ -126,21 +126,21 @@ bool DisplayImage::Private::should_display_frame() const
 
 void DisplayImage::read_settings()
 {
-  d->limit_fps = d->recording ? d->configuration->limit_fps_recording() : d->configuration->limit_fps();
-  d->min_milliseconds_elapsed = 1000/(d->recording ? d->configuration->max_display_fps_recording() : d->configuration->max_display_fps() );
+  d->limit_fps = d->recording ? d->configuration.limit_fps_recording() : d->configuration.limit_fps();
+  d->min_milliseconds_elapsed = 1000/(d->recording ? d->configuration.max_display_fps_recording() : d->configuration.max_display_fps() );
   
-  d->edge_detection_sobel =  d->configuration->edge_algorithm() == Configuration::Sobel;
-  d->sobel_kernel = d->configuration->sobel_kernel();
-  d->sobel_blur_size = d->configuration->sobel_blur_size();
-  d->sobel_delta = d->configuration->sobel_delta();
-  d->sobel_scale = d->configuration->sobel_scale();
+  d->edge_detection_sobel =  d->configuration.edge_algorithm() == Configuration::Sobel;
+  d->sobel_kernel = d->configuration.sobel_kernel();
+  d->sobel_blur_size = d->configuration.sobel_blur_size();
+  d->sobel_delta = d->configuration.sobel_delta();
+  d->sobel_scale = d->configuration.sobel_scale();
 
-  d->edge_detection_canny =  d->configuration->edge_algorithm() == Configuration::Canny;
-  d->canny_blur = d->configuration->canny_blur_size();
-  d->canny_kernel_size = d->configuration->canny_kernel_size();
-  d->canny_low_threshold = d->configuration->canny_low_threshold();
-  d->canny_threshold_ratio = d->configuration->canny_threshold_ratio();
-  d->debayer = d->configuration->debayer();
+  d->edge_detection_canny =  d->configuration.edge_algorithm() == Configuration::Canny;
+  d->canny_blur = d->configuration.canny_blur_size();
+  d->canny_kernel_size = d->configuration.canny_kernel_size();
+  d->canny_low_threshold = d->configuration.canny_low_threshold();
+  d->canny_threshold_ratio = d->configuration.canny_threshold_ratio();
+  d->debayer = d->configuration.debayer();
 }
 
 

@@ -26,7 +26,7 @@ class SaveFileConfiguration : public QWidget
 {
     Q_OBJECT
 public:
-    SaveFileConfiguration(const Configuration::ptr &configuration, QWidget *parent = 0);
+    SaveFileConfiguration(Configuration &configuration, QWidget *parent = 0);
     ~SaveFileConfiguration();
 private:
     DPTR

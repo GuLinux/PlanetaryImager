@@ -28,7 +28,7 @@ class CameraControlsWidget : public QWidget
 {
 public:
 ~CameraControlsWidget();
-CameraControlsWidget(Imager *imager, const Configuration::ptr &configuration, const FilesystemBrowser::ptr &filesystemBrowser, QWidget* parent = 0);
+CameraControlsWidget(Imager *imager, Configuration &configuration, const FilesystemBrowser::ptr &filesystemBrowser, QWidget* parent = 0);
 
 private:
     DPTR

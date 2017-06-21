@@ -29,7 +29,7 @@ class DisplayImage : public QObject, public ImageHandler
 Q_OBJECT
 public:
     ~DisplayImage();
-    DisplayImage(const Configuration::ptr &configuration, QObject* parent = 0);
+    DisplayImage(const Configuration &configuration, QObject* parent = 0);
     virtual void handle(const Frame::ptr &frame);
     void setRecording(bool recording);
     QRect imageRect() const;

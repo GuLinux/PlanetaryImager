@@ -36,7 +36,7 @@ public:
     All,
   };
   ~Histogram();
-  Histogram(const Configuration::ptr &configuration, QObject* parent = 0);
+  Histogram(const Configuration &configuration, QObject* parent = 0);
   virtual void handle(const Frame::ptr &frame);
   void set_bins(std::size_t bins_size);
   void setRecording(bool recording);

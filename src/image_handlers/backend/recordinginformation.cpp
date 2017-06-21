@@ -34,12 +34,12 @@ DPTR_IMPL(RecordingInformation) {
   QVariantMap properties;
 };
 
-RecordingInformation::RecordingInformation(const Configuration::ptr & configuration, Imager *imager) : dptr(QDateTime::currentDateTime())
+RecordingInformation::RecordingInformation(const Configuration &configuration, Imager *imager) : dptr(QDateTime::currentDateTime())
 {
   d->properties["started"] = d->started.toString(Qt::ISODate);
   d->properties["camera"] = imager->name();
-  d->properties["observer"] = configuration->observer();
-  d->properties["telescope"] = configuration->telescope();
+  d->properties["observer"] = configuration.observer();
+  d->properties["telescope"] = configuration.telescope();
   QVariantList controls;
   for(auto control: imager->controls()) {
     controls.push_back(control.asMap());
@@ -75,12 +75,12 @@ RecordingInformation::~RecordingInformation()
 namespace {
   class JSONRecordingInformationWriter : public RecordingInformation::Writer {
   public:
-    JSONRecordingInformationWriter(const QString &file_base_name, const Configuration::ptr &configuration);
+    JSONRecordingInformationWriter(const QString &file_base_name, Configuration &configuration);
     virtual void write(const QVariantMap &information);
     ~JSONRecordingInformationWriter();
   private:
     const QString file_base_name;
-    Configuration::ptr configuration;
+    Configuration &configuration;
   };
   
   class TXTRecordingInformationWriter : public RecordingInformation::Writer {
@@ -131,7 +131,7 @@ namespace {
   }
 }
 
-JSONRecordingInformationWriter::JSONRecordingInformationWriter(const QString &file_base_name, const Configuration::ptr &configuration) 
+JSONRecordingInformationWriter::JSONRecordingInformationWriter(const QString &file_base_name, Configuration &configuration)
   : file_base_name{file_base_name}, configuration{configuration} {
 }
 
@@ -141,7 +141,7 @@ void JSONRecordingInformationWriter::write(const QVariantMap &information) {
 }
 
 JSONRecordingInformationWriter::~JSONRecordingInformationWriter() {
-  QMetaObject::invokeMethod(configuration.get(), "recording_preset_saved", Q_ARG(QString, "%1.json"_q % file_base_name));
+  QMetaObject::invokeMethod(&configuration, "recording_preset_saved", Q_ARG(QString, "%1.json"_q % file_base_name));
 }
 
 TXTRecordingInformationWriter::TXTRecordingInformationWriter(const QString &file_base_name) : file_base_name{file_base_name} {
@@ -166,7 +166,7 @@ void CompositeRecordingInformationWriter::write(const QVariantMap &information) 
 
 
 
-RecordingInformation::Writer::ptr RecordingInformation::json(const QString& file_base_name, const Configuration::ptr &configuration)
+RecordingInformation::Writer::ptr RecordingInformation::json(const QString& file_base_name, Configuration &configuration)
 {
   return make_shared<JSONRecordingInformationWriter>(file_base_name, configuration);
 }

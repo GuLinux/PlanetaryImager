@@ -48,7 +48,7 @@ int main(int argc, char** argv)
     commandLine.backend().daemon("127.0.0.1").process();
     LogHandler log_handler{commandLine};
     
-    auto configuration = make_shared<Configuration>();
+    Configuration configuration;
     auto save_images = make_shared<LocalSaveImages>(configuration);
     auto drivers = make_shared<SupportedDrivers>(commandLine.driversDirectories());
     
