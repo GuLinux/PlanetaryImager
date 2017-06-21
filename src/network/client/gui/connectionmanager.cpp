@@ -47,7 +47,7 @@ DPTR_IMPL(ConnectionManager) {
   NetworkDispatcher::ptr dispatcher;
   RemoteDriver::ptr remoteDriver;
   NetworkClient::ptr client;
-  RemoteConfiguration::ptr configuration;
+  unique_ptr<RemoteConfiguration> configuration;
   
   PlanetaryImagerMainWindow *mainWindow = nullptr;
   
@@ -68,7 +68,7 @@ ConnectionManager::ConnectionManager() : dptr(this)
   d->dispatcher = make_shared<NetworkDispatcher>();
   d->client = make_shared<NetworkClient>(d->dispatcher);
   d->remoteDriver = make_shared<RemoteDriver>(d->dispatcher);
-  d->configuration = make_shared<RemoteConfiguration>(d->dispatcher);
+  d->configuration = make_unique<RemoteConfiguration>(d->dispatcher);
   auto connectButton = d->ui->buttonBox->addButton(tr("Connect"), QDialogButtonBox::ApplyRole);
   connect(connectButton, &QPushButton::clicked, this, [=] {
     d->configuration->set_server_host(d->ui->host->text());
@@ -125,7 +125,7 @@ void ConnectionManager::Private::onConnected()
 {
   ui->status->clear();
   auto imageHandlers = make_shared<ImageHandlers>();
-  auto planetaryImager = make_shared<PlanetaryImager>(remoteDriver, imageHandlers, make_shared<RemoteSaveImages>(dispatcher), configuration);
+  auto planetaryImager = make_shared<PlanetaryImager>(remoteDriver, imageHandlers, make_shared<RemoteSaveImages>(dispatcher), *configuration);
   mainWindow = new PlanetaryImagerMainWindow{planetaryImager, imageHandlers, make_shared<RemoteFilesystemBrowser>(dispatcher)};
   mainWindow->show();
   q->hide();

@@ -27,7 +27,7 @@
 class ConfigurationForwarder : public NetworkReceiver
 {
 public:
-  ConfigurationForwarder(const Configuration::ptr &configuration, const NetworkDispatcher::ptr &dispatcher);
+  ConfigurationForwarder(Configuration &configuration, const NetworkDispatcher::ptr &dispatcher);
   ~ConfigurationForwarder();
 private:
   DPTR

@@ -118,8 +118,8 @@ PlanetaryImagerMainWindow::~PlanetaryImagerMainWindow()
 
 void PlanetaryImagerMainWindow::Private::saveState()
 {
-  planetaryImager->configuration()->set_dock_status(q->saveState());
-  planetaryImager->configuration()->set_main_window_geometry(q->saveGeometry());
+  planetaryImager->configuration().set_dock_status(q->saveState());
+  planetaryImager->configuration().set_main_window_geometry(q->saveGeometry());
 }
 
 
@@ -155,7 +155,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     d->ui->image->layout()->setSpacing(0);
     d->ui->image->layout()->addWidget(d->image_widget = new ZoomableImage(false));
 #ifdef HAVE_QT5_OPENGL // TODO: make configuration item
-    if(d->planetaryImager->configuration()->opengl())
+    if(d->planetaryImager->configuration().opengl())
       d->image_widget->setOpenGL();
 #endif
     d->image_widget->scene()->setBackgroundBrush(QBrush{Qt::black, Qt::Dense4Pattern});
@@ -184,8 +184,8 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     d->image_widget->toolbar()->setFloatable(true);
     d->image_widget->toolbar()->setMovable(true);
     
-    restoreGeometry(d->planetaryImager->configuration()->main_window_geometry());
-    restoreState(d->planetaryImager->configuration()->dock_status());
+    restoreGeometry(d->planetaryImager->configuration().main_window_geometry());
+    restoreState(d->planetaryImager->configuration().dock_status());
     connect(d->ui->actionAbout, &QAction::triggered, bind(&QMessageBox::about, this, tr("About"),
 							  tr("%1 version %2.\nFast imaging capture software for planetary imaging").arg(qApp->applicationDisplayName())
 							 .arg(qApp->applicationVersion())));
@@ -224,11 +224,11 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     setupDockWidget(d->ui->actionCamera_Settings, d->ui->camera_settings);
     setupDockWidget(d->ui->actionRecording, d->ui->recording);
     setupDockWidget(d->ui->actionHistogram, d->ui->histogram);
-    if(! d->planetaryImager->configuration()->widgets_setup_first_run() ) {
+    if(! d->planetaryImager->configuration().widgets_setup_first_run() ) {
       tabifyDockWidget(d->ui->chipInfoWidget, d->ui->camera_settings);
       tabifyDockWidget(d->ui->chipInfoWidget, d->ui->histogram);
       tabifyDockWidget(d->ui->chipInfoWidget, d->ui->recording);
-      d->planetaryImager->configuration()->set_widgets_setup_first_run(true);
+      d->planetaryImager->configuration().set_widgets_setup_first_run(true);
     }
     qDebug() << "file " << logFilePath << "exists: " << QFile::exists(logFilePath);
     d->ui->actionOpen_log_file_folder->setMenuRole(QAction::ApplicationSpecificRole);

@@ -35,7 +35,7 @@
 using namespace std;
 
 DPTR_IMPL(Histogram) {
-  Configuration::ptr configuration;
+  const Configuration &configuration;
   Histogram *q;
   atomic_bool recording;
   atomic_bool histogram_disable_on_recording;
@@ -73,7 +73,7 @@ Histogram::~Histogram()
 {
 }
 
-Histogram::Histogram(const Configuration::ptr &configuration, QObject* parent) : QObject(parent), dptr(configuration, this)
+Histogram::Histogram(const Configuration &configuration, QObject* parent) : QObject(parent), dptr(configuration, this)
 {
   d->last.start();
   d->recording = false;
@@ -216,9 +216,9 @@ void Histogram::setRecording(bool recording)
 
 void Histogram::read_settings()
 {
-  d->histogram_disable_on_recording = d->configuration->histogram_disable_on_recording();
-  d->histogram_timeout = d->configuration->histogram_timeout();
-  d->histogram_timeout_recording = d->configuration->histogram_timeout_recording();
+  d->histogram_disable_on_recording = d->configuration.histogram_disable_on_recording();
+  d->histogram_timeout = d->configuration.histogram_timeout();
+  d->histogram_timeout_recording = d->configuration.histogram_timeout_recording();
 }
 
 

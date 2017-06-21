@@ -50,7 +50,7 @@ int main(int argc, char** argv)
     
     LogHandler log_handler{commandLine};
     
-    auto configuration = make_shared<Configuration>();
+    Configuration configuration;
     auto driver = make_shared<SupportedDrivers>(commandLine.driversDirectories());
     auto dispatcher = make_shared<NetworkDispatcher>();
     auto save_images = make_shared<LocalSaveImages>(configuration);

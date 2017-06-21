@@ -45,7 +45,7 @@ class WriterThreadWorker;
 };
 
 DPTR_IMPL(LocalSaveImages) {
-    Configuration::ptr configuration;
+    Configuration &configuration;
     WriterThreadWorker *worker;
     QThread *recordingThread;
     LocalSaveImages *q;
@@ -68,7 +68,7 @@ struct RecordingParameters {
   int64_t max_size;
   bool timelapse;
   qlonglong timelapse_msecs;
-  Configuration::ptr configuration;
+  Configuration *configuration = nullptr;
   RecordingInformation::Writer::ptr recording_information_writer(const FileWriter::Ptr &file_writer) const;
 };
 
@@ -77,7 +77,7 @@ RecordingInformation::Writer::ptr RecordingParameters::recording_information_wri
   if(write_txt_info)
     writers.push_back(RecordingInformation::txt(file_writer->filename()));
   if(write_json_info)
-    writers.push_back(RecordingInformation::json(file_writer->filename(), configuration));
+    writers.push_back(RecordingInformation::json(file_writer->filename(), *configuration));
   return RecordingInformation::composite(writers);
 }
 
@@ -264,14 +264,14 @@ void WriterThreadWorker::start(const RecordingParameters & recording_parameters,
 
 FileWriter::Factory LocalSaveImages::Private::writerFactory()
 {
-  if(configuration->savefile().isEmpty()) {
+  if(configuration.savefile().isEmpty()) {
     return {};
   }
 
-  return FileWriter::factories()[configuration->save_format()];
+  return FileWriter::factories()[configuration.save_format()];
 }
 
-LocalSaveImages::LocalSaveImages(const Configuration::ptr & configuration, QObject* parent)
+LocalSaveImages::LocalSaveImages(Configuration &configuration, QObject* parent)
   : dptr(configuration, new WriterThreadWorker(this), new QThread, this)
 {
   d->worker->moveToThread(d->recordingThread);
@@ -298,21 +298,21 @@ void LocalSaveImages::startRecording(Imager *imager)
   auto writerFactory = d->writerFactory();
   if(writerFactory) {
     RecordingInformation::ptr recording_information;
-    
+
     RecordingParameters recording{
-      bind(writerFactory, imager->name(), d->configuration), 
+      bind(writerFactory, imager->name(), &d->configuration),
       make_shared<RecordingInformation>(d->configuration, imager),
-      d->configuration->recording_limit_type(),
-      d->configuration->recording_frames_limit(),
-      chrono::duration<double>{d->configuration->recording_seconds_limit()},
-      d->configuration->save_info_file(),
-      d->configuration->save_json_info_file(),
+      d->configuration.recording_limit_type(),
+      d->configuration.recording_frames_limit(),
+      chrono::duration<double>{d->configuration.recording_seconds_limit()},
+      d->configuration.save_info_file(),
+      d->configuration.save_json_info_file(),
       0,
-      d->configuration->timelapse_mode(),
-      d->configuration->timelapse_msecs(),
-      d->configuration
-    };    
-    QMetaObject::invokeMethod(d->worker, "start", Q_ARG(RecordingParameters, recording), Q_ARG(qlonglong, d->configuration->max_memory_usage() ));    
+      d->configuration.timelapse_mode(),
+      d->configuration.timelapse_msecs(),
+      &d->configuration
+    };
+    QMetaObject::invokeMethod(d->worker, "start", Q_ARG(RecordingParameters, recording), Q_ARG(qlonglong, d->configuration.max_memory_usage() ));
   }
 }
 

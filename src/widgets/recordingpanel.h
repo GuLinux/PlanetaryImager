@@ -29,7 +29,7 @@ class RecordingPanel : public QWidget
     Q_OBJECT
 public:
     ~RecordingPanel();
-    RecordingPanel(const Configuration::ptr &configuration, const FilesystemBrowser::ptr &filesystemBrowser, QWidget* parent = 0);
+    RecordingPanel(Configuration &configuration, const FilesystemBrowser::ptr &filesystemBrowser, QWidget* parent = 0);
 public slots:
   void recording(bool recording = false, const QString &filename = {});
   void saveFPS(double fps);

@@ -27,7 +27,6 @@ class Configuration : public QObject
 {
   Q_OBJECT
 public:
-    typedef std::shared_ptr<Configuration> ptr;
     Configuration();
     ~Configuration();
 #define declare_setting(name, type) \

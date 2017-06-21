@@ -30,14 +30,14 @@ DPTR_IMPL(SaveFileConfiguration) {
     unique_ptr<Ui::SaveFileConfiguration> ui;
 };
 
-SaveFileConfiguration::SaveFileConfiguration(const Configuration::ptr & configuration, QWidget* parent) : dptr(this)
+SaveFileConfiguration::SaveFileConfiguration(Configuration &configuration, QWidget* parent) : dptr(this)
 {
     d->ui.reset(new Ui::SaveFileConfiguration);
     d->ui->setupUi(this);
-    d->ui->separator->setText(configuration->save_file_prefix_suffix_separator());
-    connect(d->ui->separator, &QLineEdit::textChanged, bind(&Configuration::set_save_file_prefix_suffix_separator, configuration.get(), _1));
-    d->ui->prefixes->setText(configuration->save_file_avail_prefixes().join(","));
-    d->ui->suffixes->setText(configuration->save_file_avail_suffixes().join(","));
+    d->ui->separator->setText(configuration.save_file_prefix_suffix_separator());
+    connect(d->ui->separator, &QLineEdit::textChanged, bind(&Configuration::set_save_file_prefix_suffix_separator, &configuration, _1));
+    d->ui->prefixes->setText(configuration.save_file_avail_prefixes().join(","));
+    d->ui->suffixes->setText(configuration.save_file_avail_suffixes().join(","));
     auto split = [](const QString &s) {
         QStringList splitted = s.split(",");
         for_each(splitted.begin(), splitted.end(), [](QString &s) { s = s.trimmed(); });
@@ -45,8 +45,8 @@ SaveFileConfiguration::SaveFileConfiguration(const Configuration::ptr & configur
         splitted.erase(remove_if(splitted.begin(), splitted.end(), bind(&QString::isEmpty, _1)), splitted.end());
         return splitted;
     };
-    connect(d->ui->prefixes, &QLineEdit::textChanged, [&, split](const QString &v) { configuration->set_save_file_avail_prefixes(split(v)); });
-    connect(d->ui->suffixes, &QLineEdit::textChanged, [&, split](const QString &v) { configuration->set_save_file_avail_suffixes(split(v)); });
+    connect(d->ui->prefixes, &QLineEdit::textChanged, [&, split](const QString &v) { configuration.set_save_file_avail_prefixes(split(v)); });
+    connect(d->ui->suffixes, &QLineEdit::textChanged, [&, split](const QString &v) { configuration.set_save_file_avail_suffixes(split(v)); });
 }
 
 SaveFileConfiguration::~SaveFileConfiguration()

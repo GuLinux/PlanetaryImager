@@ -24,7 +24,7 @@ using namespace std;
 using namespace std::placeholders;
 
 DPTR_IMPL(ConfigurationForwarder) {
-  Configuration::ptr configuration;
+  Configuration &configuration;
   ConfigurationForwarder *q;
   void get(const NetworkPacket::ptr &packet);
   void set(const NetworkPacket::ptr &packet);
@@ -39,17 +39,17 @@ DPTR_IMPL(ConfigurationForwarder) {
 };
 
 #define register_conf_function(name, type) d->names[#name] = Private::ConfigurationFunctions{ \
-  [this] { return QVariant{ d->configuration->name() }; }, \
-  [this](const QVariant &v) { d->configuration->set_ ##name( v.value<type>() ); }, \
-  [this] { d->configuration->reset_ ##name(); }, \
+  [this] { return QVariant{ d->configuration.name() }; }, \
+  [this](const QVariant &v) { d->configuration.set_ ##name( v.value<type>() ); }, \
+  [this] { d->configuration.reset_ ##name(); }, \
 };
 #define register_conf_function_enum(name, type) d->names[#name] = Private::ConfigurationFunctions{ \
-  [this] { return QVariant{ static_cast<int>(d->configuration->name() ) }; }, \
-  [this](const QVariant &v) { d->configuration->set_ ##name( static_cast<type>(v.value<int>() ) ); }, \
-  [this] { d->configuration->reset_ ##name(); }, \
+  [this] { return QVariant{ static_cast<int>(d->configuration.name() ) }; }, \
+  [this](const QVariant &v) { d->configuration.set_ ##name( static_cast<type>(v.value<int>() ) ); }, \
+  [this] { d->configuration.reset_ ##name(); }, \
 };
 
-ConfigurationForwarder::ConfigurationForwarder(const Configuration::ptr& configuration, const NetworkDispatcher::ptr& dispatcher) : NetworkReceiver{dispatcher}, dptr(configuration, this)
+ConfigurationForwarder::ConfigurationForwarder(Configuration &configuration, const NetworkDispatcher::ptr& dispatcher) : NetworkReceiver{dispatcher}, dptr(configuration, this)
 {
   register_handler(ConfigurationProtocol::Get, bind(&Private::get, d.get(), _1));
   register_handler(ConfigurationProtocol::Set, bind(&Private::set, d.get(), _1));

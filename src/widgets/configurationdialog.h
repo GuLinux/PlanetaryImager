@@ -28,7 +28,7 @@ class ConfigurationDialog : public QDialog
     Q_OBJECT
 public:
     ~ConfigurationDialog();
-    ConfigurationDialog(const Configuration::ptr &configuration, QWidget* parent = 0);
+    ConfigurationDialog(Configuration &configuration, QWidget* parent = 0);
 
 private:
   DPTR

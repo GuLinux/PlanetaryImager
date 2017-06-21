@@ -36,13 +36,13 @@ public:
         const Driver::ptr &driver,
         const ImageHandler::ptr &imageHandler,
         const SaveImages::ptr &saveImages,
-        const Configuration::ptr &configuration
+        Configuration &configuration
     );
     ~PlanetaryImager();
   Driver::Cameras cameras() const;
   Imager *imager() const;
   SaveImages::ptr saveImages() const;
-  Configuration::ptr configuration() const;
+  Configuration &configuration() const;
   
 public slots:
   void scanCameras();
