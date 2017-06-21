@@ -208,6 +208,12 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
 
     connect(d->configurationDialog, &QDialog::accepted, this, bind(&DisplayImage::read_settings, d->displayImage), Qt::DirectConnection);
     connect(d->configurationDialog, &QDialog::accepted, this, bind(&Histogram::read_settings, d->histogram), Qt::DirectConnection);
+    connect(d->configurationDialog, &QDialog::accepted, this,
+            [this]() {
+                auto *imager = d->planetaryImager->imager();
+                if (imager) imager->setCaptureEndianess(d->planetaryImager->configuration().capture_endianess());
+            });
+
     connect(d->recording_panel, &RecordingPanel::start, [=]{d->planetaryImager->saveImages()->startRecording(d->imager);});
     connect(d->recording_panel, &RecordingPanel::stop, bind(&SaveImages::endRecording, d->planetaryImager->saveImages()));
     connect(d->recording_panel, &RecordingPanel::setPaused, bind(&SaveImages::setPaused, d->planetaryImager->saveImages(), _1));

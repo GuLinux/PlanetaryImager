@@ -29,6 +29,7 @@ class IIDCImagerWorker: public ImagerThread::Worker
     dc1394camera_t *camera;
     dc1394video_frame_t *nativeFrame; ///< The most recently captured frame
     dc1394video_mode_t vidMode;
+    dc1394color_coding_t pixFmt;
 
     struct
     {
@@ -60,7 +61,7 @@ public:
 
     static constexpr uint32_t NUM_DMA_BUFFERS = 4;
 
-    IIDCImagerWorker(dc1394camera_t *_camera, dc1394video_mode_t _vidMode,
+    IIDCImagerWorker(dc1394camera_t *_camera, dc1394video_mode_t _vidMode, dc1394color_coding_t _pixFmt,
                      /// Must be already validated; also used as the initial frame size for Format7 modes
                      const QRect &roi);
 

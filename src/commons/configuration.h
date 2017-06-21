@@ -107,6 +107,10 @@ public:
     declare_setting(deprecated_video_warning_shown, bool)
     declare_setting(recording_pause_stops_timer, bool)
     
+    /// Defines how to interpret multi-byte data coming from camera (CameraDefault = as reported by the camera; may be unreliable)
+    enum class CaptureEndianess { CameraDefault, Little, Big };
+    declare_setting(capture_endianess, CaptureEndianess)
+
     struct Preset {
       QString path;
       QString name;

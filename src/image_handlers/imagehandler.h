@@ -20,13 +20,16 @@
 
 #include <memory>
 #include <QList>
-#include<algorithm>
+#include <algorithm>
 #include "commons/frame.h"
 
 class ImageHandler {
+protected:
+    virtual void doHandle(Frame::ptr frame) = 0;
+
 public:
   typedef std::shared_ptr<ImageHandler> ptr;
-  virtual void handle(const Frame::ptr &frame) = 0;
+  void handle(Frame::ptr frame) { doHandle(frame); }
 };
 
 class ImageHandlers : public ImageHandler {
@@ -34,13 +37,15 @@ public:
   typedef std::shared_ptr<ImageHandlers> ptr;
   ImageHandlers(const QList<ImageHandler::ptr> &handlers = {}) : handlers{handlers} {}
   
-  virtual void handle(const Frame::ptr &frame) {
-    for(auto handler: handlers)
-      handler->handle(frame);
-  }
   void push_back(const ImageHandler::ptr &handler) { handlers.push_back(handler); }
   void clear() { handlers.clear(); }
 private:
+
+  void doHandle(Frame::ptr frame) override {
+    for(auto handler: handlers)
+      handler->handle(frame);
+  }
+
   QList<ImageHandler::ptr> handlers;
 };
 #endif

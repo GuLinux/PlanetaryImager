@@ -22,13 +22,17 @@
 
 
 IIDCImagerWorker::IIDCImagerWorker(dc1394camera_t *_camera, dc1394video_mode_t _vidMode,
-                                   const QRect &roi)
-: camera(_camera), nativeFrame(nullptr), vidMode(_vidMode)
+                                   dc1394color_coding_t _pixFmt, const QRect &roi)
+: camera(_camera), nativeFrame(nullptr), vidMode(_vidMode), pixFmt(_pixFmt)
 {
     frameInfo.initialized = false;
 
     IIDC_CHECK << dc1394_video_set_mode(camera, vidMode)
                << "Set video mode";
+
+    if (dc1394_is_video_mode_scalable(vidMode))
+        IIDC_CHECK << dc1394_format7_set_color_coding(camera, vidMode, pixFmt)
+                   << "Format7 set color coding";
 
     qDebug() << "Requested to set ROI to " << roi.x() << ", " << roi.y() << ", " << roi.width() << ", " << roi.height();
 
@@ -197,3 +201,4 @@ void IIDCImagerWorker::setROI(const QRect &roi)
                    << "Set ROI";
     }
 }
+

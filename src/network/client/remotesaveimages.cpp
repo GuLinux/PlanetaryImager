@@ -50,10 +50,6 @@ void RemoteSaveImages::endRecording()
   dispatcher()->queue_send(SaveFileProtocol::packetEndRecording());
 }
 
-void RemoteSaveImages::handle(const Frame::ptr& frame)
-{
-}
-
 void RemoteSaveImages::setPaused(bool paused)
 {
   dispatcher()->queue_send(SaveFileProtocol::setPaused(paused));

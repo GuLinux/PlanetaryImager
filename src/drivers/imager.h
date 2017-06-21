@@ -20,6 +20,7 @@
 #define PL_IMG_IMAGER_H
 
 #include <memory>
+#include <commons/configuration.h>
 #include <chrono>
 #include <QObject>
 #include <QDebug>
@@ -45,6 +46,8 @@ public:
   virtual Properties properties() const = 0;
   bool supports(Capability capability) const;
   
+  void setCaptureEndianess(Configuration::CaptureEndianess captureEndianess);
+
 protected:
   void restart(const ImagerThread::Worker::factory &worker);
   std::shared_ptr<QWaitCondition> push_job_on_thread(const ImagerThread::Job &job);

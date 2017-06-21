@@ -28,9 +28,11 @@ public:
  cvVideoWriter(const Configuration &configuration);
  ~cvVideoWriter();
  QString filename() const override;
- void handle(const Frame::ptr &frame) override;
 
 private:
+
+    void doHandle(Frame::ptr frame) override;
+
     DPTR
 };
 

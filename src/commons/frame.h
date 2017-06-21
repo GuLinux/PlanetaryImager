@@ -58,6 +58,7 @@ public:
   typedef std::chrono::duration<double> Seconds;
   Seconds exposure() const;
   void set_exposure(const Seconds &exposure);
+  void overrideByteOrder(ByteOrder byteOrder);
 private:
   DPTR
 };

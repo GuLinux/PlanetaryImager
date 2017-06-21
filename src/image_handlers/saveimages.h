@@ -32,7 +32,7 @@ public:
   class Error;
     SaveImages(QObject *parent = 0);
     virtual ~SaveImages();
-    virtual void handle(const Frame::ptr &frame) = 0;
+
 public slots:
   virtual void startRecording(Imager *imager) = 0;
   virtual void endRecording() = 0;

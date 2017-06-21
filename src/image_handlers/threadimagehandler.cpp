@@ -28,12 +28,13 @@ DPTR_IMPL(ThreadImageHandler) {
   unique_ptr<Worker> worker;
 };
 
-class ThreadImageHandler::Private::Worker : public QObject, public ImageHandler {
+class ThreadImageHandler::Private::Worker : public QObject {
   Q_OBJECT
+
 public:
   Worker(const ImageHandler::ptr &imageHandler, QObject *parent = nullptr);
 public slots:
-  virtual void handle(const Frame::ptr &frame);
+  void handle(Frame::ptr frame);
 private:
   ImageHandler::ptr imageHandler;
 };
@@ -44,7 +45,7 @@ ThreadImageHandler::Private::Worker::Worker(const ImageHandler::ptr& imageHandle
 }
 
 
-void ThreadImageHandler::Private::Worker::handle(const Frame::ptr& frame)
+void ThreadImageHandler::Private::Worker::handle(Frame::ptr frame)
 {
   imageHandler->handle(frame);
 }
@@ -63,7 +64,7 @@ ThreadImageHandler::~ThreadImageHandler()
   d->thread->wait();
 }
 
-void ThreadImageHandler::handle(const Frame::ptr& frame)
+void ThreadImageHandler::doHandle(Frame::ptr frame)
 {
   QMetaObject::invokeMethod(d->worker.get(), "handle", Qt::QueuedConnection, Q_ARG(Frame::ptr, frame));
 }

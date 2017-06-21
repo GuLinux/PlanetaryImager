@@ -28,9 +28,11 @@ public:
  SERWriter(const QString &deviceName, const Configuration &configuration);
  ~SERWriter();
  QString filename() const override;
- void handle(const Frame::ptr &frame) override;
 
 private:
+
+    void doHandle(Frame::ptr frame) override;
+
    DPTR
 };
 

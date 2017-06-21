@@ -29,7 +29,6 @@
 #include "Qt/strings.h"
 #include <unordered_map>
 
-
 using namespace std::chrono;
 
 enum ControlID: qlonglong
@@ -38,7 +37,10 @@ enum ControlID: qlonglong
 
     // Used to select one of the fixed framerates from the 'dc1394framerate_t' enum (only for non-scalable = non-Format7 modes);
     // a camera may also support DC1394_FEATURE_FRAME_RATE, which can change the frame rate independently and with finer granularity
-    FrameRate
+    FrameRate,
+
+    // Used to select pixel format (color coding) for the current video mode (non-Format7 modes have only one pixel format)
+    PixelFormat
 };
 
 struct EnumHash
@@ -69,8 +71,9 @@ DPTR_IMPL(IIDCImager)
 
     std::unique_ptr<dc1394camera_t, Deleters::camera> camera;
 
-    dc1394video_modes_t videoModes;
-    dc1394video_mode_t currentVidMode;
+    dc1394video_modes_t  videoModes;
+    dc1394video_mode_t   currentVidMode;
+    dc1394color_coding_t currentPixFmt;
     std::unordered_map<dc1394video_mode_t, dc1394framerates_t, EnumHash> frameRates; ///< Key: non-scalable video mode from 'videoModes'
     std::unordered_map<dc1394video_mode_t, dc1394format7mode_t, EnumHash> fmt7Info; ///< Key: scalable video mode form 'videoModes'
 
@@ -91,7 +94,12 @@ DPTR_IMPL(IIDCImager)
 
     void updateWorkerExposureTimeout();
 
+    /// Returns a combo control listing all video modes, with 'currentVidMode' selected
     Control enumerateVideoModes();
+
+    /// Returns a combo control listing all pixel formats for 'currentVidMode'
+    Control enumerateCurrentModePixelFormats();
+
 
     void getRawRange(dc1394feature_t id, uint32_t &rawMin, uint32_t &rawMax);
 
@@ -119,6 +127,26 @@ void IIDCImager::Private::updateWorkerExposureTimeout()
 //TODO: implement this
 }
 
+Imager::Control IIDCImager::Private::enumerateCurrentModePixelFormats()
+{
+    auto pixelFormats = Imager::Control{ ControlID::PixelFormat, "Pixel Format", Control::Combo };
+
+    if (dc1394_is_video_mode_scalable(currentVidMode))
+    {
+        const auto &f7info = fmt7Info[currentVidMode];
+
+        for (int i = 0; i < f7info.color_codings.num; i++)
+            pixelFormats.add_choice_enum(COLOR_CODING_NAME[f7info.color_codings.codings[i]], f7info.color_codings.codings[i]);
+    }
+    else
+        pixelFormats.add_choice_enum(COLOR_CODING_NAME[currentPixFmt], currentPixFmt);
+
+    pixelFormats.set_value_enum(currentPixFmt);
+    pixelFormats.readonly = (pixelFormats.choices.size() == 1);
+
+    return pixelFormats;
+}
+
 Imager::Control IIDCImager::Private::enumerateVideoModes()
 {
     auto videoMode = Imager::Control{ ControlID::VideoMode, "Video Mode", Control::Combo };
@@ -138,8 +166,7 @@ Imager::Control IIDCImager::Private::enumerateVideoModes()
         // FIXME: does not compile if COLOR_CODING_NAME is 'const'; possibly a problem with _q or %
         QString modeName = "%1x%2 %3"_q % width % height % COLOR_CODING_NAME[coding];
 
-        if (vidMode >= DC1394_VIDEO_MODE_FORMAT7_MIN &&
-            vidMode <= DC1394_VIDEO_MODE_FORMAT7_MAX)
+        if (dc1394_is_video_mode_scalable(vidMode))
         {
             // Format7 modes may have additional capabilities:
             //   - Frame size other than the fixed sizes in 'dc1394video_mode_t' enum
@@ -151,8 +178,8 @@ Imager::Control IIDCImager::Private::enumerateVideoModes()
 
             const dc1394format7mode_t &fmt7 = fmt7Info[vidMode];
 
-            modeName = "%1x%2 %3 (FMT7: %4)"_q % fmt7.max_size_x % fmt7.max_size_y
-                                               % COLOR_CODING_NAME[coding] %  (vidMode - DC1394_VIDEO_MODE_FORMAT7_0);
+            modeName = "%1x%2 (FMT7: %3)"_q % fmt7.max_size_x % fmt7.max_size_y
+                                            % (vidMode - DC1394_VIDEO_MODE_FORMAT7_0);
         }
 
         videoMode.add_choice_enum(modeName, vidMode);
@@ -225,6 +252,11 @@ IIDCImager::IIDCImager(std::unique_ptr<dc1394camera_t, Deleters::camera> camera,
     d->currentVidMode = d->videoModes.modes[0];
     d->changeVideoMode(d->currentVidMode);
     d->setHighestFrameRate(d->currentVidMode);
+    if (dc1394_is_video_mode_scalable(d->currentVidMode))
+        d->currentPixFmt = d->fmt7Info[d->currentVidMode].color_codings.codings[0];
+    else
+        IIDC_CHECK << dc1394_get_color_coding_from_video_mode(d->camera.get(), d->currentVidMode, &d->currentPixFmt)
+                   << "Get color coding from video mode";
 
     IIDC_CHECK << dc1394_feature_get_all(d->camera.get(), &d->features)
                << "Get all features";
@@ -306,6 +338,8 @@ void IIDCImager::Private::changeVideoMode(dc1394video_mode_t newMode)
         maxFrameSize = { (int)fmt7.max_size_x, (int)fmt7.max_size_y };
 
         currentROI = { 0, 0, maxFrameSize.width(), maxFrameSize.height() };
+
+        currentPixFmt = fmt7.color_codings.codings[0];
     }
     else
     {
@@ -316,6 +350,9 @@ void IIDCImager::Private::changeVideoMode(dc1394video_mode_t newMode)
         currentROI = { 0, 0, (int)width, (int)height };
 
         roiValidator = std::make_shared<ROIValidator>(std::list<ROIValidator::Rule>{ });
+
+        IIDC_CHECK << dc1394_get_color_coding_from_video_mode(camera.get(), newMode, &currentPixFmt)
+                   << "Get color coding from video mode";
     }
 
     currentVidMode = newMode;
@@ -339,6 +376,7 @@ void IIDCImager::setControl(const Imager::Control& control)
             Imager::Control emptyFrameRatesCtrl{ ControlID::FrameRate, "Fixed Frame Rate", Control::Combo };
             emptyFrameRatesCtrl.add_choice("N/A", 0);
             emptyFrameRatesCtrl.set_value(0);
+            emptyFrameRatesCtrl.readonly = true;
             emit changed(emptyFrameRatesCtrl);
         }
         else
@@ -346,6 +384,8 @@ void IIDCImager::setControl(const Imager::Control& control)
             d->setHighestFrameRate(newMode);
             emit changed(d->getFrameRates(newMode));
         }
+
+        emit changed(d->enumerateCurrentModePixelFormats());
     }
     else if (control.id == ControlID::FrameRate)
     {
@@ -353,14 +393,12 @@ void IIDCImager::setControl(const Imager::Control& control)
         {
             IIDC_CHECK << dc1394_video_set_framerate(d->camera.get(), control.get_value_enum<dc1394framerate_t>())
                        << "Set frame rate";
-
-            // Changing frame rate changes the shutter range; need to inform the GUI
-            if (d->ctrlShutter.valid())
-            {
-                d->updateShutterCtrl();
-                emit changed(d->ctrlShutter);
-            }
         }
+    }
+    else if (control.id == ControlID::PixelFormat)
+    {
+        d->currentPixFmt = control.get_value_enum<dc1394color_coding_t>();
+        startLive();
     }
     else
     {
@@ -410,9 +448,13 @@ void IIDCImager::setControl(const Imager::Control& control)
 
     emit changed(control);
 
-    if (DC1394_FEATURE_FRAME_RATE == control.id && d->ctrlShutter.valid())
+    if (d->ctrlShutter.valid() &&
+        (DC1394_FEATURE_FRAME_RATE == control.id ||
+         ControlID::FrameRate      == control.id ||
+         ControlID::VideoMode      == control.id ||
+         ControlID::PixelFormat    == control.id))
     {
-        // Changing frame rate changes the shutter range; need to inform the GUI
+        // Changing frame rate, video mode or pixel format may change the shutter range; need to inform the GUI
 
         d->updateShutterCtrl();
         emit changed(d->ctrlShutter);
@@ -469,6 +511,8 @@ Imager::Controls IIDCImager::controls() const
     Controls controls;
 
     controls.push_back(std::move(d->enumerateVideoModes()));
+
+    controls.push_back(std::move(d->enumerateCurrentModePixelFormats()));
 
     if (DC1394_FALSE == dc1394_is_video_mode_scalable(d->currentVidMode))
         controls.push_back(d->getFrameRates(d->currentVidMode));
@@ -544,7 +588,7 @@ Imager::Controls IIDCImager::controls() const
             {
                 dc1394switch_t currOnOff;
                 IIDC_CHECK << dc1394_feature_get_power(d->camera.get(), feature.id, &currOnOff)
-                           << "Get feature on/off";
+                           << "Get feature on/off state";
                 control.value_onOff = (DC1394_ON == currOnOff);
             }
 
@@ -558,7 +602,7 @@ Imager::Controls IIDCImager::controls() const
 
             d->getRawRange(feature.id, rawMin, rawMax);
 
-            // A feature is "absolute control-capable", if its value can be set using
+            // A feature is "absolute control-capable" if its value can be set using
             // floating-point arguments, not just the integer "raw/driver" values.
             // E.g. SHUTTER can be set in fractional "absolute" values expressed in seconds.
             dc1394bool_t absoluteCapable;
@@ -630,7 +674,7 @@ void IIDCImager::setROI(const QRect &roi)
 
 void IIDCImager::startLive()
 {
-    restart([this] { return std::make_shared<IIDCImagerWorker>(d->camera.get(), d->currentVidMode, d->currentROI); });
+    restart([this] { return std::make_shared<IIDCImagerWorker>(d->camera.get(), d->currentVidMode, d->currentPixFmt, d->currentROI); });
     qDebug() << "Video streaming started successfully";
 }
 
@@ -659,4 +703,14 @@ void IIDCImager::Private::updateShutterCtrl()
         getAbsoluteRange(DC1394_FEATURE_SHUTTER, absMin, absMax);
 
     UpdateRangeAndStep(hasAbsControl, ctrlShutter, rawMin, rawMax, absMin, absMax);
+
+    dc1394feature_mode_t mode;
+    IIDC_CHECK << dc1394_feature_get_mode(camera.get(), DC1394_FEATURE_SHUTTER, &mode)
+               << "Get feature mode";
+    ctrlShutter.value_auto = (mode == DC1394_FEATURE_MODE_AUTO);
+
+    dc1394switch_t onOff;
+    IIDC_CHECK << dc1394_feature_get_power(camera.get(), DC1394_FEATURE_SHUTTER, &onOff)
+               << "Get feature on/off state";
+    ctrlShutter.value_onOff = (onOff == DC1394_ON);
 }

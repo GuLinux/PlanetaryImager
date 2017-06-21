@@ -86,7 +86,7 @@ Histogram::Histogram(const Configuration &configuration, QObject* parent) : QObj
   }
 }
 
-void Histogram::handle(const Frame::ptr &frame)
+void Histogram::doHandle(Frame::ptr frame)
 {
   if( ! d->should_read_frame() )
     return;

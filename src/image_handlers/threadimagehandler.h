@@ -27,8 +27,11 @@ class ThreadImageHandler : public ImageHandler
 public:
   ThreadImageHandler(const  ImageHandler::ptr &imageHandler);
   virtual ~ThreadImageHandler();
-  virtual void handle(const Frame::ptr &frame);
+
 private:
+
+  void doHandle(Frame::ptr frame) override;
+
   DPTR
 };
 

@@ -81,7 +81,7 @@ QString SERWriter::filename() const
   return d->file.fileName();
 }
 
-void SERWriter::handle ( const Frame::ptr &frame )
+void SERWriter::doHandle(Frame::ptr frame)
 {
   if(! d->header->imageWidth) {
     d->header->endian = (frame->byteOrder() == Frame::BigEndian ? SER_Header::BigEndian : SER_Header::LittleEndian);

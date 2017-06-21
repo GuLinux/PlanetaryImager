@@ -62,7 +62,7 @@ ImageFileWriter::~ImageFileWriter()
 }
 
 
-void ImageFileWriter::handle(const Frame::ptr& frame)
+void ImageFileWriter::doHandle(Frame::ptr frame)
 {
   if(d->writer)
     d->writer(frame);

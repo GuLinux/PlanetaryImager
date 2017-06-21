@@ -30,7 +30,6 @@ Q_OBJECT
 public:
     ~DisplayImage();
     DisplayImage(const Configuration &configuration, QObject* parent = 0);
-    virtual void handle(const Frame::ptr &frame);
     void setRecording(bool recording);
     QRect imageRect() const;
 signals:
@@ -44,6 +43,9 @@ public slots:
   void quit();
   void read_settings();
 private:
+
+  void doHandle(Frame::ptr frame) override;
+
   DPTR
 };
 
