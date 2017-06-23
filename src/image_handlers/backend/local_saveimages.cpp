@@ -287,7 +287,7 @@ LocalSaveImages::~LocalSaveImages()
 }
 
 
-void LocalSaveImages::handle(const Frame::ptr &frame)
+void LocalSaveImages::doHandle(Frame::ptr frame)
 {
   d->worker->queue(frame);
 //   QtConcurrent::run(bind(&WriterThreadWorker::handle, d->worker, frame));

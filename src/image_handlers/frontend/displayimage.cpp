@@ -144,7 +144,7 @@ void DisplayImage::read_settings()
 }
 
 
-void DisplayImage::handle( const Frame::ptr &frame )
+void DisplayImage::doHandle(Frame::ptr frame)
 {
   if( ! d->should_display_frame()  || !frame->mat().data ) {
     return;

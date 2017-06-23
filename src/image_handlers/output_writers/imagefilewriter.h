@@ -27,9 +27,11 @@ public:
   enum Format {PNG, FITS};
   ImageFileWriter(Format format, const Configuration &configuration);
   QString filename() const override;
-  void handle(const Frame::ptr & frame) override;
   ~ImageFileWriter();
 private:
+
+    void doHandle(Frame::ptr frame) override;
+
   DPTR
 };
 

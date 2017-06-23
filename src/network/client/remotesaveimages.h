@@ -29,12 +29,15 @@ Q_OBJECT
 public:
   RemoteSaveImages(const NetworkDispatcher::ptr &dispatcher);
   ~RemoteSaveImages();
-  void handle(const Frame::ptr & frame) override;
+
 public slots:
   void startRecording(Imager * imager) override;
   void endRecording() override;
   void setPaused(bool paused) override;
 private:
+
+  void doHandle(Frame::ptr frame) override { }
+
   DPTR
 };
 

@@ -29,12 +29,14 @@ class LocalSaveImages : public SaveImages
 public:
     LocalSaveImages(Configuration &configuration, QObject *parent = 0);
     ~LocalSaveImages();
-    virtual void handle(const Frame::ptr &frame);
 public slots:
   void startRecording(Imager *imager);
   void endRecording();
   void setPaused(bool paused);
 private:
+
+  void doHandle(Frame::ptr frame) override;
+
   DPTR
 };
 

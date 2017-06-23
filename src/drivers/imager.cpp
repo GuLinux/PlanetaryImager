@@ -30,6 +30,7 @@ DPTR_IMPL(Imager) {
   LOG_C_SCOPE(Imager);
   unique_ptr<QHash<Imager::Capability, bool>> capabilities;
   bool destroyed = false;
+  Configuration::CaptureEndianess captureEndianess = Configuration::CaptureEndianess::CameraDefault;
 };
 
 Imager::Imager(const ImageHandler::ptr& image_handler) : QObject(nullptr), dptr(image_handler)
@@ -109,7 +110,7 @@ void Imager::restart(const ImagerThread::Worker::factory& worker)
 {
   LOG_F_SCOPE
   d->imager_thread.reset();
-  d->imager_thread = make_shared<ImagerThread>(worker(), this, d->image_handler);
+  d->imager_thread = make_shared<ImagerThread>(worker(), this, d->image_handler, d->captureEndianess);
   update_exposure();
   d->imager_thread->start();
 }
@@ -155,6 +156,14 @@ bool Imager::supports(Capability capability) const
       (*d->capabilities)[capability] = true;
   }
   return d->capabilities->value(capability, false);
+}
+
+void Imager::setCaptureEndianess(Configuration::CaptureEndianess captureEndianess)
+{
+    d->captureEndianess = captureEndianess;
+
+    if (d->imager_thread)
+        wait_for(push_job_on_thread([=]() { d->imager_thread->setCaptureEndianess(d->captureEndianess); }));
 }
 
 #include "imager.moc"

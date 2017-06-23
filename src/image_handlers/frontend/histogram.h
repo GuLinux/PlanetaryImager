@@ -37,7 +37,6 @@ public:
   };
   ~Histogram();
   Histogram(const Configuration &configuration, QObject* parent = 0);
-  virtual void handle(const Frame::ptr &frame);
   void set_bins(std::size_t bins_size);
   void setRecording(bool recording);
   void setLogarithmic(bool logarithmic);
@@ -48,6 +47,9 @@ public slots:
 signals:
   void histogram(const QImage &, const QMap<Histogram::Channel, QVariantMap> &, Histogram::Channel channel);
 private:
+
+  void doHandle(Frame::ptr frame) override;
+
   DPTR
 };
 

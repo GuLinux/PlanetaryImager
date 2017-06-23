@@ -29,9 +29,11 @@ public:
   typedef std::shared_ptr<FramesForwarder> ptr;
   FramesForwarder(const NetworkDispatcher::ptr &dispatcher);
   ~FramesForwarder();
-  void handle(const Frame::ptr & frame) override;
   bool enabled() const;
 private:
+
+  void doHandle(Frame::ptr frame) override;
+
   DPTR
 public slots:
   void setEnabled(bool enabled);

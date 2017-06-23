@@ -18,6 +18,8 @@
 
 #ifndef IMAGERTHREAD_H
 #define IMAGERTHREAD_H
+
+#include <commons/configuration.h>
 #include <functional>
 #include "image_handlers/imagehandler.h"
 #include "dptr.h"
@@ -36,12 +38,13 @@ class ImagerThread
     typedef std::shared_ptr<Worker> ptr;
     typedef std::function<ptr()> factory;
   };
-  ImagerThread(const Worker::ptr& worker, Imager* imager, const ImageHandler::ptr& imageHandler);
+  ImagerThread(const Worker::ptr& worker, Imager* imager, const ImageHandler::ptr& imageHandler, Configuration::CaptureEndianess captureEndianess);
   ~ImagerThread();
   void stop();
   void start();
   std::shared_ptr<QWaitCondition> push_job(const Job &job);
   void set_exposure(const std::chrono::duration<double> &exposure);
+  void setCaptureEndianess(Configuration::CaptureEndianess captureEndianess);
 private:
   DPTR
 

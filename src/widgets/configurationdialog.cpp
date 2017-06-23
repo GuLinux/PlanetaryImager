@@ -177,4 +177,12 @@ ConfigurationDialog::ConfigurationDialog(Configuration &configuration, QWidget* 
         QMessageBox::information(this, tr("Restart required"), tr("You changed the OpenGL setting. Please restart PlanetaryImage for this change to take effect"));
       }
     });
+
+    d->ui->pixelDataEndianess->addItem("camera default", static_cast<int>(Configuration::CaptureEndianess::CameraDefault));
+    d->ui->pixelDataEndianess->addItem("little-endian",  static_cast<int>(Configuration::CaptureEndianess::Little));
+    d->ui->pixelDataEndianess->addItem("big-endian",     static_cast<int>(Configuration::CaptureEndianess::Big));
+    d->ui->pixelDataEndianess->setCurrentIndex(static_cast<int>(d->configuration.capture_endianess()));
+
+    connect(d->ui->pixelDataEndianess, F_PTR(QComboBox, activated, int),
+            [=](int index) { d->configuration.set_capture_endianess(static_cast<Configuration::CaptureEndianess>(d->ui->pixelDataEndianess->itemData(index).toInt())); });
 }

@@ -102,6 +102,7 @@ void PlanetaryImager::open(const Driver::Camera::ptr& camera)
   auto openImager = [this, camera] {
     try {
       auto imager = camera->imager(d->imageHandler);
+      imager->setCaptureEndianess(d->configuration.capture_endianess());
       imager->moveToThread(this->thread());
       imager->setParent(this);
       return imager;

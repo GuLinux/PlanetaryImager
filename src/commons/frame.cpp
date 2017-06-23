@@ -133,4 +133,7 @@ Frame::ByteOrder Frame::byteOrder() const
   return d->byteOrder;
 }
 
-
+void Frame::overrideByteOrder(ByteOrder byteOrder)
+{
+    d->byteOrder = byteOrder;
+}

@@ -48,7 +48,10 @@ public:
   boost::lockfree::spsc_queue<Job> jobs_queue;
   bool long_exposure_mode = false;
   chrono::duration<double> exposure;
+  Configuration::CaptureEndianess captureEndianess = Configuration::CaptureEndianess::CameraDefault;
+
   void thread_started();
+
   LOG_C_SCOPE(ImagerThread);
 };
 
@@ -65,9 +68,11 @@ ImagerThread::Private::Private(const ImagerThread::Worker::ptr& worker, Imager* 
 }
 
 
-ImagerThread::ImagerThread(const ImagerThread::Worker::ptr& worker, Imager* imager, const ImageHandler::ptr& imageHandler)
+ImagerThread::ImagerThread(const ImagerThread::Worker::ptr& worker, Imager* imager, const ImageHandler::ptr& imageHandler,
+                           Configuration::CaptureEndianess captureEndianess)
   : dptr(worker, imager, imageHandler)
 {
+    d->captureEndianess = captureEndianess;
 }
 
 ImagerThread::~ImagerThread()
@@ -100,7 +105,7 @@ void ImagerThread::Private::thread_started()
         try {
           queued_job();
         } catch(const std::exception &e) {
-          MessagesLogger::queue(MessagesLogger::Warning, tr("Error on imager task"), tr("An error occured during an imager operation for %1:\n%2") 
+          MessagesLogger::queue(MessagesLogger::Warning, tr("Error on imager task"), tr("An error occurred during an imager operation for %1:\n%2")
             % imager->name()
             % e.what());
           qWarning() << e.what();
@@ -112,6 +117,9 @@ void ImagerThread::Private::thread_started()
         imager->long_exposure_started(exposure.count() );
       if(auto frame = worker->shoot()) {
           frame->set_exposure(exposure);
+          if (captureEndianess != Configuration::CaptureEndianess::CameraDefault)
+              frame->overrideByteOrder(captureEndianess == Configuration::CaptureEndianess::Little ? Frame::ByteOrder::LittleEndian
+                                                                                                   : Frame::ByteOrder::BigEndian);
           imageHandler->handle(frame);
         ++fps;
         errors_since_last_success = 0;
@@ -129,14 +137,14 @@ void ImagerThread::Private::thread_started()
         continue;
       }
       if(firstErrorOccured.elapsed() > 30 * 1000 && error_messages_since_last_success++ == 0) {
-        MessagesLogger::queue(MessagesLogger::Warning, tr("Error on frame capture"), tr("An error occured while capturing frame for %1:\n%2") 
+        MessagesLogger::queue(MessagesLogger::Warning, tr("Error on frame capture"), tr("An error occurred while capturing frame for %1:\n%2")
         % imager->name()
         % e.what());
         continue;
       }
       
       if(firstErrorOccured.elapsed() > 90 * 1000) {
-          MessagesLogger::queue(MessagesLogger::Warning, tr("Error on frame capture"), tr("An error occured while capturing frame for %1:\n%2\nDisconnecting camera.") 
+          MessagesLogger::queue(MessagesLogger::Warning, tr("Error on frame capture"), tr("An error occurred while capturing frame for %1:\n%2\nDisconnecting camera.")
             % imager->name()
             % e.what());
           running = false;
@@ -169,5 +177,10 @@ void ImagerThread::set_exposure(const std::chrono::duration<double> &exposure)
   qDebug() << "Exposure: " << exposure.count() << "s; long exposure: " << d->long_exposure_mode;
 }
 
+void ImagerThread::setCaptureEndianess(Configuration::CaptureEndianess captureEndianess)
+{
+    d->captureEndianess = captureEndianess;
+    qDebug() << "Capture endianess changed to " << static_cast<int>(captureEndianess);
+}
 
 #include "imagerthread.moc"

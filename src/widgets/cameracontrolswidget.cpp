@@ -160,6 +160,9 @@ void CameraControl::control_updated(const Imager::Control& changed_control)
   if(changed_control.supports_auto) {
     auto_changed(changed_control.value_auto);
   }
+  control_widget->setEnabled(!changed_control.readonly
+                             && (!changed_control.supports_auto  || !changed_control.value_auto)
+                             && (!changed_control.supports_onOff || changed_control.value_onOff));
   control_changed_led->setPixmap(is_expected_value ? green_dot : red_dot);
   control_changed_led->show();
   QTimer::singleShot(5000, this, [this]{ control_changed_led->hide(); });
