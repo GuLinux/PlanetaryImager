@@ -23,9 +23,15 @@
 #include "fc2_worker.h"
 
 
+// Captured frames may be "inconsistent" (have damaged contents), e.g. sometimes when using GigE cameras
+// on Linux with its network stack (instead of PGR's Ethernet Filter Driver under Windows). Allow a few of them
+// before reporting error.
+constexpr int MAX_NUM_INCONSISTENT_FRAMES_TO_SKIP = 15;
 
-FC2ImagerWorker::FC2ImagerWorker(//dc1394camera_t *_camera, dc1394video_mode_t _vidMode,
+
+FC2ImagerWorker::FC2ImagerWorker(FlyCapture2::Camera &_camera, //dc1394camera_t *_camera, dc1394video_mode_t _vidMode,
                                    const QRect &roi)
+: camera(_camera)
 // //camera(_camera), nativeFrame(nullptr), vidMode(_vidMode)
 {
 //    frameInfo.initialized = false;
@@ -33,8 +39,8 @@ FC2ImagerWorker::FC2ImagerWorker(//dc1394camera_t *_camera, dc1394video_mode_t _
 //    IIDC_CHECK << dc1394_video_set_mode(camera, vidMode)
 //               << "Set video mode";
 //
-//    qDebug() << "Requested to set ROI to " << roi.x() << ", " << roi.y() << ", " << roi.width() << ", " << roi.height();
-//
+    qDebug() << "Requested to set ROI to " << roi.x() << ", " << roi.y() << ", " << roi.width() << ", " << roi.height();
+
 //    setROI(roi);
 //
 //    IIDC_CHECK << dc1394_capture_setup(camera, NUM_DMA_BUFFERS, DC1394_CAPTURE_FLAGS_DEFAULT)
@@ -42,15 +48,16 @@ FC2ImagerWorker::FC2ImagerWorker(//dc1394camera_t *_camera, dc1394video_mode_t _
 //
 //    IIDC_CHECK << dc1394_video_set_transmission(camera, DC1394_ON)
 //               << "Start video transmission";
+
+
+    FC2_CHECK << camera.StartCapture(nullptr, nullptr).GetType()
+              << "Camera::StartCapture";
 }
 
 FC2ImagerWorker::~FC2ImagerWorker()
 {
-//    IIDC_CHECK << dc1394_video_set_transmission(camera, DC1394_OFF)
-//               << "Stop video transmission";
-//
-//    IIDC_CHECK << dc1394_capture_stop(camera)
-//               << "Stop capture";
+    FC2_CHECK << camera.StopCapture().GetType()
+              << "Camera::StopCapture";
 }
 
 //void FC2ImagerWorker::initFrameInfo()
@@ -106,90 +113,41 @@ FC2ImagerWorker::~FC2ImagerWorker()
 Frame::ptr FC2ImagerWorker::shoot()
 {
 //    //TODO: fail gracefully if cannot capture
-//    IIDC_CHECK << dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_WAIT, &nativeFrame)
-//               << "Capture dequeue";
-//
-//    if (!frameInfo.initialized)
-//    {
-//        initFrameInfo();
-//        frameInfo.initialized = true;
-//
-//        if (isYUV(nativeFrame->color_coding))
-//        {
-//            frameInfo.needsYUVtoRGBconversion = true;
-//            conversionBuf.src = std::make_unique<uint8_t[]>(nativeFrame->total_bytes); // Pass 'total_bytes' for simplicity; we may use less
-//            conversionBuf.dest = std::make_unique<uint8_t[]>(nativeFrame->size[0] * nativeFrame->size[1] * 3); // 3 bytes/pixel (R, G, B)
-//        }
-//        else
-//            frameInfo.needsYUVtoRGBconversion = false;
-//    }
-//
-//    const size_t imgWidth = nativeFrame->size[0],
-//                 imgHeight = nativeFrame->size[1];
-//
-//    auto frame = std::make_shared<Frame>(frameInfo.bitsPerChannel,
-//                                         frameInfo.colorFormat,
-//                                         QSize{ (int)imgWidth, (int)imgHeight },
-//                                         frameInfo.byteOrder);
-//
-//    uint8_t *srcLine;
-//    size_t srcLineStep;
-//
-//    uint8_t *destLine = frame->mat().data;
-//    const size_t destLineStep = frame->mat().step[0];
-//    size_t numDestCopyBytes; // Number of bytes per line to copy into 'frame'
-//
-//    if (frameInfo.needsYUVtoRGBconversion)
-//    {
-//        //
-//        // 1) Condense source data from 'nativeFrame' into 'conversionBuf.src'
-//        //
-//
-//        for (size_t y = 0; y < imgHeight; y++)
-//            memcpy(conversionBuf.src.get() + y*frameInfo.srcBytesPerLine,
-//                   nativeFrame->image + y * nativeFrame->stride,
-//                   frameInfo.srcBytesPerLine);
-//
-//        //
-//        // 2) Convert
-//        //
-//
-//        dc1394_convert_to_RGB8(conversionBuf.src.get(), conversionBuf.dest.get(), imgWidth, imgHeight,
-//                               nativeFrame->yuv_byte_order, nativeFrame->color_coding, 8);
-//
-//        //
-//        // 3) Prepare to copy converted data to 'frame'
-//        //
-//
-//        srcLine = conversionBuf.dest.get();
-//        srcLineStep = imgWidth * 3;
-//        numDestCopyBytes = std::min(destLineStep, imgWidth * 3);
-//    }
-//    else
-//    {
-//        srcLine = nativeFrame->image;
-//        srcLineStep = nativeFrame->stride;
-//        numDestCopyBytes = std::min(destLineStep, (size_t)nativeFrame->stride);
-//    }
-//
-//    for (int y = 0; y < frame->mat().rows; y++)
-//    {
-//        memcpy(destLine, srcLine, numDestCopyBytes);
-//
-//        srcLine += srcLineStep;
-//        destLine += destLineStep;
-//    }
-//
-//    IIDC_CHECK << dc1394_capture_enqueue(camera, nativeFrame)
-//               << "Capture enqueue";
-//    nativeFrame = nullptr;
-//
-//    return frame;
 
+    int badFrameCounter = 0;
+    FlyCapture2::Error result;
+    while (badFrameCounter < MAX_NUM_INCONSISTENT_FRAMES_TO_SKIP &&
+           (result = camera.RetrieveBuffer(&image)).GetType() == FlyCapture2::PGRERROR_IMAGE_CONSISTENCY_ERROR)
+    {
+        badFrameCounter++;
+    }
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(33));
-    return std::make_shared<Frame>(8, Frame::ColorFormat::Mono, QSize(640, 480), Frame::ByteOrder::LittleEndian);
+    FC2_CHECK << result.GetType() << "Camera::RetrieveBuffer";
 
+    auto frame = std::make_shared<Frame>(image.GetBitsPerPixel(),
+                                         Frame::ColorFormat::Mono,
+                                         QSize(image.GetCols(), image.GetRows()),
+                                         Frame::ByteOrder::LittleEndian);
+
+    const uint8_t *srcLine = image.GetData();
+    const ptrdiff_t srcStride = image.GetStride();
+
+    uint8_t *destLine = frame->mat().data;
+    const size_t destStride = frame->mat().step[0];
+    size_t numDestCopyBytes; // Number of bytes per line to copy into 'frame'
+
+    //...
+
+    numDestCopyBytes = std::min(destStride, (size_t)srcStride);
+
+    for (int y = 0; y < frame->mat().rows; y++)
+    {
+        memcpy(destLine, srcLine, numDestCopyBytes);
+        srcLine += srcStride;
+        destLine += destStride;
+    }
+
+    return frame;
 }
 
 //void FC2ImagerWorker::setROI(const QRect &roi)

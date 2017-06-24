@@ -834,7 +834,7 @@ void FC2Imager::setROI(const QRect &roi)
 
 void FC2Imager::startLive()
 {
-    restart([this] { return std::make_shared<FC2ImagerWorker>(/*..., */d->currentROI); });
+    restart([this] { return std::make_shared<FC2ImagerWorker>(d->cam, d->currentROI); });
     qDebug() << "Video streaming started successfully";
 }
 

@@ -22,12 +22,18 @@
 #include <commons/utils.h>
 //#include <dc1394/dc1394.h>
 #include <drivers/imagerthread.h>
+#include <Camera.h>
+#include <Image.h>
 
 #include "fc2_worker.h"
 
 
 class FC2ImagerWorker: public ImagerThread::Worker
 {
+    FlyCapture2::Camera &camera;
+
+    FlyCapture2::Image image;
+
 //    dc1394camera_t *camera;
 //    dc1394video_frame_t *nativeFrame; ///< The most recently captured frame
 //    dc1394video_mode_t vidMode;
@@ -62,7 +68,7 @@ public:
 
 //    static constexpr uint32_t NUM_DMA_BUFFERS = 4;
 
-    FC2ImagerWorker(//dc1394camera_t *_camera, dc1394video_mode_t _vidMode,
+    FC2ImagerWorker(FlyCapture2::Camera &_camera,  //dc1394camera_t *_camera, dc1394video_mode_t _vidMode,
                     /// Must be already validated; also used as the initial frame size for Format7 modes
                     const QRect &roi);
 
