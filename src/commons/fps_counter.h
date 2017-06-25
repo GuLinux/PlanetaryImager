@@ -20,6 +20,7 @@
 
 #include <QObject>
 #include "dptr.h"
+#include <functional>
 
 class fps_counter : public QObject
 {
