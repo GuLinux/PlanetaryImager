@@ -629,7 +629,7 @@ Imager::Controls IIDCImager::controls() const
                     control.value = fval;
                 }
                 else
-                    control.value = fmin;
+                    control.value = absMin;
             }
             else
             {
