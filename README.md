@@ -14,7 +14,7 @@ Useful Links
 Supported Cameras
 -----------------
 
-Mainly ZWO ASI Cameras (my camera is an ASI178mm), v4l2 (including DMK and Celestron Skyris), QHY, IIDC (including all FLIR/Point Grey FireWire and USB 2/3 models).
+ZWO ASI Cameras (my camera is an ASI178mm), v4l2 (including DMK and Celestron Skyris), QHY, FLIR/Point Grey via FlyCapture2 (all interfaces), IIDC (including all FLIR/Point Grey FireWire and USB 2/3 models).
 
 
 Requirements
@@ -113,4 +113,4 @@ Credits
 
 Application Icon: [Hat Saturn](https://www.iconfinder.com/icons/37878/hat_planet_saturn_icon) by [Denis Sazhin](http://iconka.com/).
 Toolbar/action icons: [TWG Retina Display Icons](http://blog.twg.ca/2010/11/retina-display-icon-set/), darkened and with a few customizations to add more actions.
-IIDC driver: [Filip Szczerek](ga.software@yahoo.com) (GreatAttractor).
+IIDC & FlyCapture2 drivers: [Filip Szczerek](ga.software@yahoo.com) (GreatAttractor).
