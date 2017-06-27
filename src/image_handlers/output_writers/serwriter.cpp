@@ -51,7 +51,6 @@ SERWriter::SERWriter ( const QString& deviceName, const Configuration &configura
   SER_Header empty_header;
   empty_header.datetime = SER_Header::timestamp(QDateTime::currentDateTime());
   empty_header.datetime_utc = SER_Header::timestamp(QDateTime::currentDateTimeUtc());
-  qDebug() << "Starting datetime: " << QDateTime::currentDateTimeUtc() << ", : " << SER_Header::qdatetime(empty_header.datetime_utc);
   ::strcpy(empty_header.camera, deviceName.left(40).toLatin1());
   ::strcpy(empty_header.observer, configuration.observer().left(40).toLatin1());
   ::strcpy(empty_header.telescope, configuration.telescope().left(40).toLatin1());

@@ -17,7 +17,7 @@
  */
 #include "ser_header.h"
 #include <map>
-
+#include <QDebug>
 using namespace std;
 
 namespace {
@@ -38,6 +38,7 @@ map<Frame::ColorFormat, SER_Header::ColorId> color_format_conversion(){
   };
   return _map;
 };
+  static const QDateTime reference_datetime{{1,1,1},{0,0,0}, Qt::UTC};
 }
 
 size_t SER_Header::frame_size() const
@@ -70,13 +71,16 @@ void SER_Header::set_color_format(const Frame::ColorFormat& format)
 
  SER_Timestamp SER_Header::timestamp(const QDateTime& datetime)
 {
-  static const QDateTime reference{{1, 1, 1}, {0,0,0}};
-  return qToLittleEndian(reference.msecsTo(datetime) * 10000);
+  auto diff_msecs = reference_datetime.msecsTo(datetime);
+  if(datetime.timeSpec() == Qt::LocalTime) {
+    diff_msecs += datetime.offsetFromUtc() * 1000l;
+  }
+  return qToLittleEndian(diff_msecs * 10000);
 }
 
 QDateTime SER_Header::qdatetime(const SER_Timestamp& timestamp)
 {
-  static const QDateTime reference{{1, 1, 1}, {0,0,0}};
-  return reference.addMSecs( qFromLittleEndian(timestamp) / 10000);
+  // TODO: support also local timestamp?
+  return reference_datetime.addMSecs(qFromLittleEndian(timestamp) / 10000);
 }
 
