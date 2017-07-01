@@ -60,7 +60,7 @@ void StatusBarInfoWidget::displayFPS(double fps)
 void StatusBarInfoWidget::temperature(double celsius, bool hide)
 {
   d->ui->temperature_frame->setHidden(hide);
-  d->ui->temperature->setText("%1°"_q % QString::number(celsius, 'f', 2));
+  d->ui->temperature->setText("%1 \u2103"_q % QString::number(celsius, 'f', 2)); // \u2103 = degree Celsius
 }
 
 void StatusBarInfoWidget::zoom(double ratio)
