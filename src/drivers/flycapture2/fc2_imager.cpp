@@ -19,6 +19,7 @@
 //#include <algorithm>
 //#include <chrono>
 
+#include <cstring>
 #include <QRect>
 #include <FlyCapture2Defs.h>
 #include <functional>
@@ -126,6 +127,13 @@ static std::map<FlyCapture2::VideoMode, FlyCapture2::PixelFormat> VID_MODE_PIX_F
     { FlyCapture2::VIDEOMODE_1600x1200Y16    , FlyCapture2::PIXEL_FORMAT_MONO16  },
 };
 
+/// Key: FlyCapture2::PropertyInfo::pUnitAbbr
+static const std::map<std::string, std::chrono::duration<double>> DURATION_VALUE =
+{
+    { "us", 1us },
+    { "ms", 1ms },
+    { "s",  1s }
+};
 
 DPTR_IMPL(FC2Imager)
 {
@@ -155,15 +163,11 @@ DPTR_IMPL(FC2Imager)
 
     std::map<FlyCapture2::VideoMode, std::vector<FlyCapture2::FrameRate>> videoModes;
     std::map<FlyCapture2::Mode, FlyCapture2::Format7Info> fmt7Modes;
+    std::map<FlyCapture2::PropertyType, FlyCapture2::PropertyInfo> propertyInfo;
 
     FC2VideoMode currentVidMode;
     FlyCapture2::PixelFormat currentPixFmt;
-//
-//    dc1394featureset_t features;
-//    std::unordered_map<dc1394feature_t, bool> hasAbsoluteControl;
-//
-//    Properties properties;
-//
+
     /// Copy of the SHUTTER control; used for informing GUI about shutter range change when frame rate changes
     Control ctrlShutter;
 
@@ -181,16 +185,9 @@ DPTR_IMPL(FC2Imager)
     /// Returns a combo control listing all pixel formats for 'currentVidMode'
     Control enumerateCurrentModePixelFormats();
 
-    void getRawRange(FlyCapture2::PropertyType id, uint32_t &rawMin, uint32_t &rawMax);
-
-    void getAbsoluteRange(FlyCapture2::PropertyType id, float &absMin, float &absMax);
-
     /** Resets frame size and ROI validator (if applicable). The actual video mode change
         comes into effect after the worker thread is restarted. */
     void changeVideoMode(const FC2VideoMode &newMode);
-
-    /// Sets the highest supported frame rate
-    void setHighestFrameRate(FlyCapture2::VideoMode vidMode);
 
     Control getFrameRates(FlyCapture2::VideoMode vidMode);
 
@@ -200,9 +197,17 @@ DPTR_IMPL(FC2Imager)
     LOG_C_SCOPE(FC2Imager);
 };
 
-static void UpdateRangeAndStep(bool absoluteCapable, Imager::Control &control,
-                               uint32_t rawMin, uint32_t rawMax,
-                               float    absMin, float    absMax);
+/// Ensures both raw and absolute ranges satisfy: min < max
+static void VerifyRanges(FlyCapture2::PropertyInfo &propInfo)
+{
+    if (propInfo.min > propInfo.max)
+        std::swap(propInfo.min, propInfo.max);
+
+    if (propInfo.absMin > propInfo.absMax)
+        std::swap(propInfo.absMin, propInfo.absMax);
+}
+
+static void UpdateRangeAndStep(Imager::Control &control, const FlyCapture2::PropertyInfo &propInfo);
 
 void FC2Imager::Private::updateWorkerExposureTimeout()
 {
@@ -217,6 +222,7 @@ static void ForEachPossiblePixelFormat(const std::function<void (FlyCapture2::Pi
             FlyCapture2::PIXEL_FORMAT_RAW8,
             FlyCapture2::PIXEL_FORMAT_RGB8,
 
+            //TODO: handle this
             // FlyCapture2::PIXEL_FORMAT_411YUV8,
             // FlyCapture2::PIXEL_FORMAT_422YUV8,
             // FlyCapture2::PIXEL_FORMAT_444YUV8,
@@ -225,6 +231,7 @@ static void ForEachPossiblePixelFormat(const std::function<void (FlyCapture2::Pi
             FlyCapture2::PIXEL_FORMAT_RAW16,
             FlyCapture2::PIXEL_FORMAT_RGB16,
 
+            //TODO: handle this
             // FlyCapture2::PIXEL_FORMAT_MONO12,
             // FlyCapture2::PIXEL_FORMAT_RAW12,
             /* FlyCapture2::PIXEL_FORMAT_422YUV8_JPEG*/ })
@@ -285,37 +292,35 @@ Imager::Control FC2Imager::Private::enumerateVideoModes()
 
     return videoMode;
 }
-//
-//Imager::Control IIDCImager::Private::getFrameRates(dc1394video_mode_t vidMode)
-//{
-//    const auto frloc = frameRates.find(vidMode);
-//    assert(frloc != frameRates.end());
-//
-//    const dc1394framerates_t &fr = frloc->second;
-//
-//    auto frameRatesCtrl = Imager::Control{ ControlID::FrameRate, "Fixed Frame Rate", Control::Combo };
-//
-//    for (auto i = 0; i < fr.num; i++)
-//        switch (fr.framerates[i])
-//        {
-//        case DC1394_FRAMERATE_1_875: frameRatesCtrl.add_choice_enum("1.875 fps", fr.framerates[i]); break;
-//        case DC1394_FRAMERATE_3_75:  frameRatesCtrl.add_choice_enum("3.75 fps",  fr.framerates[i]); break;
-//        case DC1394_FRAMERATE_7_5:   frameRatesCtrl.add_choice_enum("7.5 fps",   fr.framerates[i]); break;
-//        case DC1394_FRAMERATE_15:    frameRatesCtrl.add_choice_enum("15 fps",    fr.framerates[i]); break;
-//        case DC1394_FRAMERATE_30:    frameRatesCtrl.add_choice_enum("30 fps",    fr.framerates[i]); break;
-//        case DC1394_FRAMERATE_60:    frameRatesCtrl.add_choice_enum("60 fps",    fr.framerates[i]); break;
-//        case DC1394_FRAMERATE_120:   frameRatesCtrl.add_choice_enum("120 fps",   fr.framerates[i]); break;
-//        case DC1394_FRAMERATE_240:   frameRatesCtrl.add_choice_enum("240 fps",   fr.framerates[i]); break;
-//        }
-//
-//    // Initially we set the highest frame rate, so report it as selected
-//    frameRatesCtrl.set_value_enum(*std::max_element(fr.framerates, fr.framerates + fr.num));
-//
-//    return frameRatesCtrl;
-//}
-//
-////Q_DECLARE_METATYPE(IIDCImagerWorker::ImageType)
-//
+
+Imager::Control FC2Imager::Private::getFrameRates(FlyCapture2::VideoMode vidMode)
+{
+    const auto frloc = videoModes.find(vidMode);
+    assert(frloc != videoModes.end());
+
+    const auto &frList = frloc->second;
+
+    auto frameRatesCtrl = Imager::Control{ ControlID::FrameRate, "Fixed Frame Rate", Control::Combo };
+
+    for (const auto fr: frList)
+        switch (fr)
+        {
+        case FlyCapture2::FRAMERATE_1_875: frameRatesCtrl.add_choice_enum("1.875 fps", fr); break;
+        case FlyCapture2::FRAMERATE_3_75:  frameRatesCtrl.add_choice_enum("3.75 fps",  fr); break;
+        case FlyCapture2::FRAMERATE_7_5:   frameRatesCtrl.add_choice_enum("7.5 fps",   fr); break;
+        case FlyCapture2::FRAMERATE_15:    frameRatesCtrl.add_choice_enum("15 fps",    fr); break;
+        case FlyCapture2::FRAMERATE_30:    frameRatesCtrl.add_choice_enum("30 fps",    fr); break;
+        case FlyCapture2::FRAMERATE_60:    frameRatesCtrl.add_choice_enum("60 fps",    fr); break;
+        case FlyCapture2::FRAMERATE_120:   frameRatesCtrl.add_choice_enum("120 fps",   fr); break;
+        case FlyCapture2::FRAMERATE_240:   frameRatesCtrl.add_choice_enum("240 fps",   fr); break;
+        }
+
+    // Initially we set the highest frame rate, so report it as selected
+    frameRatesCtrl.set_value_enum(*std::max_element(frList.begin(), frList.end()));
+
+    return frameRatesCtrl;
+}
+
 FC2Imager::FC2Imager(const FlyCapture2::PGRGuid &guid, const ImageHandler::ptr &handler)
 : Imager(handler), dptr()
 {
@@ -354,10 +359,7 @@ FC2Imager::FC2Imager(const FlyCapture2::PGRGuid &guid, const ImageHandler::ptr &
     }
 
     if (!d->videoModes.empty())
-    {
         d->changeVideoMode(d->videoModes.begin()->first);
-        d->setHighestFrameRate((FlyCapture2::VideoMode)d->currentVidMode);
-    }
     else
         d->changeVideoMode(d->fmt7Modes.begin()->first);
 
@@ -379,7 +381,6 @@ FC2Imager::FC2Imager(const FlyCapture2::PGRGuid &guid, const ImageHandler::ptr &
     }
     else
         d->currentPixFmt = VID_MODE_PIX_FMT[(FlyCapture2::VideoMode)d->currentVidMode];
-
 
     connect(this, &Imager::exposure_changed, this, std::bind(&Private::updateWorkerExposureTimeout, d.get()));
 }
@@ -438,14 +439,14 @@ Imager::Properties FC2Imager::properties() const
         QString maxBusSpeedStr;
         switch (d->camInfo.maximumBusSpeed)
         {
-        case FlyCapture2::BUSSPEED_S100:        maxBusSpeedStr = "100 Mbit/s"; break;
-        case FlyCapture2::BUSSPEED_S200:        maxBusSpeedStr = "200 Mbit/s"; break;
-        case FlyCapture2::BUSSPEED_S400:        maxBusSpeedStr = "400 Mbit/s"; break;
-        case FlyCapture2::BUSSPEED_S480:        maxBusSpeedStr = "480 Mbit/s"; break;
-        case FlyCapture2::BUSSPEED_S800:        maxBusSpeedStr = "800 Mbit/s"; break;
-        case FlyCapture2::BUSSPEED_S1600:       maxBusSpeedStr = "1600 Mbit/s"; break;
-        case FlyCapture2::BUSSPEED_S3200:       maxBusSpeedStr = "3200 Mbit/s"; break;
-        case FlyCapture2::BUSSPEED_S5000:       maxBusSpeedStr = "5000 Mbit/s"; break;
+        case FlyCapture2::BUSSPEED_S100:        maxBusSpeedStr = "100 Mb/s"; break;
+        case FlyCapture2::BUSSPEED_S200:        maxBusSpeedStr = "200 Mb/s"; break;
+        case FlyCapture2::BUSSPEED_S400:        maxBusSpeedStr = "400 Mb/s"; break;
+        case FlyCapture2::BUSSPEED_S480:        maxBusSpeedStr = "480 Mb/s"; break;
+        case FlyCapture2::BUSSPEED_S800:        maxBusSpeedStr = "800 Mb/s"; break;
+        case FlyCapture2::BUSSPEED_S1600:       maxBusSpeedStr = "1.6 Gb/s"; break;
+        case FlyCapture2::BUSSPEED_S3200:       maxBusSpeedStr = "3.2 Gb/s"; break;
+        case FlyCapture2::BUSSPEED_S5000:       maxBusSpeedStr = "5.0 Gb/s"; break;
         case FlyCapture2::BUSSPEED_10BASE_T:    maxBusSpeedStr = "10Base-T"; break;
         case FlyCapture2::BUSSPEED_100BASE_T:   maxBusSpeedStr = "100Base-T"; break;
         case FlyCapture2::BUSSPEED_1000BASE_T:  maxBusSpeedStr = "1000Base-T"; break;
@@ -621,48 +622,27 @@ void FC2Imager::setControl(const Imager::Control& control)
 void FC2Imager::readTemperature()
 {
 }
-//
-//
-//void IIDCImager::Private::getRawRange(dc1394feature_t id, uint32_t &rawMin, uint32_t &rawMax)
-//{
-//    IIDC_CHECK << dc1394_feature_get_boundaries(camera.get(), id, &rawMin, &rawMax)
-//               << "Get feature boundaries";
-//
-//    if (rawMin > rawMax)
-//        std::swap(rawMin, rawMax);
-//}
-//
-//void IIDCImager::Private::getAbsoluteRange(dc1394feature_t id, float &absMin, float &absMax)
-//{
-//    IIDC_CHECK << dc1394_feature_get_absolute_boundaries(camera.get(), id, &absMin, &absMax)
-//               << "Get feature absolute boundaries";
-//
-//    if (absMin > absMax)
-//        std::swap(absMin, absMax);
-//}
-//
-//static void UpdateRangeAndStep(bool absoluteCapable, Imager::Control &control,
-//                               uint32_t rawMin, uint32_t rawMax,
-//                               float    absMin, float    absMax)
-//{
-//    if (absoluteCapable)
-//    {
-//        if (rawMax != rawMin)
-//            control.range.step = (absMax - absMin) / (rawMax - rawMin + 1);
-//        else
-//            control.range.step = 0;
-//
-//        control.range.min = absMin;
-//        control.range.max = absMax;
-//    }
-//    else
-//    {
-//        control.range.min = rawMin;
-//        control.range.max = rawMax;
-//        control.range.step = (rawMin != rawMax ? 1 : 0);
-//    }
-//}
-//
+
+static void UpdateRangeAndStep(Imager::Control &control, const FlyCapture2::PropertyInfo &propInfo)
+{
+    if (propInfo.absValSupported)
+    {
+        if (propInfo.max != propInfo.min)
+            control.range.step = (propInfo.absMax - propInfo.absMin) / (propInfo.max - propInfo.min + 1);
+        else
+            control.range.step = 0;
+
+        control.range.min = propInfo.absMin;
+        control.range.max = propInfo.absMax;
+    }
+    else
+    {
+        control.range.min = propInfo.min;
+        control.range.max = propInfo.max;
+        control.range.step = (propInfo.min != propInfo.max ? 1 : 0);
+    }
+}
+
 Imager::Controls FC2Imager::controls() const
 {
     Controls controls;
@@ -671,150 +651,141 @@ Imager::Controls FC2Imager::controls() const
 
     controls.push_back(std::move(d->enumerateCurrentModePixelFormats()));
 
-//
-//    if (DC1394_FALSE == dc1394_is_video_mode_scalable(d->currentVidMode))
-//        controls.push_back(d->getFrameRates(d->currentVidMode));
-//
-//    for (const dc1394feature_info_t &feature: d->features.feature)
-//        if (DC1394_TRUE == feature.available)
-//        {
-//            Control control{ feature.id };
-//            control.type = Control::Type::Number;
-//
-//            switch (feature.id)
-//            {
-//                case DC1394_FEATURE_BRIGHTNESS:      control.name = "Brightness"; break;
-//
-//                // This is not "exposure time" (see DC1394_FEATURE_SHUTTER for that);
-//                // instead, it regulates the desired overall image brightness by changing
-//                // values of shutter and gain - if they are set to auto
-//                case DC1394_FEATURE_EXPOSURE:        control.name = "Exposure"; break;
-//
-//                case DC1394_FEATURE_SHARPNESS:       control.name = "Sharpness"; break;
-//
-//                //TODO: this is in fact a pair of controls
-//                //case DC1394_FEATURE_WHITE_BALANCE:   control.name = "White balance"; break;
-//
-//                case DC1394_FEATURE_HUE:             control.name = "Hue"; break;
-//                case DC1394_FEATURE_SATURATION:      control.name = "Saturation"; break;
-//                case DC1394_FEATURE_GAMMA:           control.name = "Gamma"; break;
-//
-//                case DC1394_FEATURE_SHUTTER:
-//                    control.name = "Shutter";
-//                    control.is_exposure = true;
-//                    control.is_duration = true;
-//                    // No way to check the unit using IIDC API, but PGR Firefly MV (FMVU-03MTM) and Chameleon3 (CM3-U3-13S2M) both use seconds
-//                    control.duration_unit = 1s;
-//                    break;
-//
-//                case DC1394_FEATURE_GAIN:            control.name = "Gain"; break;
-//                case DC1394_FEATURE_IRIS:            control.name = "Iris"; break;
-//                case DC1394_FEATURE_FOCUS:           control.name = "Focus"; break;
-//                case DC1394_FEATURE_TEMPERATURE:     control.name = "Temperature"; break;
-//
-//                // TODO: requires special handling
-//                // case DC1394_FEATURE_TRIGGER:         control.name = "Trigger"; break;
-//
-//                // TODO: uncomment when DC1394_FEATURE_TRIGGER is implemented
-//                // case DC1394_FEATURE_TRIGGER_DELAY:
-//                //     control.name = "Trigger delay";
-//                //     control.is_duration = true;
-//                //     break;
-//
-//                //TODO: this is in fact a triple of controls
-//                //case DC1394_FEATURE_WHITE_SHADING:   control.name = "White shading"; break;
-//
-//                case DC1394_FEATURE_FRAME_RATE:      control.name = "Frame Rate"; break;
-//                case DC1394_FEATURE_ZOOM:            control.name = "Zoom"; break;
-//                case DC1394_FEATURE_PAN:             control.name = "Pan"; break;
-//                case DC1394_FEATURE_TILT:            control.name = "Tilt"; break;
-//                case DC1394_FEATURE_OPTICAL_FILTER:  control.name = "Optical Filter"; break;
-//                case DC1394_FEATURE_CAPTURE_SIZE:    control.name = "Capture Size"; break;
-//                case DC1394_FEATURE_CAPTURE_QUALITY: control.name = "Capture Quality"; break;
-//
-//                default: continue;
-//            }
-//
-//            control.supports_auto = (std::find(feature.modes.modes, feature.modes.modes + feature.modes.num, DC1394_FEATURE_MODE_AUTO)
-//                                       != feature.modes.modes + feature.modes.num);
-//
-//            control.readonly = (0 == feature.modes.num &&
-//                                DC1394_TRUE == feature.readout_capable);
-//
-//            control.supports_onOff = (DC1394_TRUE == feature.on_off_capable);
-//            if (control.supports_onOff)
-//            {
-//                dc1394switch_t currOnOff;
-//                IIDC_CHECK << dc1394_feature_get_power(d->camera.get(), feature.id, &currOnOff)
-//                           << "Get feature on/off";
-//                control.value_onOff = (DC1394_ON == currOnOff);
-//            }
-//
-//            dc1394feature_mode_t currMode;
-//            IIDC_CHECK << dc1394_feature_get_mode(d->camera.get(), feature.id, &currMode)
-//                        << "Get feature mode";
-//            control.value_auto = (DC1394_FEATURE_MODE_AUTO == currMode);
-//
-//            float absMin, absMax;
-//            uint32_t rawMin, rawMax;
-//
-//            d->getRawRange(feature.id, rawMin, rawMax);
-//
-//            // A feature is "absolute control-capable", if its value can be set using
-//            // floating-point arguments, not just the integer "raw/driver" values.
-//            // E.g. SHUTTER can be set in fractional "absolute" values expressed in seconds.
-//            dc1394bool_t absoluteCapable;
-//            IIDC_CHECK << dc1394_feature_has_absolute_control(d->camera.get(), feature.id, &absoluteCapable)
-//                       << "Get feature absolute capability";
-//
-//            if (DC1394_TRUE == absoluteCapable)
-//            {
-//                d->hasAbsoluteControl[feature.id] = true;
-//
-//                control.decimals = 6;
-//
-//                IIDC_CHECK << dc1394_feature_set_absolute_control(d->camera.get(), feature.id, DC1394_ON)
-//                           << "Set feature absolute control";
-//
-//                d->getAbsoluteRange(feature.id, absMin, absMax);
-//
-//                if (DC1394_TRUE == feature.readout_capable)
-//                {
-//                    float fval;
-//                    IIDC_CHECK << dc1394_feature_get_absolute_value(d->camera.get(), feature.id, &fval)
-//                               << "Get feature absolute value";
-//
-//                    control.value = fval;
-//                }
-//                else
-//                    control.value = fmin;
-//            }
-//            else
-//            {
-//                d->hasAbsoluteControl[feature.id] = false;
-//
-//                control.decimals = 0;
-//
-//                if (DC1394_TRUE == feature.readout_capable)
-//                {
-//                    uint32_t rawVal;
-//                    IIDC_CHECK << dc1394_feature_get_value(d->camera.get(), feature.id, &rawVal)
-//                               << "Get feature value";
-//
-//                    control.value = rawVal;
-//                }
-//                else
-//                    control.value = rawMin;
-//            }
-//
-//            UpdateRangeAndStep(d->hasAbsoluteControl[feature.id], control, rawMin, rawMax, absMin, absMax);
-//
-//            if (DC1394_FEATURE_SHUTTER == feature.id)
-//                d->ctrlShutter = control; // See the comment for ctrlShutter
-//
-//            controls.push_back(std::move(control));
-//        }
-//
+    if (!d->currentVidMode.isFormat7())
+        controls.push_back(d->getFrameRates((FlyCapture2::VideoMode)d->currentVidMode));
+
+    for (FlyCapture2::PropertyType propType: { FlyCapture2::BRIGHTNESS,
+                                               FlyCapture2::AUTO_EXPOSURE,
+                                               FlyCapture2::SHARPNESS,
+                                               FlyCapture2::WHITE_BALANCE,
+                                               FlyCapture2::HUE,
+                                               FlyCapture2::SATURATION,
+                                               FlyCapture2::GAMMA,
+                                               FlyCapture2::IRIS,
+                                               FlyCapture2::FOCUS,
+                                               FlyCapture2::ZOOM,
+                                               FlyCapture2::PAN,
+                                               FlyCapture2::TILT,
+                                               FlyCapture2::SHUTTER,
+                                               FlyCapture2::GAIN,
+                                               FlyCapture2::TRIGGER_MODE,
+                                               FlyCapture2::TRIGGER_DELAY,
+                                               FlyCapture2::FRAME_RATE,
+                                               FlyCapture2::TEMPERATURE })
+    {
+        FlyCapture2::PropertyInfo propInfo;
+        propInfo.type = propType;
+
+        FC2_CHECK << d->cam.GetPropertyInfo(&propInfo).GetType()
+                  << "Camera::GetPropertyInfo";
+
+        VerifyRanges(propInfo);
+
+        if (propInfo.present)
+        {
+            d->propertyInfo[propType] = propInfo;
+
+            Control control{ propType };
+            control.type = Control::Type::Number;
+
+            FlyCapture2::Property prop;
+            prop.type = propType;
+            FC2_CHECK << d->cam.GetProperty(&prop).GetType()
+                      << "Camera::GetProperty";
+
+            switch (propType)
+            {
+                case FlyCapture2::BRIGHTNESS:       control.name = "Brightness"; break;
+
+                // This is not "exposure time" (see FlyCapture2::SHUTTER for that);
+                // instead, it regulates the desired overall image brightness by changing
+                // values of shutter and gain - if they are set to auto
+                case FlyCapture2::AUTO_EXPOSURE:    control.name = "Exposure"; break;
+
+                case FlyCapture2::SHARPNESS:       control.name = "Sharpness"; break;
+
+                case FlyCapture2::HUE:             control.name = "Hue"; break;
+                case FlyCapture2::SATURATION:      control.name = "Saturation"; break;
+                case FlyCapture2::GAMMA:           control.name = "Gamma"; break;
+
+                case FlyCapture2::SHUTTER:
+                {
+                    control.name = "Shutter";
+                    control.is_exposure = true;
+                    control.is_duration = true;
+
+                    const auto &unitLoc = DURATION_VALUE.find(propInfo.pUnitAbbr);
+                    if (unitLoc != DURATION_VALUE.end())
+                        control.duration_unit = unitLoc->second;
+                    else
+                        control.duration_unit = 1s;
+                    break;
+                }
+
+                case FlyCapture2::GAIN:            control.name = "Gain"; break;
+                case FlyCapture2::IRIS:            control.name = "Iris"; break;
+                case FlyCapture2::FOCUS:           control.name = "Focus"; break;
+                case FlyCapture2::TEMPERATURE:     control.name = "Temperature"; break;
+                //TODO: implement this      case FlyCapture2::WHITE_BALANCE:   control.name = "White Balance"; break;
+                case FlyCapture2::FRAME_RATE:      control.name = "Frame Rate"; break;
+                case FlyCapture2::ZOOM:            control.name = "Zoom"; break;
+                case FlyCapture2::PAN:             control.name = "Pan"; break;
+                case FlyCapture2::TILT:            control.name = "Tilt"; break;
+
+                default: continue;
+            }
+
+            control.supports_auto = propInfo.autoSupported;
+
+            control.readonly = !propInfo.manualSupported && !propInfo.autoSupported && propInfo.readOutSupported;
+
+            control.supports_onOff = propInfo.onOffSupported;
+
+            if (control.supports_onOff)
+                control.value_onOff = prop.onOff;
+
+            control.value_auto = prop.autoManualMode;
+
+            // A feature is "absolute control-capable", if its value can be set using
+            // floating-point arguments, not just the integer "raw/driver" values.
+            // E.g. SHUTTER can be set in fractional "absolute" values expressed in seconds.
+            if (propInfo.absValSupported)
+            {
+                control.decimals = 6;
+
+                prop.absControl = true;
+                FC2_CHECK << d->cam.SetProperty(&prop).GetType()
+                          << "Camera::SetProperty - enable absolute control";
+
+                //if (DC1394_TRUE == feature.readout_capable)
+                if (propInfo.readOutSupported)
+                {
+                    FC2_CHECK << d->cam.GetProperty(&prop).GetType()
+                              << "Camera::GetProperty";
+
+                    control.value = prop.absValue;
+                }
+                else
+                    control.value = propInfo.absMin;
+            }
+            else
+            {
+                control.decimals = 0;
+
+                if (propInfo.readOutSupported)
+                    control.value = prop.valueA;
+                else
+                    control.value = propInfo.min;
+            }
+
+            UpdateRangeAndStep(control, propInfo);
+
+            if (propType == FlyCapture2::SHUTTER)
+                d->ctrlShutter = control; // See the comment for ctrlShutter
+
+            controls.push_back(std::move(control));
+        }
+    }
 
     return controls;
 }
@@ -838,26 +809,15 @@ void FC2Imager::startLive()
     qDebug() << "Video streaming started successfully";
 }
 
-void FC2Imager::Private::setHighestFrameRate(FlyCapture2::VideoMode vidMode)
+void FC2Imager::Private::updateShutterCtrl()
 {
-//    const dc1394framerates_t &f = frameRates[vidMode];
-//
-//    const dc1394framerate_t *highest = std::max_element(f.framerates, f.framerates + f.num);
-//
-//    IIDC_CHECK << dc1394_video_set_framerate(camera.get(), *highest)
-//               << "Set frame rate";
+    FlyCapture2::PropertyInfo propInfo;
+    propInfo.type = FlyCapture2::SHUTTER;
+
+    FC2_CHECK << cam.GetPropertyInfo(&propInfo).GetType()
+              << "Camera::GetPropertyInfo - shutter";
+
+    VerifyRanges(propInfo);
+
+    UpdateRangeAndStep(ctrlShutter, propInfo);
 }
-//
-//void IIDCImager::Private::updateShutterCtrl()
-//{
-//    uint32_t rawMin, rawMax;
-//    float absMin, absMax;
-//
-//    getRawRange(DC1394_FEATURE_SHUTTER, rawMin, rawMax);
-//
-//    const bool hasAbsControl = hasAbsoluteControl[DC1394_FEATURE_SHUTTER];
-//    if (hasAbsControl)
-//        getAbsoluteRange(DC1394_FEATURE_SHUTTER, absMin, absMax);
-//
-//    UpdateRangeAndStep(hasAbsControl, ctrlShutter, rawMin, rawMax, absMin, absMax);
-//}
