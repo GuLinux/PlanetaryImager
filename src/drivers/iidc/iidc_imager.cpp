@@ -228,6 +228,8 @@ IIDCImager::IIDCImager(std::unique_ptr<dc1394camera_t, Deleters::camera> camera,
 {
     d->camera = std::move(camera);
 
+    d->temperatureAvailable = false;
+
     IIDC_CHECK << dc1394_video_get_supported_modes(d->camera.get(), &d->videoModes)
                << "Get supported video modes";
 
