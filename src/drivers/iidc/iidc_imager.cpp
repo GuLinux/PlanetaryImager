@@ -92,6 +92,9 @@ DPTR_IMPL(IIDCImager)
 
     QRect currentROI;
 
+    bool temperatureAvailable;
+    bool temperatureAbsSupported;
+
     void updateWorkerExposureTimeout();
 
     /// Returns a combo control listing all video modes, with 'currentVidMode' selected
@@ -280,6 +283,17 @@ Imager::Properties IIDCImager::properties() const
     if (vmEnd != std::find_if(&d->videoModes.modes[0], vmEnd, [](const dc1394video_mode_t &vidMode) { return DC1394_TRUE == dc1394_is_video_mode_scalable(vidMode); }))
         properties << ROI;
 
+    const auto featEnd = d->features.feature + DC1394_FEATURE_NUM;
+    const auto featTemp = std::find_if(&d->features.feature[0], featEnd,
+            [](const dc1394feature_info_t &feat) { return DC1394_FEATURE_TEMPERATURE == feat.id && feat.available; });
+    if (featTemp != featEnd)
+    {
+        d->temperatureAvailable = true;
+        d->temperatureAbsSupported = featTemp->absolute_capable;
+
+        properties << Temperature;
+    }
+
     QString iidcVersion;
     switch (d->camera.get()->iidc_version)
     {
@@ -463,6 +477,28 @@ void IIDCImager::setControl(const Imager::Control& control)
 
 void IIDCImager::readTemperature()
 {
+    if (d->temperatureAvailable)
+    {
+        double tempCelsius;
+
+        // IIDC does not report units of temperature; my camera returns values in kelvins
+        if (d->temperatureAbsSupported)
+        {
+            float absVal;
+            IIDC_CHECK << dc1394_feature_get_absolute_value(d->camera.get(), DC1394_FEATURE_TEMPERATURE, &absVal)
+                       << "Get feature absolute value";
+            tempCelsius = absVal - 273.15;
+        }
+        else
+        {
+            uint32_t rawVal;
+            IIDC_CHECK << dc1394_feature_get_value(d->camera.get(), DC1394_FEATURE_TEMPERATURE, &rawVal)
+                       << "Get feature value";
+            tempCelsius = rawVal - 273;
+        }
+
+        emit temperature(tempCelsius);
+    }
 }
 
 

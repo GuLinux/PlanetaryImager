@@ -66,6 +66,7 @@ public slots:
   virtual void startLive() = 0;
   virtual void destroy();
   QVariantList export_controls() const;
+  /// If the camera supports temperature reporting, derived classes should perform the readout and emit the 'temperature' signal
   virtual void readTemperature();
 signals:
   void fps(double rate);
