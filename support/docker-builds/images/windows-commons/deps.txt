@@ -16,7 +16,7 @@ libopencv_core.dll
 libopencv_highgui.dll
 libopencv_imgproc.dll
 libpcre-1.dll
-libpcre16-0.dll
+libpcre2-16-0.dll
 libpng16-16.dll
 libstdc++-6.dll
 libtiff-5.dll

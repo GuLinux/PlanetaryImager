@@ -17,7 +17,8 @@ install(FILES
   /mxe/usr/x86_64-w64-mingw32.shared/bin/libopencv_highgui.dll
   /mxe/usr/x86_64-w64-mingw32.shared/bin/libopencv_imgproc.dll
   /mxe/usr/x86_64-w64-mingw32.shared/bin/libpcre-1.dll
-  /mxe/usr/x86_64-w64-mingw32.shared/bin/libpcre16-0.dll
+  /mxe/usr/x86_64-w64-mingw32.shared/bin/libpcre2-16-0.dll
+  /mxe/usr/x86_64-w64-mingw32.shared/bin/libpcre-1.dll
   /mxe/usr/x86_64-w64-mingw32.shared/bin/libpng16-16.dll
   /mxe/usr/x86_64-w64-mingw32.shared/bin/libstdc++-6.dll
   /mxe/usr/x86_64-w64-mingw32.shared/bin/libtiff-5.dll
