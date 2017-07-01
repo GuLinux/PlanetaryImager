@@ -29,26 +29,37 @@
 constexpr int MAX_NUM_INCONSISTENT_FRAMES_TO_SKIP = 15;
 
 
-FC2ImagerWorker::FC2ImagerWorker(FlyCapture2::Camera &_camera, //dc1394camera_t *_camera, dc1394video_mode_t _vidMode,
-                                   const QRect &roi)
+FC2ImagerWorker::FC2ImagerWorker(
+    FlyCapture2::Camera &_camera,
+    FC2VideoMode vidMode,
+    FlyCapture2::FrameRate frameRate,
+    FlyCapture2::PixelFormat pixFmt,
+    /// Must be already validated; also used as the initial frame size for Format7 modes
+    const QRect &roi)
 : camera(_camera)
-// //camera(_camera), nativeFrame(nullptr), vidMode(_vidMode)
 {
-//    frameInfo.initialized = false;
-//
-//    IIDC_CHECK << dc1394_video_set_mode(camera, vidMode)
-//               << "Set video mode";
-//
-    qDebug() << "Requested to set ROI to " << roi.x() << ", " << roi.y() << ", " << roi.width() << ", " << roi.height();
+    frameInfo.initialized = false;
 
-//    setROI(roi);
-//
-//    IIDC_CHECK << dc1394_capture_setup(camera, NUM_DMA_BUFFERS, DC1394_CAPTURE_FLAGS_DEFAULT)
-//               << "Setup capture";
-//
-//    IIDC_CHECK << dc1394_video_set_transmission(camera, DC1394_ON)
-//               << "Start video transmission";
 
+    /*!!!*/std::cout << "Requested to set ROI to " << roi.x() << ", " << roi.y() << ", " << roi.width() << ", " << roi.height() << std::endl;
+
+    if (vidMode.isFormat7())
+    {
+        FlyCapture2::Format7ImageSettings fmt7settings;
+
+        fmt7settings.mode = (FlyCapture2::Mode)vidMode;
+        fmt7settings.offsetX = roi.left();
+        fmt7settings.offsetY = roi.top();
+        fmt7settings.width = roi.width();
+        fmt7settings.height = roi.height();
+        fmt7settings.pixelFormat = pixFmt;
+
+        FC2_CHECK << camera.SetFormat7Configuration(&fmt7settings, 100.0f).GetType()
+                  << "Camera::SetFormat7Configuration";
+    }
+    else
+        FC2_CHECK << camera.SetVideoModeAndFrameRate((FlyCapture2::VideoMode)vidMode, frameRate).GetType()
+                  << "Camera::SetVideoModeAndFrameRate";
 
     FC2_CHECK << camera.StartCapture(nullptr, nullptr).GetType()
               << "Camera::StartCapture";
@@ -60,48 +71,46 @@ FC2ImagerWorker::~FC2ImagerWorker()
               << "Camera::StopCapture";
 }
 
-//void FC2ImagerWorker::initFrameInfo()
-//{
-//    switch (nativeFrame->color_coding)
-//    {
-//    case DC1394_COLOR_CODING_MONO8:
-//    case DC1394_COLOR_CODING_MONO16:
-//    case DC1394_COLOR_CODING_MONO16S:
-//        frameInfo.colorFormat = Frame::ColorFormat::Mono; break;
-//
-//    // YUV formats will be converted to RGB before returning the frame
-//    case DC1394_COLOR_CODING_YUV411:
-//    case DC1394_COLOR_CODING_YUV422:
-//    case DC1394_COLOR_CODING_YUV444:
-//    case DC1394_COLOR_CODING_RGB8:
-//    case DC1394_COLOR_CODING_RGB16:
-//    case DC1394_COLOR_CODING_RGB16S:
-//        frameInfo.colorFormat = Frame::ColorFormat::RGB; break;
-//
-//    case DC1394_COLOR_CODING_RAW8:
-//    case DC1394_COLOR_CODING_RAW16:
-//        switch (nativeFrame->color_filter)
-//        {
-//        case DC1394_COLOR_FILTER_RGGB: frameInfo.colorFormat = Frame::ColorFormat::Bayer_RGGB; break;
-//        case DC1394_COLOR_FILTER_BGGR: frameInfo.colorFormat = Frame::ColorFormat::Bayer_BGGR; break;
-//        case DC1394_COLOR_FILTER_GBRG: frameInfo.colorFormat = Frame::ColorFormat::Bayer_GBRG; break;
-//        case DC1394_COLOR_FILTER_GRBG: frameInfo.colorFormat = Frame::ColorFormat::Bayer_GRBG; break;
-//        }
-//        break;
-//    }
-//
-//    frameInfo.bitsPerChannel = nativeFrame->data_depth;
-//    frameInfo.byteOrder = (nativeFrame->little_endian ? Frame::ByteOrder::LittleEndian : Frame::ByteOrder::BigEndian);
-//
-//    switch (nativeFrame->color_coding)
-//    {
-//    case DC1394_COLOR_CODING_YUV411: frameInfo.srcBytesPerLine = (3 * nativeFrame->size[0] + 1) / 2; break;
-//    case DC1394_COLOR_CODING_YUV422: frameInfo.srcBytesPerLine = 2 * nativeFrame->size[0]; break;
-//    case DC1394_COLOR_CODING_YUV444: frameInfo.srcBytesPerLine = 3 * nativeFrame->size[0]; break;
-//
-//    default: frameInfo.srcBytesPerLine = 0; break;
-//    }
-//}
+void FC2ImagerWorker::initFrameInfo()
+{
+    switch (image.GetPixelFormat())
+    {
+    case FlyCapture2::PIXEL_FORMAT_MONO8:
+    case FlyCapture2::PIXEL_FORMAT_MONO12:
+    case FlyCapture2::PIXEL_FORMAT_MONO16:
+    case FlyCapture2::PIXEL_FORMAT_S_MONO16:
+        frameInfo.colorFormat = Frame::ColorFormat::Mono; break;
+
+    // YUV formats will be converted to RGB before returning the frame
+    case FlyCapture2::PIXEL_FORMAT_411YUV8:
+    case FlyCapture2::PIXEL_FORMAT_422YUV8:
+    case FlyCapture2::PIXEL_FORMAT_444YUV8:
+        frameInfo.colorFormat = Frame::ColorFormat::RGB; break;
+
+    case FlyCapture2::PIXEL_FORMAT_RAW8:
+    case FlyCapture2::PIXEL_FORMAT_RAW12:
+    case FlyCapture2::PIXEL_FORMAT_RAW16:
+        switch (image.GetBayerTileFormat())
+        {
+        case FlyCapture2::RGGB: frameInfo.colorFormat = Frame::ColorFormat::Bayer_RGGB; break;
+        case FlyCapture2::BGGR: frameInfo.colorFormat = Frame::ColorFormat::Bayer_BGGR; break;
+        case FlyCapture2::GBRG: frameInfo.colorFormat = Frame::ColorFormat::Bayer_GBRG; break;
+        case FlyCapture2::GRBG: frameInfo.colorFormat = Frame::ColorFormat::Bayer_GRBG; break;
+        }
+        break;
+    }
+
+    frameInfo.bitsPerChannel = image.GetBitsPerPixel(); // TODO: make sure it really is "per channel" by testing in an RGB mode
+
+    switch (image.GetPixelFormat())
+    {
+    case FlyCapture2::PIXEL_FORMAT_411YUV8: frameInfo.srcBytesPerLine = (3 * image.GetCols() + 1) / 2; break;
+    case FlyCapture2::PIXEL_FORMAT_422YUV8: frameInfo.srcBytesPerLine = 2 * image.GetCols(); break;
+    case FlyCapture2::PIXEL_FORMAT_444YUV8: frameInfo.srcBytesPerLine = 3 * image.GetCols(); break;
+
+    default: frameInfo.srcBytesPerLine = 0; break;
+    }
+}
 
 //static bool isYUV(dc1394color_coding_t colorCoding)
 //{
@@ -124,8 +133,24 @@ Frame::ptr FC2ImagerWorker::shoot()
 
     FC2_CHECK << result.GetType() << "Camera::RetrieveBuffer";
 
-    auto frame = std::make_shared<Frame>(image.GetBitsPerPixel(),
-                                         Frame::ColorFormat::Mono,
+    if (!frameInfo.initialized)
+    {
+        initFrameInfo();
+        frameInfo.initialized = true;
+
+//        if (isYUV(nativeFrame->color_coding))
+//        {
+//            frameInfo.needsYUVtoRGBconversion = true;
+//            conversionBuf.src = std::make_unique<uint8_t[]>(nativeFrame->total_bytes); // Pass 'total_bytes' for simplicity; we may use less
+//            conversionBuf.dest = std::make_unique<uint8_t[]>(nativeFrame->size[0] * nativeFrame->size[1] * 3); // 3 bytes/pixel (R, G, B)
+//        }
+//        else
+//            frameInfo.needsYUVtoRGBconversion = false;
+
+    }
+
+    auto frame = std::make_shared<Frame>(frameInfo.bitsPerChannel,
+                                         frameInfo.colorFormat,
                                          QSize(image.GetCols(), image.GetRows()),
                                          Frame::ByteOrder::LittleEndian);
 
@@ -149,17 +174,3 @@ Frame::ptr FC2ImagerWorker::shoot()
 
     return frame;
 }
-
-//void FC2ImagerWorker::setROI(const QRect &roi)
-//{
-//    if (dc1394_is_video_mode_scalable(vidMode))
-//    {
-//        dc1394color_coding_t colorcd;
-//        IIDC_CHECK << dc1394_get_color_coding_from_video_mode(camera, vidMode, &colorcd)
-//                   << "Get color coding from video mode";
-//
-//        IIDC_CHECK << dc1394_format7_set_roi(camera, vidMode, colorcd, DC1394_USE_MAX_AVAIL,
-//                                             roi.x(), roi.y(), roi.width(), roi.height())
-//                   << "Set ROI";
-//    }
-//}

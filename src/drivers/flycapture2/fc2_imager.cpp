@@ -16,9 +16,6 @@
  *
  */
 
-//#include <algorithm>
-//#include <chrono>
-
 #include <cstring>
 #include <QRect>
 #include <FlyCapture2Defs.h>
@@ -140,32 +137,12 @@ DPTR_IMPL(FC2Imager)
     FlyCapture2::Camera cam;
     FlyCapture2::CameraInfo camInfo;
 
-    /// Contains either a value from FlyCapture2::VideoMode, or a value from FlyCapture2::Mode (i.e. a Format7 mode) + FMT7_BASE
-    class FC2VideoMode
-    {
-        static constexpr int FMT7_BASE = FlyCapture2::VideoMode::NUM_VIDEOMODES + 1;
-
-        int mode;
-
-    public:
-
-        FC2VideoMode(): mode(-1) { }
-        FC2VideoMode(const FC2VideoMode &) = default;
-        FC2VideoMode(FlyCapture2::VideoMode vidMode): mode(vidMode) { }
-        FC2VideoMode(FlyCapture2::Mode fmt7Mode): mode(fmt7Mode + FMT7_BASE) { }
-
-        explicit operator FlyCapture2::VideoMode() const { return (FlyCapture2::VideoMode)mode; }
-        explicit operator FlyCapture2::Mode()      const { return (FlyCapture2::Mode)(mode - FMT7_BASE); }
-        explicit operator int()                    const { return mode; }
-
-        bool isFormat7() const { return mode >= FMT7_BASE + FlyCapture2::MODE_0; }
-    };
-
     std::map<FlyCapture2::VideoMode, std::vector<FlyCapture2::FrameRate>> videoModes;
     std::map<FlyCapture2::Mode, FlyCapture2::Format7Info> fmt7Modes;
     std::map<FlyCapture2::PropertyType, FlyCapture2::PropertyInfo> propertyInfo;
 
     FC2VideoMode currentVidMode;
+    FlyCapture2::FrameRate currentFrameRate;
     FlyCapture2::PixelFormat currentPixFmt;
 
     /// Copy of the SHUTTER control; used for informing GUI about shutter range change when frame rate changes
@@ -189,9 +166,11 @@ DPTR_IMPL(FC2Imager)
         comes into effect after the worker thread is restarted. */
     void changeVideoMode(const FC2VideoMode &newMode);
 
-    Control getFrameRates(FlyCapture2::VideoMode vidMode);
+    Control getFrameRates(FC2VideoMode vidMode);
 
     void updateShutterCtrl();
+
+    Control getEmptyFrameRatesCtrl();
 
 
     LOG_C_SCOPE(FC2Imager);
@@ -293,32 +272,65 @@ Imager::Control FC2Imager::Private::enumerateVideoModes()
     return videoMode;
 }
 
-Imager::Control FC2Imager::Private::getFrameRates(FlyCapture2::VideoMode vidMode)
+Imager::Control FC2Imager::Private::getEmptyFrameRatesCtrl()
 {
-    const auto frloc = videoModes.find(vidMode);
-    assert(frloc != videoModes.end());
-
-    const auto &frList = frloc->second;
-
     auto frameRatesCtrl = Imager::Control{ ControlID::FrameRate, "Fixed Frame Rate", Control::Combo };
 
-    for (const auto fr: frList)
-        switch (fr)
-        {
-        case FlyCapture2::FRAMERATE_1_875: frameRatesCtrl.add_choice_enum("1.875 fps", fr); break;
-        case FlyCapture2::FRAMERATE_3_75:  frameRatesCtrl.add_choice_enum("3.75 fps",  fr); break;
-        case FlyCapture2::FRAMERATE_7_5:   frameRatesCtrl.add_choice_enum("7.5 fps",   fr); break;
-        case FlyCapture2::FRAMERATE_15:    frameRatesCtrl.add_choice_enum("15 fps",    fr); break;
-        case FlyCapture2::FRAMERATE_30:    frameRatesCtrl.add_choice_enum("30 fps",    fr); break;
-        case FlyCapture2::FRAMERATE_60:    frameRatesCtrl.add_choice_enum("60 fps",    fr); break;
-        case FlyCapture2::FRAMERATE_120:   frameRatesCtrl.add_choice_enum("120 fps",   fr); break;
-        case FlyCapture2::FRAMERATE_240:   frameRatesCtrl.add_choice_enum("240 fps",   fr); break;
-        }
-
-    // Initially we set the highest frame rate, so report it as selected
-    frameRatesCtrl.set_value_enum(*std::max_element(frList.begin(), frList.end()));
+    frameRatesCtrl.add_choice_enum("N/A", 0);
+    frameRatesCtrl.set_value_enum(0);
+    frameRatesCtrl.readonly = true;
 
     return frameRatesCtrl;
+}
+
+Imager::Control FC2Imager::Private::getFrameRates(FC2VideoMode vidMode)
+{
+    auto frameRatesCtrl = Imager::Control{ ControlID::FrameRate, "Fixed Frame Rate", Control::Combo };
+
+    if (!vidMode.isFormat7())
+    {
+        const auto frloc = videoModes.find((FlyCapture2::VideoMode)vidMode);
+        assert(frloc != videoModes.end());
+
+        const auto &frList = frloc->second;
+
+        for (const auto fr: frList)
+            switch (fr)
+            {
+            case FlyCapture2::FRAMERATE_1_875: frameRatesCtrl.add_choice_enum("1.875 fps", fr); break;
+            case FlyCapture2::FRAMERATE_3_75:  frameRatesCtrl.add_choice_enum("3.75 fps",  fr); break;
+            case FlyCapture2::FRAMERATE_7_5:   frameRatesCtrl.add_choice_enum("7.5 fps",   fr); break;
+            case FlyCapture2::FRAMERATE_15:    frameRatesCtrl.add_choice_enum("15 fps",    fr); break;
+            case FlyCapture2::FRAMERATE_30:    frameRatesCtrl.add_choice_enum("30 fps",    fr); break;
+            case FlyCapture2::FRAMERATE_60:    frameRatesCtrl.add_choice_enum("60 fps",    fr); break;
+            case FlyCapture2::FRAMERATE_120:   frameRatesCtrl.add_choice_enum("120 fps",   fr); break;
+            case FlyCapture2::FRAMERATE_240:   frameRatesCtrl.add_choice_enum("240 fps",   fr); break;
+            }
+
+        // Initially we set the highest frame rate, so report it as selected
+        frameRatesCtrl.set_value_enum(*std::max_element(frList.begin(), frList.end()));
+
+        return frameRatesCtrl;
+    }
+    else
+        return getEmptyFrameRatesCtrl();
+}
+
+static FlyCapture2::PixelFormat GetFirstSupportedPixelFormat(const FlyCapture2::Format7Info &f7info)
+{
+    FlyCapture2::PixelFormat first = FlyCapture2::UNSPECIFIED_PIXEL_FORMAT;
+    bool firstAlreadySelected = false;
+
+    ForEachPossiblePixelFormat([&](FlyCapture2::PixelFormat pixFmt)
+                               {
+                                   if ((f7info.pixelFormatBitField & pixFmt) == pixFmt && !firstAlreadySelected)
+                                   {
+                                       first = pixFmt;
+                                       firstAlreadySelected = true;
+                                   }
+                               });
+
+    return first;
 }
 
 FC2Imager::FC2Imager(const FlyCapture2::PGRGuid &guid, const ImageHandler::ptr &handler)
@@ -365,19 +377,8 @@ FC2Imager::FC2Imager(const FlyCapture2::PGRGuid &guid, const ImageHandler::ptr &
 
     if (d->currentVidMode.isFormat7())
     {
-        FlyCapture2::PixelFormat first = FlyCapture2::UNSPECIFIED_PIXEL_FORMAT;
-        bool firstAlreadySelected = false;
-
-        ForEachPossiblePixelFormat([&](FlyCapture2::PixelFormat pixFmt)
-                                   {
-                                       if (!firstAlreadySelected)
-                                       {
-                                           first = pixFmt;
-                                           firstAlreadySelected = true;
-                                       }
-                                   });
-
-        d->currentPixFmt = first;
+        const auto &f7info = d->fmt7Modes[(FlyCapture2::Mode)d->currentVidMode];
+        d->currentPixFmt = GetFirstSupportedPixelFormat(f7info);
     }
     else
         d->currentPixFmt = VID_MODE_PIX_FMT[(FlyCapture2::VideoMode)d->currentVidMode];
@@ -393,6 +394,9 @@ Imager::Properties FC2Imager::properties() const
 {
     auto properties = Imager::Properties();
     properties << LiveStream;
+
+    if (!d->fmt7Modes.empty())
+        properties << ROI;
 
     properties << Imager::Properties::Property{ "Vendor", d->camInfo.vendorName };
 
@@ -492,32 +496,34 @@ QString FC2Imager::name() const
 
 void FC2Imager::Private::changeVideoMode(const FC2VideoMode &newMode)
 {
-//    if (DC1394_TRUE == dc1394_is_video_mode_scalable(newMode))
-//    {
-//        const dc1394format7mode_t &fmt7 = fmt7Info[newMode];
-//
-//        roiValidator = std::make_shared<ROIValidator>(
-//            std::list<ROIValidator::Rule>{ ROIValidator::x_multiple(fmt7.unit_pos_x),
-//                                           ROIValidator::y_multiple(fmt7.unit_pos_y),
-//                                           ROIValidator::width_multiple(fmt7.unit_size_x),
-//                                           ROIValidator::height_multiple(fmt7.unit_size_y),
-//                                           ROIValidator::within_rect(QRect{ 0, 0, (int)fmt7.max_size_x, (int)fmt7.max_size_y }) });
-//
-//        maxFrameSize = { (int)fmt7.max_size_x, (int)fmt7.max_size_y };
-//
-//        currentROI = { 0, 0, maxFrameSize.width(), maxFrameSize.height() };
-//    }
-//    else
-//    {
-//        uint32_t width, height;
-//        IIDC_CHECK << dc1394_get_image_size_from_video_mode(camera.get(), newMode, &width, &height)
-//                   << "Get image size from video mode";
-//
-//        currentROI = { 0, 0, (int)width, (int)height };
-//
-//        roiValidator = std::make_shared<ROIValidator>(std::list<ROIValidator::Rule>{ });
-//    }
-//
+    if (newMode.isFormat7())
+    {
+        const auto &fmt7 = fmt7Modes[(FlyCapture2::Mode)newMode];
+
+        roiValidator = std::make_shared<ROIValidator>(
+            std::list<ROIValidator::Rule>{ ROIValidator::x_multiple(fmt7.offsetHStepSize),
+                                           ROIValidator::y_multiple(fmt7.offsetVStepSize),
+                                           ROIValidator::width_multiple(fmt7.imageHStepSize),
+                                           ROIValidator::height_multiple(fmt7.imageVStepSize),
+                                           ROIValidator::within_rect(QRect{ 0, 0, (int)fmt7.maxWidth, (int)fmt7.maxHeight }) });
+
+        maxFrameSize = { (int)fmt7.maxWidth, (int)fmt7.maxHeight };
+
+        currentROI = { 0, 0, maxFrameSize.width(), maxFrameSize.height() };
+
+        currentPixFmt = GetFirstSupportedPixelFormat(fmt7);
+    }
+    else
+    {
+        const auto &res = VID_MODE_RESOLUTION[(FlyCapture2::VideoMode)newMode];
+        const int width  = std::get<0>(res);
+        const int height = std::get<1>(res);
+
+        currentROI = { 0, 0, width, height };
+
+        roiValidator = std::make_shared<ROIValidator>(std::list<ROIValidator::Rule>{ });
+    }
+
     currentVidMode = newMode;
 }
 
@@ -525,28 +531,25 @@ void FC2Imager::setControl(const Imager::Control& control)
 {
     LOG_F_SCOPE
 
-//    if (control.id == ControlID::VideoMode)
-//    {
-//        const dc1394video_mode_t newMode = control.get_value_enum<dc1394video_mode_t>();
-//
-//        d->changeVideoMode(newMode);
-//
-//        startLive();
-//
-//        if (dc1394_is_video_mode_scalable(newMode))
-//        {
-//            // Scalable modes do not use fixed frame rates; inform the GUI to show an empty list
-//            Imager::Control emptyFrameRatesCtrl{ ControlID::FrameRate, "Fixed Frame Rate", Control::Combo };
-//            emptyFrameRatesCtrl.add_choice("N/A", 0);
-//            emptyFrameRatesCtrl.set_value(0);
-//            emit changed(emptyFrameRatesCtrl);
-//        }
-//        else
-//        {
+    if (control.id == ControlID::VideoMode)
+    {
+        const auto newMode = control.get_value_enum<FC2VideoMode>();
+
+        d->changeVideoMode(newMode);
+
+        startLive();
+
+        if (newMode.isFormat7())
+        {
+            // Format7 modes do not use fixed frame rates; inform the GUI to show an empty list
+            emit changed(d->getEmptyFrameRatesCtrl());
+        }
+        else
+        {
 //            d->setHighestFrameRate(newMode);
 //            emit changed(d->getFrameRates(newMode));
-//        }
-//    }
+        }
+    }
 //    else if (control.id == ControlID::FrameRate)
 //    {
 //        if (!dc1394_is_video_mode_scalable(d->currentVidMode))
@@ -562,61 +565,40 @@ void FC2Imager::setControl(const Imager::Control& control)
 //            }
 //        }
 //    }
-//    else
-//    {
-//        if (control.supports_auto)
-//        {
-//            dc1394feature_mode_t mode;
-//            IIDC_CHECK << dc1394_feature_get_mode(d->camera.get(), (dc1394feature_t)control.id, &mode)
-//                       << "Get feature mode";
-//
-//            if ((DC1394_FEATURE_MODE_AUTO == mode) ^ control.value_auto)
-//            {
-//                IIDC_CHECK << dc1394_feature_set_mode(d->camera.get(), (dc1394feature_t)control.id, control.value_auto ? DC1394_FEATURE_MODE_AUTO
-//                                                                                                                       : DC1394_FEATURE_MODE_MANUAL)
-//                           << "Set feature mode";
-//            }
-//        }
-//
-//        if (control.supports_onOff)
-//        {
-//            dc1394switch_t onOffState;
-//            IIDC_CHECK << dc1394_feature_get_power(d->camera.get(), (dc1394feature_t)control.id, &onOffState)
-//                       << "Get feature on/off state";
-//
-//            if ((DC1394_ON == onOffState) ^ control.value_onOff)
-//            {
-//                IIDC_CHECK << dc1394_feature_set_power(d->camera.get(), (dc1394feature_t)control.id, control.value_onOff ? DC1394_ON
-//                                                                                                                         : DC1394_OFF)
-//                           << "Set feature on/off state";
-//            }
-//        }
-//
-//        if ((!control.supports_onOff || control.value_onOff) &&
-//            !(control.supports_auto  && control.value_auto))
-//        {
-//            if (d->hasAbsoluteControl[(dc1394feature_t)control.id])
-//            {
-//                IIDC_CHECK << dc1394_feature_set_absolute_value(d->camera.get(), (dc1394feature_t)control.id, control.value.toFloat())
-//                           << "Set feature absolute value";
-//            }
-//            else
-//            {
-//                IIDC_CHECK << dc1394_feature_set_value(d->camera.get(), (dc1394feature_t)control.id, control.value.toInt())
-//                           << "Set feature value";
-//            }
-//        }
-//    }
-//
-//    emit changed(control);
-//
-//    if (DC1394_FEATURE_FRAME_RATE == control.id && d->ctrlShutter.valid())
-//    {
-//        // Changing frame rate changes the shutter range; need to inform the GUI
-//
-//        d->updateShutterCtrl();
-//        emit changed(d->ctrlShutter);
-//    }
+    else if (control.id == ControlID::PixelFormat)
+    {
+        d->currentPixFmt = control.get_value_enum<FlyCapture2::PixelFormat>();
+        startLive();
+    }
+    else
+    {
+        FlyCapture2::Property prop;
+        prop.type = (FlyCapture2::PropertyType)control.id;
+        FC2_CHECK << d->cam.GetProperty(&prop).GetType()
+                  << "Camera::GetProperty";
+
+        prop.autoManualMode = control.value_auto;
+        prop.onOff = control.value_onOff;
+        prop.absValue = control.value.toFloat();
+        prop.valueA = control.value.toInt();
+
+        FC2_CHECK << d->cam.SetProperty(&prop).GetType()
+                  << "Camera::SetProperty";
+    }
+
+    emit changed(control);
+
+    if (d->ctrlShutter.valid() &&
+        (FlyCapture2::FRAME_RATE == control.id ||
+         ControlID::FrameRate    == control.id ||
+         ControlID::VideoMode    == control.id ||
+         ControlID::PixelFormat  == control.id))
+    {
+        // Changing frame rate, video mode or pixel format may change the shutter range; need to inform the GUI
+
+        d->updateShutterCtrl();
+        emit changed(d->ctrlShutter);
+    }
 }
 
 void FC2Imager::readTemperature()
@@ -651,8 +633,7 @@ Imager::Controls FC2Imager::controls() const
 
     controls.push_back(std::move(d->enumerateCurrentModePixelFormats()));
 
-    if (!d->currentVidMode.isFormat7())
-        controls.push_back(d->getFrameRates((FlyCapture2::VideoMode)d->currentVidMode));
+    controls.push_back(d->getFrameRates(d->currentVidMode));
 
     for (FlyCapture2::PropertyType propType: { FlyCapture2::BRIGHTNESS,
                                                FlyCapture2::AUTO_EXPOSURE,
@@ -793,19 +774,19 @@ Imager::Controls FC2Imager::controls() const
 
 void FC2Imager::clearROI()
 {
-//    setROI(QRect{ 0, 0, d->maxFrameSize.width(), d->maxFrameSize.height() });
+    setROI(QRect{ 0, 0, d->maxFrameSize.width(), d->maxFrameSize.height() });
 }
 
 void FC2Imager::setROI(const QRect &roi)
 {
-//    d->currentROI = d->roiValidator->validate(roi, QRect{ });
-//    startLive();
+    d->currentROI = d->roiValidator->validate(roi, QRect{ });
+    startLive();
 }
 
 
 void FC2Imager::startLive()
 {
-    restart([this] { return std::make_shared<FC2ImagerWorker>(d->cam, d->currentROI); });
+    restart([this] { return std::make_shared<FC2ImagerWorker>(d->cam, d->currentVidMode, d->currentFrameRate, d->currentPixFmt, d->currentROI); });
     qDebug() << "Video streaming started successfully";
 }
 

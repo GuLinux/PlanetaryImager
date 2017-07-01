@@ -109,14 +109,22 @@ ROIValidator::Rule ROIValidator::area_multiple(int factor, int width_step, int h
 ROIValidator::Rule ROIValidator::within_rect(const QRect &bounds)
 {
     return [=](QRect &roi) {
+
+        QRect newROI = roi;
+
         if (roi.left() < bounds.left())
-            roi.setLeft(bounds.left());
+            newROI.setLeft(bounds.left());
         if (roi.right() > bounds.right())
-            roi.setRight(bounds.right());
+            newROI.setRight(bounds.right());
         if (roi.top() < bounds.top())
-            roi.setTop(bounds.top());
+            newROI.setTop(bounds.top());
         if (roi.bottom() > bounds.bottom())
-            roi.setBottom(bounds.bottom());
+            newROI.setBottom(bounds.bottom());
+
+        if (!bounds.contains(newROI))
+            newROI = bounds;
+
+        roi = newROI;
     };
 }
 
