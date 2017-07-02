@@ -155,6 +155,8 @@ DPTR_IMPL(FC2Imager)
 
     QRect currentROI;
 
+    bool temperatureAvailable;
+
     void updateWorkerExposureTimeout();
 
     Control enumerateVideoModes();
@@ -338,6 +340,8 @@ FC2Imager::FC2Imager(const FlyCapture2::PGRGuid &guid, const ImageHandler::ptr &
 {
     //FIXME: if a CHECK fails in Imager constructor, there is a segfault (instead of printing the caught exception)
 
+    d->temperatureAvailable = false;
+
     // Connect() most likely does not modify the passed GUID
     FC2_CHECK << d->cam.Connect(const_cast<FlyCapture2::PGRGuid*>(&guid)).GetType()
               << "Camera::Connect";
@@ -486,6 +490,17 @@ Imager::Properties FC2Imager::properties() const
         properties << Imager::Properties::Property{ "Subnet Mask", ipFormatter(d->camInfo.subnetMask) };
     }
 
+    FlyCapture2::PropertyInfo propInfo;
+    propInfo.type = FlyCapture2::TEMPERATURE;
+    FC2_CHECK << d->cam.GetPropertyInfo(&propInfo).GetType()
+              << "Camera::GetPropertyInfo";
+    if (propInfo.present)
+    {
+        d->temperatureAvailable = true;
+        properties << Temperature;
+    }
+
+
     return properties;
 }
 
@@ -603,6 +618,21 @@ void FC2Imager::setControl(const Imager::Control& control)
 
 void FC2Imager::readTemperature()
 {
+    if (d->temperatureAvailable)
+    {
+        FlyCapture2::Property prop;
+        prop.type = FlyCapture2::TEMPERATURE;
+        FC2_CHECK << d->cam.GetProperty(&prop).GetType()
+                  << "Camera::GetProperty";
+
+        // Calculation as in CamSettingsPage.cpp from FlyCapture2 SDK. Strangely, both "absolute capable"
+        // and "unit abbreviation" fields are not taken into account (e.g. on Chameleon3 CM3-U3-13S2M the indicated
+        // unit is Celsius; yet, the formula below must be used anyway).
+
+        double tempCelsius = prop.valueA / 10.0 - 273.15;
+
+        emit temperature(tempCelsius);
+    }
 }
 
 static void UpdateRangeAndStep(Imager::Control &control, const FlyCapture2::PropertyInfo &propInfo)
@@ -651,8 +681,7 @@ Imager::Controls FC2Imager::controls() const
                                                FlyCapture2::GAIN,
                                                FlyCapture2::TRIGGER_MODE,
                                                FlyCapture2::TRIGGER_DELAY,
-                                               FlyCapture2::FRAME_RATE,
-                                               FlyCapture2::TEMPERATURE })
+                                               FlyCapture2::FRAME_RATE })
     {
         FlyCapture2::PropertyInfo propInfo;
         propInfo.type = propType;
@@ -706,7 +735,6 @@ Imager::Controls FC2Imager::controls() const
                 case FlyCapture2::GAIN:            control.name = "Gain"; break;
                 case FlyCapture2::IRIS:            control.name = "Iris"; break;
                 case FlyCapture2::FOCUS:           control.name = "Focus"; break;
-                case FlyCapture2::TEMPERATURE:     control.name = "Temperature"; break;
                 //TODO: implement this      case FlyCapture2::WHITE_BALANCE:   control.name = "White Balance"; break;
                 case FlyCapture2::FRAME_RATE:      control.name = "Frame Rate"; break;
                 case FlyCapture2::ZOOM:            control.name = "Zoom"; break;
