@@ -564,6 +564,8 @@ void FC2Imager::setControl(const Imager::Control& control)
 //            d->setHighestFrameRate(newMode);
 //            emit changed(d->getFrameRates(newMode));
         }
+
+        emit changed(d->enumerateCurrentModePixelFormats());
     }
 //    else if (control.id == ControlID::FrameRate)
 //    {

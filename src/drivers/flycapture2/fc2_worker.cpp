@@ -40,9 +40,6 @@ FC2ImagerWorker::FC2ImagerWorker(
 {
     frameInfo.initialized = false;
 
-
-    /*!!!*/std::cout << "Requested to set ROI to " << roi.x() << ", " << roi.y() << ", " << roi.width() << ", " << roi.height() << std::endl;
-
     if (vidMode.isFormat7())
     {
         FlyCapture2::Format7ImageSettings fmt7settings;
@@ -73,7 +70,9 @@ FC2ImagerWorker::~FC2ImagerWorker()
 
 void FC2ImagerWorker::initFrameInfo()
 {
-    switch (image.GetPixelFormat())
+    const auto pixFmt = image.GetPixelFormat();
+
+    switch (pixFmt)
     {
     case FlyCapture2::PIXEL_FORMAT_MONO8:
     case FlyCapture2::PIXEL_FORMAT_MONO12:
@@ -85,6 +84,8 @@ void FC2ImagerWorker::initFrameInfo()
     case FlyCapture2::PIXEL_FORMAT_411YUV8:
     case FlyCapture2::PIXEL_FORMAT_422YUV8:
     case FlyCapture2::PIXEL_FORMAT_444YUV8:
+    case FlyCapture2::PIXEL_FORMAT_RGB8:
+    case FlyCapture2::PIXEL_FORMAT_RGB16:
         frameInfo.colorFormat = Frame::ColorFormat::RGB; break;
 
     case FlyCapture2::PIXEL_FORMAT_RAW8:
@@ -100,15 +101,24 @@ void FC2ImagerWorker::initFrameInfo()
         break;
     }
 
-    frameInfo.bitsPerChannel = image.GetBitsPerPixel(); // TODO: make sure it really is "per channel" by testing in an RGB mode
+    frameInfo.bitsPerChannel = image.GetBitsPerPixel();
 
-    switch (image.GetPixelFormat())
+    switch (pixFmt)
     {
     case FlyCapture2::PIXEL_FORMAT_411YUV8: frameInfo.srcBytesPerLine = (3 * image.GetCols() + 1) / 2; break;
     case FlyCapture2::PIXEL_FORMAT_422YUV8: frameInfo.srcBytesPerLine = 2 * image.GetCols(); break;
     case FlyCapture2::PIXEL_FORMAT_444YUV8: frameInfo.srcBytesPerLine = 3 * image.GetCols(); break;
 
+    case FlyCapture2::PIXEL_FORMAT_RGB8:    frameInfo.srcBytesPerLine = 3 * image.GetCols(); break;
+    case FlyCapture2::PIXEL_FORMAT_RGB16:   frameInfo.srcBytesPerLine = 6 * image.GetCols(); break;
+
     default: frameInfo.srcBytesPerLine = 0; break;
+    }
+
+    if (pixFmt == FlyCapture2::PIXEL_FORMAT_RGB8 ||
+        pixFmt == FlyCapture2::PIXEL_FORMAT_RGB16)
+    {
+        frameInfo.bitsPerChannel /= 3;
     }
 }
 
@@ -128,6 +138,7 @@ Frame::ptr FC2ImagerWorker::shoot()
     while (badFrameCounter < MAX_NUM_INCONSISTENT_FRAMES_TO_SKIP &&
            (result = camera.RetrieveBuffer(&image)).GetType() == FlyCapture2::PGRERROR_IMAGE_CONSISTENCY_ERROR)
     {
+        qWarning() << "Image consistency error detected, skipping frame";
         badFrameCounter++;
     }
 
