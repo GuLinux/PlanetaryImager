@@ -574,7 +574,11 @@
           </widget>
          </item>
          <item row="0" column="1">
-          <widget class="QComboBox" name="pixelDataEndianess"/>
+          <widget class="QComboBox" name="pixelDataEndianess">
+           <property name="toolTip">
+            <string>Endianess of multi-byte pixel values received from camera</string>
+           </property>
+          </widget>
          </item>
         </layout>
        </item>

@@ -164,7 +164,7 @@ DPTR_IMPL(FC2Imager)
     /// Returns a combo control listing all pixel formats for 'currentVidMode'
     Control enumerateCurrentModePixelFormats();
 
-    /** Resets frame size and ROI validator (if applicable). The actual video mode change
+    /** Resets frame size, ROI validator and frame rate (if applicable). The actual video mode change
         comes into effect after the worker thread is restarted. */
     void changeVideoMode(const FC2VideoMode &newMode);
 
@@ -385,12 +385,7 @@ FC2Imager::FC2Imager(const FlyCapture2::PGRGuid &guid, const ImageHandler::ptr &
         d->currentPixFmt = GetFirstSupportedPixelFormat(f7info);
     }
     else
-    {
         d->currentPixFmt = VID_MODE_PIX_FMT[(FlyCapture2::VideoMode)d->currentVidMode];
-
-        // Initially choose the highest frame rate
-        d->currentFrameRate = *d->videoModes[(FlyCapture2::VideoMode)d->currentVidMode].rbegin();
-    }
 
     connect(this, &Imager::exposure_changed, this, std::bind(&Private::updateWorkerExposureTimeout, d.get()));
 }
@@ -542,6 +537,9 @@ void FC2Imager::Private::changeVideoMode(const FC2VideoMode &newMode)
         currentROI = { 0, 0, width, height };
 
         roiValidator = std::make_shared<ROIValidator>(std::list<ROIValidator::Rule>{ });
+
+        // Initially choose the highest frame rate
+        currentFrameRate = *videoModes[(FlyCapture2::VideoMode)newMode].rbegin();
     }
 
     currentVidMode = newMode;
@@ -565,28 +563,15 @@ void FC2Imager::setControl(const Imager::Control& control)
             emit changed(d->getEmptyFrameRatesCtrl());
         }
         else
-        {
-//            d->setHighestFrameRate(newMode);
-//            emit changed(d->getFrameRates(newMode));
-        }
+            emit changed(d->getFrameRates(newMode));
 
         emit changed(d->enumerateCurrentModePixelFormats());
     }
-//    else if (control.id == ControlID::FrameRate)
-//    {
-//        if (!dc1394_is_video_mode_scalable(d->currentVidMode))
-//        {
-//            IIDC_CHECK << dc1394_video_set_framerate(d->camera.get(), control.get_value_enum<dc1394framerate_t>())
-//                       << "Set frame rate";
-//
-//            // Changing frame rate changes the shutter range; need to inform the GUI
-//            if (d->ctrlShutter.valid())
-//            {
-//                d->updateShutterCtrl();
-//                emit changed(d->ctrlShutter);
-//            }
-//        }
-//    }
+    else if (control.id == ControlID::FrameRate)
+    {
+        d->currentFrameRate = control.get_value_enum<FlyCapture2::FrameRate>();
+        startLive();
+    }
     else if (control.id == ControlID::PixelFormat)
     {
         d->currentPixFmt = control.get_value_enum<FlyCapture2::PixelFormat>();
