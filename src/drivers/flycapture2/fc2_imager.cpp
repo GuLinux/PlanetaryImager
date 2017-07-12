@@ -385,7 +385,12 @@ FC2Imager::FC2Imager(const FlyCapture2::PGRGuid &guid, const ImageHandler::ptr &
         d->currentPixFmt = GetFirstSupportedPixelFormat(f7info);
     }
     else
+    {
         d->currentPixFmt = VID_MODE_PIX_FMT[(FlyCapture2::VideoMode)d->currentVidMode];
+
+        // Initially choose the highest frame rate
+        d->currentFrameRate = *d->videoModes[(FlyCapture2::VideoMode)d->currentVidMode].rbegin();
+    }
 
     connect(this, &Imager::exposure_changed, this, std::bind(&Private::updateWorkerExposureTimeout, d.get()));
 }

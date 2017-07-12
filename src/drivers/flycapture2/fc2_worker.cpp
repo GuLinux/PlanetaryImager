@@ -55,8 +55,11 @@ FC2ImagerWorker::FC2ImagerWorker(
                   << "Camera::SetFormat7Configuration";
     }
     else
+    {
+        std::cout << "Passing " << (int)vidMode << ", " << (int)frameRate << std::endl;  //TESTING ################
         FC2_CHECK << camera.SetVideoModeAndFrameRate((FlyCapture2::VideoMode)vidMode, frameRate).GetType()
                   << "Camera::SetVideoModeAndFrameRate";
+    }
 
     FC2_CHECK << camera.StartCapture(nullptr, nullptr).GetType()
               << "Camera::StartCapture";
