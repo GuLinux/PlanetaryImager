@@ -16,6 +16,7 @@
  *
  */
 
+#include <functional>
 #include "savefileconfiguration.h"
 #include "ui_savefileconfiguration.h"
 #include "commons/configuration.h"
