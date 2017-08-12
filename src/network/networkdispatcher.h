@@ -20,6 +20,7 @@
 #ifndef NETWORKDISPATCHER_H
 #define NETWORKDISPATCHER_H
 
+#include <functional>
 #include <QObject>
 #include <QtNetwork/QTcpSocket>
 #include "c++/dptr.h"
