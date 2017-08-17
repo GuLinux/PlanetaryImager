@@ -1,0 +1,143 @@
+V1.13.0.19 2017.6.1
+fix bug of invalid handle exception when ASIStopVideoCapture is invoked in UWP
+
+V1.13.0.16 2017.4.14
+fix bug happen when continuous snap shot
+
+2017.3.28
+fix bug of fail to get frame under some resolution on Linux and OSX
+fix bug on OSX
+
+V1.13.0.10 2017.1.10
+fix some bugs
+
+V1.13.0.7 2016.12.13
+Add support for ASI071MC-Cool
+Add control ANTI_DEW_HEATER
+Add API ASIGetProductIDs for all supported cameras
+Fan is on when cooler works and turn off when cooler stop work
+The ID get from ASIGetCameraProperty become const even refreshing devices
+Binning pixel value is changed to the sum of bin*bin pixels at 8bit, and keep as the mean value for 16bit
+Fix the serration issue at bin mode for color camera
+ 
+V1.12.0.2 2016.9.29
+Fix bug: remove white balance control for ASI290 mono camera
+
+V1.12.0.1 2016.9.20
+Fix bug of getting invalid value from ASIGetControlValue when ASI_CONTROL_TYPE is ASI_BANDWIDTHOVERLOAD under Linux.
+
+V1.12.0.0 2016.9.19
+SDK2: add new API ASIInitCamera, it's isolated from ASIOpenCamera, so now it should be called after ASIOpenCamera
+Add pattern adjust control for 1600 mono camera
+Decrease the maximum value of brightness to 60 for 1600
+
+V1.11.0.39 2016.9.8
+Add support for turning on/off fan on cooled camera equipped with hud
+
+V1.11.0.38 2016.8.31
+ASISetROIFormat: Width must be multiple of 8 for USB3.0 cameras
+Improve performance under Linux, the asi.rules should be installed
+The average brightness remains the same after binning
+Fix other bugs
+
+V1.11.0.35 2016.7.27
+Fix 1600 hang or banding problem
+Extend the "USB Limit"lowest range to 40%
+
+
+V1.11.0.34 2016.6.23
+Add MONO_BIN control to SDK
+Fix bug of memory leak
+Fix bug of mutex lock error on Linux
+
+V1.11.0.29 2016.5.20
+Reduce the memory overhead
+Increase priority of data transfer thread on Windows
+Fix other bugs
+
+V1.11.0.24 2016.3.24
+fix bug of black dots in image under ARM
+SDK2: add ASIGetGainOffset() to get predefined setting
+fix other bugs
+add support for ASI1600 and ASI290
+
+V1.11.0.18 2016.1.30
+fix some bugs
+
+V1.11.0.16 2016.1.20
+ASI178 support bin3&bin4
+fix some bugs
+
+V1.11.0.13 2015.12.10
+add support for 178MM and 178MM-COOL
+fix bugs of ASI174
+fix bug of ASIStartExposure
+
+V1.11.0.0 2015.10.26
+support cooled cameras
+improve amp-glow problem of ASI174
+add LCG mode of ASI224
+fix some bugs
+
+V1.10.0.11 2015.8.4
+fix some bugs
+
+V1.10.0.5 2015.7.21
+Add cooler_on control type for cool camera
+temerature scale get from controlcaps times 10
+remove argument "long ms" from StartExposure()
+add API to know the camera is USB3 or USB2 
+support new cameras 185, 224, 178
+
+V1.9.0.7 2015.3.20
+fix 120mc's FPS decrease problem at small resolution.
+
+V1.9.0.1 2015.3.5
+fix bug of getImageData() with wait time too long problem, remove library of platform "armhf" under linux
+expand the scale of gamma
+add APIs to read/write ID function of USB3.0 camera 
+link to C++ runtime library statically.
+
+V1.8 2015.2.2
+add camera 174MC/MM
+SDK2: remove ControlID from ASI_CONTROL_CAPS
+
+V1.7 2014.9.9
+sometimes image output split problem fixed
+
+V1.6 2014.6.27
+add ASI120S, USB3.0 camera
+add CONTROL_OVERCLOCK to Control_TYPE for ASI120S
+
+V1.0.0.5 2014.4.30
+function "CAMERA_TYPE getCameraType(int)" is removed
+all different kinds of cameras'dll are moved into one asicamera.dll
+darkframe will be saved and remembered even quit the software
+fixed bug:vertical line is there when change back from long exposure
+
+
+
+V1.0.0.4 20131207
+fix bug of ASI120MM/MC
+add a new function
+CAMERA_TYPE getCameraType(int camIndex);
+
+V1.0.0.3 20130909
+fix bug of auto exposure
+add ASI034MC support
+ 
+V1.0.0.2 20130805
+Add 3 new functions:
+//this must be called after openCamera.
+ASICAMERA_API  bool initCamera();
+// set auto parameter
+ASICAMERA_API void setAutoPara(int iMaxGain, int iMaxExp, int iDestBrightness);
+// get auto parameter
+ASICAMERA_API void getAutoPara(int *pMaxGain, int *pMaxExp, int *pDestBrightness);
+
+V1.0.0.1 20130624
+fix ASI120MM and ASI120MC bug: 
+camera sometimes freeze when change exposure from long to short
+
+V1.0.0.0 20130530
+the first version of the SDK
