@@ -111,5 +111,6 @@ If you camera is not detected, you may need to use a newer version of libdc1394.
 Credits
 -------
 
-Application Icon: [Hat Saturn](https://www.iconfinder.com/icons/37878/hat_planet_saturn_icon) by [Denis Sazhin](http://iconka.com/)
+Application Icon: [Hat Saturn](https://www.iconfinder.com/icons/37878/hat_planet_saturn_icon) by [Denis Sazhin](http://iconka.com/).
 Toolbar/action icons: [TWG Retina Display Icons](http://blog.twg.ca/2010/11/retina-display-icon-set/), darkened and with a few customizations to add more actions.
+IIDC driver: [Filip Szczerek](ga.software@yahoo.com) (GreatAttractor).
