@@ -43,7 +43,10 @@ enum ControlID: qlonglong
     FrameRate,
 
     // Used to select pixel format for the current video mode (non-Format7 modes have only one pixel format)
-    PixelFormat
+    PixelFormat,
+
+    // FlyCapture2::WHITE_BALANCE is actually a pair of values, so expose two custom IDs
+    WhiteBalanceRed, WhiteBalanceBlue
 };
 
 static std::map<FlyCapture2::PixelFormat, const char *> PIXEL_FORMAT_NAME =
@@ -148,6 +151,9 @@ DPTR_IMPL(FC2Imager)
     /// Copy of the SHUTTER control; used for informing GUI about shutter range change when frame rate changes
     Control ctrlShutter;
 
+    // Copies of controls; used for informing the GUI about changes in their availability
+    Control ctrlWhiteBalance;
+
     ROIValidator::ptr roiValidator; ///< Region of Interest validator
 
     /// Concerns the current video mode; used to disable ROI and return to full image size
@@ -171,6 +177,8 @@ DPTR_IMPL(FC2Imager)
     Control getFrameRates(FC2VideoMode vidMode);
 
     void updateShutterCtrl();
+
+    void updateColorCtrls();
 
     Control getEmptyFrameRatesCtrl();
 
@@ -606,6 +614,14 @@ void FC2Imager::setControl(const Imager::Control& control)
         d->updateShutterCtrl();
         emit changed(d->ctrlShutter);
     }
+
+    if (d->ctrlWhiteBalance.valid() &&
+        (ControlID::VideoMode == control.id ||
+         ControlID::PixelFormat == control.id))
+    {
+        d->updateColorCtrls();
+        emit changed(d->ctrlWhiteBalance);
+    }
 }
 
 void FC2Imager::readTemperature()
@@ -727,7 +743,7 @@ Imager::Controls FC2Imager::controls() const
                 case FlyCapture2::GAIN:            control.name = "Gain"; break;
                 case FlyCapture2::IRIS:            control.name = "Iris"; break;
                 case FlyCapture2::FOCUS:           control.name = "Focus"; break;
-                //TODO: implement this      case FlyCapture2::WHITE_BALANCE:   control.name = "White Balance"; break;
+                case FlyCapture2::WHITE_BALANCE:   control.name = "White Balance"; break;
                 case FlyCapture2::FRAME_RATE:      control.name = "Frame Rate"; break;
                 case FlyCapture2::ZOOM:            control.name = "Zoom"; break;
                 case FlyCapture2::PAN:             control.name = "Pan"; break;
@@ -783,6 +799,8 @@ Imager::Controls FC2Imager::controls() const
 
             if (propType == FlyCapture2::SHUTTER)
                 d->ctrlShutter = control; // See the comment for ctrlShutter
+            else if (propType == FlyCapture2::WHITE_BALANCE)
+                d->ctrlWhiteBalance = control;
 
             controls.push_back(std::move(control));
         }
@@ -821,4 +839,22 @@ void FC2Imager::Private::updateShutterCtrl()
     VerifyRanges(propInfo);
 
     UpdateRangeAndStep(ctrlShutter, propInfo);
+}
+
+void FC2Imager::Private::updateColorCtrls()
+{
+    FlyCapture2::PropertyInfo propInfo;
+    propInfo.type = FlyCapture2::WHITE_BALANCE;
+    FC2_CHECK << cam.GetPropertyInfo(&propInfo).GetType()
+              << "Camera::GetPropertyInfo - white balance";
+    VerifyRanges(propInfo);
+    ctrlWhiteBalance.supports_auto = propInfo.autoSupported;
+    ctrlWhiteBalance.supports_onOff = propInfo.onOffSupported;
+
+    FlyCapture2::Property prop;
+    prop.type = FlyCapture2::WHITE_BALANCE;
+    FC2_CHECK << cam.GetProperty(&prop).GetType()
+              << "Camera::GetProperty - white balance";
+    ctrlWhiteBalance.value_auto = prop.autoManualMode;
+    ctrlWhiteBalance.value_onOff = prop.onOff;
 }
