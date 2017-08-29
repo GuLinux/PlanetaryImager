@@ -47,9 +47,9 @@ Frame::Private::Private(uint8_t bpp, Frame::ColorFormat colorFormat, const QSize
   color_format{colorFormat},
   bpp{bpp},
   resolution{resolution},
-  mat{resolution.height(), resolution.width(), Private::cv_type(bpp, colorFormat)},
   byteOrder{byteOrder}
 {
+    mat.create(resolution.height(), resolution.width(), Private::cv_type(bpp, colorFormat));
 }
 
 Frame::Private::Private(Frame::ColorFormat colorFormat, const cv::Mat& image, ByteOrder byteOrder)
