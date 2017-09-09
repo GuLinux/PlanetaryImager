@@ -76,6 +76,7 @@ signals:
   void exposure_changed(const Imager::Control &control);
   void long_exposure_started(double exposure_seconds);
   void long_exposure_ended();
+  void control_added(const Imager::Control &control);
 };
 
 struct Imager::Control {

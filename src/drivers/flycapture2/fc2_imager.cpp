@@ -39,7 +39,7 @@ enum ControlID: qlonglong
     VideoMode = FlyCapture2::PropertyType::UNSPECIFIED_PROPERTY_TYPE + 1,
 
     // Used to select one of the fixed frame rates from the 'FrameRate' enum (only for non-Format7 modes);
-    // a camera may also support PropertyType::SHUTTER, which can change the frame rate independently and with finer granularity
+    // a camera may also support PropertyType::FRAME_RATE, which can change the frame rate independently and with finer granularity
     FrameRate,
 
     // Used to select pixel format for the current video mode (non-Format7 modes have only one pixel format)
@@ -152,7 +152,7 @@ DPTR_IMPL(FC2Imager)
     Control ctrlShutter;
 
     // Copies of controls; used for informing the GUI about changes in their availability
-    Control ctrlWhiteBalance;
+    Control ctrlWhiteBalanceRed, ctrlWhiteBalanceBlue;
 
     ROIValidator::ptr roiValidator; ///< Region of Interest validator
 
@@ -178,9 +178,12 @@ DPTR_IMPL(FC2Imager)
 
     void updateShutterCtrl();
 
-    void updateColorCtrls();
+    void createWhiteBalanceCtrls();
 
     Control getEmptyFrameRatesCtrl();
+
+    /// Caller must check if the result is valid()
+    Control createControlFromFC2Property(const FlyCapture2::PropertyInfo &propInfo);
 
 
     LOG_C_SCOPE(FC2Imager);
@@ -588,14 +591,34 @@ void FC2Imager::setControl(const Imager::Control& control)
     else
     {
         FlyCapture2::Property prop;
-        prop.type = (FlyCapture2::PropertyType)control.id;
+
+        if (control.id == ControlID::WhiteBalanceRed ||
+            control.id == ControlID::WhiteBalanceBlue)
+        {
+            prop.type = FlyCapture2::WHITE_BALANCE;
+        }
+        else
+            prop.type = (FlyCapture2::PropertyType)control.id;
+
         FC2_CHECK << d->cam.GetProperty(&prop).GetType()
                   << "Camera::GetProperty";
 
         prop.autoManualMode = control.value_auto;
         prop.onOff = control.value_onOff;
-        prop.absValue = control.value.toFloat();
-        prop.valueA = control.value.toInt();
+
+        if (control.id == ControlID::WhiteBalanceRed)
+        {
+            prop.valueA = control.value.toInt();
+        }
+        else if (control.id == ControlID::WhiteBalanceBlue)
+        {
+            prop.valueB = control.value.toInt();
+        }
+        else
+        {
+            prop.absValue = control.value.toFloat();
+            prop.valueA = control.value.toInt();
+        }
 
         FC2_CHECK << d->cam.SetProperty(&prop).GetType()
                   << "Camera::SetProperty";
@@ -615,13 +638,15 @@ void FC2Imager::setControl(const Imager::Control& control)
         emit changed(d->ctrlShutter);
     }
 
-    if (d->ctrlWhiteBalance.valid() &&
-        (ControlID::VideoMode == control.id ||
-         ControlID::PixelFormat == control.id))
+    if (ControlID::VideoMode == control.id ||
+        ControlID::PixelFormat == control.id)
     {
-        d->updateColorCtrls();
-        emit changed(d->ctrlWhiteBalance);
+        d->createWhiteBalanceCtrls();
+        emit changed(d->ctrlWhiteBalanceRed);
+        emit changed(d->ctrlWhiteBalanceBlue);
     }
+
+    //TODO: "auto" and "on/off" of white balance apply to both WB_Red/WB_Blue; if user changes checkbox of one of them, react accordingly
 }
 
 void FC2Imager::readTemperature()
@@ -663,6 +688,105 @@ static void UpdateRangeAndStep(Imager::Control &control, const FlyCapture2::Prop
     }
 }
 
+Imager::Control FC2Imager::Private::createControlFromFC2Property(const FlyCapture2::PropertyInfo &propInfo)
+{
+    Control control{ propInfo.type };
+    control.type = Control::Type::Number;
+
+    FlyCapture2::Property prop;
+    prop.type = propInfo.type;
+    FC2_CHECK << cam.GetProperty(&prop).GetType()
+              << "Camera::GetProperty";
+
+    switch (propInfo.type)
+    {
+        case FlyCapture2::BRIGHTNESS:       control.name = "Brightness"; break;
+
+        // This is not "exposure time" (see FlyCapture2::SHUTTER for that);
+        // instead, it regulates the desired overall image brightness by changing
+        // values of shutter and gain - if they are set to auto
+        case FlyCapture2::AUTO_EXPOSURE:    control.name = "Exposure"; break;
+
+        case FlyCapture2::SHARPNESS:       control.name = "Sharpness"; break;
+
+        case FlyCapture2::HUE:             control.name = "Hue"; break;
+        case FlyCapture2::SATURATION:      control.name = "Saturation"; break;
+        case FlyCapture2::GAMMA:           control.name = "Gamma"; break;
+
+        case FlyCapture2::SHUTTER:
+        {
+            control.name = "Shutter";
+            control.is_exposure = true;
+            control.is_duration = true;
+
+            const auto &unitLoc = DURATION_VALUE.find(propInfo.pUnitAbbr);
+            if (unitLoc != DURATION_VALUE.end())
+                control.duration_unit = unitLoc->second;
+            else
+                control.duration_unit = 1s;
+            break;
+        }
+
+        case FlyCapture2::GAIN:            control.name = "Gain"; break;
+        case FlyCapture2::IRIS:            control.name = "Iris"; break;
+        case FlyCapture2::FOCUS:           control.name = "Focus"; break;
+        case FlyCapture2::WHITE_BALANCE:   control.name = "White Balance"; break;
+        case FlyCapture2::FRAME_RATE:      control.name = "Frame Rate"; break;
+        case FlyCapture2::ZOOM:            control.name = "Zoom"; break;
+        case FlyCapture2::PAN:             control.name = "Pan"; break;
+        case FlyCapture2::TILT:            control.name = "Tilt"; break;
+
+        // Control not yet supported
+        default: control.name = ""; return control;
+    }
+
+    control.supports_auto = propInfo.autoSupported;
+
+    control.readonly = !propInfo.manualSupported && !propInfo.autoSupported && propInfo.readOutSupported;
+
+    control.supports_onOff = propInfo.onOffSupported;
+
+    if (control.supports_onOff)
+        control.value_onOff = prop.onOff;
+
+    control.value_auto = prop.autoManualMode;
+
+    // A feature is "absolute control-capable", if its value can be set using
+    // floating-point arguments, not just the integer "raw/driver" values.
+    // E.g. SHUTTER can be set in fractional "absolute" values expressed in seconds.
+    if (propInfo.absValSupported)
+    {
+        control.decimals = 6;
+
+        prop.absControl = true;
+        FC2_CHECK << cam.SetProperty(&prop).GetType()
+                  << "Camera::SetProperty - enable absolute control";
+
+        if (propInfo.readOutSupported)
+        {
+            FC2_CHECK << cam.GetProperty(&prop).GetType()
+                      << "Camera::GetProperty";
+
+            control.value = prop.absValue;
+        }
+        else
+            control.value = propInfo.absMin;
+    }
+    else
+    {
+        control.decimals = 0;
+
+        if (propInfo.readOutSupported)
+            control.value = prop.valueA;
+        else
+            control.value = propInfo.min;
+    }
+
+    UpdateRangeAndStep(control, propInfo);
+
+    return control;
+}
+
 Imager::Controls FC2Imager::controls() const
 {
     Controls controls;
@@ -673,10 +797,10 @@ Imager::Controls FC2Imager::controls() const
 
     controls.push_back(d->getFrameRates(d->currentVidMode));
 
+    // WHITE_BALANCE is handled after this loop
     for (FlyCapture2::PropertyType propType: { FlyCapture2::BRIGHTNESS,
                                                FlyCapture2::AUTO_EXPOSURE,
                                                FlyCapture2::SHARPNESS,
-                                               FlyCapture2::WHITE_BALANCE,
                                                FlyCapture2::HUE,
                                                FlyCapture2::SATURATION,
                                                FlyCapture2::GAMMA,
@@ -703,108 +827,23 @@ Imager::Controls FC2Imager::controls() const
         {
             d->propertyInfo[propType] = propInfo;
 
-            Control control{ propType };
-            control.type = Control::Type::Number;
+            auto control = d->createControlFromFC2Property(propInfo);
+            if (!control.valid())
+                continue;
 
-            FlyCapture2::Property prop;
-            prop.type = propType;
-            FC2_CHECK << d->cam.GetProperty(&prop).GetType()
-                      << "Camera::GetProperty";
-
-            switch (propType)
-            {
-                case FlyCapture2::BRIGHTNESS:       control.name = "Brightness"; break;
-
-                // This is not "exposure time" (see FlyCapture2::SHUTTER for that);
-                // instead, it regulates the desired overall image brightness by changing
-                // values of shutter and gain - if they are set to auto
-                case FlyCapture2::AUTO_EXPOSURE:    control.name = "Exposure"; break;
-
-                case FlyCapture2::SHARPNESS:       control.name = "Sharpness"; break;
-
-                case FlyCapture2::HUE:             control.name = "Hue"; break;
-                case FlyCapture2::SATURATION:      control.name = "Saturation"; break;
-                case FlyCapture2::GAMMA:           control.name = "Gamma"; break;
-
-                case FlyCapture2::SHUTTER:
-                {
-                    control.name = "Shutter";
-                    control.is_exposure = true;
-                    control.is_duration = true;
-
-                    const auto &unitLoc = DURATION_VALUE.find(propInfo.pUnitAbbr);
-                    if (unitLoc != DURATION_VALUE.end())
-                        control.duration_unit = unitLoc->second;
-                    else
-                        control.duration_unit = 1s;
-                    break;
-                }
-
-                case FlyCapture2::GAIN:            control.name = "Gain"; break;
-                case FlyCapture2::IRIS:            control.name = "Iris"; break;
-                case FlyCapture2::FOCUS:           control.name = "Focus"; break;
-                case FlyCapture2::WHITE_BALANCE:   control.name = "White Balance"; break;
-                case FlyCapture2::FRAME_RATE:      control.name = "Frame Rate"; break;
-                case FlyCapture2::ZOOM:            control.name = "Zoom"; break;
-                case FlyCapture2::PAN:             control.name = "Pan"; break;
-                case FlyCapture2::TILT:            control.name = "Tilt"; break;
-
-                default: continue;
-            }
-
-            control.supports_auto = propInfo.autoSupported;
-
-            control.readonly = !propInfo.manualSupported && !propInfo.autoSupported && propInfo.readOutSupported;
-
-            control.supports_onOff = propInfo.onOffSupported;
-
-            if (control.supports_onOff)
-                control.value_onOff = prop.onOff;
-
-            control.value_auto = prop.autoManualMode;
-
-            // A feature is "absolute control-capable", if its value can be set using
-            // floating-point arguments, not just the integer "raw/driver" values.
-            // E.g. SHUTTER can be set in fractional "absolute" values expressed in seconds.
-            if (propInfo.absValSupported)
-            {
-                control.decimals = 6;
-
-                prop.absControl = true;
-                FC2_CHECK << d->cam.SetProperty(&prop).GetType()
-                          << "Camera::SetProperty - enable absolute control";
-
-                //if (DC1394_TRUE == feature.readout_capable)
-                if (propInfo.readOutSupported)
-                {
-                    FC2_CHECK << d->cam.GetProperty(&prop).GetType()
-                              << "Camera::GetProperty";
-
-                    control.value = prop.absValue;
-                }
-                else
-                    control.value = propInfo.absMin;
-            }
-            else
-            {
-                control.decimals = 0;
-
-                if (propInfo.readOutSupported)
-                    control.value = prop.valueA;
-                else
-                    control.value = propInfo.min;
-            }
-
-            UpdateRangeAndStep(control, propInfo);
-
-            if (propType == FlyCapture2::SHUTTER)
+            if (propInfo.type == FlyCapture2::SHUTTER)
                 d->ctrlShutter = control; // See the comment for ctrlShutter
-            else if (propType == FlyCapture2::WHITE_BALANCE)
-                d->ctrlWhiteBalance = control;
 
             controls.push_back(std::move(control));
         }
     }
+
+    // Create white balance controls.
+    // Even if white balance is not supported in current video mode, return the controls (in inactive state),
+    // as we may need them after switching to another video mode (then they will be activated).
+    d->createWhiteBalanceCtrls();
+    controls.push_back(d->ctrlWhiteBalanceRed);
+    controls.push_back(d->ctrlWhiteBalanceBlue);
 
     return controls;
 }
@@ -841,20 +880,46 @@ void FC2Imager::Private::updateShutterCtrl()
     UpdateRangeAndStep(ctrlShutter, propInfo);
 }
 
-void FC2Imager::Private::updateColorCtrls()
+void FC2Imager::Private::createWhiteBalanceCtrls()
 {
     FlyCapture2::PropertyInfo propInfo;
     propInfo.type = FlyCapture2::WHITE_BALANCE;
     FC2_CHECK << cam.GetPropertyInfo(&propInfo).GetType()
               << "Camera::GetPropertyInfo - white balance";
-    VerifyRanges(propInfo);
-    ctrlWhiteBalance.supports_auto = propInfo.autoSupported;
-    ctrlWhiteBalance.supports_onOff = propInfo.onOffSupported;
 
-    FlyCapture2::Property prop;
-    prop.type = FlyCapture2::WHITE_BALANCE;
-    FC2_CHECK << cam.GetProperty(&prop).GetType()
-              << "Camera::GetProperty - white balance";
-    ctrlWhiteBalance.value_auto = prop.autoManualMode;
-    ctrlWhiteBalance.value_onOff = prop.onOff;
+    if (propInfo.present)
+    {
+        VerifyRanges(propInfo);
+
+        auto control = createControlFromFC2Property(propInfo);
+
+        FlyCapture2::Property prop;
+        prop.type = FlyCapture2::WHITE_BALANCE;
+        FC2_CHECK << cam.GetProperty(&prop).GetType()
+                  << "Camera::GetProperty - white balance";
+
+        ctrlWhiteBalanceRed = control;
+        ctrlWhiteBalanceBlue = control;
+
+        ctrlWhiteBalanceRed.value = prop.valueA;
+        ctrlWhiteBalanceBlue.value = prop.valueB;
+    }
+    else
+    {
+        // return disabled white balance controls
+        for (Control *ctrl: { &ctrlWhiteBalanceRed,
+                              &ctrlWhiteBalanceBlue })
+        {
+            ctrl->value = 0;
+            ctrl->supports_onOff = true;//false;
+            ctrl->supports_auto = true;//false;
+            ctrl->readonly = true;
+        }
+    }
+
+    ctrlWhiteBalanceRed.name = "White Balance \u2013 Red"; // u2013 = en-dash
+    ctrlWhiteBalanceRed.id = ControlID::WhiteBalanceRed;
+
+    ctrlWhiteBalanceBlue.name = "White Balance \u2013 Blue";
+    ctrlWhiteBalanceBlue.id = ControlID::WhiteBalanceBlue;
 }
