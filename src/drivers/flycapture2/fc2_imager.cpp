@@ -911,8 +911,8 @@ void FC2Imager::Private::createWhiteBalanceCtrls()
                               &ctrlWhiteBalanceBlue })
         {
             ctrl->value = 0;
-            ctrl->supports_onOff = true;//false;
-            ctrl->supports_auto = true;//false;
+            ctrl->supports_onOff = false;
+            ctrl->supports_auto = false;
             ctrl->readonly = true;
         }
     }

@@ -157,6 +157,11 @@ void CameraControl::control_updated(const Imager::Control& changed_control)
   control = changed_control;
   new_value = control;
   control_widget->update(changed_control);
+
+  on_off_value_widget->setVisible(control.supports_onOff);
+  on_off_value_widget->setChecked(control.value_onOff);
+  auto_value_widget->setVisible(control.supports_auto);
+
   if(changed_control.supports_auto) {
     auto_changed(changed_control.value_auto);
   }
