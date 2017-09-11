@@ -603,6 +603,12 @@ void FC2Imager::setControl(const Imager::Control& control)
         FC2_CHECK << d->cam.GetProperty(&prop).GetType()
                   << "Camera::GetProperty";
 
+        // When the on/off or auto state of one of the white balance controls (Red, Blue) changes,
+        // the other's does too (as it is in fact a single FC2 control)
+        const bool wbAutoOnOffChanged =
+            (control.id == ControlID::WhiteBalanceRed || control.id == ControlID::WhiteBalanceBlue) &&
+            ((prop.autoManualMode ^ control.value_auto) || (prop.onOff ^ control.value_onOff));
+
         prop.autoManualMode = control.value_auto;
         prop.onOff = control.value_onOff;
 
@@ -622,6 +628,22 @@ void FC2Imager::setControl(const Imager::Control& control)
 
         FC2_CHECK << d->cam.SetProperty(&prop).GetType()
                   << "Camera::SetProperty";
+
+        if (wbAutoOnOffChanged)
+        {
+            d->ctrlWhiteBalanceRed.value = prop.valueA;
+            d->ctrlWhiteBalanceBlue.value = prop.valueB;
+
+            for (Control *c: { &d->ctrlWhiteBalanceRed,
+                               &d->ctrlWhiteBalanceBlue })
+            {
+                c->value_auto = prop.autoManualMode;
+                c->value_onOff = prop.onOff;
+            }
+
+            emit changed(d->ctrlWhiteBalanceRed);
+            emit changed(d->ctrlWhiteBalanceBlue);
+        }
     }
 
     emit changed(control);
@@ -641,12 +663,12 @@ void FC2Imager::setControl(const Imager::Control& control)
     if (ControlID::VideoMode == control.id ||
         ControlID::PixelFormat == control.id)
     {
+        // Some video modes/pixel formats may not support white balance;
+        // createWhiteBalanceCtrls() will then return disabled controls
         d->createWhiteBalanceCtrls();
         emit changed(d->ctrlWhiteBalanceRed);
         emit changed(d->ctrlWhiteBalanceBlue);
     }
-
-    //TODO: "auto" and "on/off" of white balance apply to both WB_Red/WB_Blue; if user changes checkbox of one of them, react accordingly
 }
 
 void FC2Imager::readTemperature()
