@@ -26,7 +26,7 @@
 #include <boost/lockfree/spsc_queue.hpp>
 #include "stlutils.h"
 #include "Qt/benchmark.h"
-#include "Qt/strings.h"
+#include "Qt/qt_strings_helper.h"
 #include "imagerexception.h"
 #include <QElapsedTimer>
 #include "commons/messageslogger.h"

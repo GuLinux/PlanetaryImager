@@ -21,7 +21,7 @@
 #include <linux/videodev2.h>
 #include <QDebug>
 #include "v4l2utils.h"
-#include "Qt/strings.h"
+#include "Qt/qt_strings_helper.h"
 
 using namespace std;
 

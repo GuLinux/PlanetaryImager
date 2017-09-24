@@ -1,5 +1,5 @@
 #include "src/commons/ser_header.h"
-#include "GuLinux-Commons/Qt/strings.h"
+#include "GuLinux-Commons/Qt/qt_strings_helper.h"
 
 #include <iostream>
 #include <QFile>

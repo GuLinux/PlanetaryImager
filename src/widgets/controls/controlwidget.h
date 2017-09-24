@@ -20,7 +20,7 @@
 #define SETTINGWIDGET_H
 #include <QWidget>
 #include "drivers/imager.h"
-#include "Qt/functional.h"
+#include "Qt/qt_functional.h"
 #include <QLayout>
 #include "c++/dptr.h"
 

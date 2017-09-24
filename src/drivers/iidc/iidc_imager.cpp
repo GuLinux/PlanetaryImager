@@ -26,7 +26,7 @@
 #include "iidc_worker.h"
 #include <map>
 #include <QRect>
-#include "Qt/strings.h"
+#include "Qt/qt_strings_helper.h"
 #include <unordered_map>
 
 using namespace std::chrono;

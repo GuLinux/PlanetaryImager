@@ -18,7 +18,7 @@
  */
 
 #include "planetaryimager.h"
-#include "Qt/functional.h"
+#include "Qt/qt_functional.h"
 #include "commons/messageslogger.h"
 #include <QThread>
 #include <QTimer>

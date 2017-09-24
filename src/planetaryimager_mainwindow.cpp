@@ -41,8 +41,8 @@
 #include <QGridLayout>
 #include <QToolBar>
 #include <QWhatsThis>
-#include "Qt/strings.h"
-#include <Qt/functional.h>
+#include "Qt/qt_strings_helper.h"
+#include "Qt/qt_functional.h"
 #include <QGraphicsScene>
 #include <QFileInfo>
 #include <QDesktopServices>
@@ -56,7 +56,7 @@
 #include "commons/messageslogger.h"
 #include "c++/stlutils.h"
 #include "commons/exposuretimer.h"
-#include "Qt/functional.h"
+#include "Qt/qt_functional.h"
 
 #include "planetaryimager.h"
 

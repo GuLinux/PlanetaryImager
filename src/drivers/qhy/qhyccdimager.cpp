@@ -28,7 +28,7 @@
 #include <QtConcurrent/QtConcurrent>
 #include "commons/fps_counter.h"
 #include <chrono>
-#include "Qt/strings.h"
+#include "Qt/qt_strings_helper.h"
 #include "qhyexception.h"
 #include "qhyimagingworker.h"
 #include <chrono>

@@ -17,7 +17,7 @@
 
 #include "qhyexception.h"
 #include "qhyccderr.h"
-#include "Qt/strings.h"
+#include "Qt/qt_strings_helper.h"
 
 using namespace std;
 

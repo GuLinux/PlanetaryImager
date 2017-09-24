@@ -30,7 +30,7 @@
 #include "commons/configuration.h"
 #include <boost/lockfree/spsc_queue.hpp>
 #include "commons/opencv_utils.h"
-#include <Qt/strings.h>
+#include <Qt/qt_strings_helper.h>
 #include "output_writers/filewriter.h"
 #include "recordinginformation.h"
 #include <atomic>

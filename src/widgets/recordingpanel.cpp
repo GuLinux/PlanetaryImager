@@ -21,7 +21,7 @@
 #include "commons/configuration.h"
 #include "savefileconfiguration.h"
 #include "commons/messageslogger.h"
-#include <Qt/functional.h>
+#include "Qt/qt_functional.h"
 #include <QDir>
 #include <QDialog>
 #include <QElapsedTimer>

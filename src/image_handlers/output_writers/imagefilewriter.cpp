@@ -18,7 +18,7 @@
 
 #include "imagefilewriter.h"
 #include <functional>
-#include "Qt/strings.h"
+#include "Qt/qt_strings_helper.h"
 #include <opencv2/opencv.hpp>
 #include <QDir>
 #include <CCfits/CCfits>

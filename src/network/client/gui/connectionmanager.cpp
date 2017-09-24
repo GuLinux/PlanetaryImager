@@ -30,8 +30,8 @@
 
 #include <QPushButton>
 
-#include "Qt/strings.h"
-#include "Qt/functional.h"
+#include "Qt/qt_strings_helper.h"
+#include "Qt/qt_functional.h"
 #include "commons/utils.h"
 
 #include "network/protocol/protocol.h"

@@ -18,7 +18,7 @@
  */
 
 #include "remoteconfiguration.h"
-#include "Qt/strings.h"
+#include "Qt/qt_strings_helper.h"
 #include "network/protocol/configurationprotocol.h"
 
 using namespace std;

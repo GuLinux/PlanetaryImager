@@ -21,7 +21,7 @@
 #include <QObject>
 #include "driverforwarder.h"
 #include "network/protocol/driverprotocol.h"
-#include "Qt/functional.h"
+#include "Qt/qt_functional.h"
 
 using namespace std;
 using namespace std::placeholders;

@@ -18,13 +18,13 @@
  */
 
 #include "recordinginformation.h"
-#include <Qt/strings.h>
+#include <Qt/qt_strings_helper.h>
 #include <QDateTime>
 #include "drivers/imager.h"
 #include <QJsonDocument>
 #include "commons/configuration.h"
 #include <QFile>
-#include "Qt/strings.h"
+#include "Qt/qt_strings_helper.h"
 
 using namespace std;
 

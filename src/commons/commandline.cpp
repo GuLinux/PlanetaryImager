@@ -20,7 +20,7 @@
 #include "commandline.h"
 #include <QCoreApplication>
 #include "commons/configuration.h"
-#include "Qt/strings.h"
+#include "Qt/qt_strings_helper.h"
 #include <QCommandLineParser>
 #include <iostream>
 #include "loghandler.h"

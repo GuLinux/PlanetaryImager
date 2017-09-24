@@ -19,7 +19,7 @@
 #include "histogramwidget.h"
 #include "ui_histogramwidget.h"
 #include "commons/configuration.h"
-#include "Qt/functional.h"
+#include "Qt/qt_functional.h"
 #include <QMap>
 #include <opencv2/opencv.hpp>
 #include "histogramstatswidget.h"
