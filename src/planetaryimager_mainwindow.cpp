@@ -42,8 +42,8 @@
 #include <QGridLayout>
 #include <QToolBar>
 #include <QWhatsThis>
-#include "Qt/strings.h"
-#include <Qt/functional.h>
+#include "Qt/qt_strings_helper.h"
+#include <Qt/qt_functional.h>
 #include <QGraphicsScene>
 #include <QFileInfo>
 #include <QDesktopServices>

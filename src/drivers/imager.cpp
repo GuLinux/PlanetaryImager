@@ -17,7 +17,7 @@
  */
 
 #include "imager.h"
-#include "Qt/strings.h"
+#include "Qt/qt_strings_helper.h"
 #include "commons/utils.h"
 #include <QCoreApplication>
 #include <QMutex>

@@ -21,7 +21,7 @@
 #include <QIODevice>
 #include <QDataStream>
 #include <QJsonDocument>
-#include "Qt/strings.h"
+#include "Qt/qt_strings_helper.h"
 #include <QCoreApplication>
 #include <QBuffer>
 

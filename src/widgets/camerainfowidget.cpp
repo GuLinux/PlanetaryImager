@@ -17,7 +17,7 @@
  */
 
 #include "camerainfowidget.h"
-#include "Qt/strings.h"
+#include "Qt/qt_strings_helper.h"
 #include <QGridLayout>
 #include <QLabel>
 #include <QSpacerItem>

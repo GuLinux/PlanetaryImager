@@ -18,7 +18,7 @@
 
 #include <QDebug>
 #include <QObject>
-#include "Qt/strings.h"
+#include "Qt/qt_strings_helper.h"
 #include "cvvideowriter.h"
 #include "commons/opencv_utils.h"
 #include "image_handlers/saveimages.h"

@@ -22,13 +22,13 @@
 #include "commons/utils.h"
 #include "commons/configuration.h"
 #include <QSettings>
-#include "Qt/functional.h"
+#include "Qt/qt_functional.h"
 #include <QLayout>
 #include <QCheckBox>
 #include <QComboBox>
 #include "controls/controls.h"
 #include "ui_cameracontrolswidget.h"
-#include "Qt/strings.h"
+#include "Qt/qt_strings_helper.h"
 #include <QMetaObject>
 #include <QMenu>
 #include <QAction>
@@ -37,7 +37,7 @@
 #include <QFileDialog>
 #include <QFileInfo>
 #include <QJsonDocument>
-#include "Qt/functional.h"
+#include "Qt/qt_functional.h"
 #include <QSortFilterProxyModel>
 
 using namespace std;

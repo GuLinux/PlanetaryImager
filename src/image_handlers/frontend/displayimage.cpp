@@ -25,7 +25,7 @@
 #include <QImage>
 #include <boost/lockfree/spsc_queue.hpp>
 #include <QDebug>
-#include "Qt/strings.h"
+#include "Qt/qt_strings_helper.h"
 #include "commons/utils.h"
 #include <opencv2/opencv.hpp>
 #include "commons/opencv_utils.h"

@@ -21,7 +21,7 @@
 #include <sys/ioctl.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "Qt/strings.h"
+#include "Qt/qt_strings_helper.h"
 #include <QDebug>
 #include "c++/stringbuilder.h"
 #include "v4l2exception.h"

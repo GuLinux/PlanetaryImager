@@ -23,8 +23,8 @@
 #include <functional>
 #include <QSpinBox>
 #include <QMessageBox>
-#include "Qt/strings.h"
-#include "Qt/functional.h"
+#include "Qt/qt_strings_helper.h"
+#include "Qt/qt_functional.h"
 
 using namespace std::placeholders;
 using namespace std;

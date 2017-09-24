@@ -22,7 +22,7 @@
 #include "network/networkdispatcher.h"
 #include "protocol/protocol.h"
 #include "protocol/driverprotocol.h"
-#include "Qt/functional.h"
+#include "Qt/qt_functional.h"
 
 using namespace std;
 

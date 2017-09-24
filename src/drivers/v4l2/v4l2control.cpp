@@ -22,7 +22,7 @@
 #include <QHash>
 #include "v4l2exception.h"
 #include "c++/stringbuilder.h"
-#include "Qt/strings.h"
+#include "Qt/qt_strings_helper.h"
 
 using namespace std;
 using namespace GuLinux;
