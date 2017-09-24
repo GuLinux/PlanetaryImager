@@ -83,7 +83,9 @@ QString SERWriter::filename() const
 void SERWriter::doHandle(Frame::ptr frame)
 {
   if(! d->header->imageWidth) {
-    d->header->endian = (frame->byteOrder() == Frame::BigEndian ? SER_Header::BigEndian : SER_Header::LittleEndian);
+      // Force incorrect ENDIAN Type for compatibility with most readers ...
+    // d->header->endian = (frame->byteOrder() == Frame::BigEndian ? SER_Header::BigEndian : SER_Header::LittleEndian);
+    d->header->endian = (frame->byteOrder() == Frame::BigEndian ? SER_Header::LittleEndian : SER_Header::BigEndian);
     d->header->set_color_format(frame->colorFormat());
     d->header->pixelDepth = frame->bpp();
     qDebug() << "SER PixelDepth set to " << d->header->pixelDepth << "bpp" << ", bytesPerPixels: " << d->header->bytesPerPixel();
