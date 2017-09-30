@@ -20,7 +20,7 @@
  - bugfix: fix disconnection/closing crashes with ZWO cameras
  - Temporarly disable QHY driver, until we get a stabler SDK
  - ui fixes
- - updated ASI SDK version (Linux/OSX: v0.6.0328, Windows: 1.13.0.10)
+ - updated ASI SDK version (Linux/OSX: v0.6.0921, Windows: 1.13.1.4)
  
 ## 0.6.2 2016-10-30
  - Fix ASI ROI validation, particularly with USB2 cameras
