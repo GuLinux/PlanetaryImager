@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y git build-essential cmake clang wget au
     git clone https://github.com/tpoechtrager/osxcross && \
     git clone https://github.com/planetbeing/libdmg-hfsplus && \
     cd /libdmg-hfsplus && mkdir build && cd build && \
-    cmake .. -DCMAKE_INSTALL_PREFIX=/usr/bin && \
+    cmake .. -DCMAKE_INSTALL_PREFIX=/usr && \
     make && make install && cd / && \
     pip install ds-store mac_alias
 

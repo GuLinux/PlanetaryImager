@@ -9,7 +9,7 @@ libIex-2_2-12.dll
 libIlmImf-2_2-22.dll
 libIlmThread-2_2-12.dll
 libintl-8.dll
-libjasper-1.dll
+libjasper.dll
 libjpeg-9.dll
 liblzma-5.dll
 libopencv_core.dll
