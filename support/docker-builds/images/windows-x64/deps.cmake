@@ -10,7 +10,7 @@ install(FILES
   /mxe/usr/x86_64-w64-mingw32.shared/bin/libIlmImf-2_2-22.dll
   /mxe/usr/x86_64-w64-mingw32.shared/bin/libIlmThread-2_2-12.dll
   /mxe/usr/x86_64-w64-mingw32.shared/bin/libintl-8.dll
-  /mxe/usr/x86_64-w64-mingw32.shared/bin/libjasper-1.dll
+  /mxe/usr/x86_64-w64-mingw32.shared/bin/libjasper.dll
   /mxe/usr/x86_64-w64-mingw32.shared/bin/libjpeg-9.dll
   /mxe/usr/x86_64-w64-mingw32.shared/bin/liblzma-5.dll
   /mxe/usr/x86_64-w64-mingw32.shared/bin/libopencv_core.dll
