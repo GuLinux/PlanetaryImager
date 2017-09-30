@@ -94,10 +94,6 @@ ASIControl::operator Imager::Control() const
     { ASI_FAN_ON, QObject::tr("Fan on") },
     { ASI_PATTERN_ADJUST, QObject::tr("Pattern adjust") },
     { ASI_ANTI_DEW_HEATER, QObject::tr("Anti dew heater") },
-    //ASI_AUTO_MAX_EXP_MS is on Linux/Mac only for now
-#ifndef Q_OS_WIN
-    { ASI_AUTO_MAX_EXP_MS, QObject::tr("Auto max exposure") },
-#endif
   };
   auto control = Imager::Control{ static_cast<qlonglong>(caps.ControlType), labels.value(caps.ControlType, caps.Description) }
       .set_range(caps.MinValue, caps.MaxValue, 1l)
