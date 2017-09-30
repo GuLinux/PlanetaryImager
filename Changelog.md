@@ -1,4 +1,4 @@
-## 0.7.0 2017-xx-xx
+## 0.7.0 2017-09-30
  - feature: adding channel selection to histogram
  - feature: display histogram statistics for clipping detection
  - feature: adding camera controls presets
