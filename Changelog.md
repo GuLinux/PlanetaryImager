@@ -1,7 +1,7 @@
 ## 0.8.0 2017-xx-xx
   - feature: scripting support
   
-## 0.7.0 2017-xx-xx
+## 0.7.0 2017-10-01
  - feature: adding channel selection to histogram
  - feature: display histogram statistics for clipping detection
  - feature: adding camera controls presets
