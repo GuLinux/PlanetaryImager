@@ -1,24 +1,18 @@
-matrix:
-  include:
-    # works on Precise and Trusty
-    - os: linux
-      addons:
-        apt:
-          sources:
-            - ubuntu-toolchain-r-test
-          packages:
-            - g++-7
-            - autoconf
-            - qtbase5-dev
-            - qtdeclarative5-dev
-            - cmake
-            - libopencv-dev
-            - libboost-all-dev
-            - libudev-dev
-            - libccfits-dev
-      env:
-- MATRIX_EVAL="CC=gcc-7 && CXX=g++-7"
+- os: linux
+  addons:
+    apt:
+      sources:
+        - ubuntu-toolchain-r-test
+      packages:
+        - g++-7
+        - autoconf
+        - qtbase5-dev
+        - qtdeclarative5-dev
+        - cmake
+        - libopencv-dev
+        - libboost-all-dev
+        - libudev-dev
+        - libccfits-dev
 script:
   cmake .. && make
-before_install:
-    - eval "${MATRIX_EVAL}"
+
