@@ -1,0 +1,10 @@
+version: 2.0
+jobs:
+  build:
+    docker:
+      - image: gulinux/planetaryimager_build:ubuntu-17.04-64bit
+  steps:
+      - run: echo "--- start PlanetaryImager build ---"
+      - run: pwd
+      - run: ls
+
