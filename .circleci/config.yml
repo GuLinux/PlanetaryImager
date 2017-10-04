@@ -4,7 +4,9 @@ jobs:
     docker:
       - image: gulinux/planetaryimager_build:ubuntu-17.04-64bit
   steps:
-      - run: echo "--- start PlanetaryImager build ---"
-      - run: pwd
-      - run: ls
+    - checkout
+    - run: echo "hello world" 
+    - run: echo "--- start PlanetaryImager build ---"
+    - run: pwd
+    - run: ls
 
