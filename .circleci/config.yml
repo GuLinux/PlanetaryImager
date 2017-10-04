@@ -5,8 +5,8 @@ jobs:
       - image: gulinux/planetaryimager_build:ubuntu-17.04-64bit
     steps:
       - checkout:
-          - run: git submodule sync
-      - run: git submodule update --init
+        - run: git submodule sync
+        - run: git submodule update --init
       - run:
           command: |
             mkdir build
