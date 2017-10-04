@@ -1,18 +1,18 @@
-- os: linux
-  addons:
-    apt:
-      sources:
-        - ubuntu-toolchain-r-test
-      packages:
-        - g++-7
-        - autoconf
-        - qtbase5-dev
-        - qtdeclarative5-dev
-        - cmake
-        - libopencv-dev
-        - libboost-all-dev
-        - libudev-dev
-        - libccfits-dev
+os: linux
+addons:
+  apt:
+    sources:
+      - ubuntu-toolchain-r-test
+    packages:
+      - g++-7
+      - autoconf
+      - qtbase5-dev
+      - qtdeclarative5-dev
+      - cmake
+      - libopencv-dev
+      - libboost-all-dev
+      - libudev-dev
+      - libccfits-dev
 script:
   cmake .. && make
 
