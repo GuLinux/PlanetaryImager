@@ -9,7 +9,7 @@ jobs:
       - run: git submodule update --init
       - run:
           command: |
-            export GTEST_OUTPUT=xml:/root/project/build/tests_result
+            export GTEST_OUTPUT=xml:/root/project/build/tests_result/
             mkdir -p build/tests_result
             cd build
             cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_PLANETARYIMAGER_TESTING=On
