@@ -13,4 +13,6 @@ jobs:
             cd build
             cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_PLANETARYIMAGER_TESTING=On
             make
-
+            ctest -T Test
+      - store_test_results:
+        path: /root/project/build/Testing/
