@@ -1,2 +1,0 @@
-from planetaryimager_client import PlanetaryImagerClient
-
