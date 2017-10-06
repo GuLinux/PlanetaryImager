@@ -15,4 +15,4 @@ jobs:
             make
             ctest -T Test
       - store_test_results:
-        path: /root/project/build/Testing/
+          path: /root/project/build/Testing/
