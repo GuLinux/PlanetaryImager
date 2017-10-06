@@ -24,7 +24,6 @@
 #include "drivers/driver.h"
 #include "network/server/savefileforwarder.h"
 #include "network/networkdispatcher.h"
-#include "network/server/scripting/scriptingengine.h"
 #include "framesforwarder.h"
 #include "planetaryimager.h"
 

@@ -35,4 +35,3 @@ endif()
 
 # Extra executables to be built
 option(build_network_server "Build PlanetaryImager network daemon and frontend" On)
-option(build_scripting_client "Build PlanetaryImager scripting client" Off)
