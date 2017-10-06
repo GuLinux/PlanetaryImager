@@ -5,18 +5,15 @@ jobs:
       - image: gulinux/planetaryimager_build:ubuntu-17.04-64bit
     steps:
       - checkout
-      - run: echo 'export GTEST_OUTPUT=xml:/root/project/build/tests_result' >> $BASH_ENV
       - run: git submodule sync
       - run: git submodule update --init
       - run:
           command: |
+            export GTEST_OUTPUT=xml:/root/project/build/tests_result
             mkdir -p build/tests_result
             cd build
-            cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_PLANETARYIMAGER_TESTING=On -DTESTS_REPORT=On
+            cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_PLANETARYIMAGER_TESTING=On
             make
-      - run:
-          command: |
-            cd build
-            make test
+            ctest -T Test
       - store_test_results:
           path: /root/project/build/tests_result/
