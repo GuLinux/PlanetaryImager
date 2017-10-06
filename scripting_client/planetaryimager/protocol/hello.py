@@ -1,4 +1,4 @@
-from protocol import Protocol
+from .protocol import Protocol
 
 class Hello:
     def __init__(self):

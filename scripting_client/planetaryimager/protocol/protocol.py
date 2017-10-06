@@ -1,4 +1,4 @@
-from network_packet import NetworkPacket
+from . import NetworkPacket
 
 class Protocol:
     def __init__(self, area, name):
