@@ -14,6 +14,9 @@ jobs:
             cd build
             cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_PLANETARYIMAGER_TESTING=On -DTESTS_REPORT=On
             make
-      - run: make test
+      - run:
+          command: |
+            cd build
+            make test
       - store_test_results:
           path: /root/project/build/tests_result/
