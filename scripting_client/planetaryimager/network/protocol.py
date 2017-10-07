@@ -1,4 +1,5 @@
 from . import NetworkPacket
+import collections
 
 class Protocol:
     def __init__(self, area, name):
@@ -11,3 +12,10 @@ class Protocol:
     def packet(self):
         return NetworkPacket(self.packet_name())
 
+    def check(self, packet):
+        if not packet.name == self.packet_name():
+            raise RuntimeError('Unknown packet: expecting {}, got {}'.format(self.packet_name(), packet.name))
+
+    def named_tuple(self, packet, fields):
+        classname = collections.namedtuple(self.name, fields)
+        return classname(**packet.payload_variant())

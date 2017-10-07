@@ -1,11 +1,15 @@
 from .protocol import Protocol
+import collections
+
+NETWORK = 'Network'
 
 class Hello:
-
+    PACKET=Protocol(NETWORK, 'Hello')
+    REPLY=Protocol(NETWORK, 'HelloReply')
+    
     @staticmethod
-    def send_packet():
-        send_protocol = Protocol('Network', 'Hello') 
-        packet = send_protocol.packet()
+    def send():
+        packet = Hello.PACKET.packet()
         packet.set_payload({
             'format': 2,
             'compression': False,
@@ -15,7 +19,7 @@ class Hello:
         return packet
 
     @staticmethod
-    def reply_packet():
-       reply_protocol = Protocol('Network', 'HelloReply') 
-       return reply_protocol.packet()
+    def reply(packet):
+        Hello.REPLY.check(packet)
+        return Hello.REPLY.named_tuple(packet, ['imager_running'])
 
