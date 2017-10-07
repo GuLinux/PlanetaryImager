@@ -9,8 +9,7 @@ class Client:
         self.sock = None
 
     def connect(self):
-        self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.sock.connect((self.host, self.port))
+        self.sock = socket.create_connection((self.host, self.port))
 
     def send_receive(self, packet):
         packet.send_to(self.sock)
@@ -18,4 +17,11 @@ class Client:
         received.receive_from(self.sock)
         return received
 
+
+    def disconnect(self):
+        if not self.sock:
+            return
+        self.sock.shutdown(socket.SHUT_RDWR)
+        self.sock.close()
+        self.sock = None
 

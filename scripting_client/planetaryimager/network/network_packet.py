@@ -34,8 +34,6 @@ class NetworkPacket:
         s = QDataStream(ba, QIODevice.WriteOnly)
         s.writeQVariant(variant)
         self.payload = ba.data()
-        print(variant)
-        print(self.payload)
 
     def payload_variant(self):
         ba = QByteArray(self.payload)
