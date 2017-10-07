@@ -3,17 +3,46 @@ jobs:
   build:
     docker:
       - image: gulinux/planetaryimager_build:ubuntu-17.04-64bit
+    working_directory: /PlanetaryImager-Workflow
     steps:
       - checkout
-      - run: git submodule sync
-      - run: git submodule update --init
       - run:
           command: |
-            export GTEST_OUTPUT=xml:/root/project/build/tests_result/
+            git submodule sync
+            git submodule update --init
+
             mkdir -p build/tests_result
             cd build
             cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_PLANETARYIMAGER_TESTING=On
-            make
-            ctest -T Test
+            make -j4
+      - save_cache:
+          key: PlanetaryImager-Workflow-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - /PlanetaryImager-Workflow
+  test:
+    docker:
+      - image: gulinux/planetaryimager_build:ubuntu-17.04-64bit
+
+    working_directory: /PlanetaryImager-Workflow
+    steps:
+      - restore_cache:
+          keys:
+            - PlanetaryImager-Workflow-{{ .Branch }}-{{ .Revision }}
+      - run:
+          command: |
+            cd build
+            export GTEST_OUTPUT=xml:/PlanetaryImager-Workflow/build/tests_result/
+            make test 
+      - store_artifacts:
+          path: /PlanetaryImager-Workflow/build/tests_result/
       - store_test_results:
-          path: /root/project/build/tests_result/
+          path: /PlanetaryImager-Workflow/build/tests_result/
+
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - test:
+          requires:
+            - build 
