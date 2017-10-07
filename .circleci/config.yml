@@ -9,12 +9,25 @@ jobs:
       - run: git submodule update --init
       - run:
           command: |
-            export GTEST_OUTPUT=xml:/root/project/build/tests_result/
             mkdir -p build/tests_result
             cd build
             cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_PLANETARYIMAGER_TESTING=On
             make -j4
-            make test
-            ls /root/project/build/tests_result/
-      - store_test_results:
+ test:
+    docker:
+      - image: gulinux/planetaryimager_build:ubuntu-17.04-64bit
+    steps:
+      - run:
+          command: |
+            export GTEST_OUTPUT=xml:/root/project/build/tests_result/
+            make test 
+      - store_artifacts:
           path: /root/project/build/tests_result/
+workflows:
+  version: 2
+  build_and_test:
+    jobs:
+      - build
+      - test:
+          requires:
+            - build 
