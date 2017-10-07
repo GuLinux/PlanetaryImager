@@ -31,10 +31,12 @@ jobs:
             - pi-repo-{{ checksum ".circle-sha" }}
       - run:
           command: |
-            export GTEST_OUTPUT=xml:/root/project/build/tests_result/
+            pwd
+            ls
+            export GTEST_OUTPUT=xml:/PlanetaryImager-Workflow/build/tests_result/
             make test 
       - store_artifacts:
-          path: /root/project/build/tests_result/
+          path: /PlanetaryImager-Workflow/build/tests_result/
 workflows:
   version: 2
   build_and_test:
