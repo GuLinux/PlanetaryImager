@@ -13,7 +13,7 @@ jobs:
             cd build
             cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_PLANETARYIMAGER_TESTING=On
             make -j4
- test:
+  test:
     docker:
       - image: gulinux/planetaryimager_build:ubuntu-17.04-64bit
     steps:
