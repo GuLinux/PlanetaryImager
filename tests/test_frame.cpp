@@ -22,25 +22,21 @@
 
 using namespace std;
 
-class TestFrame : public ::testing::Test {
-public:
-  TestFrame();
-  cv::Mat testImage;
-};
-
-TestFrame::TestFrame() : testImage{cv::Size{3, 2}, CV_8UC3}
-{
+cv::Mat testMat() {
+  cv::Mat testImage{cv::Size{3, 2}, CV_8UC3};
   testImage.at<cv::Vec3b>(cv::Point(0, 0)) = cv::Vec3b(0, 1, 2);
   testImage.at<cv::Vec3b>(cv::Point(0, 1)) = cv::Vec3b(255, 0, 0);
   testImage.at<cv::Vec3b>(cv::Point(1, 0)) = cv::Vec3b(0, 255, 0);
   testImage.at<cv::Vec3b>(cv::Point(1, 1)) = cv::Vec3b(0, 0, 255);
   testImage.at<cv::Vec3b>(cv::Point(2, 0)) = cv::Vec3b(125, 125, 125);
   testImage.at<cv::Vec3b>(cv::Point(2, 1)) = cv::Vec3b(255, 255, 255);
+  return testImage;
 }
 
 
-TEST_F(TestFrame, testFrameMatConstructor)
+TEST(TestFrame, testFrameMatConstructor)
 {
+  auto testImage = testMat();
   auto frame = make_shared<Frame>(Frame::ColorFormat::BGR, testImage, Frame::LittleEndian);
   ASSERT_EQ(3, frame->channels());
   ASSERT_EQ(testImage.elemSize() * testImage.total(), frame->size());
