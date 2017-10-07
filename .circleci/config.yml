@@ -6,17 +6,17 @@ jobs:
     working_directory: /PlanetaryImager-Workflow
     steps:
       - checkout
-      - run: git submodule sync
-      - run: git submodule update --init
-      - run:
+      - run:       - run:
           command: |
-            echo $CIRCLE_SHA1 > .circle-sha
+            git submodule sync
+            git submodule update --init
+
             mkdir -p build/tests_result
             cd build
             cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_PLANETARYIMAGER_TESTING=On
             make -j4
       - save_cache:
-          key: pi-repo-{{ checksum ".circle-sha" }}
+          key: PlanetaryImager-Workflow-{{ .Branch }}-{{ .Revision }}
           paths:
             - /PlanetaryImager-Workflow
   test:
@@ -25,10 +25,9 @@ jobs:
 
     working_directory: /PlanetaryImager-Workflow
     steps:
-      - run: echo $CIRCLE_SHA1 > .circle-sha
       - restore_cache:
           keys:
-            - pi-repo-{{ checksum ".circle-sha" }}
+            - PlanetaryImager-Workflow-{{ .Branch }}-{{ .Revision }}
       - run:
           command: |
             cd build
@@ -36,6 +35,9 @@ jobs:
             make test 
       - store_artifacts:
           path: /PlanetaryImager-Workflow/build/tests_result/
+      - store_test_results:
+          path: /PlanetaryImager-Workflow/build/tests_result/
+
 workflows:
   version: 2
   build_and_test:
