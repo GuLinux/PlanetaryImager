@@ -6,7 +6,7 @@ jobs:
     working_directory: /PlanetaryImager-Workflow
     steps:
       - checkout
-      - run:       - run:
+      - run:
           command: |
             git submodule sync
             git submodule update --init
