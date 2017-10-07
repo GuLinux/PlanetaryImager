@@ -30,6 +30,12 @@ using namespace std;
 DPTR_IMPL(NetworkPacket) {
   Type name;
   QByteArray payload;
+  static const int NAME_BYTES = 1;
+  static const int PACKET_BYTES = 4;
+  template<typename T> QByteArray asFixedBytes(T number, int digits) const;
+  template<typename T> T fromFixedBytes(const QByteArray &bytes) const;
+  
+  QByteArray chunked_read(int bytes, QIODevice *device, int chunk_size = 1024);
 };
 
 NetworkPacket::NetworkPacket() : dptr()
@@ -38,8 +44,32 @@ NetworkPacket::NetworkPacket() : dptr()
 
 NetworkPacket::NetworkPacket(const Type& name) : NetworkPacket()
 {
+  if(name.size() > 255) {
+    throw runtime_error(("Packet name must be under 256 characters (was: %1)" % name).toStdString());
+  }
   setName(name);
 }
+
+template<typename T> QByteArray NetworkPacket::Private::asFixedBytes(T number, int digits) const
+{
+  QByteArray out(digits, '\0');
+  for(int i = digits-1; i >=0; i--) {
+    out[i] = number % 256;
+    number /= 256;
+  }
+  return out;
+}
+
+template<typename T> T NetworkPacket::Private::fromFixedBytes(const QByteArray &bytes) const
+{
+  T number = 0;
+  for(uint8_t b: bytes) {
+    number *= 256;
+    number += static_cast<T>(b);
+  }
+  return number;
+}
+
 
 
 NetworkPacket::~NetworkPacket()
@@ -50,35 +80,41 @@ NetworkPacket::~NetworkPacket()
 
 qint64 NetworkPacket::sendTo(QIODevice *device) const
 {
-  QBuffer buffer;
-  buffer.open(QIODevice::WriteOnly);
-  QDataStream s(&buffer);
-  s << d->name << d->payload.size();
-  qint64 wrote = device->write(buffer.data());
+  qint64 wrote = device->write( d->asFixedBytes(d->name.size(), Private::NAME_BYTES));
+  wrote += device->write(d->name.toLatin1());
+  wrote += device->write(d->asFixedBytes(d->payload.size(), Private::PACKET_BYTES));
   wrote += device->write(d->payload);
-  if(wrote == -1) {
-    qWarning() << "Error writing data to device: " << device->errorString();
-    return -1;
-  }
+  auto expected = d->name.size() + d->payload.size() + Private::PACKET_BYTES + Private::NAME_BYTES;
   
-  if(wrote != d->payload.size() + buffer.size())
+  if(wrote != expected)
     qWarning() << "Wrote " << wrote << "bytes, expected " << d->payload.size();
-  //qDebug() << "Wrote " << wrote << "bytes, expected " << d->payload.size();
-  //qDebug() << "Sent data: " << data;
   return wrote;
 }
 
 
 void NetworkPacket::receiveFrom(QIODevice *device)
 {
-  int data_size;
-  QDataStream s(device);
-  s >> d->name >> data_size;
-  while(device->bytesAvailable() < data_size)
-    qApp->processEvents();
-  //qDebug() << "reading " << data_size << " bytes";
-  d->payload = device->read(data_size);
+  auto name_size = d->fromFixedBytes<int>(d->chunked_read(Private::NAME_BYTES, device));
+  auto name = d->chunked_read(name_size, device);
+  d->name = QString::fromLatin1(name);
+  
+  auto data_size = d->fromFixedBytes<int>(d->chunked_read(Private::PACKET_BYTES, device));
+  d->payload = d->chunked_read(data_size, device);
 }
+
+QByteArray NetworkPacket::Private::chunked_read(int bytes, QIODevice *device, int chunk_size)
+{
+  QByteArray dest;
+  while(dest.size() < bytes) {
+    auto remaining = bytes - dest.size();
+    auto chunk = std::min(remaining, chunk_size);
+    while(device->bytesAvailable() < chunk)
+      qApp->processEvents();
+    dest.append(device->read(chunk));
+  }
+  return dest;
+}
+
 
 
 NetworkPacket::Type NetworkPacket::name() const
