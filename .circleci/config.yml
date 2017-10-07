@@ -31,8 +31,7 @@ jobs:
             - pi-repo-{{ checksum ".circle-sha" }}
       - run:
           command: |
-            pwd
-            ls
+            cd build
             export GTEST_OUTPUT=xml:/PlanetaryImager-Workflow/build/tests_result/
             make test 
       - store_artifacts:
