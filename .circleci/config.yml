@@ -3,20 +3,32 @@ jobs:
   build:
     docker:
       - image: gulinux/planetaryimager_build:ubuntu-17.04-64bit
+    working_directory: /PlanetaryImager-Workflow
     steps:
       - checkout
       - run: git submodule sync
       - run: git submodule update --init
       - run:
           command: |
+            echo $CIRCLE_SHA1 > .circle-sha
             mkdir -p build/tests_result
             cd build
             cmake .. -DCMAKE_BUILD_TYPE=Debug -DENABLE_PLANETARYIMAGER_TESTING=On
             make -j4
+      - save_cache:
+          key: pi-repo-{{ checksum ".circle-sha" }}
+          paths:
+            - /PlanetaryImager-Workflow
   test:
     docker:
       - image: gulinux/planetaryimager_build:ubuntu-17.04-64bit
+
+    working_directory: /PlanetaryImager-Workflow
     steps:
+      - run: echo $CIRCLE_SHA1 > .circle-sha
+      - restore_cache:
+          keys:
+            - pi-repo-{{ checksum ".circle-sha" }}
       - run:
           command: |
             export GTEST_OUTPUT=xml:/root/project/build/tests_result/
