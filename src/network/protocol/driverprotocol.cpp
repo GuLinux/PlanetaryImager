@@ -237,7 +237,7 @@ Frame::ptr DriverProtocol::decodeFrame(const NetworkPacket::ptr& packet)
   vector<uint8_t> data(image.size());
   move(begin(image), end(image), begin(data));
   auto mat = cv::imdecode(data, CV_LOAD_IMAGE_UNCHANGED);
-  auto frame = make_shared<Frame>(mat.channels() == 1 ? Frame::Mono : Frame::BGR, mat);
+  auto frame = make_shared<Frame>(mat.channels() == 1 ? Frame::Mono : Frame::BGR, mat, Frame::LittleEndian);
   //qDebug() << "FRAME data size: " << image.size() << ", bpp: " << frame->bpp() << ", res: " << frame->resolution() << ", channels: " << frame->channels();
   
   return frame;

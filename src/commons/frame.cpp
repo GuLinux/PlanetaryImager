@@ -57,9 +57,9 @@ Frame::Private::Private(Frame::ColorFormat colorFormat, const cv::Mat& image, By
   color_format{colorFormat},
   bpp{image.depth() == CV_8U || image.depth() == CV_8S ? uint8_t{8} : uint8_t{16}},
   resolution{image.cols, image.rows},
-  mat{image},
   byteOrder{byteOrder}
 {
+  image.copyTo(mat);
 }
 
 
@@ -71,6 +71,7 @@ Frame::Frame(uint8_t bpp, Frame::ColorFormat colorFormat, const QSize& resolutio
 Frame::Frame(Frame::ColorFormat colorFormat, const cv::Mat& image, ByteOrder byteOrder) : dptr(colorFormat, image, byteOrder)
 {
 }
+
 
 
 Frame::~Frame()
