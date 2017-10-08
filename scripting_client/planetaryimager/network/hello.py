@@ -21,5 +21,5 @@ class Hello:
     @staticmethod
     def reply(packet):
         Hello.REPLY.check(packet)
-        return Hello.REPLY.named_tuple(packet, ['imager_running'])
+        return Hello.REPLY.named_tuple(packet)
 

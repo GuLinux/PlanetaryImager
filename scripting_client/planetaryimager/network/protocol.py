@@ -16,6 +16,7 @@ class Protocol:
         if not packet.name == self.packet_name():
             raise RuntimeError('Unknown packet: expecting {}, got {}'.format(self.packet_name(), packet.name))
 
-    def named_tuple(self, packet, fields):
-        classname = collections.namedtuple(self.name, fields)
+    def named_tuple(self, packet):
+        packet_dict = packet.payload_variant()
+        classname = collections.namedtuple(self.name, list(packet_dict.keys()))
         return classname(**packet.payload_variant())

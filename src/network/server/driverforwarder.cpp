@@ -88,6 +88,9 @@ void DriverForwarder::Private::ConnectCamera(const NetworkPacket::ptr& p)
 {
   auto address = reinterpret_cast<Driver::Camera *>(p->payloadVariant().toLongLong());
   auto camera = find_if(begin(cameras), end(cameras), [address](const Driver::Camera::ptr &p){ return p.get() == address; });
+  qDebug()<< "address: " << address;
+  for(auto camera: cameras)
+    qDebug() << camera.get();
   if(camera != cameras.end()) {
     planetaryImager->open(*camera);
   }

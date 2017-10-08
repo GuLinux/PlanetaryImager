@@ -1,4 +1,4 @@
-from .network import Client, Hello, CameraList
+from .network import *
 
 class PlanetaryImagerClient:
     def __init__(self, address, port=19232):
@@ -18,10 +18,25 @@ class PlanetaryImagerClient:
         self.client.disconnect()
         self.connected = False
 
-    
     def cameras(self):
         self.__check_connection()
-        return self.client.send_receive(CameraList.send())
+        return CameraListProtocol.reply(self.client.send_receive(CameraListProtocol.send()))
+
+    def ping(self):
+        self.__check_connection()
+        return self.client.send_receive(Ping.send())
+
+    def status(self):
+        return {
+            'connected': self.connected,
+            'imager_running': self.imager_running,
+        }
+
+    def connect_camera(self, camera):
+        self.__check_connection()
+        ConnectCameraProtocol.reply(self.client.send_receive(ConnectCameraProtocol.send(camera)))
+        self.imager_running = True
+        return True
 
 
     def __check_connection(self, exception=True):

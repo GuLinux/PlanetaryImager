@@ -62,6 +62,10 @@ NetworkServer::NetworkServer(
     d->forwarder->getStatus(status);
     d->dispatcher->send(NetworkProtocol::packetHelloReply() << status);
   });
+  
+  register_handler(NetworkProtocol::ping, [this](const NetworkPacket::ptr &) {
+    d->dispatcher->send(NetworkProtocol::packetpong());
+  });
   register_handler(DriverProtocol::StartLive, [this](const NetworkPacket::ptr &){
       d->elapsed.restart();
   });
