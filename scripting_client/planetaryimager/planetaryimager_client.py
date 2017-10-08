@@ -7,7 +7,7 @@ class PlanetaryImagerClient:
 
     def connect(self):
         self.client.connect()
-        rec = Hello.reply(self.client.send_receive(Hello.send()))
+        rec = Hello.reply(self.client.round_trip(Hello.send(), Hello.REPLY))
         self.connected = True
         self.imager_running = rec.imager_running
 
@@ -20,11 +20,11 @@ class PlanetaryImagerClient:
 
     def cameras(self):
         self.__check_connection()
-        return CameraListProtocol.reply(self.client.send_receive(CameraListProtocol.send()))
+        return CameraListProtocol.reply(self.client.round_trip(CameraListProtocol.send(), CameraListProtocol.REPLY))
 
     def ping(self):
         self.__check_connection()
-        return self.client.send_receive(Ping.send())
+        return self.client.round_trip(Ping.send(), Ping.REPLY)
 
     def status(self):
         return {
@@ -34,7 +34,7 @@ class PlanetaryImagerClient:
 
     def connect_camera(self, camera):
         self.__check_connection()
-        ConnectCameraProtocol.reply(self.client.send_receive(ConnectCameraProtocol.send(camera)))
+        ConnectCameraProtocol.reply(self.client.round_trip(ConnectCameraProtocol.send(camera), ConnectCameraProtocol.REPLY))
         self.imager_running = True
         return True
 
