@@ -1,20 +1,23 @@
 import time
-from . import NetworkPacket
+from . import NetworkPacket, Ping
 import socket
+import threading
+from ..utils import Interval
 
 class Client:
     def __init__(self, host, port):
         self.host = host
         self.port = port
-        self.sock = None
+        self.__sock = None
+        self.__sock_lock = threading.RLock()
         self.handlers = []
+        self.interval = Interval()
 
     def connect(self):
-        self.sock = socket.create_connection((self.host, self.port))
+        with self.__sock_lock:
+            self.__sock = socket.create_connection((self.host, self.port))
+        self.interval.start(2, self.__ping)
 
-    def send_receive(self, packet):
-        self.send(packet)
-        return self.receive()
 
     def round_trip(self, packet, expected, timeout=30):
         self.send(packet)
@@ -27,23 +30,28 @@ class Client:
         raise RuntimeError('Expected packet {} not received'.format(expected.packet_name()))
 
     def send(self, packet):
-        if not self.sock:
-            raise RuntimeError('not connected')
-        packet.send_to(self.sock)
+        with self.__sock_lock:
+            if not self.__sock:
+                raise RuntimeError('not connected')
+            packet.send_to(self.__sock)
 
     def receive(self):
-        if not self.sock:
-            raise RuntimeError('not connected')
-        received = NetworkPacket()
-        received.receive_from(self.sock)
-        return received
+        with self.__sock_lock:
+            if not self.__sock:
+                raise RuntimeError('not connected')
+            received = NetworkPacket()
+            received.receive_from(self.__sock)
+            return received
 
     def disconnect(self):
-        if not self.sock:
+        if not self.__sock:
             return
-        self.sock.shutdown(socket.SHUT_RDWR)
-        self.sock.close()
-        self.sock = None
+
+        self.interval.stop()
+        with self.__sock_lock:
+            self.__sock.shutdown(socket.SHUT_RDWR)
+            self.__sock.close()
+            self.__sock = None
 
     def add_handler(self, expected, callback):
         self.handlers.append((expected.packet_name(), callback))
@@ -61,3 +69,5 @@ class Client:
             # TODO: add some kind of logging class
             print('Received unexpected packet {}'.format(packet.name))
 
+    def __ping(self):
+        self.round_trip(Ping.send(), Ping.REPLY)

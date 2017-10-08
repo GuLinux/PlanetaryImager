@@ -4,6 +4,7 @@ class PlanetaryImagerClient:
     def __init__(self, address, port=19232):
         self.client = Client(address, port)
         self.connected = False
+        self.imager_running = False
 
     def connect(self):
         self.client.connect()
