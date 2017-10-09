@@ -30,39 +30,47 @@ class Client:
         raise RuntimeError('Expected packet {} not received'.format(expected.packet_name()))
 
     def send(self, packet):
+        self.__check_connection()
         with self.__sock_lock:
             if not self.__sock:
                 raise RuntimeError('not connected')
             packet.send_to(self.__sock)
 
     def receive(self):
+        self.__check_connection()
         with self.__sock_lock:
-            if not self.__sock:
-                raise RuntimeError('not connected')
             received = NetworkPacket()
             received.receive_from(self.__sock)
             return received
 
     def disconnect(self):
-        if not self.__sock:
+        if not self.connected():
             return
 
         self.interval.stop()
         with self.__sock_lock:
             self.__sock.shutdown(socket.SHUT_RDWR)
             self.__sock.close()
-            self.__sock = None
+        self.__sock = None
 
-    def add_handler(self, expected, callback):
-        self.handlers.append((expected.packet_name(), callback))
+    def add_handler(self, callback, name=None, packet=None):
+        if name is None and packet is not None:
+            name=packet.packet_name()
+        self.handlers.append((name, callback))
 
-    def remove_handler(self, expected):
-        self.handlers = [x for x in self.handlers if x[0] != expected.packet_name()]
+    def connected(self):
+        return self.__sock is not None
+
+    def remove_handler(self, name=None, packet=None):
+        if name is None and packet is not None:
+            name=packet.packet_name()
+        self.handlers = [x for x in self.handlers if x[0] != name]
+
 
     def __handle(self, packet):
         handled = False
         for handler in self.handlers:
-            if handler[0] == packet.name:
+            if handler[0] == '*' or handler[0] == packet.name:
                 handler[1](packet)
                 handled = True
         if not handled:
@@ -71,3 +79,9 @@ class Client:
 
     def __ping(self):
         self.round_trip(Ping.send(), Ping.REPLY)
+
+
+    def __check_connection(self):
+        if not self.connected():
+            raise RuntimeError('Not connected')
+
