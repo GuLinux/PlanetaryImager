@@ -29,6 +29,7 @@ DPTR_IMPL(ConfigurationForwarder) {
   void get(const NetworkPacket::ptr &packet);
   void set(const NetworkPacket::ptr &packet);
   void reset(const NetworkPacket::ptr &packet);
+  void list(const NetworkPacket::ptr &packet);
   
   struct ConfigurationFunctions {
     function<QVariant()> get;
@@ -36,24 +37,28 @@ DPTR_IMPL(ConfigurationForwarder) {
     function<void()> reset;
   };
   QHash<QString, ConfigurationFunctions> names;
+  QVariantMap settings_list;
 };
 
 #define register_conf_function(name, type) d->names[#name] = Private::ConfigurationFunctions{ \
   [this] { return QVariant{ d->configuration.name() }; }, \
   [this](const QVariant &v) { d->configuration.set_ ##name( v.value<type>() ); }, \
   [this] { d->configuration.reset_ ##name(); }, \
-};
+}; \
+d->settings_list[#name] = #type;
 #define register_conf_function_enum(name, type) d->names[#name] = Private::ConfigurationFunctions{ \
   [this] { return QVariant{ static_cast<int>(d->configuration.name() ) }; }, \
   [this](const QVariant &v) { d->configuration.set_ ##name( static_cast<type>(v.value<int>() ) ); }, \
   [this] { d->configuration.reset_ ##name(); }, \
-};
+}; \
+d->settings_list[#name] = #type;
 
 ConfigurationForwarder::ConfigurationForwarder(Configuration &configuration, const NetworkDispatcher::ptr& dispatcher) : NetworkReceiver{dispatcher}, dptr(configuration, this)
 {
   register_handler(ConfigurationProtocol::Get, bind(&Private::get, d.get(), _1));
   register_handler(ConfigurationProtocol::Set, bind(&Private::set, d.get(), _1));
   register_handler(ConfigurationProtocol::Reset, bind(&Private::reset, d.get(), _1));
+  register_handler(ConfigurationProtocol::List, bind(&Private::list, d.get(), _1));
 
   register_conf_function(buffered_output, bool )
   register_conf_function(max_memory_usage, long long )
@@ -106,3 +111,9 @@ void ConfigurationForwarder::Private::set(const NetworkPacket::ptr& packet)
   ConfigurationProtocol::decodeSet(packet, name, value);
   names[name].set(value);
 }
+
+void ConfigurationForwarder::Private::list(const NetworkPacket::ptr& packet)
+{
+  q->dispatcher()->queue_send(ConfigurationProtocol::packetListReply() << settings_list);
+}
+

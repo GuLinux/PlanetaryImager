@@ -34,9 +34,7 @@ class ConnectCameraProtocol:
 
     @staticmethod
     def send(camera):
-        packet = ConnectCameraProtocol.PACKET.packet()
-        packet.set_payload(camera.address)
-        return packet
+        return ConnectCameraProtocol.PACKET.packet().set_payload(camera.address)
 
     def reply(packet):
         ConnectCameraProtocol.REPLY.check(packet)

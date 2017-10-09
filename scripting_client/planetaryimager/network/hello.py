@@ -9,14 +9,12 @@ class Hello:
     
     @staticmethod
     def send():
-        packet = Hello.PACKET.packet()
-        packet.set_payload({
+        return Hello.PACKET.packet().set_payload({
             'format': 2,
             'compression': False,
             'force8bit': False,
             'jpegQuality': 10
         })
-        return packet
 
     @staticmethod
     def reply(packet):

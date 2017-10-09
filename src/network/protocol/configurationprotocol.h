@@ -25,6 +25,8 @@
 class ConfigurationProtocol : public NetworkProtocol
 {
 public:
+  ADD_PROTOCOL_PACKET_NAME(List)
+  ADD_PROTOCOL_PACKET_NAME(ListReply)
   ADD_PROTOCOL_PACKET_NAME(Get)
   ADD_PROTOCOL_PACKET_NAME(GetReply)
   ADD_PROTOCOL_PACKET_NAME(Set)

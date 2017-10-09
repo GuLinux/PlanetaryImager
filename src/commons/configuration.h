@@ -131,6 +131,7 @@ public:
     void remove_preset(const QString &name);
     
     QString savefile() const;
+    
 public slots:
     void preset_saved(const QString &file);
     void recording_preset_saved(const QString &file);

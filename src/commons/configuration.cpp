@@ -77,6 +77,7 @@ template<typename T> void Configuration::Private::set(const QString& key, const 
   values_cache[key] = value;
 }
 
+
 #define define_setting_reset(name) void Configuration::reset_ ##name() { d->settings->remove(#name); d->values_cache.remove(#name); }
 #define define_setting_set(name, type) void Configuration::set_ ##name(const type &value) { d->set<type>( #name, value); }
 #define define_setting_enum_set(name, type) void Configuration::set_ ##name(const type &value) { d->set<int>( #name, static_cast<int>(value) ); }

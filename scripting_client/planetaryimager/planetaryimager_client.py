@@ -1,10 +1,12 @@
 from .network import *
+from .configuration import Configuration
 
 class PlanetaryImagerClient:
     def __init__(self, address, port=19232):
         self.client = Client(address, port)
         self.connected = False
         self.imager_running = False
+        self.configuration = Configuration(self.client)
 
     def connect(self):
         self.client.connect()
@@ -44,3 +46,4 @@ class PlanetaryImagerClient:
         if not self.connected and exception:
             raise RuntimeError('Not connected')
         return self.connected
+

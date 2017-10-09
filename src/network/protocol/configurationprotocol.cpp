@@ -19,6 +19,8 @@
 
 #include "configurationprotocol.h"
 
+PROTOCOL_NAME_VALUE(Configuration, List);
+PROTOCOL_NAME_VALUE(Configuration, ListReply);
 PROTOCOL_NAME_VALUE(Configuration, Get);
 PROTOCOL_NAME_VALUE(Configuration, GetReply);
 PROTOCOL_NAME_VALUE(Configuration, Set);
