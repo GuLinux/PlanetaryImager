@@ -26,7 +26,6 @@ class DriverProtocol : public NetworkProtocol {
 public:
   ADD_PROTOCOL_PACKET_NAME(CameraList)
   ADD_PROTOCOL_PACKET_NAME(CameraListReply)
-  ADD_PROTOCOL_PACKET_NAME(CamerasParameter)
   ADD_PROTOCOL_PACKET_NAME(ConnectCamera)
   ADD_PROTOCOL_PACKET_NAME(CloseCamera)
   ADD_PROTOCOL_PACKET_NAME(ConnectCameraReply)

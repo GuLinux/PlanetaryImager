@@ -1,11 +1,13 @@
 from .network import Client, DriverProtocol, StatusProtocol
 from .configuration import Configuration
+from .recording import Recording
 
 class PlanetaryImagerClient:
     def __init__(self, address, port=19232):
         self.client = Client(address, port)
         self.imager_running = False
         self.configuration = Configuration(self.client)
+        self.recording = Recording(self.client)
 
     def connect(self):
         self.client.connect()
@@ -32,4 +34,6 @@ class PlanetaryImagerClient:
         self.imager_running = True
         return True
 
+    def close_camera(self):
+        DriverProtocol.close_camera(self.client)
 

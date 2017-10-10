@@ -2,13 +2,13 @@ from .protocol import Protocol
 
 
 class ConfigurationProtocol:
-    CONFIGURATION = 'Configuration'
-    PACKET_LIST = Protocol(CONFIGURATION, 'List')
-    REPLY_LIST = Protocol(CONFIGURATION, 'ListReply')
-    PACKET_GET = Protocol(CONFIGURATION, 'Get')
-    REPLY_GET = Protocol(CONFIGURATION, 'GetReply')
-    PACKET_SET = Protocol(CONFIGURATION, 'Set')
-    PACKET_RESET = Protocol(CONFIGURATION, 'Reset')
+    AREA = 'Configuration'
+    PACKET_LIST = Protocol(AREA, 'List')
+    REPLY_LIST = Protocol(AREA, 'ListReply')
+    PACKET_GET = Protocol(AREA, 'Get')
+    REPLY_GET = Protocol(AREA, 'GetReply')
+    PACKET_SET = Protocol(AREA, 'Set')
+    PACKET_RESET = Protocol(AREA, 'Reset')
 
     @classmethod
     def list(cls, client):

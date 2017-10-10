@@ -15,11 +15,13 @@ class Camera:
 
 
 class DriverProtocol:
-    DRIVER = 'Driver'
-    PACKET_CAMERA_LIST = Protocol(DRIVER, 'CameraList')
-    REPLY_CAMERA_LIST = Protocol(DRIVER, 'CameraListReply')
-    PACKET_CONNECT_CAMERA = Protocol(DRIVER, 'ConnectCamera')
-    REPLY_CONNECT_CAMERA = Protocol(DRIVER, 'ConnectCameraReply')
+    AREA = 'Driver'
+    PACKET_CAMERA_LIST = Protocol(AREA, 'CameraList')
+    REPLY_CAMERA_LIST = Protocol(AREA, 'CameraListReply')
+    PACKET_CONNECT_CAMERA = Protocol(AREA, 'ConnectCamera')
+    REPLY_CONNECT_CAMERA = Protocol(AREA, 'ConnectCameraReply')
+    PACKET_CLOSE_CAMERA = Protocol(AREA, 'CloseCamera')
+    SIGNAL_DISCONNECTED = Protocol(AREA, 'signalDisconnected')
 
     @classmethod
     def camera_list(cls, client):
@@ -29,4 +31,6 @@ class DriverProtocol:
     def connect_camera(cls, client, camera):
         Protocol.round_trip(client, cls.PACKET_CONNECT_CAMERA.packet().set_payload(camera.address), cls.REPLY_CONNECT_CAMERA)
     
-
+    @classmethod
+    def close_camera(cls, client):
+        Protocol.round_trip(client, cls.PACKET_CLOSE_CAMERA.packet(), cls.SIGNAL_DISCONNECTED)

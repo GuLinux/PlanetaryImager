@@ -1,11 +1,11 @@
 from .protocol import Protocol
 
 class StatusProtocol:
-    NETWORK = 'Network'
-    PACKET_HELLO = Protocol(NETWORK, 'Hello')
-    REPLY_HELLO = Protocol(NETWORK, 'HelloReply')
-    PACKET_PING = Protocol(NETWORK, 'ping')
-    REPLY_PONG = Protocol(NETWORK, 'pong')
+    AREA = 'Network'
+    PACKET_HELLO = Protocol(AREA, 'Hello')
+    REPLY_HELLO = Protocol(AREA, 'HelloReply')
+    PACKET_PING = Protocol(AREA, 'ping')
+    REPLY_PONG = Protocol(AREA, 'pong')
  
     @classmethod
     def hello(cls, client):

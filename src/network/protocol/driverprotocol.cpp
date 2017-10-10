@@ -27,7 +27,6 @@ using namespace std;
 using namespace std::placeholders;
 PROTOCOL_NAME_VALUE(Driver, CameraList);
 PROTOCOL_NAME_VALUE(Driver, CameraListReply);
-PROTOCOL_NAME_VALUE(Driver, CamerasParameter);
 PROTOCOL_NAME_VALUE(Driver, ConnectCamera);
 PROTOCOL_NAME_VALUE(Driver, ConnectCameraReply);
 PROTOCOL_NAME_VALUE(Driver, GetCameraName);

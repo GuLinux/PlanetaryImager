@@ -40,3 +40,6 @@ class Protocol:
         reply = client.round_trip(packet_send, expected_reply)
         return expected_reply.check(reply)
 
+    @classmethod
+    def register_packet_handler(cls, client, expected, callback):
+        client.add_handler(callback, packet=expected) 

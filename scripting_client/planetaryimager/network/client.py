@@ -73,9 +73,9 @@ class Client:
             if handler[0] == '*' or handler[0] == packet.name:
                 handler[1](packet)
                 handled = True
-        if not handled:
-            # TODO: add some kind of logging class
-            print('Received unexpected packet {}'.format(packet.name))
+#        if not handled:
+#            # TODO: add some kind of logging class
+#            print('Received unexpected packet {}'.format(packet.name))
 
     def __ping(self):
         StatusProtocol.ping(self)

@@ -65,7 +65,12 @@ int main(int argc, char** argv)
     PlanetaryImagerMainWindow mainWindow{planetaryImager, compositeImageHandler, make_shared<LocalFilesystemBrowser>(), commandLine.logfile() };
     auto server = make_shared<NetworkServer>(planetaryImager, dispatcher, frames_forwarder);
     QObject::connect(save_files_forwarder.get(), &SaveFileForwarder::isRecording, frames_forwarder.get(), &FramesForwarder::recordingMode);
-    
+    QObject::connect(planetaryImager.get(), &PlanetaryImager::cameraConnected, save_files_forwarder.get(), [&]{ 
+      save_files_forwarder->setImager(planetaryImager->imager());
+    });
+    QObject::connect(planetaryImager.get(), &PlanetaryImager::cameraDisconnected, save_files_forwarder.get(), [&]{ 
+      save_files_forwarder->setImager(nullptr);
+    });
     
     QMetaObject::invokeMethod(server.get(), "listen", Q_ARG(QString, commandLine.address()), Q_ARG(int, commandLine.port()));
     
