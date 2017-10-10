@@ -1,4 +1,4 @@
-from .network import *
+from .network import Client, DriverProtocol, StatusProtocol
 from .configuration import Configuration
 
 class PlanetaryImagerClient:
@@ -9,14 +9,14 @@ class PlanetaryImagerClient:
 
     def connect(self):
         self.client.connect()
-        rec = Hello.reply(self.client.round_trip(Hello.send(), Hello.REPLY))
-        self.imager_running = rec.imager_running
+        server_status = StatusProtocol.hello(self.client)
+        self.imager_running = server_status.imager_running
 
     def disconnect(self):
         self.client.disconnect()
 
     def cameras(self):
-        return CameraListProtocol.reply(self.client.round_trip(CameraListProtocol.send(), CameraListProtocol.REPLY))
+        return DriverProtocol.camera_list(self.client)
 
     def ping(self):
         return self.client.round_trip(Ping.send(), Ping.REPLY)
@@ -28,7 +28,7 @@ class PlanetaryImagerClient:
         }
 
     def connect_camera(self, camera):
-        ConnectCameraProtocol.reply(self.client.round_trip(ConnectCameraProtocol.send(camera), ConnectCameraProtocol.REPLY))
+        DriverProtocol.connect_camera(self.client, camera)
         self.imager_running = True
         return True
 

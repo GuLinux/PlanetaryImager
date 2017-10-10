@@ -5,14 +5,14 @@ class Configuration:
         self.client = client
 
     def list(self):
-        return ListConfigurationProtocol.reply(self.client.round_trip(ListConfigurationProtocol.send(), ListConfigurationProtocol.REPLY))
+        return ConfigurationProtocol.list(self.client)
 
     def get(self, name):
-        return GetConfigurationProtocol.reply(self.client.round_trip(GetConfigurationProtocol.send(name), GetConfigurationProtocol.REPLY))
+        return ConfigurationProtocol.get(self.client, name)
 
     def set(self, name, value):
-        self.client.send(SetConfigurationProtocol.send(name, value))
+        ConfigurationProtocol.set(self.client, name, value)
 
-    def reset(self, name, value):
-        self.client.send(ResetConfigurationProtocol.send(name))
+    def reset(self, name):
+        ConfigurationProtocol.reset(self.client, name)
 

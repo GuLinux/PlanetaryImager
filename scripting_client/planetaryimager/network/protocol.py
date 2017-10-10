@@ -15,8 +15,28 @@ class Protocol:
     def check(self, packet):
         if not packet.name == self.packet_name():
             raise RuntimeError('Unknown packet: expecting {}, got {}'.format(self.packet_name(), packet.name))
+        return packet
 
     def named_tuple(self, packet):
         packet_dict = packet.payload_variant()
         classname = collections.namedtuple(self.name, list(packet_dict.keys()))
         return classname(**packet.payload_variant())
+
+
+    @classmethod
+    def send(cls, client, packet_send):
+        client.send(packet_send)
+
+    @classmethod
+    def round_trip_tuple(cls, client, packet_send, expected_reply):
+        return expected_reply.named_tuple(cls.round_trip(client, packet_send, expected_reply))
+
+    @classmethod
+    def round_trip_variant(cls, client, packet_send, expected_reply):
+        return cls.round_trip(client, packet_send, expected_reply).payload_variant()
+   
+    @classmethod
+    def round_trip(cls, client, packet_send, expected_reply):
+        reply = client.round_trip(packet_send, expected_reply)
+        return expected_reply.check(reply)
+

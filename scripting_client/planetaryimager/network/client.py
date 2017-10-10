@@ -1,5 +1,5 @@
 import time
-from . import NetworkPacket, Ping
+from . import NetworkPacket, StatusProtocol
 import socket
 import threading
 from ..utils import Interval
@@ -78,8 +78,7 @@ class Client:
             print('Received unexpected packet {}'.format(packet.name))
 
     def __ping(self):
-        self.round_trip(Ping.send(), Ping.REPLY)
-
+        StatusProtocol.ping(self)
 
     def __check_connection(self):
         if not self.connected():
