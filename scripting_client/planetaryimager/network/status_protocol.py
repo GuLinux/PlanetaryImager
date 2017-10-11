@@ -20,5 +20,5 @@ class StatusProtocol:
 
     @classmethod
     def ping(cls, client):
-        Protocol.round_trip(client, cls.PACKET_PING.packet(), cls.REPLY_PONG)
+        reply = Protocol.round_trip(client, cls.PACKET_PING.packet(), cls.REPLY_PONG)
 

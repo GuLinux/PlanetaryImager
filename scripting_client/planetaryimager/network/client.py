@@ -11,7 +11,7 @@ class Client:
         self.__sock = None
         self.__sock_lock = threading.RLock()
         self.handlers = []
-        self.interval = Interval()
+        self.interval = Interval(daemon=True)
 
     def connect(self):
         with self.__sock_lock:
