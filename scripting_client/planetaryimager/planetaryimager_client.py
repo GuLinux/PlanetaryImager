@@ -17,23 +17,30 @@ class PlanetaryImagerClient:
     def disconnect(self):
         self.client.disconnect()
 
+    @property
     def cameras(self):
         return DriverProtocol.camera_list(self.client)
 
     def ping(self):
         return self.client.round_trip(Ping.send(), Ping.REPLY)
 
+    @property
     def status(self):
         return {
-            'connected': self.client.connected(),
+            'connected': self.client.connected,
             'imager_running': self.imager_running,
         }
 
-    def connect_camera(self, camera):
-        DriverProtocol.connect_camera(self.client, camera)
-        self.imager_running = True
-        return True
+    @property
+    def imager(self):
+        # TODO return instance of future Imager class
+        return None
 
-    def close_camera(self):
-        DriverProtocol.close_camera(self.client)
+    @imager.setter
+    def imager(self, camera):
+        if not camera:
+            DriverProtocol.close_camera(self.client)
+        else:
+            DriverProtocol.connect_camera(self.client, camera)
+            self.imager_running = True
 

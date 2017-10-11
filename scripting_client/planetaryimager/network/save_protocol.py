@@ -14,7 +14,7 @@ class SaveProtocol:
     @classmethod
     def on_signal_recording(cls, client, callback):
         def dispatch(packet):
-            callback(packet.payload_variant())
+            callback(packet.variant)
         Protocol.register_packet_handler(client, cls.SIGNAL_RECORDING, dispatch)
 
     @classmethod

@@ -29,18 +29,23 @@ class NetworkPacket:
             chunk_size = min(remaining_bytes, 1024)
             self.payload += sock.recv(chunk_size)
 
-    def set_payload(self, variant):
+    @property
+    def variant(self):
+        ba = QByteArray(self.payload)
+        s = QDataStream(ba, QIODevice.ReadOnly)
+        return s.readQVariant()
+
+    @variant.setter
+    def variant(self, variant):
         ba = QByteArray()
         s = QDataStream(ba, QIODevice.WriteOnly)
         s.writeQVariant(variant)
         self.payload = ba.data()
-        return self
 
-    def payload_variant(self):
-        ba = QByteArray(self.payload)
-        s = QDataStream(ba, QIODevice.ReadOnly)
-        return s.readQVariant()
-      
+    def with_variant(self, variant):
+        self.variant = variant
+        return self
+     
     @staticmethod
     def __num2hex(number, digits):
         out = bytearray(digits)

@@ -14,7 +14,8 @@ class Recording:
     def end_recording(self):
         SaveProtocol.end_recording(self.client)
 
-    def get_recording_filename(self):
+    @property
+    def recording_filename(self):
         return self.__recording_filename
 
     def __handle_signal_start_recording(self, filename):

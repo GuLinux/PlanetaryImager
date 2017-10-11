@@ -32,7 +32,7 @@ class Client:
     def send(self, packet):
         self.__check_connection()
         with self.__sock_lock:
-            if not self.__sock:
+            if not self.connected:
                 raise RuntimeError('not connected')
             packet.send_to(self.__sock)
 
@@ -44,7 +44,7 @@ class Client:
             return received
 
     def disconnect(self):
-        if not self.connected():
+        if not self.connected:
             return
 
         self.interval.stop()
@@ -58,6 +58,7 @@ class Client:
             name=packet.packet_name()
         self.handlers.append((name, callback))
 
+    @property
     def connected(self):
         return self.__sock is not None
 
@@ -81,6 +82,6 @@ class Client:
         StatusProtocol.ping(self)
 
     def __check_connection(self):
-        if not self.connected():
+        if not self.connected:
             raise RuntimeError('Not connected')
 

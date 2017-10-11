@@ -18,9 +18,9 @@ class Protocol:
         return packet
 
     def named_tuple(self, packet):
-        packet_dict = packet.payload_variant()
+        packet_dict = packet.variant
         classname = collections.namedtuple(self.name, list(packet_dict.keys()))
-        return classname(**packet.payload_variant())
+        return classname(**packet.variant)
 
 
     @classmethod
@@ -33,7 +33,7 @@ class Protocol:
 
     @classmethod
     def round_trip_variant(cls, client, packet_send, expected_reply):
-        return cls.round_trip(client, packet_send, expected_reply).payload_variant()
+        return cls.round_trip(client, packet_send, expected_reply).variant
    
     @classmethod
     def round_trip(cls, client, packet_send, expected_reply):

@@ -29,7 +29,7 @@ class DriverProtocol:
 
     @classmethod
     def connect_camera(cls, client, camera):
-        Protocol.round_trip(client, cls.PACKET_CONNECT_CAMERA.packet().set_payload(camera.address), cls.REPLY_CONNECT_CAMERA)
+        Protocol.round_trip(client, cls.PACKET_CONNECT_CAMERA.packet().with_variant(camera.address), cls.REPLY_CONNECT_CAMERA)
     
     @classmethod
     def close_camera(cls, client):
