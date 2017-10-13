@@ -1,3 +1,7 @@
+""" Planetary Imager Scripting client
+
+This module allows you to control Planetary Imager with a simple Python API interface.
+"""
 from .network import Client, DriverProtocol, StatusProtocol
 from .configuration import Configuration
 from .capture import Capture
