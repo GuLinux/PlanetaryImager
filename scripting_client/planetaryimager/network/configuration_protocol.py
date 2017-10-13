@@ -16,13 +16,13 @@ class ConfigurationProtocol:
 
     @classmethod
     def get(cls, client, name):
-        return Protocol.round_trip_variant(client, cls.PACKET_GET.packet().with_variant(name), cls.REPLY_GET)
+        return Protocol.round_trip_variant(client, cls.PACKET_GET.packet(variant=name), cls.REPLY_GET)
 
     @classmethod
     def set(cls, client, name, value):
-        Protocol.send(client, cls.PACKET_SET.packet().with_variant({'name': name, 'value': value}))
+        Protocol.send(client, cls.PACKET_SET.packet(variant={'name': name, 'value': value}))
 
     @classmethod
     def reset(cls, client, name):
-        Protocol.send(client, cls.PACKET_RESET.packet().with_variant(name))
+        Protocol.send(client, cls.PACKET_RESET.packet(variant=name))
 

@@ -9,8 +9,13 @@ class Protocol:
     def packet_name(self):
         return '{}_{}'.format(self.area, self.name)
 
-    def packet(self):
-        return NetworkPacket(self.packet_name())
+    def packet(self, payload=None, variant=None):
+        packet = NetworkPacket(self.packet_name())
+        if payload is not None:
+            packet.payload = payload
+        if variant is not None:
+            packet.variant = variant
+        return packet
 
     def check(self, packet):
         if not packet.name == self.packet_name():

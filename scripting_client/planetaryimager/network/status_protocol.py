@@ -9,7 +9,7 @@ class StatusProtocol:
  
     @classmethod
     def hello(cls, client):
-        packet = cls.PACKET_HELLO.packet().with_variant({
+        packet = cls.PACKET_HELLO.packet(variant={
             'format': 2,
             'compression': False,
             'force8bit': False,

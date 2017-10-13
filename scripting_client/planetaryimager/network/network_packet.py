@@ -42,10 +42,6 @@ class NetworkPacket:
         s.writeQVariant(variant)
         self.payload = ba.data()
 
-    def with_variant(self, variant):
-        self.variant = variant
-        return self
-     
     @staticmethod
     def __num2hex(number, digits):
         out = bytearray(digits)
