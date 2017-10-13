@@ -6,6 +6,7 @@ class SaveProtocol:
     PACKET_END_RECORDING = Protocol(AREA, 'EndRecording')
     SIGNAL_RECORDING = Protocol(AREA, 'signalRecording')
     SIGNAL_FINISHED = Protocol(AREA, 'signalFinished')
+    PACKET_SET_PAUSED = Protocol(AREA, 'slotSetPaused')
 
     @classmethod
     def start_recording(cls, client):
@@ -19,7 +20,7 @@ class SaveProtocol:
 
     @classmethod
     def end_recording(cls, client):
-        Protocol.send(client,  cls.PACKET_END_RECORDING.packet())
+        Protocol.send(client, cls.PACKET_END_RECORDING.packet())
 
 
     @classmethod
@@ -27,3 +28,8 @@ class SaveProtocol:
         def dispatch(_):
             callback()
         Protocol.register_packet_handler(client, cls.SIGNAL_FINISHED, dispatch)
+
+    @classmethod
+    def set_paused(cls, client, paused):
+        Protocol.send(client, cls.PACKET_SET_PAUSED.packet(variant=paused))
+
