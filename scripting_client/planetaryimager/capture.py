@@ -1,9 +1,9 @@
 from .network import SaveProtocol
 
-class Recording:
+class Capture:
     def __init__(self, client):
         self.client = client
-        self.recording = False
+        self.is_recording = False
         self.__recording_filename = None
         SaveProtocol.on_signal_recording(client, self.__handle_signal_start_recording)
         SaveProtocol.on_signal_end_recording(client, self.__handle_signal_end_recording)
@@ -19,9 +19,9 @@ class Recording:
         return self.__recording_filename
 
     def __handle_signal_start_recording(self, filename):
-        self.recording = True
+        self.is_recording = True
         self.__recording_filename = filename
 
     def __handle_signal_end_recording(self):
         self.__recording_filename = None
-        self.recording = False
+        self.is_recording = False

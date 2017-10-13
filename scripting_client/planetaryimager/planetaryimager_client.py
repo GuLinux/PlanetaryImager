@@ -1,13 +1,13 @@
 from .network import Client, DriverProtocol, StatusProtocol
 from .configuration import Configuration
-from .recording import Recording
+from .capture import Capture
 
 class PlanetaryImagerClient:
     def __init__(self, address, port=19232):
         self.client = Client(address, port)
         self.imager_running = False
         self.configuration = Configuration(self.client)
-        self.recording = Recording(self.client)
+        self.capture = Capture(self.client)
 
     def connect(self):
         self.client.connect()
