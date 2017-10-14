@@ -23,8 +23,7 @@ def handle_recording(seeing, client, trigger):
 
 if args.trigger is not None:
     from planetaryimager import PlanetaryImagerClient
-    client = PlanetaryImagerClient(args.planetary_imager_host)
-    client.connect()
+    client = PlanetaryImagerClient(args.planetary_imager_host, autoconnect=True)
 
 with serial.Serial(args.serial_port, 115000, timeout=2) as ser:
     readings = {}

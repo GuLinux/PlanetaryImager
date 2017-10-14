@@ -6,14 +6,24 @@ from .network import Client, DriverProtocol, StatusProtocol
 from .configuration import Configuration
 from .capture import Capture
 
+
 class PlanetaryImagerClient:
-    def __init__(self, address, port=19232):
+    def __init__(self, address='localhost', port=19232, autoconnect=True):
+        """ Create a PlanetaryImager client.
+
+        :param address: hostname of the machine running Planetary Imager (default: localhost).
+        :param port: TCP port for Planetary Imager connection (default: 19232).
+        :param autoconnect: set this to True to automatically connect on creation (default: True).
+        """
         self.client = Client(address, port)
         self.imager_running = False
         self.configuration = Configuration(self.client)
         self.capture = Capture(self.client)
+        if autoconnect:
+            self.connect()
 
     def connect(self):
+        """ Connect to PlanetaryImager instance."""
         self.client.connect()
         server_status = StatusProtocol.hello(self.client)
         self.imager_running = server_status.imager_running
@@ -24,9 +34,6 @@ class PlanetaryImagerClient:
     @property
     def cameras(self):
         return DriverProtocol.camera_list(self.client)
-
-    def ping(self):
-        return self.client.round_trip(Ping.send(), Ping.REPLY)
 
     @property
     def status(self):
