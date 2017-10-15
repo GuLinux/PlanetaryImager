@@ -65,9 +65,9 @@ int main(int argc, char** argv)
     auto scriptingengine = make_shared<ScriptingEngine>(planetaryImager, dispatcher);
     
     
-    PlanetaryImagerMainWindow mainWindow{planetaryImager, compositeImageHandler, make_shared<LocalFilesystemBrowser>(), commandLine.logfile() };
     auto server = make_shared<NetworkServer>(planetaryImager, dispatcher, frames_forwarder);
     QObject::connect(save_files_forwarder.get(), &SaveFileForwarder::isRecording, frames_forwarder.get(), &FramesForwarder::recordingMode);
+    PlanetaryImagerMainWindow mainWindow{planetaryImager, compositeImageHandler, make_shared<LocalFilesystemBrowser>(), commandLine.logfile() };
     
     
     QMetaObject::invokeMethod(server.get(), "listen", Q_ARG(QString, commandLine.address()), Q_ARG(int, commandLine.port()));
