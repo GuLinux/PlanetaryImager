@@ -2,7 +2,19 @@ from .network import SaveProtocol
 
 class Capture:
     def __init__(self, client):
+        """Mean fps on saving frames."""
+        self.mean_save_fps = 0
+        """Current fps on saving frames."""
+        self.save_fps = 0
+        """Total frames saved."""
+        self.saved_frames = 0
+        """Total frames dropped."""
+        self.dropped_frames = 0
+        """Boolean flag to indicate if PlanetaryImager is currently reecording."""
+        self.is_recording = False
+        self.__recording_filename = None
         self.client = client
+
         self.__on_recording_started = None
         self.__on_recording_finished = None
         self.__on_saved_frames = None
@@ -16,13 +28,6 @@ class Capture:
         SaveProtocol.on_signal_save_fps(client, self.__handle_save_fps)
         SaveProtocol.on_signal_saved_frames(client, self.__handle_saved_frames)
         SaveProtocol.on_signal_dropped_frames(client, self.__handle_dropped_frames)
-
-        self.mean_save_fps = 0
-        self.save_fps = 0
-        self.saved_frames = 0
-        self.dropped_frames = 0
-
-        self.__handle_signal_end_recording()
 
     def start_recording(self):
         SaveProtocol.start_recording(self.client)
