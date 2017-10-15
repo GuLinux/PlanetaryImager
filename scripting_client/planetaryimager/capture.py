@@ -2,6 +2,14 @@ from .network import SaveProtocol
 
 class Capture:
     def __init__(self, client):
+        """PlanetaryImager capture manager.
+
+        Handles start, stop and pause recording, and gets information about fps and saved/dropped frames.
+        Can also be configured with callbacks to be executed when these events occur.
+
+        :param client: network client to communicate with PlanetaryImager.
+        """
+
         """Mean fps on saving frames."""
         self.mean_save_fps = 0
         """Current fps on saving frames."""
