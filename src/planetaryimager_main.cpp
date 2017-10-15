@@ -62,7 +62,6 @@ int main(int argc, char** argv)
     auto planetaryImager = make_shared<PlanetaryImager>(drivers, threadedImageHandler, save_images, configuration);
         
     
-    PlanetaryImagerMainWindow mainWindow{planetaryImager, compositeImageHandler, make_shared<LocalFilesystemBrowser>(), commandLine.logfile() };
     auto server = make_shared<NetworkServer>(planetaryImager, dispatcher, frames_forwarder);
     QObject::connect(save_files_forwarder.get(), &SaveFileForwarder::isRecording, frames_forwarder.get(), &FramesForwarder::recordingMode);
     QObject::connect(planetaryImager.get(), &PlanetaryImager::cameraConnected, save_files_forwarder.get(), [&]{ 
@@ -71,7 +70,8 @@ int main(int argc, char** argv)
     QObject::connect(planetaryImager.get(), &PlanetaryImager::cameraDisconnected, save_files_forwarder.get(), [&]{ 
       save_files_forwarder->setImager(nullptr);
     });
-    
+    PlanetaryImagerMainWindow mainWindow{planetaryImager, compositeImageHandler, make_shared<LocalFilesystemBrowser>(), commandLine.logfile() };
+        
     QMetaObject::invokeMethod(server.get(), "listen", Q_ARG(QString, commandLine.address()), Q_ARG(int, commandLine.port()));
     
     QObject::connect(server.get(), &NetworkServer::imagerConnected, &mainWindow, [&](Imager *imager) {
