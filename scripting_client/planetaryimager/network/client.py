@@ -10,14 +10,13 @@ class Client:
         self.port = port
         self.__sock = None
         self.__sock_lock = threading.RLock()
-        self.handlers = []
+        self.handlers = {}
         self.interval = Interval(daemon=True)
 
     def connect(self):
         with self.__sock_lock:
             self.__sock = socket.create_connection((self.host, self.port))
         self.interval.start(2, self.__ping)
-
 
     def round_trip(self, packet, expected, timeout=30):
         self.send(packet)
@@ -55,8 +54,8 @@ class Client:
 
     def add_handler(self, callback, name=None, packet=None):
         if name is None and packet is not None:
-            name=packet.packet_name()
-        self.handlers.append((name, callback))
+            name = packet.packet_name()
+        self.handlers[name] = callback
 
     @property
     def connected(self):
@@ -64,19 +63,14 @@ class Client:
 
     def remove_handler(self, name=None, packet=None):
         if name is None and packet is not None:
-            name=packet.packet_name()
-        self.handlers = [x for x in self.handlers if x[0] != name]
-
+            name = packet.packet_name()
+        self.handlers.pop(name, None)
 
     def __handle(self, packet):
-        handled = False
-        for handler in self.handlers:
-            if handler[0] == '*' or handler[0] == packet.name:
-                handler[1](packet)
-                handled = True
-#        if not handled:
-#            # TODO: add some kind of logging class
-#            print('Received unexpected packet {}'.format(packet.name))
+        def noop(packet):
+            # TODO: add some kind of logging class
+            pass
+        self.handlers.get(packet.name, noop)(packet)
 
     def __ping(self):
         StatusProtocol.ping(self)
