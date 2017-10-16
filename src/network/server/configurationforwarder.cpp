@@ -85,6 +85,9 @@ ConfigurationForwarder::ConfigurationForwarder(Configuration &configuration, con
   register_conf_function(timelapse_mode, bool)
   register_conf_function(timelapse_msecs, qlonglong)
   register_conf_function(recording_pause_stops_timer, bool)
+  QObject::connect(&configuration, &Configuration::settings_changed, &configuration, [=]{
+    this->dispatcher()->queue_send(ConfigurationProtocol::packetsignalSettingsChanged());
+  });
 }
 
 ConfigurationForwarder::~ConfigurationForwarder()

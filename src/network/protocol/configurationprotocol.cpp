@@ -25,6 +25,7 @@ PROTOCOL_NAME_VALUE(Configuration, Get);
 PROTOCOL_NAME_VALUE(Configuration, GetReply);
 PROTOCOL_NAME_VALUE(Configuration, Set);
 PROTOCOL_NAME_VALUE(Configuration, Reset);
+PROTOCOL_NAME_VALUE(Configuration, signalSettingsChanged);
 
 
 NetworkPacket::ptr  ConfigurationProtocol::get(const QString name)

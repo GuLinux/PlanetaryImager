@@ -75,6 +75,7 @@ template<typename T> void Configuration::Private::set(const QString& key, const 
 {
   settings->setValue(key, value);
   values_cache[key] = value;
+  emit q->settings_changed();
 }
 
 

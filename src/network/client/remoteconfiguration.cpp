@@ -39,6 +39,9 @@ RemoteConfiguration::RemoteConfiguration(const NetworkDispatcher::ptr& dispatche
     ConfigurationProtocol::decodeGetReply(packet, name, value);
     d->values[name] = value;
   });
+  register_handler(ConfigurationProtocol::signalSettingsChanged, [this](const NetworkPacket::ptr &) {
+    emit settings_changed();
+  });
 }
 
 RemoteConfiguration::~RemoteConfiguration()

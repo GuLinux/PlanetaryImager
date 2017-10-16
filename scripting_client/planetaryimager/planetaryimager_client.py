@@ -5,7 +5,7 @@ This module allows you to control Planetary Imager with a simple Python API inte
 from .network import Client, DriverProtocol, StatusProtocol
 from .configuration import Configuration
 from .capture import Capture
-
+from .imager import Imager
 
 class PlanetaryImagerClient:
     """Main entrypoint for PlanetaryImager scripting.
@@ -30,11 +30,9 @@ class PlanetaryImagerClient:
         :param autoconnect: set this to True to automatically connect on creation (default: True).
         """
         self.client = Client(address, port)
-        self.__imager_running = False
-        """PlanetaryImager configuration manager."""
-        self.configuration = Configuration(self.client)
-        """Start and stops capture, monitoring capture status"""
-        self.capture = Capture(self.client)
+        self.__configuration = Configuration(self.client)
+        self.__capture = Capture(self.client)
+        self.__imager = Imager(self.client)
         if autoconnect:
             self.connect()
 
@@ -42,7 +40,7 @@ class PlanetaryImagerClient:
         """Connect to PlanetaryImager instance."""
         self.client.connect()
         server_status = StatusProtocol.hello(self.client)
-        self.__imager_running = server_status.imager_running
+        self.imager.is_running = server_status.imager_running
 
     def disconnect(self):
         """Disonnect from PlanetaryImager instance."""
@@ -58,23 +56,25 @@ class PlanetaryImagerClient:
         """Report of current PlanetaryImager status"""
         return {
             'connected': self.client.connected,
-            'imager_running': self.__imager_running,
+            'imager_running': self.imager.is_running,
         }
 
     @property
+    def configuration(self):
+        """PlanetaryImager configuration manager."""
+        return self.__configuration
+
+    @property
     def imager(self):
-        # TODO return instance of future Imager class
-        return None
+        """Open, close and manage current imager."""
+        return self.__imager
 
-    @imager.setter
-    def imager(self, camera):
-        """Set the current imager and start live framing.
+    @property
+    def capture(self):
+        """Start and stops capture, monitoring capture status."""
+        return self.__capture
 
-        :param camera: camera instance from the `cameras` attribute.
-        """
-        if not camera:
-            DriverProtocol.close_camera(self.client)
-        else:
-            DriverProtocol.connect_camera(self.client, camera)
-            self.__imager_running = True
+
+
+
 

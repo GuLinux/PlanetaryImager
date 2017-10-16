@@ -138,6 +138,7 @@ public slots:
 signals:
   void presets_changed();
   void recording_presets_changed();
+  void settings_changed();
 private:
     DPTR
 };
