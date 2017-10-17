@@ -70,6 +70,10 @@ class Configuration:
         """
         return self.entries[name]
 
+    def on_settings_changed(self, callback):
+        """Run the provided callback when settings change."""
+        ConfigurationProtocol.on_signal_settings_changed(self.client, callback)
+
     def __getattr__(self, item):
         """Access a configuration item as an attribute (configuration.entry_name)"""
         return self.entries[item] if item in self.entries else None

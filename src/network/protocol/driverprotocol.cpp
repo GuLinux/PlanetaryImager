@@ -28,7 +28,6 @@ using namespace std::placeholders;
 PROTOCOL_NAME_VALUE(Driver, CameraList);
 PROTOCOL_NAME_VALUE(Driver, CameraListReply);
 PROTOCOL_NAME_VALUE(Driver, ConnectCamera);
-PROTOCOL_NAME_VALUE(Driver, ConnectCameraReply);
 PROTOCOL_NAME_VALUE(Driver, GetCameraName);
 PROTOCOL_NAME_VALUE(Driver, GetCameraNameReply);
 PROTOCOL_NAME_VALUE(Driver, GetProperties);
@@ -45,6 +44,7 @@ PROTOCOL_NAME_VALUE(Driver, signalFPS);
 PROTOCOL_NAME_VALUE(Driver, signalTemperature);
 PROTOCOL_NAME_VALUE(Driver, signalControlChanged);
 PROTOCOL_NAME_VALUE(Driver, signalDisconnected);
+PROTOCOL_NAME_VALUE(Driver, signalCameraConnected);
 PROTOCOL_NAME_VALUE(Driver, CloseCamera);
 
 namespace {

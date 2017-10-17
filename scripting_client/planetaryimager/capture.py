@@ -18,7 +18,7 @@ class Capture:
         self.saved_frames = 0
         """Total frames dropped."""
         self.dropped_frames = 0
-        """Boolean flag to indicate if PlanetaryImager is currently reecording."""
+        """Boolean flag to indicate if Planetary Imager is currently recording."""
         self.is_recording = False
         self.__recording_filename = None
         self.client = client

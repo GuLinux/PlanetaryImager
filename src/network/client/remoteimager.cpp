@@ -34,9 +34,9 @@ DPTR_IMPL(RemoteImager) {
 
 RemoteImager::RemoteImager(const ImageHandler::ptr& image_handler, const NetworkDispatcher::ptr &dispatcher, qlonglong id) : Imager{image_handler}, NetworkReceiver{dispatcher}, dptr(image_handler)
 {
-  register_handler(DriverProtocol::ConnectCameraReply, [](const NetworkPacket::ptr &) {});
+  register_handler(DriverProtocol::signalCameraConnected, [](const NetworkPacket::ptr &) {});
   register_handler(DriverProtocol::GetCameraNameReply, [this](const NetworkPacket::ptr &packet) {
-    d->name = QString{packet->payload()};
+    d->name = packet->payloadVariant().toString();
   });
   register_handler(DriverProtocol::GetPropertiesReply, [this](const NetworkPacket::ptr &packet) {
     DriverProtocol::decode(d->properties, packet);
@@ -65,7 +65,7 @@ RemoteImager::RemoteImager(const ImageHandler::ptr& image_handler, const Network
 
   if(id != -1) {
     dispatcher->queue_send( DriverProtocol::packetConnectCamera() << id );
-    wait_for_processed(DriverProtocol::ConnectCameraReply);
+    wait_for_processed(DriverProtocol::signalCameraConnected);
     d->live_was_started = false;
   }
   dispatcher->queue_send(DriverProtocol::packetGetCameraName() );

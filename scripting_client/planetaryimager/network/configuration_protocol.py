@@ -9,6 +9,7 @@ class ConfigurationProtocol:
     REPLY_GET = Protocol(AREA, 'GetReply')
     PACKET_SET = Protocol(AREA, 'Set')
     PACKET_RESET = Protocol(AREA, 'Reset')
+    SIGNAL_SETTINGS_CHANGED = Protocol(AREA, 'signalSettingsChanged')
 
     @classmethod
     def list(cls, client):
@@ -26,3 +27,7 @@ class ConfigurationProtocol:
     def reset(cls, client, name):
         Protocol.send(client, cls.PACKET_RESET.packet(variant=name))
 
+    @classmethod
+    def on_signal_settings_changed(cls, client, callback):
+        def dispatch(_): callback()
+        Protocol.register_packet_handler(client, cls.SIGNAL_SETTINGS_CHANGED, dispatch)
