@@ -22,6 +22,11 @@
 #include <QHash>
 #include <QCoreApplication>
 #include "commons/utils.h"
+#include <QCoreApplication>
+#include "Qt/qt_strings_helper.h"
+#ifdef DEVELOPER_MODE
+#include "commons/loghandler.h"
+#endif
 
 using namespace std;
 
@@ -31,6 +36,7 @@ DPTR_IMPL(NetworkDispatcher) {
   void readyRead();
   uint64_t written;
   uint64_t sent;
+  void debugPacket(const NetworkPacket::ptr &packet, const QString &prefix);
 };
 
 
@@ -126,6 +132,7 @@ void NetworkDispatcher::send(const NetworkPacket::ptr &packet) {
   if(! is_connected() || ! packet)
     return;
   //qDebug() << packet->name();
+  d->debugPacket(packet, ">>>");
   auto written = packet->sendTo(d->socket);
   d->written += written;
 }
@@ -148,6 +155,8 @@ void NetworkDispatcher::Private::readyRead()
     //qDebug() << packet->name();
   }
   for(auto packet: packets) {
+  debugPacket(packet, "<<<");
+
     for(auto receiver: receivers)
       receiver->handle(packet);
   }
@@ -156,5 +165,21 @@ void NetworkDispatcher::Private::readyRead()
 bool NetworkDispatcher::is_connected() const
 {
   return d->socket && d->socket->isValid() && d->socket->isOpen();
+}
+
+void NetworkDispatcher::Private::debugPacket(const NetworkPacket::ptr& packet, const QString& prefix)
+{
+#ifdef DEVELOPER_MODE
+    QString payload;
+    if(packet->payloadVariant().isValid()) {
+        QDebug(&payload) << packet->payloadVariant();
+    } else {
+        QDebug(&payload) << packet->payload();
+    }
+    QString s = "%1 %2|%3\n" % prefix % packet->name() % payload;
+    QMessageLogContext context;
+    context.category = qPrintable("NETWORK_DEBUG");
+    LogHandler::log(QtMsgType::QtDebugMsg, context, s);
+#endif
 }
 

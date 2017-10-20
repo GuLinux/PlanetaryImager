@@ -75,6 +75,12 @@ void LogHandler::Private::log_handler(QtMsgType type, const QMessageLogContext &
   }
 }
 
+void LogHandler::log(QtMsgType type, const QMessageLogContext& context, const QString& msg)
+{
+    Private::log_handler(type, context, msg);
+}
+
+
 
 LogHandler::LogHandler(const CommandLine &commandLine) : dptr()
 {
