@@ -76,9 +76,7 @@ template<typename T> void Configuration::Private::set(const QString& key, const 
 {
   settings->setValue(key, value);
   values_cache[key] = value;
-  QTimer::singleShot(100, q, [this] {
-    emit q->settings_changed();
-  });
+  emit q->settings_changed();
 }
 
 
