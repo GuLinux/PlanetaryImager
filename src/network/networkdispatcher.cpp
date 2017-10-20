@@ -169,13 +169,12 @@ bool NetworkDispatcher::is_connected() const
 
 void NetworkDispatcher::Private::debugPacket(const NetworkPacket::ptr& packet, const QString& prefix)
 {
-#if 0
-//#ifdef DEVELOPER_MODE
+#ifdef DEBUG_NETWORK_PACKETS
     QString payload;
     if(packet->payloadVariant().isValid()) {
         QDebug(&payload) << packet->payloadVariant();
     } else {
-        QDebug(&payload) << packet->payload();
+        QDebug(&payload) << packet->payload().left(180);
     }
     QString s = "%1 %2|%3\n" % prefix % packet->name() % payload;
     QMessageLogContext context;

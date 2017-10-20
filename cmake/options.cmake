@@ -33,5 +33,10 @@ if(DEVELOPER_MODE)
   add_definitions(-DDEVELOPER_MODE)
 endif()
 
+option(DEBUG_NETWORK_PACKETS "Debug network packets" OFF)
+if(DEBUG_NETWORK_PACKETS)
+  add_definitions(-DDEBUG_NETWORK_PACKETS)
+endif()
+
 # Extra executables to be built
 option(build_network_server "Build PlanetaryImager network daemon and frontend" On)
