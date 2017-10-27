@@ -13,17 +13,12 @@ class Camera:
         return self.__str__()
 
 
-# ADD_PROTOCOL_PACKET_NAME(GetProperties)
-# ADD_PROTOCOL_PACKET_NAME(GetPropertiesReply)
 # ADD_PROTOCOL_PACKET_NAME(StartLive)
 # ADD_PROTOCOL_PACKET_NAME(StartLiveReply)
 # ADD_PROTOCOL_PACKET_NAME(ClearROI)
-# ADD_PROTOCOL_PACKET_NAME(GetControls)
-# ADD_PROTOCOL_PACKET_NAME(GetControlsReply)
 # ADD_PROTOCOL_PACKET_NAME(SendFrame)
 # ADD_PROTOCOL_PACKET_NAME(SetControl)
 # ADD_PROTOCOL_PACKET_NAME(SetROI)
-#
 
 class DriverProtocol:
     AREA = 'Driver'
@@ -39,6 +34,10 @@ class DriverProtocol:
     SIGNAL_FPS = Protocol(AREA, 'signalFPS')
     SIGNAL_TEMPERATURE = Protocol(AREA, 'signalTemperature')
     SIGNAL_CONTROL_CHANGED = Protocol(AREA, 'signalControlChanged')
+    PACKET_CONTROLS = Protocol(AREA, 'GetControls')
+    PACKET_CONTROLS_REPLY = Protocol(AREA, 'GetControlsReply')
+    PACKET_PROPERTIES = Protocol(AREA, 'GetProperties')
+    PACKET_PROPERTIES_REPLY = Protocol(AREA, 'GetPropertiesReply')
 
     @classmethod
     def camera_list(cls, client):
@@ -55,6 +54,14 @@ class DriverProtocol:
     @classmethod
     def get_camera_name(cls, client):
         return Protocol.round_trip_variant(client, cls.PACKET_CAMERA_NAME.packet(), cls.REPLY_CAMERA_NAME)
+
+    @classmethod
+    def get_controls(cls, client):
+        return Protocol.round_trip_variant(client, cls.PACKET_CONTROLS.packet(), cls.PACKET_CONTROLS_REPLY)
+
+    @classmethod
+    def get_properties(cls, client):
+        return Protocol.round_trip_variant(client, cls.PACKET_PROPERTIES.packet(), cls.PACKET_PROPERTIES_REPLY)
 
     @classmethod
     def on_signal_fps(cls, client, callback):

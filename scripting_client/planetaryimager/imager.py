@@ -1,5 +1,12 @@
 from .network import DriverProtocol
 
+def check_connection(f):
+    def wrap(*args, **kwargs):
+        if not args[0].is_running:
+            raise RuntimeError('Imager not running')
+        return f(*args, **kwargs)
+    return wrap
+
 
 class Imager:
     def __init__(self, client):
@@ -21,8 +28,28 @@ class Imager:
         DriverProtocol.close_camera(self.client)
 
     @property
+    @check_connection
     def name(self):
-        return DriverProtocol.get_camera_name(self.client) if self.is_running else None
+        return DriverProtocol.get_camera_name(self.client)
+
+    @property
+    @check_connection
+    def controls(self):
+        return DriverProtocol.get_controls(self.client)
+
+    @property
+    @check_connection
+    def properties(self):
+        return DriverProtocol.get_properties(self.client)
+
+    def __str__(self):
+        try:
+            return self.name
+        except RuntimeError:
+            return 'No imager connected'
+
+    def __repr__(self):
+        return self.__str__()
 
     def __on_fps(self, fps):
         self.fps = fps
