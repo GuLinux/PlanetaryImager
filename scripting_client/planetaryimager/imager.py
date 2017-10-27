@@ -27,6 +27,9 @@ class Imager:
     def close(self):
         DriverProtocol.close_camera(self.client)
 
+    def start_live(self):
+        DriverProtocol.start_live(self.client)
+
     @property
     @check_connection
     def name(self):

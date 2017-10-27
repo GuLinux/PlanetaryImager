@@ -13,8 +13,6 @@ class Camera:
         return self.__str__()
 
 
-# ADD_PROTOCOL_PACKET_NAME(StartLive)
-# ADD_PROTOCOL_PACKET_NAME(StartLiveReply)
 # ADD_PROTOCOL_PACKET_NAME(ClearROI)
 # ADD_PROTOCOL_PACKET_NAME(SendFrame)
 # ADD_PROTOCOL_PACKET_NAME(SetControl)
@@ -38,6 +36,8 @@ class DriverProtocol:
     PACKET_CONTROLS_REPLY = Protocol(AREA, 'GetControlsReply')
     PACKET_PROPERTIES = Protocol(AREA, 'GetProperties')
     PACKET_PROPERTIES_REPLY = Protocol(AREA, 'GetPropertiesReply')
+    PACKET_START_LIVE = Protocol(AREA, 'StartLive')
+    PACKET_START_LIVE_REPLY = Protocol(AREA, 'StartLiveReply')
 
     @classmethod
     def camera_list(cls, client):
@@ -62,6 +62,10 @@ class DriverProtocol:
     @classmethod
     def get_properties(cls, client):
         return Protocol.round_trip_variant(client, cls.PACKET_PROPERTIES.packet(), cls.PACKET_PROPERTIES_REPLY)
+
+    @classmethod
+    def start_live(cls, client):
+        return Protocol.round_trip(client, cls.PACKET_START_LIVE.packet(), cls.PACKET_START_LIVE_REPLY)
 
     @classmethod
     def on_signal_fps(cls, client, callback):
