@@ -14,36 +14,37 @@ class Imager:
         self.is_running = False
         self.fps = None
         self.temperature = None
-        DriverProtocol.on_signal_fps(self.client, self.__on_fps)
-        DriverProtocol.on_signal_temperature(self.client, self.__on_temperature)
-        DriverProtocol.on_control_changed(self.client, self.__on_control_changed)
-        DriverProtocol.on_camera_connected(self.client, self.__on_camera_connected)
-        DriverProtocol.on_camera_disconnected(self.client, self.__on_camera_disconnected)
+        self.driver_protocol = DriverProtocol(self.client)
+        self.driver_protocol.on_signal_fps(self.__on_fps)
+        self.driver_protocol.on_signal_temperature(self.__on_temperature)
+        self.driver_protocol.on_control_changed(self.__on_control_changed)
+        self.driver_protocol.on_camera_connected(self.__on_camera_connected)
+        self.driver_protocol.on_camera_disconnected(self.__on_camera_disconnected)
         self.callbacks = {}
 
     def open(self, camera):
-        DriverProtocol.connect_camera(self.client, camera)
+        self.driver_protocol.connect_camera(camera)
 
     def close(self):
-        DriverProtocol.close_camera(self.client)
+        self.driver_protocol.close_camera()
 
     def start_live(self):
-        DriverProtocol.start_live(self.client)
+        self.driver_protocol.start_live()
 
     @property
     @check_connection
     def name(self):
-        return DriverProtocol.get_camera_name(self.client)
+        return self.driver_protocol.get_camera_name()
 
     @property
     @check_connection
     def controls(self):
-        return DriverProtocol.get_controls(self.client)
+        return self.driver_protocol.get_controls()
 
     @property
     @check_connection
     def properties(self):
-        return DriverProtocol.get_properties(self.client)
+        return self.driver_protocol.get_properties()
 
     def __str__(self):
         try:

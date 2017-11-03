@@ -49,7 +49,7 @@ class PlanetaryImagerClient:
     @property
     def cameras(self):
         """List of cameras detected. They can be assigned to the `imager` property to set the current imager."""
-        return DriverProtocol.camera_list(self.client)
+        return DriverProtocol(self.client).camera_list()
 
     @property
     def status(self):

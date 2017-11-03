@@ -1,4 +1,4 @@
-from .protocol import Protocol
+from .protocol import *
 
 
 class Camera:
@@ -18,76 +18,49 @@ class Camera:
 # ADD_PROTOCOL_PACKET_NAME(SetControl)
 # ADD_PROTOCOL_PACKET_NAME(SetROI)
 
+@protocol(area='Driver', packets=['CameraList', 'CameraListReply', 'GetCameraName', 'GetCameraNameReply', 'ConnectCamera', 'ConnectCameraReply', \
+                                  'CloseCamera', 'signalDisconnected', 'signalCameraConnected', 'signalFPS', 'signalTemperature', 'signalControlChanged', \
+                                  'GetControls', 'GetControlsReply', 'GetProperties', 'GetPropertiesReply', 'StartLive', 'StartLiveReply'])
 class DriverProtocol:
-    AREA = 'Driver'
-    PACKET_CAMERA_LIST = Protocol(AREA, 'CameraList')
-    REPLY_CAMERA_LIST = Protocol(AREA, 'CameraListReply')
-    PACKET_CAMERA_NAME = Protocol(AREA, 'GetCameraName')
-    REPLY_CAMERA_NAME = Protocol(AREA, 'GetCameraNameReply')
-    PACKET_CONNECT_CAMERA = Protocol(AREA, 'ConnectCamera')
-    REPLY_CONNECT_CAMERA = Protocol(AREA, 'ConnectCameraReply')
-    PACKET_CLOSE_CAMERA = Protocol(AREA, 'CloseCamera')
-    SIGNAL_DISCONNECTED = Protocol(AREA, 'signalDisconnected')
-    SIGNAL_CONNECTED = Protocol(AREA, 'signalCameraConnected')
-    SIGNAL_FPS = Protocol(AREA, 'signalFPS')
-    SIGNAL_TEMPERATURE = Protocol(AREA, 'signalTemperature')
-    SIGNAL_CONTROL_CHANGED = Protocol(AREA, 'signalControlChanged')
-    PACKET_CONTROLS = Protocol(AREA, 'GetControls')
-    PACKET_CONTROLS_REPLY = Protocol(AREA, 'GetControlsReply')
-    PACKET_PROPERTIES = Protocol(AREA, 'GetProperties')
-    PACKET_PROPERTIES_REPLY = Protocol(AREA, 'GetPropertiesReply')
-    PACKET_START_LIVE = Protocol(AREA, 'StartLive')
-    PACKET_START_LIVE_REPLY = Protocol(AREA, 'StartLiveReply')
 
-    @classmethod
-    def camera_list(cls, client):
-        return [Camera(x) for x in Protocol.round_trip_variant(client, cls.PACKET_CAMERA_LIST.packet(), cls.REPLY_CAMERA_LIST)]
+    def camera_list(self):
+        return [Camera(x) for x in self.client.round_trip(self.packet_cameralist.packet(), self.packet_cameralistreply).variant]
 
-    @classmethod
-    def connect_camera(cls, client, camera):
-        Protocol.send(client, cls.PACKET_CONNECT_CAMERA.packet(variant=camera.address))
+    def connect_camera(self, camera):
+        self.client.send(self.packet_connectcamera.packet(variant=camera.address))
 
-    @classmethod
-    def close_camera(cls, client):
-        Protocol.send(client, cls.PACKET_CLOSE_CAMERA.packet())
+    def close_camera(self):
+        self.client.send(self.packet_closecamera.packet())
 
-    @classmethod
-    def get_camera_name(cls, client):
-        return Protocol.round_trip_variant(client, cls.PACKET_CAMERA_NAME.packet(), cls.REPLY_CAMERA_NAME)
+    def get_camera_name(self):
+        return self.client.round_trip(self.packet_getcameraname.packet(), self.packet_getcameranamereply).variant
 
-    @classmethod
-    def get_controls(cls, client):
-        return Protocol.round_trip_variant(client, cls.PACKET_CONTROLS.packet(), cls.PACKET_CONTROLS_REPLY)
+    def get_controls(self):
+        return self.client.round_trip(self.packet_getcontrols.packet(), self.packet_getcontrolsreply).variant
 
-    @classmethod
-    def get_properties(cls, client):
-        return Protocol.round_trip_variant(client, cls.PACKET_PROPERTIES.packet(), cls.PACKET_PROPERTIES_REPLY)
+    def get_properties(self):
+        return self.client.round_trip(self.packet_getproperties.packet(), self.packet_getpropertiesreply).variant
 
-    @classmethod
-    def start_live(cls, client):
-        return Protocol.round_trip(client, cls.PACKET_START_LIVE.packet(), cls.PACKET_START_LIVE_REPLY)
+    def start_live(self):
+        return self.client.round_trip(self.packet_startlive.packet(), self.packet_startlivereply)
 
-    @classmethod
-    def on_signal_fps(cls, client, callback):
+    def on_signal_fps(self, callback):
         def dispatch(packet): callback(packet.variant)
-        Protocol.register_packet_handler(client, cls.SIGNAL_FPS, dispatch)
+        Protocol.register_packet_handler(self.client, self.packet_signalfps, dispatch)
 
-    @classmethod
-    def on_camera_connected(cls, client, callback):
+    def on_camera_connected(self, callback):
         def dispatch(_): callback()
-        Protocol.register_packet_handler(client, cls.SIGNAL_CONNECTED, dispatch)
+        Protocol.register_packet_handler(self.client, self.packet_signalcameraconnected, dispatch)
 
-    @classmethod
-    def on_camera_disconnected(cls, client, callback):
+    def on_camera_disconnected(self, callback):
         def dispatch(_): callback()
-        Protocol.register_packet_handler(client, cls.SIGNAL_DISCONNECTED, dispatch)
+        Protocol.register_packet_handler(self.client, self.packet_signaldisconnected, dispatch)
 
-    @classmethod
-    def on_signal_temperature(cls, client, callback):
+    def on_signal_temperature(self, callback):
         def dispatch(packet): callback(packet.variant)
-        Protocol.register_packet_handler(client, cls.SIGNAL_TEMPERATURE, dispatch)
+        Protocol.register_packet_handler(self.client, self.packet_signaltemperature, dispatch)
 
-    @classmethod
-    def on_control_changed(cls, client, callback):
+    def on_control_changed(self, callback):
         def dispatch(packet): callback(packet.variant)
-        Protocol.register_packet_handler(client, cls.SIGNAL_CONTROL_CHANGED, dispatch)
+        dir(self)
+        Protocol.register_packet_handler(self.client, self.packet_signalcontrolchanged, dispatch)
