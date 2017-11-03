@@ -1,9 +1,11 @@
 from PyQt5.QtCore import QBuffer, QIODevice, QDataStream, QByteArray, QVariant
+import collections
 import time
 
 class NetworkPacket:
     NAME_BYTES = 1
     PAYLOAD_LENGTH_BYTES = 4
+
     def __init__(self, name = None):
         self.name = name
         self.payload = bytearray()
@@ -28,6 +30,12 @@ class NetworkPacket:
             remaining_bytes = payload_size - len(self.payload)
             chunk_size = min(remaining_bytes, 1024)
             self.payload += sock.recv(chunk_size)
+
+    @property
+    def named_tuple(self):
+        packet_dict = self.variant
+        classname = collections.namedtuple(self.name, list(packet_dict.keys()))
+        return classname(**self.variant)
 
     @property
     def variant(self):

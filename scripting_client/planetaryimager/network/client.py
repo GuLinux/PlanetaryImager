@@ -73,7 +73,7 @@ class Client:
         self.handlers.get(packet.name, noop)(packet)
 
     def __ping(self):
-        StatusProtocol.ping(self)
+        StatusProtocol(self).ping()
 
     def __check_connection(self):
         if not self.connected:

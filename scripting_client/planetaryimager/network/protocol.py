@@ -1,5 +1,6 @@
 from . import NetworkPacket
-import collections
+from functools import wraps
+
 
 class Protocol:
     def __init__(self, area, name):
@@ -23,10 +24,7 @@ class Protocol:
         return packet
 
     def named_tuple(self, packet):
-        packet_dict = packet.variant
-        classname = collections.namedtuple(self.name, list(packet_dict.keys()))
-        return classname(**packet.variant)
-
+        return packet.named_tuple
 
     @classmethod
     def send(cls, client, packet_send):
@@ -48,3 +46,18 @@ class Protocol:
     @classmethod
     def register_packet_handler(cls, client, expected, callback):
         client.add_handler(callback, packet=expected) 
+
+
+def protocol(area, packets=[]):
+    def protocol_decorator(f):
+        @wraps(f)
+        def wrap(client):
+            instance = f()
+            instance.client = client
+            instance.area = area
+            for packet in packets:
+                setattr(instance, 'packet_' + packet.lower(), Protocol(area, packet))
+            return instance
+        return wrap
+    return protocol_decorator
+

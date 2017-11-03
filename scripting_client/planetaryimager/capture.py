@@ -30,24 +30,26 @@ class Capture:
         self.__on_save_mean_fps = None
         self.__on_save_fps = None
 
-        SaveProtocol.on_signal_recording(client, self.__handle_signal_start_recording)
-        SaveProtocol.on_signal_end_recording(client, self.__handle_signal_end_recording)
-        SaveProtocol.on_signal_mean_fps(client, self.__handle_mean_fps)
-        SaveProtocol.on_signal_save_fps(client, self.__handle_save_fps)
-        SaveProtocol.on_signal_saved_frames(client, self.__handle_saved_frames)
-        SaveProtocol.on_signal_dropped_frames(client, self.__handle_dropped_frames)
+        self.__saveprotocol = SaveProtocol(self.client)
+
+        self.__saveprotocol.on_signal_recording(self.__handle_signal_start_recording)
+        self.__saveprotocol.on_signal_end_recording(self.__handle_signal_end_recording)
+        self.__saveprotocol.on_signal_mean_fps(self.__handle_mean_fps)
+        self.__saveprotocol.on_signal_save_fps(self.__handle_save_fps)
+        self.__saveprotocol.on_signal_saved_frames(self.__handle_saved_frames)
+        self.__saveprotocol.on_signal_dropped_frames(self.__handle_dropped_frames)
 
     def start_recording(self):
-        SaveProtocol.start_recording(self.client)
+        self.__saveprotocol.start_recording()
 
     def end_recording(self):
-        SaveProtocol.end_recording(self.client)
+        self.__saveprotocol.end_recording()
 
     def pause(self):
-        SaveProtocol.set_paused(self.client, True)
+        self.__saveprotocol.set_paused(True)
 
     def resume(self):
-        SaveProtocol.set_paused(self.client, False)
+        self.__saveprotocol.set_paused(False)
 
     def on_recording_started(self, callback):
         """Sets a callback function to be invoked when recording starts.

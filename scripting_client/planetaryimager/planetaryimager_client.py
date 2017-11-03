@@ -39,7 +39,7 @@ class PlanetaryImagerClient:
     def connect(self):
         """Connect to PlanetaryImager instance."""
         self.client.connect()
-        server_status = StatusProtocol.hello(self.client)
+        server_status = StatusProtocol(self.client).hello()
         self.imager.is_running = server_status.imager_running
 
     def disconnect(self):

@@ -1,24 +1,17 @@
-from .protocol import Protocol
+from .protocol import *
 
+@protocol(area='Network', packets=['Hello', 'HelloReply', 'ping', 'pong'])
 class StatusProtocol:
-    AREA = 'Network'
-    PACKET_HELLO = Protocol(AREA, 'Hello')
-    REPLY_HELLO = Protocol(AREA, 'HelloReply')
-    PACKET_PING = Protocol(AREA, 'ping')
-    REPLY_PONG = Protocol(AREA, 'pong')
- 
-    @classmethod
-    def hello(cls, client):
-        packet = cls.PACKET_HELLO.packet(variant={
+    def hello(self):
+        packet = self.packet_hello.packet(variant={
             'format': 2,
             'compression': False,
             'force8bit': False,
             'jpegQuality': 10
         })
 
-        return Protocol.round_trip_tuple(client, packet, cls.REPLY_HELLO)
+        return self.client.round_trip(packet, self.packet_helloreply).named_tuple
 
-    @classmethod
-    def ping(cls, client):
-        reply = Protocol.round_trip(client, cls.PACKET_PING.packet(), cls.REPLY_PONG)
+    def ping(self):
+        reply = self.client.round_trip(self.packet_ping.packet(), self.packet_pong)
 
