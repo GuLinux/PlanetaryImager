@@ -16,7 +16,7 @@ class Camera:
 # TODO: ClearROI, SendFrame, SetControl, SetROI
 @protocol(area='Driver', packets=['CameraList', 'CameraListReply', 'GetCameraName', 'GetCameraNameReply', 'ConnectCamera', 'ConnectCameraReply', \
                                   'CloseCamera', 'signalDisconnected', 'signalCameraConnected', 'signalFPS', 'signalTemperature', 'signalControlChanged', \
-                                  'GetControls', 'GetControlsReply', 'GetProperties', 'GetPropertiesReply', 'StartLive', 'StartLiveReply'])
+                                  'GetControls', 'GetControlsReply', 'GetProperties', 'GetPropertiesReply', 'StartLive', 'StartLiveReply', 'SetControl'])
 class DriverProtocol:
 
     def camera_list(self):
@@ -33,6 +33,9 @@ class DriverProtocol:
 
     def get_controls(self):
         return self.client.round_trip(self.packet_getcontrols.packet(), self.packet_getcontrolsreply).variant
+
+    def set_control(self, control):
+        self.client.send(self.packet_setcontrol.packet(variant=control))
 
     def get_properties(self):
         return self.client.round_trip(self.packet_getproperties.packet(), self.packet_getpropertiesreply).variant

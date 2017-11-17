@@ -27,6 +27,11 @@ class Imager:
         self.driver_protocol.on_control_changed(self.__on_control_changed)
         self.driver_protocol.on_camera_connected(self.__on_camera_connected)
         self.driver_protocol.on_camera_disconnected(self.__on_camera_disconnected)
+        """Map of callbacks to be invoked when an event is received from PlanetaryImager.
+        Key type: string. Available callback names:
+            on_fps, on_control_changed, on_temperature, on_camera_connected, on_camera_disconnected 
+        Value type: function
+        """
         self.callbacks = {}
 
     def open(self, camera):
@@ -53,6 +58,24 @@ class Imager:
     def controls(self):
         """Retrieve available controls from the camera (exposure, binning etc)."""
         return self.driver_protocol.get_controls()
+
+    def find_control(self, name=None, id=None):
+        """Find a control by name or id"""
+        if name is None and id is None:
+            raise RuntimeError('You must specify either a control name or id')
+        controls = self.controls
+        if name is not None:
+            controls = [x for x in controls if x['name'] == name]
+            if not controls:
+                raise RuntimeError('No control matching name {}'.format(name))
+        if id is not None:
+            controls = [x for x in controls if x['id'] == id]
+            if not controls:
+                raise RuntimeError('No control matching id {}'.format(id))
+        return controls[0]
+        
+    def set_control(self, control):
+        self.driver_protocol.set_control(control)
 
     @property
     @check_connection
