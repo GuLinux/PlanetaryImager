@@ -11,17 +11,17 @@ class Configuration:
 
     class Entry:
         """Class representing a configuration entry"""
-        def __init__(self, name, type, client):
+        def __init__(self, name, type, configuration_protocol):
             """This entry name."""
             self.name = name
             """The type in PlanetaryImager (QString, int, an enum type, etc)."""
             self.type = type
-            self.client = client
+            self.configuration_protocol = configuration_protocol
 
         @property
         def value(self):
             """Get the current entry value"""
-            return ConfigurationProtocol.get(self.client, self.name)['value']
+            return self.configuration_protocol.get(self.name)['value']
 
         @value.setter
         def value(self, value):
@@ -29,11 +29,11 @@ class Configuration:
 
             :param value: new value to set.
             """
-            ConfigurationProtocol.set(self.client, self.name, value)
+            self.configuration_protocol.set(self.name, value)
 
         def reset(self):
             """Reset this entry to its default configuration value."""
-            ConfigurationProtocol.get(self.client, self.name)
+            self.configuration_protocol.reset(self.name)
 
         def __str__(self):
             return '{} ({}) = {}'.format(self.name, self.type, self.value)
@@ -42,7 +42,7 @@ class Configuration:
             return self.__str__()
 
     def __init__(self, client):
-        self.client = client
+        self.configuration_protocol = ConfigurationProtocol(client)
         self.__entries = None
 
     @property
@@ -53,8 +53,8 @@ class Configuration:
         """
         if not self.__entries:
             self.__entries = {}
-            for name, type in ConfigurationProtocol.list(self.client).items():
-                self.__entries[name] = Configuration.Entry(name, type, self.client)
+            for name, type in self.configuration_protocol.list().items():
+                self.__entries[name] = Configuration.Entry(name, type, self.configuration_protocol)
         return self.__entries
 
     @property
@@ -72,7 +72,7 @@ class Configuration:
 
     def on_settings_changed(self, callback):
         """Run the provided callback when settings change."""
-        ConfigurationProtocol.on_signal_settings_changed(self.client, callback)
+        self.configuration_protocol.on_signal_settings_changed(callback)
 
     def __getattr__(self, item):
         """Access a configuration item as an attribute (configuration.entry_name)"""

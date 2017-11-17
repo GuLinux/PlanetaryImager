@@ -1,33 +1,21 @@
-from .protocol import Protocol
+from .protocol import *
 
 
+@protocol(area='Configuration', packets=['List', 'ListReply', 'Get', 'GetReply', 'Set', 'Reset', 'signalSettingsChanged'])
 class ConfigurationProtocol:
-    AREA = 'Configuration'
-    PACKET_LIST = Protocol(AREA, 'List')
-    REPLY_LIST = Protocol(AREA, 'ListReply')
-    PACKET_GET = Protocol(AREA, 'Get')
-    REPLY_GET = Protocol(AREA, 'GetReply')
-    PACKET_SET = Protocol(AREA, 'Set')
-    PACKET_RESET = Protocol(AREA, 'Reset')
-    SIGNAL_SETTINGS_CHANGED = Protocol(AREA, 'signalSettingsChanged')
 
-    @classmethod
-    def list(cls, client):
-        return Protocol.round_trip_variant(client, cls.PACKET_LIST.packet(), cls.REPLY_LIST)
+    def list(self):
+        return self.client.round_trip(self.packet_list.packet(), self.packet_listreply).variant
 
-    @classmethod
-    def get(cls, client, name):
-        return Protocol.round_trip_variant(client, cls.PACKET_GET.packet(variant=name), cls.REPLY_GET)
+    def get(self, name):
+        return self.client.round_trip(self.packet_get.packet(variant=name), self.packet_getreply).variant
 
-    @classmethod
-    def set(cls, client, name, value):
-        Protocol.send(client, cls.PACKET_SET.packet(variant={'name': name, 'value': value}))
+    def set(self, name, value):
+        self.client.send(self.packet_set.packet(variant={'name': name, 'value': value}))
 
-    @classmethod
-    def reset(cls, client, name):
-        Protocol.send(client, cls.PACKET_RESET.packet(variant=name))
+    def reset(self, name):
+        self.client.send(self.packet_reset.packet(variant=name))
 
-    @classmethod
-    def on_signal_settings_changed(cls, client, callback):
+    def on_signal_settings_changed(self, callback):
         def dispatch(_): callback()
-        Protocol.register_packet_handler(client, cls.SIGNAL_SETTINGS_CHANGED, dispatch)
+        Protocol.register_packet_handler(self.client, self.signalsettingschanged, dispatch)

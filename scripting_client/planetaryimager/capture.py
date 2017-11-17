@@ -21,7 +21,6 @@ class Capture:
         """Boolean flag to indicate if Planetary Imager is currently recording."""
         self.is_recording = False
         self.__recording_filename = None
-        self.client = client
 
         self.__on_recording_started = None
         self.__on_recording_finished = None
@@ -30,7 +29,7 @@ class Capture:
         self.__on_save_mean_fps = None
         self.__on_save_fps = None
 
-        self.__saveprotocol = SaveProtocol(self.client)
+        self.__saveprotocol = SaveProtocol(client)
 
         self.__saveprotocol.on_signal_recording(self.__handle_signal_start_recording)
         self.__saveprotocol.on_signal_end_recording(self.__handle_signal_end_recording)

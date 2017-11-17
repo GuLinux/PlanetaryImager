@@ -64,3 +64,4 @@ class DriverProtocol:
         def dispatch(packet): callback(packet.variant)
         dir(self)
         Protocol.register_packet_handler(self.client, self.packet_signalcontrolchanged, dispatch)
+

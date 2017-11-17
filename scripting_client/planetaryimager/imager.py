@@ -10,11 +10,10 @@ def check_connection(f):
 
 class Imager:
     def __init__(self, client):
-        self.client = client
         self.is_running = False
         self.fps = None
         self.temperature = None
-        self.driver_protocol = DriverProtocol(self.client)
+        self.driver_protocol = DriverProtocol(client)
         self.driver_protocol.on_signal_fps(self.__on_fps)
         self.driver_protocol.on_signal_temperature(self.__on_temperature)
         self.driver_protocol.on_control_changed(self.__on_control_changed)
