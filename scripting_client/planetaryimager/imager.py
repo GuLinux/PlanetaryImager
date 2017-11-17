@@ -75,7 +75,19 @@ class Imager:
         return controls[0]
         
     def set_control(self, control):
+        """Set control on camera.
+
+        :param control: a control dictionary, as reported by `controls` and `find_control`.
+        """
         self.driver_protocol.set_control(control)
+
+    def set_roi(self, x, y, width, height):
+        """Set Region of Interest."""
+        self.driver_protocol.set_roi(x, y, width, height)
+
+    def clear_roi(self):
+        """Clear the previously set ROI."""
+        self.driver_protocol.clear_roi()
 
     @property
     @check_connection
