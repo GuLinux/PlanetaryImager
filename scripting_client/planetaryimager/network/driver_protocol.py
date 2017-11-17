@@ -13,11 +13,7 @@ class Camera:
         return self.__str__()
 
 
-# ADD_PROTOCOL_PACKET_NAME(ClearROI)
-# ADD_PROTOCOL_PACKET_NAME(SendFrame)
-# ADD_PROTOCOL_PACKET_NAME(SetControl)
-# ADD_PROTOCOL_PACKET_NAME(SetROI)
-
+# TODO: ClearROI, SendFrame, SetControl, SetROI
 @protocol(area='Driver', packets=['CameraList', 'CameraListReply', 'GetCameraName', 'GetCameraNameReply', 'ConnectCamera', 'ConnectCameraReply', \
                                   'CloseCamera', 'signalDisconnected', 'signalCameraConnected', 'signalFPS', 'signalTemperature', 'signalControlChanged', \
                                   'GetControls', 'GetControlsReply', 'GetProperties', 'GetPropertiesReply', 'StartLive', 'StartLiveReply'])
