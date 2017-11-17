@@ -22,12 +22,33 @@ class Capture:
         self.is_recording = False
         self.__recording_filename = None
 
-        self.__on_recording_started = None
-        self.__on_recording_finished = None
-        self.__on_saved_frames = None
-        self.__on_dropped_frames = None
-        self.__on_save_mean_fps = None
-        self.__on_save_fps = None
+        """Callbacks to be called when capturing events occur.
+
+        Key: string (name of callback).
+        Value: function.
+
+        Supported callbacks:
+
+         - on_recording_started: Sets a callback function to be invoked when recording starts.
+           - Callback signature: function(filename)
+
+        - on_recording_finished: Sets a callback function to be invoked when recording ends.
+           - Callback signature: function()
+
+
+        - on_save_fps: Sets a callback function to be invoked when receiving save fps info.
+           - Callback signature: function(float)
+
+        - on_save_mean_fps: Sets a callback function to be invoked when receiving mean save fps info.
+           - Callback signature: function(float)
+
+        - on_saved_frames: Sets a callback function to be invoked when receiving saved frames info.
+           - Callbacks signature: function(int)
+
+        - on_dropped_frames: Sets a callback function to be invoked when receiving dropped frames info.
+           - Callbacks signature: function(int)
+        """
+        self.callbacks = {}
 
         self.__saveprotocol = SaveProtocol(client)
 
@@ -50,50 +71,6 @@ class Capture:
     def resume(self):
         self.__saveprotocol.set_paused(False)
 
-    def on_recording_started(self, callback):
-        """Sets a callback function to be invoked when recording starts.
-
-        :param callback: function receiving `filename` as parameter. Set to None to remove the current callback
-        Callback signature: function(filename)
-        """
-        self.__on_recording_started = callback
-
-    def on_recording_finished(self, callback):
-        """Sets a callback function to be invoked when recording ends.
-
-        :param callback: function with no parameters. Set to None to remove the current callback
-        Callback signature: function()
-        """
-        self.__on_recording_finished = callback
-
-    def on_save_mean_fps(self, callback):
-        """Sets a callback function to be invoked when receiving mean save fps info.
-
-        :param callback: function receiving mean fps (float) as parameter. Set to None to remove the current callback
-        """
-        self.__on_save_mean_fps = callback
-
-    def on_save_fps(self, callback):
-        """Sets a callback function to be invoked when receiving save fps info.
-
-        :param callback: function receiving save fps (float) as parameter. Set to None to remove the current callback
-        """
-        self.__on_save_fps = callback
-
-    def on_saved_frames(self, callback):
-        """Sets a callback function to be invoked when receiving saved frames info.
-
-        :param callback: function receiving saved frames (int) as parameter. Set to None to remove the current callback
-        """
-        self.__on_saved_frames = callback
-
-    def on_dropped_frames(self, callback):
-        """Sets a callback function to be invoked when receiving dropped frames info.
-
-        :param callback: function receiving dropped frames (int) as parameter. Set to None to remove the current callback
-        """
-        self.__on_dropped_frames = callback
-
     @property
     def recording_filename(self):
         return self.__recording_filename
@@ -106,31 +83,30 @@ class Capture:
         self.dropped_frames = 0
 
         self.__recording_filename = filename
-        if callable(self.__on_recording_started):
-            self.__on_recording_started(filename)
+        self.__invoke_callback('on_recording_started', filename)
 
     def __handle_signal_end_recording(self):
         self.is_recording = False
         self.__recording_filename = None
-        if callable(self.__on_recording_finished):
-            self.__on_recording_finished()
+        self.__invoke_callback('on_recording_finished')
 
     def __handle_mean_fps(self, fps):
         self.mean_save_fps = fps
-        if callable(self.__on_save_mean_fps):
-            self.__on_save_mean_fps(fps)
+        self.__invoke_callback('on_save_mean_fps', fps)
 
     def __handle_save_fps(self, fps):
         self.save_fps = fps
-        if callable(self.__on_save_fps):
-            self.__on_save_fps(fps)
+        self.__invoke_callback('on_save_fps', fps)
 
     def __handle_saved_frames(self, frames):
         self.saved_frames = frames
-        if callable(self.__on_saved_frames):
-            self.__on_saved_frames(frames)
+        self.__invoke_callback('on_saved_frames', frames)
 
     def __handle_dropped_frames(self, frames):
         self.dropped_frames = frames
-        if callable(self.__on_dropped_frames):
-            self.__on_dropped_frames(frames)
+        self.__invoke_callback('on_dropped_frames', frames)
+
+    def __invoke_callback(self, name, *args, **kwargs):
+        if name in self.callbacks:
+            self.callbacks[name](*args, **kwargs)
+
