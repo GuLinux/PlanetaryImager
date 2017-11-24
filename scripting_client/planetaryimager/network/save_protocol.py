@@ -1,8 +1,8 @@
 from .protocol import *
 
 
-@protocol(area='SaveFile', packets=['StartRecording', 'EndRecording', 'signalRecording', 'signalFinished', \
-                                    'slotSetPaused', 'signalSaveFPS', 'signalMeanFPS', 'signalSavedFrames', \
+@protocol(area='SaveFile', packets=['StartRecording', 'EndRecording', 'signalRecording', 'signalFinished',
+                                    'slotSetPaused', 'signalSaveFPS', 'signalMeanFPS', 'signalSavedFrames',
                                     'signalDroppedFrames'])
 class SaveProtocol:
 
@@ -10,7 +10,8 @@ class SaveProtocol:
         self.client.send(self.packet_startrecording.packet())
 
     def on_signal_recording(self, callback):
-        def dispatch(packet): callback(packet.variant)
+        def dispatch(packet):
+            callback(packet.variant)
         Protocol.register_packet_handler(self.client, self.packet_signalrecording, dispatch)
 
     def on_signal_save_fps(self, callback):

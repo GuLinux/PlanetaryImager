@@ -1,6 +1,6 @@
 from PyQt5.QtCore import QBuffer, QIODevice, QDataStream, QByteArray, QVariant
 import collections
-import time
+
 
 class NetworkPacket:
     NAME_BYTES = 1

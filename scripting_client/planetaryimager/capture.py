@@ -1,28 +1,15 @@
 from .network import SaveProtocol
 
+
 class Capture:
-    def __init__(self, client):
-        """PlanetaryImager capture manager.
+    """PlanetaryImager capture manager.
 
-        Handles start, stop and pause recording, and gets information about fps and saved/dropped frames.
-        Can also be configured with callbacks to be executed when these events occur.
+    Handles start, stop and pause recording, and gets information about fps and saved/dropped frames.
+    Can also be configured with callbacks to be executed when these events occur.
 
-        :param client: network client to communicate with PlanetaryImager.
-        """
+    You can set callbacks by adding the proper key to the dictionary `callbacks`.
 
-        """Mean fps on saving frames."""
-        self.mean_save_fps = 0
-        """Current fps on saving frames."""
-        self.save_fps = 0
-        """Total frames saved."""
-        self.saved_frames = 0
-        """Total frames dropped."""
-        self.dropped_frames = 0
-        """Boolean flag to indicate if Planetary Imager is currently recording."""
-        self.is_recording = False
-        self.__recording_filename = None
-
-        """Callbacks to be called when capturing events occur.
+    Callbacks to be called when capturing events occur.
 
         Key: string (name of callback).
         Value: function.
@@ -47,7 +34,20 @@ class Capture:
 
         - on_dropped_frames: Sets a callback function to be invoked when receiving dropped frames info.
            - Callbacks signature: function(int)
-        """
+    """
+    def __init__(self, client):
+        """Mean fps on saving frames."""
+        self.mean_save_fps = 0
+        """Current fps on saving frames."""
+        self.save_fps = 0
+        """Total frames saved."""
+        self.saved_frames = 0
+        """Total frames dropped."""
+        self.dropped_frames = 0
+        """Boolean flag to indicate if Planetary Imager is currently recording."""
+        self.is_recording = False
+        self.__recording_filename = None
+
         self.callbacks = {}
 
         self.__saveprotocol = SaveProtocol(client)

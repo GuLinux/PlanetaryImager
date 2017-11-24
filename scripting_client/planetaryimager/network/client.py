@@ -23,10 +23,10 @@ class Client:
         sent = time.time()
         while time.time() - sent < timeout:
             received = self.receive()
-            if received.name == expected.packet_name():
+            if received.name == expected.packet_name:
                 return received
             self.__handle(received)
-        raise RuntimeError('Expected packet {} not received'.format(expected.packet_name()))
+        raise RuntimeError('Expected packet {} not received'.format(expected.packet_name))
 
     def send(self, packet):
         self.__check_connection()
@@ -54,7 +54,7 @@ class Client:
 
     def add_handler(self, callback, name=None, packet=None):
         if name is None and packet is not None:
-            name = packet.packet_name()
+            name = packet.packet_name
         self.handlers[name] = callback
 
     @property
@@ -63,11 +63,11 @@ class Client:
 
     def remove_handler(self, name=None, packet=None):
         if name is None and packet is not None:
-            name = packet.packet_name()
+            name = packet.packet_name
         self.handlers.pop(name, None)
 
     def __handle(self, packet):
-        def noop(packet):
+        def noop(_):
             # TODO: add some kind of logging class
             pass
         self.handlers.get(packet.name, noop)(packet)
