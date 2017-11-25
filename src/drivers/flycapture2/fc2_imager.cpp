@@ -29,7 +29,7 @@
 #include "fc2_exception.h"
 #include "fc2_imager.h"
 #include "fc2_worker.h"
-#include "Qt/strings.h"
+#include "Qt/qt_strings_helper.h"
 
 
 using namespace std::chrono;
