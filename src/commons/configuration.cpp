@@ -28,6 +28,7 @@
 #include <QStandardPaths>
 #include <QFileInfo>
 #include <QJsonDocument>
+#include <QTimer>
 
 using namespace std;
 using namespace std::placeholders;
@@ -75,7 +76,9 @@ template<typename T> void Configuration::Private::set(const QString& key, const 
 {
   settings->setValue(key, value);
   values_cache[key] = value;
+  emit q->settings_changed();
 }
+
 
 #define define_setting_reset(name) void Configuration::reset_ ##name() { d->settings->remove(#name); d->values_cache.remove(#name); }
 #define define_setting_set(name, type) void Configuration::set_ ##name(const type &value) { d->set<type>( #name, value); }

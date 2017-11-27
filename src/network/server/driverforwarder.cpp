@@ -67,7 +67,7 @@ DriverForwarder::DriverForwarder(const NetworkDispatcher::ptr &dispatcher, const
     this->dispatcher()->send(DriverProtocol::sendCameraListReply(d->cameras));
   });
   QObject::connect(planetaryImager.get(), &PlanetaryImager::cameraConnected, dispatcher.get(), [this] {
-    this->dispatcher()->send(DriverProtocol::packetConnectCameraReply()); // TODO: add status
+    this->dispatcher()->send(DriverProtocol::packetsignalCameraConnected());
     QObject::connect(d->planetaryImager->imager(), &Imager::fps, this->dispatcher().get(), bind(&Private::sendFPS, d.get(), _1));
     QObject::connect(d->planetaryImager->imager(), &Imager::temperature, this->dispatcher().get(), bind(&Private::sendTemperature, d.get(), _1));
     QObject::connect(d->planetaryImager->imager(), &Imager::disconnected, this->dispatcher().get(), bind(&Private::sendDisconnected, d.get()));
@@ -88,6 +88,9 @@ void DriverForwarder::Private::ConnectCamera(const NetworkPacket::ptr& p)
 {
   auto address = reinterpret_cast<Driver::Camera *>(p->payloadVariant().toLongLong());
   auto camera = find_if(begin(cameras), end(cameras), [address](const Driver::Camera::ptr &p){ return p.get() == address; });
+  qDebug()<< "address: " << address;
+  for(auto camera: cameras)
+    qDebug() << camera.get();
   if(camera != cameras.end()) {
     planetaryImager->open(*camera);
   }
@@ -95,7 +98,7 @@ void DriverForwarder::Private::ConnectCamera(const NetworkPacket::ptr& p)
 
 void DriverForwarder::Private::GetCameraName(const NetworkPacket::ptr& p)
 {
-  q->dispatcher()->send(DriverProtocol::packetGetCameraNameReply() << planetaryImager->imager()->name().toLatin1());
+  q->dispatcher()->send(DriverProtocol::packetGetCameraNameReply() << planetaryImager->imager()->name());
 }
 
 void DriverForwarder::Private::CloseCamera(const NetworkPacket::ptr& p)

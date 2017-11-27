@@ -25,10 +25,13 @@
 class ConfigurationProtocol : public NetworkProtocol
 {
 public:
+  ADD_PROTOCOL_PACKET_NAME(List)
+  ADD_PROTOCOL_PACKET_NAME(ListReply)
   ADD_PROTOCOL_PACKET_NAME(Get)
   ADD_PROTOCOL_PACKET_NAME(GetReply)
   ADD_PROTOCOL_PACKET_NAME(Set)
   ADD_PROTOCOL_PACKET_NAME(Reset)
+  ADD_PROTOCOL_PACKET_NAME(signalSettingsChanged)
   
   static NetworkPacket::ptr get(const QString name);
   static NetworkPacket::ptr set(const QString name, const QVariant &value);

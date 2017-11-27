@@ -51,5 +51,7 @@ NetworkProtocol::FormatParameters NetworkProtocol::decodeHello(const NetworkPack
 
 PROTOCOL_NAME_VALUE(Network, Hello);
 PROTOCOL_NAME_VALUE(Network, HelloReply);
+PROTOCOL_NAME_VALUE(Network, ping);
+PROTOCOL_NAME_VALUE(Network, pong);
 
 

@@ -46,7 +46,7 @@ public:
     declare_setting(buffered_output, bool )
     declare_setting(max_memory_usage, long long )
     
-    enum RecordingLimit { Infinite = 0, FramesNumber = 1, Duration = 2, FileSize = 3};
+    enum RecordingLimit { Infinite=0, FramesNumber=1, Duration=2, FileSize=3};
     declare_setting(recording_limit_type, RecordingLimit)
     declare_setting(recording_seconds_limit, double )
     declare_setting(recording_frames_limit, long long )
@@ -58,7 +58,7 @@ public:
     declare_setting(save_file_prefix, QString)
     declare_setting(save_file_suffix, QString )
 
-    enum SaveFormat { SER, Video, PNG, FITS };
+    enum SaveFormat { SER=0, Video=1, PNG=2, FITS=3 };
     declare_setting(save_format, SaveFormat)
     declare_setting(video_codec, QString)
     declare_setting(save_json_info_file, bool)
@@ -67,7 +67,7 @@ public:
     declare_setting(observer, QString)
     declare_setting(telescope, QString)
 
-    enum EdgeAlgorithm { Sobel, Canny };
+    enum EdgeAlgorithm { Sobel=0, Canny=1};
     declare_setting(edge_algorithm, EdgeAlgorithm)
     declare_setting(sobel_kernel, int)
     declare_setting(sobel_blur_size, int)
@@ -92,7 +92,7 @@ public:
     declare_setting(server_host, QString)
     declare_setting(server_port, int)
     
-    enum NetworkImageFormat { Network_RAW, Network_JPEG, Network_NoImage };
+    enum NetworkImageFormat { Network_RAW=0, Network_JPEG=1, Network_NoImage=2 };
     declare_setting(server_image_format, NetworkImageFormat)
     declare_setting(server_compression, bool)
     declare_setting(server_force8bit, bool)
@@ -108,7 +108,7 @@ public:
     declare_setting(recording_pause_stops_timer, bool)
     
     /// Defines how to interpret multi-byte data coming from camera (CameraDefault = as reported by the camera; may be unreliable)
-    enum class CaptureEndianess { CameraDefault, Little, Big };
+    enum class CaptureEndianess { CameraDefault=0, Little=1, Big=2};
     declare_setting(capture_endianess, CaptureEndianess)
 
     struct Preset {
@@ -131,12 +131,14 @@ public:
     void remove_preset(const QString &name);
     
     QString savefile() const;
+    
 public slots:
     void preset_saved(const QString &file);
     void recording_preset_saved(const QString &file);
 signals:
   void presets_changed();
   void recording_presets_changed();
+  void settings_changed();
 private:
     DPTR
 };

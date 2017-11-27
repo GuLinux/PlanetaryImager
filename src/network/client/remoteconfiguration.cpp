@@ -20,6 +20,8 @@
 #include "remoteconfiguration.h"
 #include "Qt/qt_strings_helper.h"
 #include "network/protocol/configurationprotocol.h"
+#include <QCoreApplication>
+#include <QTimer>
 
 using namespace std;
 
@@ -38,6 +40,11 @@ RemoteConfiguration::RemoteConfiguration(const NetworkDispatcher::ptr& dispatche
     QVariant value;
     ConfigurationProtocol::decodeGetReply(packet, name, value);
     d->values[name] = value;
+  });
+  register_handler(ConfigurationProtocol::signalSettingsChanged, [this](const NetworkPacket::ptr &) {
+    QTimer::singleShot(10, qApp, [this]{
+      emit settings_changed();
+    });
   });
 }
 

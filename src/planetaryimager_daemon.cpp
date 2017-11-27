@@ -29,7 +29,6 @@
 #include "network/server/savefileforwarder.h"
 #include "network/server/framesforwarder.h"
 #include "drivers/supporteddrivers.h"
-#include "network/server/scripting/scriptingengine.h"
 #include "planetaryimager.h"
 #include "Qt/qt_strings_helper.h"
 #include "commons/commandline.h"
@@ -59,10 +58,15 @@ int main(int argc, char** argv)
     auto configuration_forwarder = make_shared<ConfigurationForwarder>(configuration, dispatcher);
     auto save_files_forwarder = make_shared<SaveFileForwarder>(save_images, dispatcher);
     auto planetaryImager = make_shared<PlanetaryImager>(driver, imageHandlers, save_images, configuration);
-    auto scriptingengine = make_shared<ScriptingEngine>(planetaryImager, dispatcher);
     auto server = make_shared<NetworkServer>(planetaryImager, dispatcher, frames_forwarder);
     QObject::connect(save_files_forwarder.get(), &SaveFileForwarder::isRecording, frames_forwarder.get(), &FramesForwarder::recordingMode);
     
+    QObject::connect(planetaryImager.get(), &PlanetaryImager::cameraConnected, save_files_forwarder.get(), [&]{ 
+      save_files_forwarder->setImager(planetaryImager->imager());
+    });
+    QObject::connect(planetaryImager.get(), &PlanetaryImager::cameraDisconnected, save_files_forwarder.get(), [&]{ 
+      save_files_forwarder->setImager(nullptr);
+    });
     
 
     QMetaObject::invokeMethod(server.get(), "listen", Q_ARG(QString, commandLine.address()), Q_ARG(int, commandLine.port()));

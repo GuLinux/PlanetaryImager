@@ -26,10 +26,8 @@ class DriverProtocol : public NetworkProtocol {
 public:
   ADD_PROTOCOL_PACKET_NAME(CameraList)
   ADD_PROTOCOL_PACKET_NAME(CameraListReply)
-  ADD_PROTOCOL_PACKET_NAME(CamerasParameter)
   ADD_PROTOCOL_PACKET_NAME(ConnectCamera)
   ADD_PROTOCOL_PACKET_NAME(CloseCamera)
-  ADD_PROTOCOL_PACKET_NAME(ConnectCameraReply)
   ADD_PROTOCOL_PACKET_NAME(GetCameraName)
   ADD_PROTOCOL_PACKET_NAME(GetCameraNameReply)
   ADD_PROTOCOL_PACKET_NAME(GetProperties)
@@ -46,6 +44,7 @@ public:
   ADD_PROTOCOL_PACKET_NAME(signalFPS)
   ADD_PROTOCOL_PACKET_NAME(signalTemperature)
   ADD_PROTOCOL_PACKET_NAME(signalControlChanged)
+  ADD_PROTOCOL_PACKET_NAME(signalCameraConnected)
   ADD_PROTOCOL_PACKET_NAME(signalDisconnected)
   
   // TODO: remove all the static methods, particularly since most of them are stateful

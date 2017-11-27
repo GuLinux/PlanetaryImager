@@ -15,5 +15,9 @@ add_executable(test_frame test_frame.cpp ${CMAKE_SOURCE_DIR}/src/commons/frame.c
 target_link_libraries(test_frame gtest_main opencv_core Qt5::Widgets)
 add_test(test_frame test_frame)
 
+add_executable(test_networkpacket test_networkpacket.cpp ${CMAKE_SOURCE_DIR}/src/network/networkpacket.cpp)
+target_link_libraries(test_networkpacket gtest_main ${OpenCV_LIBS} Qt5::Widgets)
+add_test(test_networkpacket test_networkpacket)
+
 
 add_subdirectory(googletest)

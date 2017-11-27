@@ -38,6 +38,8 @@ public:
 
   ADD_PROTOCOL_PACKET_NAME(Hello)
   ADD_PROTOCOL_PACKET_NAME(HelloReply)
+  ADD_PROTOCOL_PACKET_NAME(ping)
+  ADD_PROTOCOL_PACKET_NAME(pong)
   struct FormatParameters {
     Configuration::NetworkImageFormat format;
     bool compression;

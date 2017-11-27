@@ -34,6 +34,7 @@ public:
   LogHandler(const CommandLine &commandLine);
   ~LogHandler();
   static QHash<QtMsgType, std::string> log_levels();
+  static void log(QtMsgType type, const QMessageLogContext &context, const QString &msg);
 private:
   DPTR
 };

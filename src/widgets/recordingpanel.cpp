@@ -30,16 +30,28 @@
 #include <QFileInfo>
 #include <QDebug>
 #include "commons/elapsedtimer.h"
+#include "c++/stlutils.h"
 
 using namespace std;
 
 DPTR_IMPL(RecordingPanel) {
+    Configuration &configuration;
     FilesystemBrowser::ptr filesystemBrowser;
     bool recording;
     RecordingPanel *q;
     unique_ptr<Ui::RecordingPanel> ui;
     ElapsedTimer recording_elapsed;
     unique_ptr<QTimer> recording_elapsed_timer;
+    void reload_config();
+    static vector<Configuration::SaveFormat> format_combo_index;
+    bool is_reloading_prefix_suffix{false};
+};
+
+vector<Configuration::SaveFormat> RecordingPanel::Private::format_combo_index = {
+  Configuration::SER,
+  Configuration::Video,
+  Configuration::PNG,
+  Configuration::FITS,
 };
 
 RecordingPanel::~RecordingPanel()
@@ -47,7 +59,7 @@ RecordingPanel::~RecordingPanel()
 }
 
 RecordingPanel::RecordingPanel(Configuration &configuration, const FilesystemBrowser::ptr &filesystemBrowser, QWidget* parent)
-  : QWidget{parent}, dptr(filesystemBrowser, false, this)
+  : QWidget{parent}, dptr(configuration, filesystemBrowser, false, this)
 {
   d->ui = make_unique<Ui::RecordingPanel>();
   d->ui->setupUi(this);
@@ -57,20 +69,10 @@ RecordingPanel::RecordingPanel(Configuration &configuration, const FilesystemBro
   });
   
   recording(false);
-  d->ui->save_recording_info->setCurrentIndex( (configuration.save_json_info_file() ? 1 : 0) + (configuration.save_info_file() ? 2 : 0) );
-  d->ui->filePrefix->setCurrentText(configuration.save_file_prefix());
-  d->ui->fileSuffix->setCurrentText(configuration.save_file_suffix());
-  static vector<Configuration::SaveFormat> format_combo_index {
-    Configuration::SER,
-    Configuration::Video,
-    Configuration::PNG,
-    Configuration::FITS,
-  };
-  auto current_format_index = std::find(format_combo_index.begin(), format_combo_index.end(), configuration.save_format());
-  d->ui->videoOutputType->setCurrentIndex( current_format_index == format_combo_index.end() ? 0 : current_format_index-format_combo_index.begin() );
+
   connect(d->ui->videoOutputType, F_PTR(QComboBox, activated, int), [&](int index) {
-    configuration.set_save_format(format_combo_index[index]);
-    if(format_combo_index[index] == Configuration::Video && !configuration.deprecated_video_warning_shown()) {
+    configuration.set_save_format(Private::format_combo_index[index]);
+    if(Private::format_combo_index[index] == Configuration::Video && !configuration.deprecated_video_warning_shown()) {
       configuration.set_deprecated_video_warning_shown(true);
       MessagesLogger::instance()->queue(MessagesLogger::Warning, tr("Video encoder"), tr(R"(Saving as video file is not supported, and not recommended.
 Video encoding might fail, due to unavailable codecs, will result in quality loss, and will slow down capture FPS.
@@ -81,31 +83,23 @@ The best file format for planetary imaging is SER. You can also save frames as P
     configuration.set_save_directory(directory);
   });
   
-  d->ui->saveDirectory->setText(configuration.save_directory());
   
-  auto is_reloading_prefix_suffix = make_shared<bool>(false);
-  auto change_prefix = [is_reloading_prefix_suffix, &configuration](const QString &prefix){ if(! *is_reloading_prefix_suffix) configuration.set_save_file_prefix(prefix); };
-  auto change_suffix = [is_reloading_prefix_suffix, &configuration](const QString &suffix){ if(! *is_reloading_prefix_suffix) configuration.set_save_file_suffix(suffix); };
+  auto change_prefix = [this, &configuration](const QString &prefix){
+    if(! d->is_reloading_prefix_suffix) configuration.set_save_file_prefix(prefix);
+  };
+  auto change_suffix = [this, &configuration](const QString &suffix){
+    if(! d->is_reloading_prefix_suffix) configuration.set_save_file_suffix(suffix);
+  };
   connect(d->ui->filePrefix, F_PTR(QComboBox, editTextChanged, const QString&), this, change_prefix);
   connect(d->ui->fileSuffix, F_PTR(QComboBox, editTextChanged, const QString&), this, change_suffix);
   
-  auto reload_filename_hints = [&,is_reloading_prefix_suffix]{
-      *is_reloading_prefix_suffix = true;
-      d->ui->filePrefix->clear();
-      d->ui->filePrefix->addItems(configuration.save_file_avail_prefixes());
-      d->ui->filePrefix->setCurrentText(configuration.save_file_prefix());
-      d->ui->fileSuffix->clear();
-      d->ui->fileSuffix->addItems(configuration.save_file_avail_suffixes());
-      d->ui->fileSuffix->setCurrentText(configuration.save_file_suffix());
-      *is_reloading_prefix_suffix = false;
-};
-  reload_filename_hints();
-  d->ui->limitType->setCurrentIndex(configuration.recording_limit_type());
   connect(d->ui->limitType, F_PTR(QComboBox, activated, int), d->ui->limitsWidgets, &QStackedWidget::setCurrentIndex);
-  connect(d->ui->limitType, F_PTR(QComboBox, activated, int), [&configuration](int index){ configuration.set_recording_limit_type(static_cast<Configuration::RecordingLimit>(index)); });
+  connect(d->ui->limitType, F_PTR(QComboBox, activated, int), [&configuration](int index){
+    configuration.set_recording_limit_type(static_cast<Configuration::RecordingLimit>(index));
+  });
   d->ui->limitsWidgets->setCurrentIndex(d->ui->limitType->currentIndex());
   
-  connect(d->ui->filename_options, &QPushButton::clicked, [&,reload_filename_hints] {
+  connect(d->ui->filename_options, &QPushButton::clicked, [&] {
       QDialog *dialog = new QDialog;
       dialog->setWindowTitle(tr("Filename options"));
       dialog->setLayout(new QVBoxLayout);
@@ -113,15 +107,12 @@ The best file format for planetary imaging is SER. You can also save frames as P
       dialog->layout()->addWidget(saveFileConfiguration);
       dialog->resize(550, 100);
       dialog->exec();
-      reload_filename_hints();
       dialog->deleteLater();
   });
-  d->ui->saveFramesLimit->setCurrentText(QString::number(configuration.recording_frames_limit()));
   connect(d->ui->saveFramesLimit, &QComboBox::currentTextChanged, [&configuration](const QString &text){
       configuration.set_recording_frames_limit(text.toLongLong());
   });
   
-  d->ui->duration_limit->setValue(configuration.recording_seconds_limit());
   connect(d->ui->duration_limit, F_PTR(QDoubleSpinBox, valueChanged, double), [&configuration](double seconds){
       configuration.set_recording_seconds_limit(seconds);
   });
@@ -180,10 +171,37 @@ The best file format for planetary imaging is SER. You can also save frames as P
   connect(d->ui->timelapse_duration, &QTimeEdit::timeChanged, this, [=, &configuration](const QTime &time) {
     configuration.set_timelapse_msecs(QTime{0,0,0}.msecsTo(time));
   });
-  d->ui->timelapse->setChecked(configuration.timelapse_mode());
-  d->ui->timelapse_duration->setTime(QTime{0,0,0}.addMSecs(configuration.timelapse_msecs()));
 
+  d->reload_config();
+  connect(&configuration, &Configuration::settings_changed, this, bind(&Private::reload_config, d.get()));
 }
+
+
+void RecordingPanel::Private::reload_config()
+{
+  ui->save_recording_info->setCurrentIndex( (configuration.save_json_info_file() ? 1 : 0) + (configuration.save_info_file() ? 2 : 0) );
+  
+  ui->timelapse->setChecked(configuration.timelapse_mode());
+  ui->timelapse_duration->setTime(QTime{0,0,0}.addMSecs(configuration.timelapse_msecs()));
+  ui->saveDirectory->setText(configuration.save_directory());
+  ui->duration_limit->setValue(configuration.recording_seconds_limit());
+  ui->saveFramesLimit->setCurrentText(QString::number(configuration.recording_frames_limit()));
+  ui->limitType->setCurrentIndex(configuration.recording_limit_type());
+  auto current_format_index = std::find(format_combo_index.begin(), format_combo_index.end(), configuration.save_format());
+  ui->videoOutputType->setCurrentIndex( current_format_index == format_combo_index.end() ? 0 : current_format_index-format_combo_index.begin() );
+  is_reloading_prefix_suffix = true;
+  GuLinux::Scope reset_reloading([&]{ is_reloading_prefix_suffix = false; });
+  ui->filePrefix->clear();
+  ui->filePrefix->addItems(configuration.save_file_avail_prefixes());
+  ui->filePrefix->setCurrentText(configuration.save_file_prefix());
+  ui->fileSuffix->clear();
+  ui->fileSuffix->addItems(configuration.save_file_avail_suffixes());
+  ui->fileSuffix->setCurrentText(configuration.save_file_suffix());
+  
+  ui->filePrefix->setCurrentText(configuration.save_file_prefix());
+  ui->fileSuffix->setCurrentText(configuration.save_file_suffix());
+}
+
 
 void RecordingPanel::recording(bool recording, const QString& filename)
 {

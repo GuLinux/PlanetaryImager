@@ -33,7 +33,6 @@ public:
   ADD_PROTOCOL_PACKET_NAME(signalRecording)
   ADD_PROTOCOL_PACKET_NAME(signalFinished)
   static NetworkPacket::ptr setPaused(bool paused);
-  
 };
 
 #endif // SAVEFILEPROTOCOL_H

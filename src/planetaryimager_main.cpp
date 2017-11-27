@@ -28,7 +28,6 @@
 #include "commons/commandline.h"
 #include "network/server/networkserver.h"
 #include "network/server/configurationforwarder.h"
-#include "network/server/scripting/scriptingengine.h"
 #include "image_handlers/threadimagehandler.h"
 
 using namespace std;
@@ -61,15 +60,18 @@ int main(int argc, char** argv)
     auto threadedImageHandler = ImageHandler::ptr{new ThreadImageHandler{compositeImageHandler}};
     
     auto planetaryImager = make_shared<PlanetaryImager>(drivers, threadedImageHandler, save_images, configuration);
-    
-    auto scriptingengine = make_shared<ScriptingEngine>(planetaryImager, dispatcher);
-    
+        
     
     auto server = make_shared<NetworkServer>(planetaryImager, dispatcher, frames_forwarder);
     QObject::connect(save_files_forwarder.get(), &SaveFileForwarder::isRecording, frames_forwarder.get(), &FramesForwarder::recordingMode);
+    QObject::connect(planetaryImager.get(), &PlanetaryImager::cameraConnected, save_files_forwarder.get(), [&]{ 
+      save_files_forwarder->setImager(planetaryImager->imager());
+    });
+    QObject::connect(planetaryImager.get(), &PlanetaryImager::cameraDisconnected, save_files_forwarder.get(), [&]{ 
+      save_files_forwarder->setImager(nullptr);
+    });
     PlanetaryImagerMainWindow mainWindow{planetaryImager, compositeImageHandler, make_shared<LocalFilesystemBrowser>(), commandLine.logfile() };
-    
-    
+        
     QMetaObject::invokeMethod(server.get(), "listen", Q_ARG(QString, commandLine.address()), Q_ARG(int, commandLine.port()));
     
     QObject::connect(server.get(), &NetworkServer::imagerConnected, &mainWindow, [&](Imager *imager) {

@@ -27,9 +27,7 @@ using namespace std;
 using namespace std::placeholders;
 PROTOCOL_NAME_VALUE(Driver, CameraList);
 PROTOCOL_NAME_VALUE(Driver, CameraListReply);
-PROTOCOL_NAME_VALUE(Driver, CamerasParameter);
 PROTOCOL_NAME_VALUE(Driver, ConnectCamera);
-PROTOCOL_NAME_VALUE(Driver, ConnectCameraReply);
 PROTOCOL_NAME_VALUE(Driver, GetCameraName);
 PROTOCOL_NAME_VALUE(Driver, GetCameraNameReply);
 PROTOCOL_NAME_VALUE(Driver, GetProperties);
@@ -46,6 +44,7 @@ PROTOCOL_NAME_VALUE(Driver, signalFPS);
 PROTOCOL_NAME_VALUE(Driver, signalTemperature);
 PROTOCOL_NAME_VALUE(Driver, signalControlChanged);
 PROTOCOL_NAME_VALUE(Driver, signalDisconnected);
+PROTOCOL_NAME_VALUE(Driver, signalCameraConnected);
 PROTOCOL_NAME_VALUE(Driver, CloseCamera);
 
 namespace {
@@ -145,14 +144,14 @@ NetworkPacket::ptr DriverProtocol::sendGetPropertiesReply(const Imager::Properti
   QVariantList caps;
   transform(begin(properties.properties), end(properties.properties), back_inserter(l), [](const Imager::Properties::Property &p) {
     return QVariantMap {
-      {"n", p.name},
-      {"v", p.value},
-      {"dn", p.display_name},
-      {"dv", p.display_value},
+      {"name", p.name},
+      {"value", p.value},
+      {"display_name", p.display_name},
+      {"display_value", p.display_value},
     };
   });
   transform(begin(properties.capabilities), end(properties.capabilities), back_inserter(caps), [](const Imager::Capability &c) { return static_cast<int>(c); } );
-  return packetGetPropertiesReply() << QVariantMap{ {"properties", l},  {"caps", caps} };
+  return packetGetPropertiesReply() << QVariantMap{ {"properties", l},  {"capabilities", caps} };
 }
 
 
@@ -165,13 +164,13 @@ void DriverProtocol::decode(Imager::Properties& properties, const NetworkPacket:
   transform(begin(p), end(p), back_inserter(properties.properties), [](const QVariant &v){
     auto m = v.toMap();
     return Imager::Properties::Property{
-      m["n"].toString(),
-      m["v"].toString(),
-      m["dn"].toString(),
-      m["dv"].toString(),
+      m["name"].toString(),
+      m["value"].toString(),
+      m["display_name"].toString(),
+      m["display_value"].toString(),
     };
   });
-  for(auto v: packetMap["caps"].toList() )
+  for(auto v: packetMap["capabilities"].toList() )
     properties.capabilities.insert( static_cast<Imager::Capability>(v.toInt()) );
 }
 

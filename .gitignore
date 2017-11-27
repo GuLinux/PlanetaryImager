@@ -1,4 +1,7 @@
 build*
+.idea
+__pycache__
+*.pyc
 .DS_Store
 *.cbp
 *.swp

@@ -101,25 +101,6 @@ if(build_network_server)
   set(install_targets ${install_targets} planetary_imager_daemon planetary_imager_frontend)
 endif()
 
-if(build_scripting_client)
-  add_executable(planetary_imager_scripting planetaryimager_scripting.cpp)
-  target_link_libraries(planetary_imager_scripting
-    network_scripting_client
-    network_client
-    ${planetary_imager_commons_DEPS}
-    ${OpenCV_LIBS}
-    GuLinux_Qt_Commons
-    GuLinux_c++_Commons
-    ${Boost_LIBRARIES}
-    Qt5::Network
-    Qt5::Qml
-    pthread
-    readline
-    history
-    ${EXTRA_LIBRARIES}
-)
-endif()
-
 install(TARGETS ${install_targets} RUNTIME DESTINATION ${binary_destination})
 
 
