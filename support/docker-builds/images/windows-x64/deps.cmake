@@ -16,6 +16,9 @@ install(FILES
   /mxe/usr/x86_64-w64-mingw32.shared/bin/libopencv_core.dll
   /mxe/usr/x86_64-w64-mingw32.shared/bin/libopencv_highgui.dll
   /mxe/usr/x86_64-w64-mingw32.shared/bin/libopencv_imgproc.dll
+  /mxe/usr/x86_64-w64-mingw32.shared/bin/libopencv_imgcodecs.dll
+  /mxe/usr/x86_64-w64-mingw32.shared/bin/libopencv_videoio.dll
+  /mxe/usr/x86_64-w64-mingw32.shared/bin/libopenblas.dll
   /mxe/usr/x86_64-w64-mingw32.shared/bin/libpcre-1.dll
   /mxe/usr/x86_64-w64-mingw32.shared/bin/libpcre2-16-0.dll
   /mxe/usr/x86_64-w64-mingw32.shared/bin/libpcre-1.dll
@@ -31,6 +34,11 @@ install(FILES
   /mxe/usr/x86_64-w64-mingw32.shared/bin/zlib1.dll
   /mxe/usr/x86_64-w64-mingw32.shared/bin/libeay32.dll
   /mxe/usr/x86_64-w64-mingw32.shared/bin/ssleay32.dll
+  /mxe/usr/x86_64-w64-mingw32.shared/bin/libwebp-5.dll
+  /mxe/usr/x86_64-w64-mingw32.shared/bin/libgfortran-3.dll
+  /mxe/usr/x86_64-w64-mingw32.shared/bin/libgomp-1.dll
+  /mxe/usr/x86_64-w64-mingw32.shared/bin/libquadmath-0.dll
+  /mxe/usr/x86_64-w64-mingw32.shared/bin/libwinpthread-1.dll
 DESTINATION .)
 file(GLOB QT_PLUGINS /mxe/usr/x86_64-w64-mingw32.shared/qt5/plugins/*)
 install(DIRECTORY ${QT_PLUGINS} DESTINATION .)
