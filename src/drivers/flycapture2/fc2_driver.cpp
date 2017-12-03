@@ -16,10 +16,7 @@
  *
  */
 
-#include <algorithm>
-#include <FlyCapture2.h>
-#include <memory>
-#include <vector>
+#include <C/FlyCapture2_C.h>
 
 #include "fc2_driver.h"
 #include "fc2_exception.h"
@@ -28,46 +25,49 @@
 
 class FC2Camera: public Driver::Camera
 {
-    FlyCapture2::PGRGuid guid;
+    fc2PGRGuid guid;
     QString camName;
 
 public:
 
     typedef std::shared_ptr<FC2Camera> ptr;
 
-    FC2Camera(const FlyCapture2::PGRGuid &_guid);
+    FC2Camera(fc2Context context, const fc2PGRGuid &_guid);
 
-    virtual ~FC2Camera() { }
+    virtual ~FC2Camera();
 
     Imager *imager(const ImageHandler::ptr &imageHandler) const override;
 
     QString name() const override { return camName; }
 };
 
-FC2Camera::FC2Camera(const FlyCapture2::PGRGuid &_guid): guid(_guid)
+FC2Camera::FC2Camera(fc2Context context, const fc2PGRGuid &_guid): guid(_guid)
 {
-    FlyCapture2::Camera cam;
-    // Connect() most likely does not modify the passed GUID
-    FC2_CHECK << cam.Connect(const_cast<FlyCapture2::PGRGuid*>(&guid)).GetType()
-              << "Camera::Connect";
+    std::cout << "Connect to " << context << std::endl;
+    FC2_CHECK << fc2Connect(context, const_cast<fc2PGRGuid*>(&guid))
+              << "fc2Connect";
 
-    FlyCapture2::CameraInfo camInfo;
-    FC2_CHECK << cam.GetCameraInfo(&camInfo).GetType()
-              << "Camera::GetCameraInfo";
+    fc2CameraInfo camInfo;
+    FC2_CHECK << fc2GetCameraInfo(context, &camInfo)
+              << "fc2GetCameraInfo";
 
     camName = camInfo.modelName;
-    if (camInfo.interfaceType == FlyCapture2::INTERFACE_IEEE1394 ||
-        camInfo.interfaceType == FlyCapture2::INTERFACE_USB2 ||
-        camInfo.interfaceType == FlyCapture2::INTERFACE_USB3)
+    if (camInfo.interfaceType == FC2_INTERFACE_IEEE1394 ||
+        camInfo.interfaceType == FC2_INTERFACE_USB_2 ||
+        camInfo.interfaceType == FC2_INTERFACE_USB_3)
     {
         // Appending driver name, because FireWire & USB cameras can be also detected & enumerated via IIDC driver
         camName += " (FlyCapture 2)";
     }
+
+    FC2_CHECK << fc2Disconnect(context)
+              << "fc2Disconnect";
 }
+
+FC2Camera::~FC2Camera() { }
 
 DPTR_IMPL(FC2Driver)
 {
-    FlyCapture2::BusManager busManager;
 };
 
 Imager *FC2Camera::imager(const ImageHandler::ptr &imageHandler) const
@@ -77,26 +77,35 @@ Imager *FC2Camera::imager(const ImageHandler::ptr &imageHandler) const
 
 Driver::Cameras FC2Driver::cameras() const
 {
+    fc2Context context;
+    FC2_CHECK << fc2CreateContext(&context)
+              << "fc2CreateContext";
+
     Driver::Cameras result;
 
-    unsigned int numCams = 0;
-    FC2_CHECK << d->busManager.GetNumOfCameras(&numCams).GetType()
-              << "BusManager::GetNumOfCameras";
+    unsigned int numCams;
+    FC2_CHECK << fc2GetNumOfCameras(context, &numCams)
+              << "fc2GetNumOfCameras";
 
     for (auto i = 0; i < numCams; i++)
     {
-        FlyCapture2::PGRGuid guid;
-        FC2_CHECK << d->busManager.GetCameraFromIndex(i, &guid).GetType()
-                  << "BusManager::GetCameraFromIndex";
+        fc2PGRGuid guid;
+        FC2_CHECK << fc2GetCameraFromIndex(context, i, &guid)
+                  << "fc2GetCameraFromIndex";
 
-        result.push_back(std::make_shared<FC2Camera>(guid));
+        result.push_back(std::make_shared<FC2Camera>(context, guid));
     }
+
+    FC2_CHECK << fc2DestroyContext(context)
+              << "fc2CreateContext";
 
     return result;
 }
 
 FC2Driver::FC2Driver(): dptr()
-{ }
+{
+}
 
 FC2Driver::~FC2Driver()
-{ }
+{
+}

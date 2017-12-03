@@ -19,12 +19,7 @@
 #ifndef FC2_IMAGER_H
 #define FC2_IMAGER_H
 
-//#include <dc1394/dc1394.h>
-//#include "iidc_deleters.h"
-//#include "drivers/imager.h"
-//#include "c++/dptr.h"
-#include <Camera.h>
-
+#include <C/FlyCapture2_C.h>
 #include "drivers/imager.h"
 
 
@@ -36,7 +31,7 @@ class FC2Imager: public Imager
 
 public:
 
-    FC2Imager(const FlyCapture2::PGRGuid &guid, const ImageHandler::ptr &handler);
+    FC2Imager(const fc2PGRGuid &guid, const ImageHandler::ptr &handler);
 
     virtual ~FC2Imager();
 

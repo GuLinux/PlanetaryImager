@@ -16,9 +16,8 @@
  *
  */
 
-#include <cstring>
 #include <QRect>
-#include <FlyCapture2Defs.h>
+#include <C/FlyCapture2_C.h>
 #include <functional>
 #include <map>
 #include <tuple>
@@ -36,98 +35,98 @@ using namespace std::chrono;
 
 enum ControlID: qlonglong
 {
-    VideoMode = FlyCapture2::PropertyType::UNSPECIFIED_PROPERTY_TYPE + 1,
+    VideoMode = FC2_UNSPECIFIED_PROPERTY_TYPE + 1,
 
-    // Used to select one of the fixed frame rates from the 'FrameRate' enum (only for non-Format7 modes);
-    // a camera may also support PropertyType::FRAME_RATE, which can change the frame rate independently and with finer granularity
+    // Used to select one of the fixed frame rates from the 'fc2FrameRate' enum (only for non-Format7 modes);
+    // a camera may also support FC2_FRAME_RATE, which can change the frame rate independently and with finer granularity
     FrameRate,
 
     // Used to select pixel format for the current video mode (non-Format7 modes have only one pixel format)
     PixelFormat,
 
-    // FlyCapture2::WHITE_BALANCE is actually a pair of values, so expose two custom IDs
+    // FC2_WHITE_BALANCE is actually a pair of values, so expose two custom IDs
     WhiteBalanceRed, WhiteBalanceBlue
 };
 
-static std::map<FlyCapture2::PixelFormat, const char *> PIXEL_FORMAT_NAME =
+static std::map<fc2PixelFormat, const char *> PIXEL_FORMAT_NAME =
 {
-    { FlyCapture2::PIXEL_FORMAT_MONO8,    "Mono 8-bit"           },
-    { FlyCapture2::PIXEL_FORMAT_411YUV8,  "YUV411"               },
-    { FlyCapture2::PIXEL_FORMAT_422YUV8,  "YUV422"               },
-    { FlyCapture2::PIXEL_FORMAT_444YUV8,  "YUV444"               },
-    { FlyCapture2::PIXEL_FORMAT_RGB8,     "RGB 8-bit"            },
-    { FlyCapture2::PIXEL_FORMAT_MONO16,   "Mono 16-bit"          },
-    { FlyCapture2::PIXEL_FORMAT_RGB16,    "RGB 16-bit"           },
-    { FlyCapture2::PIXEL_FORMAT_S_MONO16, "Mono 16-bit (signed)" },
-    { FlyCapture2::PIXEL_FORMAT_S_RGB16,  "RGB 16-bit (signed) " },
-    { FlyCapture2::PIXEL_FORMAT_RAW8,     "RAW 8-bit"            },
-    { FlyCapture2::PIXEL_FORMAT_RAW16,    "RAW 16-bit"           },
-    { FlyCapture2::PIXEL_FORMAT_MONO12,   "Mono 12-bit"          },
-    { FlyCapture2::PIXEL_FORMAT_RAW12,    "RAW 12-bit"           },
-    { FlyCapture2::PIXEL_FORMAT_BGR,      "BGR 8-bit"            },
-    { FlyCapture2::PIXEL_FORMAT_BGRU,     "BGRU 8-bit"           },
-    { FlyCapture2::PIXEL_FORMAT_RGB,      "RGB 8-bit"            },
-    { FlyCapture2::PIXEL_FORMAT_RGBU,     "RGBU 8-bit"           },
-    { FlyCapture2::PIXEL_FORMAT_BGR16,    "BGR 16-bit"           },
-    { FlyCapture2::PIXEL_FORMAT_BGRU16,   "BGRU 16-bit"          },
-    { FlyCapture2::PIXEL_FORMAT_422YUV8_JPEG, "JPEG"             }
+    { FC2_PIXEL_FORMAT_MONO8,    "Mono 8-bit"           },
+    { FC2_PIXEL_FORMAT_411YUV8,  "YUV411"               },
+    { FC2_PIXEL_FORMAT_422YUV8,  "YUV422"               },
+    { FC2_PIXEL_FORMAT_444YUV8,  "YUV444"               },
+    { FC2_PIXEL_FORMAT_RGB8,     "RGB 8-bit"            },
+    { FC2_PIXEL_FORMAT_MONO16,   "Mono 16-bit"          },
+    { FC2_PIXEL_FORMAT_RGB16,    "RGB 16-bit"           },
+    { FC2_PIXEL_FORMAT_S_MONO16, "Mono 16-bit (signed)" },
+    { FC2_PIXEL_FORMAT_S_RGB16,  "RGB 16-bit (signed) " },
+    { FC2_PIXEL_FORMAT_RAW8,     "RAW 8-bit"            },
+    { FC2_PIXEL_FORMAT_RAW16,    "RAW 16-bit"           },
+    { FC2_PIXEL_FORMAT_MONO12,   "Mono 12-bit"          },
+    { FC2_PIXEL_FORMAT_RAW12,    "RAW 12-bit"           },
+    { FC2_PIXEL_FORMAT_BGR,      "BGR 8-bit"            },
+    { FC2_PIXEL_FORMAT_BGRU,     "BGRU 8-bit"           },
+    { FC2_PIXEL_FORMAT_RGB,      "RGB 8-bit"            },
+    { FC2_PIXEL_FORMAT_RGBU,     "RGBU 8-bit"           },
+    { FC2_PIXEL_FORMAT_BGR16,    "BGR 16-bit"           },
+    { FC2_PIXEL_FORMAT_BGRU16,   "BGRU 16-bit"          },
+    { FC2_PIXEL_FORMAT_422YUV8_JPEG, "JPEG"             }
 };
 
-static std::map<FlyCapture2::VideoMode, std::tuple<unsigned, unsigned>> VID_MODE_RESOLUTION =
+static std::map<fc2VideoMode, std::tuple<unsigned, unsigned>> VID_MODE_RESOLUTION =
 {
-    { FlyCapture2::VIDEOMODE_160x120YUV444   , { 160, 120 }   },
-    { FlyCapture2::VIDEOMODE_320x240YUV422   , { 320, 240 }   },
-    { FlyCapture2::VIDEOMODE_640x480YUV411   , { 640, 480 }   },
-    { FlyCapture2::VIDEOMODE_640x480YUV422   , { 640, 480 }   },
-    { FlyCapture2::VIDEOMODE_640x480RGB      , { 640, 480 }   },
-    { FlyCapture2::VIDEOMODE_640x480Y8       , { 640, 480 }   },
-    { FlyCapture2::VIDEOMODE_640x480Y16      , { 640, 480 }   },
-    { FlyCapture2::VIDEOMODE_800x600YUV422   , { 800, 600 }   },
-    { FlyCapture2::VIDEOMODE_800x600RGB      , { 800, 600 }   },
-    { FlyCapture2::VIDEOMODE_800x600Y8       , { 800, 600 }   },
-    { FlyCapture2::VIDEOMODE_800x600Y16      , { 800, 600 }   },
-    { FlyCapture2::VIDEOMODE_1024x768YUV422  , { 1024, 768 }  },
-    { FlyCapture2::VIDEOMODE_1024x768RGB     , { 1024, 768 }  },
-    { FlyCapture2::VIDEOMODE_1024x768Y8      , { 1024, 768 }  },
-    { FlyCapture2::VIDEOMODE_1024x768Y16     , { 1024, 768 }  },
-    { FlyCapture2::VIDEOMODE_1280x960YUV422  , { 1280, 960 }  },
-    { FlyCapture2::VIDEOMODE_1280x960RGB     , { 1280, 960 }  },
-    { FlyCapture2::VIDEOMODE_1280x960Y8      , { 1280, 960 }  },
-    { FlyCapture2::VIDEOMODE_1280x960Y16     , { 1280, 960 }  },
-    { FlyCapture2::VIDEOMODE_1600x1200YUV422 , { 1600, 1200 } },
-    { FlyCapture2::VIDEOMODE_1600x1200RGB    , { 1600, 1200 } },
-    { FlyCapture2::VIDEOMODE_1600x1200Y8     , { 1600, 1200 } },
-    { FlyCapture2::VIDEOMODE_1600x1200Y16    , { 1600, 1200 } },
+    { FC2_VIDEOMODE_160x120YUV444   , { 160, 120 }   },
+    { FC2_VIDEOMODE_320x240YUV422   , { 320, 240 }   },
+    { FC2_VIDEOMODE_640x480YUV411   , { 640, 480 }   },
+    { FC2_VIDEOMODE_640x480YUV422   , { 640, 480 }   },
+    { FC2_VIDEOMODE_640x480RGB      , { 640, 480 }   },
+    { FC2_VIDEOMODE_640x480Y8       , { 640, 480 }   },
+    { FC2_VIDEOMODE_640x480Y16      , { 640, 480 }   },
+    { FC2_VIDEOMODE_800x600YUV422   , { 800, 600 }   },
+    { FC2_VIDEOMODE_800x600RGB      , { 800, 600 }   },
+    { FC2_VIDEOMODE_800x600Y8       , { 800, 600 }   },
+    { FC2_VIDEOMODE_800x600Y16      , { 800, 600 }   },
+    { FC2_VIDEOMODE_1024x768YUV422  , { 1024, 768 }  },
+    { FC2_VIDEOMODE_1024x768RGB     , { 1024, 768 }  },
+    { FC2_VIDEOMODE_1024x768Y8      , { 1024, 768 }  },
+    { FC2_VIDEOMODE_1024x768Y16     , { 1024, 768 }  },
+    { FC2_VIDEOMODE_1280x960YUV422  , { 1280, 960 }  },
+    { FC2_VIDEOMODE_1280x960RGB     , { 1280, 960 }  },
+    { FC2_VIDEOMODE_1280x960Y8      , { 1280, 960 }  },
+    { FC2_VIDEOMODE_1280x960Y16     , { 1280, 960 }  },
+    { FC2_VIDEOMODE_1600x1200YUV422 , { 1600, 1200 } },
+    { FC2_VIDEOMODE_1600x1200RGB    , { 1600, 1200 } },
+    { FC2_VIDEOMODE_1600x1200Y8     , { 1600, 1200 } },
+    { FC2_VIDEOMODE_1600x1200Y16    , { 1600, 1200 } },
 };
 
-static std::map<FlyCapture2::VideoMode, FlyCapture2::PixelFormat> VID_MODE_PIX_FMT =
+static std::map<fc2VideoMode, fc2PixelFormat> VID_MODE_PIX_FMT =
 {
-    { FlyCapture2::VIDEOMODE_160x120YUV444   , FlyCapture2::PIXEL_FORMAT_444YUV8 },
-    { FlyCapture2::VIDEOMODE_320x240YUV422   , FlyCapture2::PIXEL_FORMAT_422YUV8 },
-    { FlyCapture2::VIDEOMODE_640x480YUV411   , FlyCapture2::PIXEL_FORMAT_411YUV8 },
-    { FlyCapture2::VIDEOMODE_640x480YUV422   , FlyCapture2::PIXEL_FORMAT_422YUV8 },
-    { FlyCapture2::VIDEOMODE_640x480RGB      , FlyCapture2::PIXEL_FORMAT_RGB     },
-    { FlyCapture2::VIDEOMODE_640x480Y8       , FlyCapture2::PIXEL_FORMAT_MONO8   },
-    { FlyCapture2::VIDEOMODE_640x480Y16      , FlyCapture2::PIXEL_FORMAT_MONO16  },
-    { FlyCapture2::VIDEOMODE_800x600YUV422   , FlyCapture2::PIXEL_FORMAT_422YUV8 },
-    { FlyCapture2::VIDEOMODE_800x600RGB      , FlyCapture2::PIXEL_FORMAT_RGB8    },
-    { FlyCapture2::VIDEOMODE_800x600Y8       , FlyCapture2::PIXEL_FORMAT_MONO8   },
-    { FlyCapture2::VIDEOMODE_800x600Y16      , FlyCapture2::PIXEL_FORMAT_MONO16  },
-    { FlyCapture2::VIDEOMODE_1024x768YUV422  , FlyCapture2::PIXEL_FORMAT_422YUV8 },
-    { FlyCapture2::VIDEOMODE_1024x768RGB     , FlyCapture2::PIXEL_FORMAT_RGB8    },
-    { FlyCapture2::VIDEOMODE_1024x768Y8      , FlyCapture2::PIXEL_FORMAT_MONO8   },
-    { FlyCapture2::VIDEOMODE_1024x768Y16     , FlyCapture2::PIXEL_FORMAT_MONO16  },
-    { FlyCapture2::VIDEOMODE_1280x960YUV422  , FlyCapture2::PIXEL_FORMAT_422YUV8 },
-    { FlyCapture2::VIDEOMODE_1280x960RGB     , FlyCapture2::PIXEL_FORMAT_RGB8    },
-    { FlyCapture2::VIDEOMODE_1280x960Y8      , FlyCapture2::PIXEL_FORMAT_MONO8   },
-    { FlyCapture2::VIDEOMODE_1280x960Y16     , FlyCapture2::PIXEL_FORMAT_MONO16  },
-    { FlyCapture2::VIDEOMODE_1600x1200YUV422 , FlyCapture2::PIXEL_FORMAT_422YUV8 },
-    { FlyCapture2::VIDEOMODE_1600x1200RGB    , FlyCapture2::PIXEL_FORMAT_RGB8    },
-    { FlyCapture2::VIDEOMODE_1600x1200Y8     , FlyCapture2::PIXEL_FORMAT_MONO8   },
-    { FlyCapture2::VIDEOMODE_1600x1200Y16    , FlyCapture2::PIXEL_FORMAT_MONO16  },
+    { FC2_VIDEOMODE_160x120YUV444   , FC2_PIXEL_FORMAT_444YUV8 },
+    { FC2_VIDEOMODE_320x240YUV422   , FC2_PIXEL_FORMAT_422YUV8 },
+    { FC2_VIDEOMODE_640x480YUV411   , FC2_PIXEL_FORMAT_411YUV8 },
+    { FC2_VIDEOMODE_640x480YUV422   , FC2_PIXEL_FORMAT_422YUV8 },
+    { FC2_VIDEOMODE_640x480RGB      , FC2_PIXEL_FORMAT_RGB     },
+    { FC2_VIDEOMODE_640x480Y8       , FC2_PIXEL_FORMAT_MONO8   },
+    { FC2_VIDEOMODE_640x480Y16      , FC2_PIXEL_FORMAT_MONO16  },
+    { FC2_VIDEOMODE_800x600YUV422   , FC2_PIXEL_FORMAT_422YUV8 },
+    { FC2_VIDEOMODE_800x600RGB      , FC2_PIXEL_FORMAT_RGB8    },
+    { FC2_VIDEOMODE_800x600Y8       , FC2_PIXEL_FORMAT_MONO8   },
+    { FC2_VIDEOMODE_800x600Y16      , FC2_PIXEL_FORMAT_MONO16  },
+    { FC2_VIDEOMODE_1024x768YUV422  , FC2_PIXEL_FORMAT_422YUV8 },
+    { FC2_VIDEOMODE_1024x768RGB     , FC2_PIXEL_FORMAT_RGB8    },
+    { FC2_VIDEOMODE_1024x768Y8      , FC2_PIXEL_FORMAT_MONO8   },
+    { FC2_VIDEOMODE_1024x768Y16     , FC2_PIXEL_FORMAT_MONO16  },
+    { FC2_VIDEOMODE_1280x960YUV422  , FC2_PIXEL_FORMAT_422YUV8 },
+    { FC2_VIDEOMODE_1280x960RGB     , FC2_PIXEL_FORMAT_RGB8    },
+    { FC2_VIDEOMODE_1280x960Y8      , FC2_PIXEL_FORMAT_MONO8   },
+    { FC2_VIDEOMODE_1280x960Y16     , FC2_PIXEL_FORMAT_MONO16  },
+    { FC2_VIDEOMODE_1600x1200YUV422 , FC2_PIXEL_FORMAT_422YUV8 },
+    { FC2_VIDEOMODE_1600x1200RGB    , FC2_PIXEL_FORMAT_RGB8    },
+    { FC2_VIDEOMODE_1600x1200Y8     , FC2_PIXEL_FORMAT_MONO8   },
+    { FC2_VIDEOMODE_1600x1200Y16    , FC2_PIXEL_FORMAT_MONO16  },
 };
 
-/// Key: FlyCapture2::PropertyInfo::pUnitAbbr
+/// Key: fc2PropertyInfo::pUnitAbbr
 static const std::map<std::string, std::chrono::duration<double>> DURATION_VALUE =
 {
     { "us", 1us },
@@ -137,16 +136,16 @@ static const std::map<std::string, std::chrono::duration<double>> DURATION_VALUE
 
 DPTR_IMPL(FC2Imager)
 {
-    FlyCapture2::Camera cam;
-    FlyCapture2::CameraInfo camInfo;
+    fc2Context context;
+    fc2CameraInfo camInfo;
 
-    std::map<FlyCapture2::VideoMode, std::vector<FlyCapture2::FrameRate>> videoModes;
-    std::map<FlyCapture2::Mode, FlyCapture2::Format7Info> fmt7Modes;
-    std::map<FlyCapture2::PropertyType, FlyCapture2::PropertyInfo> propertyInfo;
+    std::map<fc2VideoMode, std::vector<fc2FrameRate>> videoModes;
+    std::map<fc2Mode, fc2Format7Info> fmt7Modes;
+    std::map<fc2PropertyType, fc2PropertyInfo> propertyInfo;
 
     FC2VideoMode currentVidMode;
-    FlyCapture2::FrameRate currentFrameRate;
-    FlyCapture2::PixelFormat currentPixFmt;
+    fc2FrameRate currentFrameRate;
+    fc2PixelFormat currentPixFmt;
 
     /// Copy of the SHUTTER control; used for informing GUI about shutter range change when frame rate changes
     Control ctrlShutter;
@@ -183,14 +182,14 @@ DPTR_IMPL(FC2Imager)
     Control getEmptyFrameRatesCtrl();
 
     /// Caller must check if the result is valid()
-    Control createControlFromFC2Property(const FlyCapture2::PropertyInfo &propInfo);
+    Control createControlFromFC2Property(const fc2PropertyInfo &propInfo);
 
 
     LOG_C_SCOPE(FC2Imager);
 };
 
 /// Ensures both raw and absolute ranges satisfy: min < max
-static void VerifyRanges(FlyCapture2::PropertyInfo &propInfo)
+static void VerifyRanges(fc2PropertyInfo &propInfo)
 {
     if (propInfo.min > propInfo.max)
         std::swap(propInfo.min, propInfo.max);
@@ -199,34 +198,34 @@ static void VerifyRanges(FlyCapture2::PropertyInfo &propInfo)
         std::swap(propInfo.absMin, propInfo.absMax);
 }
 
-static void UpdateRangeAndStep(Imager::Control &control, const FlyCapture2::PropertyInfo &propInfo);
+static void UpdateRangeAndStep(Imager::Control &control, const fc2PropertyInfo &propInfo);
 
 void FC2Imager::Private::updateWorkerExposureTimeout()
 {
 //TODO: implement this
 }
 
-static void ForEachPossiblePixelFormat(const std::function<void (FlyCapture2::PixelFormat)> &func)
+static void ForEachPossiblePixelFormat(const std::function<void (fc2PixelFormat)> &func)
 {
     // TODO: implement handling of the commented out formats
     for (const auto pixFmt: {
-            FlyCapture2::PIXEL_FORMAT_MONO8,
-            FlyCapture2::PIXEL_FORMAT_RAW8,
-            FlyCapture2::PIXEL_FORMAT_RGB8,
+            FC2_PIXEL_FORMAT_MONO8,
+            FC2_PIXEL_FORMAT_RAW8,
+            FC2_PIXEL_FORMAT_RGB8,
 
             //TODO: handle this
-            // FlyCapture2::PIXEL_FORMAT_411YUV8,
-            // FlyCapture2::PIXEL_FORMAT_422YUV8,
-            // FlyCapture2::PIXEL_FORMAT_444YUV8,
+            // FC2_PIXEL_FORMAT_411YUV8,
+            // FC2_PIXEL_FORMAT_422YUV8,
+            // FC2_PIXEL_FORMAT_444YUV8,
 
-            FlyCapture2::PIXEL_FORMAT_MONO16,
-            FlyCapture2::PIXEL_FORMAT_RAW16,
-            FlyCapture2::PIXEL_FORMAT_RGB16,
+            FC2_PIXEL_FORMAT_MONO16,
+            FC2_PIXEL_FORMAT_RAW16,
+            FC2_PIXEL_FORMAT_RGB16,
 
             //TODO: handle this
-            // FlyCapture2::PIXEL_FORMAT_MONO12,
-            // FlyCapture2::PIXEL_FORMAT_RAW12,
-            /* FlyCapture2::PIXEL_FORMAT_422YUV8_JPEG*/ })
+            // FC2_PIXEL_FORMAT_MONO12,
+            // FC2_PIXEL_FORMAT_RAW12,
+            /* FC2_PIXEL_FORMAT_422YUV8_JPEG*/ })
     {
         func(pixFmt);
     }
@@ -238,10 +237,10 @@ Imager::Control FC2Imager::Private::enumerateCurrentModePixelFormats()
 
     if (currentVidMode.isFormat7())
     {
-        const auto &f7info = fmt7Modes[(FlyCapture2::Mode)currentVidMode];
+        const auto &f7info = fmt7Modes[(fc2Mode)currentVidMode];
 
         ForEachPossiblePixelFormat(
-            [&f7info, &pixelFormats](FlyCapture2::PixelFormat pixFmt)
+            [&f7info, &pixelFormats](fc2PixelFormat pixFmt)
             {
                 if ((f7info.pixelFormatBitField       & pixFmt) == pixFmt ||
                     (f7info.vendorPixelFormatBitField & pixFmt) == pixFmt)
@@ -265,7 +264,7 @@ Imager::Control FC2Imager::Private::enumerateVideoModes()
 
     for (const auto &vm: videoModes)
     {
-        const FlyCapture2::VideoMode vidMode = vm.first;
+        const fc2VideoMode vidMode = vm.first;
         auto resolution = VID_MODE_RESOLUTION[vidMode];
         QString modeName = "%1x%2 %3"_q % (int)std::get<0>(resolution) % (int)std::get<1>(resolution) % PIXEL_FORMAT_NAME[VID_MODE_PIX_FMT[vidMode]];
         videoMode.add_choice_enum(modeName, (FC2VideoMode)vidMode);
@@ -275,7 +274,7 @@ Imager::Control FC2Imager::Private::enumerateVideoModes()
     {
         QString modeName = "%1x%2 (FMT7: %4)"_q % f7m.second.maxWidth
                                                 % f7m.second.maxHeight
-                                                % (f7m.second.mode - FlyCapture2::MODE_0);
+                                                % (f7m.second.mode - FC2_MODE_0);
 
         videoMode.add_choice_enum(modeName, (FC2VideoMode)f7m.first);
     }
@@ -302,7 +301,7 @@ Imager::Control FC2Imager::Private::getFrameRates(FC2VideoMode vidMode)
 
     if (!vidMode.isFormat7())
     {
-        const auto frloc = videoModes.find((FlyCapture2::VideoMode)vidMode);
+        const auto frloc = videoModes.find((fc2VideoMode)vidMode);
         assert(frloc != videoModes.end());
 
         const auto &frList = frloc->second;
@@ -310,14 +309,14 @@ Imager::Control FC2Imager::Private::getFrameRates(FC2VideoMode vidMode)
         for (const auto fr: frList)
             switch (fr)
             {
-            case FlyCapture2::FRAMERATE_1_875: frameRatesCtrl.add_choice_enum("1.875 fps", fr); break;
-            case FlyCapture2::FRAMERATE_3_75:  frameRatesCtrl.add_choice_enum("3.75 fps",  fr); break;
-            case FlyCapture2::FRAMERATE_7_5:   frameRatesCtrl.add_choice_enum("7.5 fps",   fr); break;
-            case FlyCapture2::FRAMERATE_15:    frameRatesCtrl.add_choice_enum("15 fps",    fr); break;
-            case FlyCapture2::FRAMERATE_30:    frameRatesCtrl.add_choice_enum("30 fps",    fr); break;
-            case FlyCapture2::FRAMERATE_60:    frameRatesCtrl.add_choice_enum("60 fps",    fr); break;
-            case FlyCapture2::FRAMERATE_120:   frameRatesCtrl.add_choice_enum("120 fps",   fr); break;
-            case FlyCapture2::FRAMERATE_240:   frameRatesCtrl.add_choice_enum("240 fps",   fr); break;
+            case FC2_FRAMERATE_1_875: frameRatesCtrl.add_choice_enum("1.875 fps", fr); break;
+            case FC2_FRAMERATE_3_75:  frameRatesCtrl.add_choice_enum("3.75 fps",  fr); break;
+            case FC2_FRAMERATE_7_5:   frameRatesCtrl.add_choice_enum("7.5 fps",   fr); break;
+            case FC2_FRAMERATE_15:    frameRatesCtrl.add_choice_enum("15 fps",    fr); break;
+            case FC2_FRAMERATE_30:    frameRatesCtrl.add_choice_enum("30 fps",    fr); break;
+            case FC2_FRAMERATE_60:    frameRatesCtrl.add_choice_enum("60 fps",    fr); break;
+            case FC2_FRAMERATE_120:   frameRatesCtrl.add_choice_enum("120 fps",   fr); break;
+            case FC2_FRAMERATE_240:   frameRatesCtrl.add_choice_enum("240 fps",   fr); break;
             }
 
         // Initially we set the highest frame rate, so report it as selected
@@ -329,12 +328,12 @@ Imager::Control FC2Imager::Private::getFrameRates(FC2VideoMode vidMode)
         return getEmptyFrameRatesCtrl();
 }
 
-static FlyCapture2::PixelFormat GetFirstSupportedPixelFormat(const FlyCapture2::Format7Info &f7info)
+static fc2PixelFormat GetFirstSupportedPixelFormat(const fc2Format7Info &f7info)
 {
-    FlyCapture2::PixelFormat first = FlyCapture2::UNSPECIFIED_PIXEL_FORMAT;
+    fc2PixelFormat first = FC2_UNSPECIFIED_PIXEL_FORMAT;
     bool firstAlreadySelected = false;
 
-    ForEachPossiblePixelFormat([&](FlyCapture2::PixelFormat pixFmt)
+    ForEachPossiblePixelFormat([&](fc2PixelFormat pixFmt)
                                {
                                    if ((f7info.pixelFormatBitField & pixFmt) == pixFmt && !firstAlreadySelected)
                                    {
@@ -346,43 +345,45 @@ static FlyCapture2::PixelFormat GetFirstSupportedPixelFormat(const FlyCapture2::
     return first;
 }
 
-FC2Imager::FC2Imager(const FlyCapture2::PGRGuid &guid, const ImageHandler::ptr &handler)
+FC2Imager::FC2Imager(const fc2PGRGuid &guid, const ImageHandler::ptr &handler)
 : Imager(handler), dptr()
 {
     //FIXME: if a CHECK fails in Imager constructor, there is a segfault (instead of printing the caught exception)
 
+    FC2_CHECK << fc2CreateContext(&d->context)
+              << "fc2CreateContext";
+
+    FC2_CHECK << fc2Connect(d->context, const_cast<fc2PGRGuid *>(&guid))
+              << "fc2Connect";
+
     d->temperatureAvailable = false;
 
-    // Connect() most likely does not modify the passed GUID
-    FC2_CHECK << d->cam.Connect(const_cast<FlyCapture2::PGRGuid*>(&guid)).GetType()
-              << "Camera::Connect";
+    FC2_CHECK << fc2GetCameraInfo(d->context, &d->camInfo)
+              << "fc2GetCameraInfo";
 
-    FC2_CHECK << d->cam.GetCameraInfo(&d->camInfo).GetType()
-              << "Camera::GetCameraInfo";
-
-    for (int vidMode = 0; vidMode < FlyCapture2::VIDEOMODE_FORMAT7; vidMode++)
-        for (int frameRate = 0; frameRate < FlyCapture2::FRAMERATE_FORMAT7; frameRate++)
+    for (int vidMode = 0; vidMode < FC2_VIDEOMODE_FORMAT7; vidMode++)
+        for (int frameRate = 0; frameRate < FC2_FRAMERATE_FORMAT7; frameRate++)
         {
-            bool supported = false;
+            BOOL supported = FALSE;
 
-            FC2_CHECK << d->cam.GetVideoModeAndFrameRateInfo((FlyCapture2::VideoMode)vidMode, (FlyCapture2::FrameRate)frameRate, &supported).GetType()
-                      << "Camera::GetVideoModeAndFrameRateInfo";
+            FC2_CHECK << fc2GetVideoModeAndFrameRateInfo(d->context, (fc2VideoMode)vidMode, (fc2FrameRate)frameRate, &supported)
+                      << "fc2GetVideoModeAndFrameRateInfo";
 
             if (supported)
-                d->videoModes[(FlyCapture2::VideoMode)vidMode].push_back((FlyCapture2::FrameRate)frameRate);
+                d->videoModes[(fc2VideoMode)vidMode].push_back((fc2FrameRate)frameRate);
         }
 
-    for (int fmt7Mode = 0; fmt7Mode <= FlyCapture2::MODE_31; fmt7Mode++)
+    for (int fmt7Mode = FC2_MODE_0; fmt7Mode < FC2_NUM_MODES; fmt7Mode++)
     {
-        FlyCapture2::Format7Info f7info;
-        f7info.mode = (FlyCapture2::Mode)fmt7Mode;
-        bool supported = false;
+        fc2Format7Info f7info;
+        f7info.mode = (fc2Mode)fmt7Mode;
+        BOOL supported = FALSE;
 
-        FC2_CHECK << d->cam.GetFormat7Info(&f7info, &supported).GetType()
-                  << "Camera::GetFormat7Info";
+        FC2_CHECK << fc2GetFormat7Info(d->context, &f7info, &supported)
+                  << "fc2GetFormat7Info";
 
         if (supported)
-            d->fmt7Modes[(FlyCapture2::Mode)fmt7Mode] = f7info;
+            d->fmt7Modes[(fc2Mode)fmt7Mode] = f7info;
     }
 
     if (!d->videoModes.empty())
@@ -392,17 +393,22 @@ FC2Imager::FC2Imager(const FlyCapture2::PGRGuid &guid, const ImageHandler::ptr &
 
     if (d->currentVidMode.isFormat7())
     {
-        const auto &f7info = d->fmt7Modes[(FlyCapture2::Mode)d->currentVidMode];
+        const auto &f7info = d->fmt7Modes[(fc2Mode)d->currentVidMode];
         d->currentPixFmt = GetFirstSupportedPixelFormat(f7info);
     }
     else
-        d->currentPixFmt = VID_MODE_PIX_FMT[(FlyCapture2::VideoMode)d->currentVidMode];
+        d->currentPixFmt = VID_MODE_PIX_FMT[(fc2VideoMode)d->currentVidMode];
 
     connect(this, &Imager::exposure_changed, this, std::bind(&Private::updateWorkerExposureTimeout, d.get()));
 }
 
 FC2Imager::~FC2Imager()
 {
+    FC2_CHECK << fc2Disconnect(d->context)
+              << "fc2Disconnect";
+
+    FC2_CHECK << fc2DestroyContext(d->context)
+              << "fc2DestroyContext";
 }
 
 Imager::Properties FC2Imager::properties() const
@@ -418,10 +424,10 @@ Imager::Properties FC2Imager::properties() const
     QString interfaceStr;
     switch (d->camInfo.interfaceType)
     {
-    case FlyCapture2::INTERFACE_GIGE: interfaceStr = "Gigabit Ethernet"; break;
-    case FlyCapture2::INTERFACE_IEEE1394: interfaceStr = "IEEE 1394"; break;
-    case FlyCapture2::INTERFACE_USB2: interfaceStr = "USB 2.0"; break;
-    case FlyCapture2::INTERFACE_USB3: interfaceStr = "USB 3.0"; break;
+    case FC2_INTERFACE_GIGE: interfaceStr = "Gigabit Ethernet"; break;
+    case FC2_INTERFACE_IEEE1394: interfaceStr = "IEEE 1394"; break;
+    case FC2_INTERFACE_USB_2: interfaceStr = "USB 2.0"; break;
+    case FC2_INTERFACE_USB_3: interfaceStr = "USB 3.0"; break;
     default: interfaceStr = "unknown"; break;
     }
     properties << Imager::Properties::Property{ "Interface", interfaceStr };
@@ -429,18 +435,18 @@ Imager::Properties FC2Imager::properties() const
     QString driverStr;
     switch (d->camInfo.driverType)
     {
-    case FlyCapture2::DRIVER_1394_CAM:       driverStr = "PGRCam.sys"; break;
-    case FlyCapture2::DRIVER_1394_PRO:       driverStr = "PGR1394.sys"; break;
-    case FlyCapture2::DRIVER_1394_JUJU:      driverStr = "firewire_core"; break;
-    case FlyCapture2::DRIVER_1394_VIDEO1394: driverStr = "video1394"; break;
-    case FlyCapture2::DRIVER_1394_RAW1394:   driverStr = "raw1394"; break;
-    case FlyCapture2::DRIVER_USB_NONE:       driverStr = "native"; break;
-    case FlyCapture2::DRIVER_USB_CAM:        driverStr = "PGRUsbCam.sys"; break;
-    case FlyCapture2::DRIVER_USB3_PRO:       driverStr = "PGRXHCI.sys"; break;
-    case FlyCapture2::DRIVER_GIGE_NONE:      driverStr = "native"; break;
-    case FlyCapture2::DRIVER_GIGE_FILTER:    driverStr = "PGRGigE.sys"; break;
-    case FlyCapture2::DRIVER_GIGE_PRO:       driverStr = "PGRGigEPro.sys"; break;
-    case FlyCapture2::DRIVER_GIGE_LWF:       driverStr = "PgrLwf.sys"; break;
+    case FC2_DRIVER_1394_CAM:       driverStr = "PGRCam.sys"; break;
+    case FC2_DRIVER_1394_PRO:       driverStr = "PGR1394.sys"; break;
+    case FC2_DRIVER_1394_JUJU:      driverStr = "firewire_core"; break;
+    case FC2_DRIVER_1394_VIDEO1394: driverStr = "video1394"; break;
+    case FC2_DRIVER_1394_RAW1394:   driverStr = "raw1394"; break;
+    case FC2_DRIVER_USB_NONE:       driverStr = "native"; break;
+    case FC2_DRIVER_USB_CAM:        driverStr = "PGRUsbCam.sys"; break;
+    case FC2_DRIVER_USB3_PRO:       driverStr = "PGRXHCI.sys"; break;
+    case FC2_DRIVER_GIGE_NONE:      driverStr = "native"; break;
+    case FC2_DRIVER_GIGE_FILTER:    driverStr = "PGRGigE.sys"; break;
+    case FC2_DRIVER_GIGE_PRO:       driverStr = "PGRGigEPro.sys"; break;
+    case FC2_DRIVER_GIGE_LWF:       driverStr = "PgrLwf.sys"; break;
     default: driverStr = "unknown"; break;
     }
     properties << Imager::Properties::Property{ "Driver", driverStr };
@@ -453,31 +459,31 @@ Imager::Properties FC2Imager::properties() const
 
     properties << Imager::Properties::Property{ "Firmware Build Time", d->camInfo.firmwareBuildTime };
 
-    if (d->camInfo.maximumBusSpeed != FlyCapture2::BUSSPEED_SPEED_UNKNOWN)
+    if (d->camInfo.maximumBusSpeed != FC2_BUSSPEED_SPEED_UNKNOWN)
     {
         QString maxBusSpeedStr;
         switch (d->camInfo.maximumBusSpeed)
         {
-        case FlyCapture2::BUSSPEED_S100:        maxBusSpeedStr = "100 Mb/s"; break;
-        case FlyCapture2::BUSSPEED_S200:        maxBusSpeedStr = "200 Mb/s"; break;
-        case FlyCapture2::BUSSPEED_S400:        maxBusSpeedStr = "400 Mb/s"; break;
-        case FlyCapture2::BUSSPEED_S480:        maxBusSpeedStr = "480 Mb/s"; break;
-        case FlyCapture2::BUSSPEED_S800:        maxBusSpeedStr = "800 Mb/s"; break;
-        case FlyCapture2::BUSSPEED_S1600:       maxBusSpeedStr = "1.6 Gb/s"; break;
-        case FlyCapture2::BUSSPEED_S3200:       maxBusSpeedStr = "3.2 Gb/s"; break;
-        case FlyCapture2::BUSSPEED_S5000:       maxBusSpeedStr = "5.0 Gb/s"; break;
-        case FlyCapture2::BUSSPEED_10BASE_T:    maxBusSpeedStr = "10Base-T"; break;
-        case FlyCapture2::BUSSPEED_100BASE_T:   maxBusSpeedStr = "100Base-T"; break;
-        case FlyCapture2::BUSSPEED_1000BASE_T:  maxBusSpeedStr = "1000Base-T"; break;
-        case FlyCapture2::BUSSPEED_10000BASE_T: maxBusSpeedStr = "10000Base-T"; break;
-        case FlyCapture2::BUSSPEED_S_FASTEST:   maxBusSpeedStr = "Fastest available"; break;
-        case FlyCapture2::BUSSPEED_ANY:         maxBusSpeedStr = "Any available"; break;
+        case FC2_BUSSPEED_S100:        maxBusSpeedStr = "100 Mb/s"; break;
+        case FC2_BUSSPEED_S200:        maxBusSpeedStr = "200 Mb/s"; break;
+        case FC2_BUSSPEED_S400:        maxBusSpeedStr = "400 Mb/s"; break;
+        case FC2_BUSSPEED_S480:        maxBusSpeedStr = "480 Mb/s"; break;
+        case FC2_BUSSPEED_S800:        maxBusSpeedStr = "800 Mb/s"; break;
+        case FC2_BUSSPEED_S1600:       maxBusSpeedStr = "1.6 Gb/s"; break;
+        case FC2_BUSSPEED_S3200:       maxBusSpeedStr = "3.2 Gb/s"; break;
+        case FC2_BUSSPEED_S5000:       maxBusSpeedStr = "5.0 Gb/s"; break;
+        case FC2_BUSSPEED_10BASE_T:    maxBusSpeedStr = "10Base-T"; break;
+        case FC2_BUSSPEED_100BASE_T:   maxBusSpeedStr = "100Base-T"; break;
+        case FC2_BUSSPEED_1000BASE_T:  maxBusSpeedStr = "1000Base-T"; break;
+        case FC2_BUSSPEED_10000BASE_T: maxBusSpeedStr = "10000Base-T"; break;
+        case FC2_BUSSPEED_S_FASTEST:   maxBusSpeedStr = "Fastest available"; break;
+        case FC2_BUSSPEED_ANY:         maxBusSpeedStr = "Any available"; break;
         }
 
         properties << Imager::Properties::Property{ "Max. Bus Speed", maxBusSpeedStr };
     }
 
-    if (d->camInfo.interfaceType == FlyCapture2::INTERFACE_GIGE)
+    if (d->camInfo.interfaceType == FC2_INTERFACE_GIGE)
     {
         QString macStr;
         macStr.sprintf("%02X:%02X:%02X:%02X:%02X:%02X", d->camInfo.macAddress.octets[0],
@@ -489,7 +495,7 @@ Imager::Properties FC2Imager::properties() const
 
         properties << Imager::Properties::Property{ "MAC",  macStr };
 
-        auto ipFormatter = [](const FlyCapture2::IPAddress &ip)
+        auto ipFormatter = [](const fc2IPAddress &ip)
                            {
                                QString str;
                                str.sprintf("%d.%d.%d.%d", ip.octets[0], ip.octets[1], ip.octets[2], ip.octets[3]);
@@ -501,16 +507,15 @@ Imager::Properties FC2Imager::properties() const
         properties << Imager::Properties::Property{ "Subnet Mask", ipFormatter(d->camInfo.subnetMask) };
     }
 
-    FlyCapture2::PropertyInfo propInfo;
-    propInfo.type = FlyCapture2::TEMPERATURE;
-    FC2_CHECK << d->cam.GetPropertyInfo(&propInfo).GetType()
-              << "Camera::GetPropertyInfo";
+    fc2PropertyInfo propInfo;
+    propInfo.type = FC2_TEMPERATURE;
+    FC2_CHECK << fc2GetPropertyInfo(d->context, &propInfo)
+              << "fc2GetPropertyInfo";
     if (propInfo.present)
     {
         d->temperatureAvailable = true;
         properties << Temperature;
     }
-
 
     return properties;
 }
@@ -524,7 +529,7 @@ void FC2Imager::Private::changeVideoMode(const FC2VideoMode &newMode)
 {
     if (newMode.isFormat7())
     {
-        const auto &fmt7 = fmt7Modes[(FlyCapture2::Mode)newMode];
+        const auto &fmt7 = fmt7Modes[(fc2Mode)newMode];
 
         roiValidator = std::make_shared<ROIValidator>(
             std::list<ROIValidator::Rule>{ ROIValidator::x_multiple(fmt7.offsetHStepSize),
@@ -541,7 +546,7 @@ void FC2Imager::Private::changeVideoMode(const FC2VideoMode &newMode)
     }
     else
     {
-        const auto &res = VID_MODE_RESOLUTION[(FlyCapture2::VideoMode)newMode];
+        const auto &res = VID_MODE_RESOLUTION[(fc2VideoMode)newMode];
         const int width  = std::get<0>(res);
         const int height = std::get<1>(res);
 
@@ -550,7 +555,7 @@ void FC2Imager::Private::changeVideoMode(const FC2VideoMode &newMode)
         roiValidator = std::make_shared<ROIValidator>(std::list<ROIValidator::Rule>{ });
 
         // Initially choose the highest frame rate
-        currentFrameRate = *videoModes[(FlyCapture2::VideoMode)newMode].rbegin();
+        currentFrameRate = *videoModes[(fc2VideoMode)newMode].rbegin();
     }
 
     currentVidMode = newMode;
@@ -580,28 +585,28 @@ void FC2Imager::setControl(const Imager::Control& control)
     }
     else if (control.id == ControlID::FrameRate)
     {
-        d->currentFrameRate = control.get_value_enum<FlyCapture2::FrameRate>();
+        d->currentFrameRate = control.get_value_enum<fc2FrameRate>();
         startLive();
     }
     else if (control.id == ControlID::PixelFormat)
     {
-        d->currentPixFmt = control.get_value_enum<FlyCapture2::PixelFormat>();
+        d->currentPixFmt = control.get_value_enum<fc2PixelFormat>();
         startLive();
     }
     else
     {
-        FlyCapture2::Property prop;
+        fc2Property prop;
 
         if (control.id == ControlID::WhiteBalanceRed ||
             control.id == ControlID::WhiteBalanceBlue)
         {
-            prop.type = FlyCapture2::WHITE_BALANCE;
+            prop.type = FC2_WHITE_BALANCE;
         }
         else
-            prop.type = (FlyCapture2::PropertyType)control.id;
+            prop.type = (fc2PropertyType)control.id;
 
-        FC2_CHECK << d->cam.GetProperty(&prop).GetType()
-                  << "Camera::GetProperty";
+        FC2_CHECK << fc2GetProperty(d->context, &prop)
+                  << "fc2GetProperty";
 
         // When the on/off or auto state of one of the white balance controls (Red, Blue) changes,
         // the other's does too (as it is in fact a single FC2 control)
@@ -626,8 +631,8 @@ void FC2Imager::setControl(const Imager::Control& control)
             prop.valueA = control.value.toInt();
         }
 
-        FC2_CHECK << d->cam.SetProperty(&prop).GetType()
-                  << "Camera::SetProperty";
+        FC2_CHECK << fc2SetProperty(d->context, &prop)
+                  << "fc2SetProperty";
 
         if (wbAutoOnOffChanged)
         {
@@ -649,7 +654,7 @@ void FC2Imager::setControl(const Imager::Control& control)
     emit changed(control);
 
     if (d->ctrlShutter.valid() &&
-        (FlyCapture2::FRAME_RATE == control.id ||
+        (FC2_FRAME_RATE == control.id ||
          ControlID::FrameRate    == control.id ||
          ControlID::VideoMode    == control.id ||
          ControlID::PixelFormat  == control.id))
@@ -675,10 +680,10 @@ void FC2Imager::readTemperature()
 {
     if (d->temperatureAvailable)
     {
-        FlyCapture2::Property prop;
-        prop.type = FlyCapture2::TEMPERATURE;
-        FC2_CHECK << d->cam.GetProperty(&prop).GetType()
-                  << "Camera::GetProperty";
+        fc2Property prop;
+        prop.type = FC2_TEMPERATURE;
+        FC2_CHECK << fc2GetProperty(d->context, &prop)
+                  << "fc2GetProperty";
 
         // Calculation as in CamSettingsPage.cpp from FlyCapture2 SDK. Strangely, both "absolute capable"
         // and "unit abbreviation" fields are not taken into account (e.g. on Chameleon3 CM3-U3-13S2M the indicated
@@ -690,7 +695,7 @@ void FC2Imager::readTemperature()
     }
 }
 
-static void UpdateRangeAndStep(Imager::Control &control, const FlyCapture2::PropertyInfo &propInfo)
+static void UpdateRangeAndStep(Imager::Control &control, const fc2PropertyInfo &propInfo)
 {
     if (propInfo.absValSupported)
     {
@@ -710,32 +715,32 @@ static void UpdateRangeAndStep(Imager::Control &control, const FlyCapture2::Prop
     }
 }
 
-Imager::Control FC2Imager::Private::createControlFromFC2Property(const FlyCapture2::PropertyInfo &propInfo)
+Imager::Control FC2Imager::Private::createControlFromFC2Property(const fc2PropertyInfo &propInfo)
 {
     Control control{ propInfo.type };
     control.type = Control::Type::Number;
 
-    FlyCapture2::Property prop;
+    fc2Property prop;
     prop.type = propInfo.type;
-    FC2_CHECK << cam.GetProperty(&prop).GetType()
-              << "Camera::GetProperty";
+    FC2_CHECK << fc2GetProperty(context, &prop)
+              << "fc2GetProperty";
 
     switch (propInfo.type)
     {
-        case FlyCapture2::BRIGHTNESS:       control.name = "Brightness"; break;
+        case FC2_BRIGHTNESS:      control.name = "Brightness"; break;
 
-        // This is not "exposure time" (see FlyCapture2::SHUTTER for that);
+        // This is not "exposure time" (see FC2_SHUTTER for that);
         // instead, it regulates the desired overall image brightness by changing
         // values of shutter and gain - if they are set to auto
-        case FlyCapture2::AUTO_EXPOSURE:    control.name = "Exposure"; break;
+        case FC2_AUTO_EXPOSURE:   control.name = "Exposure"; break;
 
-        case FlyCapture2::SHARPNESS:       control.name = "Sharpness"; break;
+        case FC2_SHARPNESS:       control.name = "Sharpness"; break;
 
-        case FlyCapture2::HUE:             control.name = "Hue"; break;
-        case FlyCapture2::SATURATION:      control.name = "Saturation"; break;
-        case FlyCapture2::GAMMA:           control.name = "Gamma"; break;
+        case FC2_HUE:             control.name = "Hue"; break;
+        case FC2_SATURATION:      control.name = "Saturation"; break;
+        case FC2_GAMMA:           control.name = "Gamma"; break;
 
-        case FlyCapture2::SHUTTER:
+        case FC2_SHUTTER:
         {
             control.name = "Shutter";
             control.is_exposure = true;
@@ -749,14 +754,14 @@ Imager::Control FC2Imager::Private::createControlFromFC2Property(const FlyCaptur
             break;
         }
 
-        case FlyCapture2::GAIN:            control.name = "Gain"; break;
-        case FlyCapture2::IRIS:            control.name = "Iris"; break;
-        case FlyCapture2::FOCUS:           control.name = "Focus"; break;
-        case FlyCapture2::WHITE_BALANCE:   control.name = "White Balance"; break;
-        case FlyCapture2::FRAME_RATE:      control.name = "Frame Rate"; break;
-        case FlyCapture2::ZOOM:            control.name = "Zoom"; break;
-        case FlyCapture2::PAN:             control.name = "Pan"; break;
-        case FlyCapture2::TILT:            control.name = "Tilt"; break;
+        case FC2_GAIN:            control.name = "Gain"; break;
+        case FC2_IRIS:            control.name = "Iris"; break;
+        case FC2_FOCUS:           control.name = "Focus"; break;
+        case FC2_WHITE_BALANCE:   control.name = "White Balance"; break;
+        case FC2_FRAME_RATE:      control.name = "Frame Rate"; break;
+        case FC2_ZOOM:            control.name = "Zoom"; break;
+        case FC2_PAN:             control.name = "Pan"; break;
+        case FC2_TILT:            control.name = "Tilt"; break;
 
         // Control not yet supported
         default: control.name = ""; return control;
@@ -781,13 +786,13 @@ Imager::Control FC2Imager::Private::createControlFromFC2Property(const FlyCaptur
         control.decimals = 6;
 
         prop.absControl = true;
-        FC2_CHECK << cam.SetProperty(&prop).GetType()
-                  << "Camera::SetProperty - enable absolute control";
+        FC2_CHECK << fc2SetProperty(context, &prop)
+                  << "fc2SetProperty - enable absolute control";
 
         if (propInfo.readOutSupported)
         {
-            FC2_CHECK << cam.GetProperty(&prop).GetType()
-                      << "Camera::GetProperty";
+            FC2_CHECK << fc2GetProperty(context, &prop)
+                      << "fc2GetProperty";
 
             control.value = prop.absValue;
         }
@@ -819,29 +824,29 @@ Imager::Controls FC2Imager::controls() const
 
     controls.push_back(d->getFrameRates(d->currentVidMode));
 
-    // WHITE_BALANCE is handled after this loop
-    for (FlyCapture2::PropertyType propType: { FlyCapture2::BRIGHTNESS,
-                                               FlyCapture2::AUTO_EXPOSURE,
-                                               FlyCapture2::SHARPNESS,
-                                               FlyCapture2::HUE,
-                                               FlyCapture2::SATURATION,
-                                               FlyCapture2::GAMMA,
-                                               FlyCapture2::IRIS,
-                                               FlyCapture2::FOCUS,
-                                               FlyCapture2::ZOOM,
-                                               FlyCapture2::PAN,
-                                               FlyCapture2::TILT,
-                                               FlyCapture2::SHUTTER,
-                                               FlyCapture2::GAIN,
-                                               FlyCapture2::TRIGGER_MODE,
-                                               FlyCapture2::TRIGGER_DELAY,
-                                               FlyCapture2::FRAME_RATE })
+    // FC2_WHITE_BALANCE is handled after this loop
+    for (fc2PropertyType propType: { FC2_BRIGHTNESS,
+                                     FC2_AUTO_EXPOSURE,
+                                     FC2_SHARPNESS,
+                                     FC2_HUE,
+                                     FC2_SATURATION,
+                                     FC2_GAMMA,
+                                     FC2_IRIS,
+                                     FC2_FOCUS,
+                                     FC2_ZOOM,
+                                     FC2_PAN,
+                                     FC2_TILT,
+                                     FC2_SHUTTER,
+                                     FC2_GAIN,
+                                     FC2_TRIGGER_MODE,
+                                     FC2_TRIGGER_DELAY,
+                                     FC2_FRAME_RATE })
     {
-        FlyCapture2::PropertyInfo propInfo;
+        fc2PropertyInfo propInfo;
         propInfo.type = propType;
 
-        FC2_CHECK << d->cam.GetPropertyInfo(&propInfo).GetType()
-                  << "Camera::GetPropertyInfo";
+        FC2_CHECK << fc2GetPropertyInfo(d->context, &propInfo)
+                  << "fc2GetPropertyInfo";
 
         VerifyRanges(propInfo);
 
@@ -853,7 +858,7 @@ Imager::Controls FC2Imager::controls() const
             if (!control.valid())
                 continue;
 
-            if (propInfo.type == FlyCapture2::SHUTTER)
+            if (propInfo.type == FC2_SHUTTER)
                 d->ctrlShutter = control; // See the comment for ctrlShutter
 
             controls.push_back(std::move(control));
@@ -885,17 +890,17 @@ void FC2Imager::setROI(const QRect &roi)
 
 void FC2Imager::startLive()
 {
-    restart([this] { return std::make_shared<FC2ImagerWorker>(d->cam, d->currentVidMode, d->currentFrameRate, d->currentPixFmt, d->currentROI); });
+    restart([this] { return std::make_shared<FC2ImagerWorker>(d->context, d->currentVidMode, d->currentFrameRate, d->currentPixFmt, d->currentROI); });
     qDebug() << "Video streaming started successfully";
 }
 
 void FC2Imager::Private::updateShutterCtrl()
 {
-    FlyCapture2::PropertyInfo propInfo;
-    propInfo.type = FlyCapture2::SHUTTER;
+    fc2PropertyInfo propInfo;
+    propInfo.type = FC2_SHUTTER;
 
-    FC2_CHECK << cam.GetPropertyInfo(&propInfo).GetType()
-              << "Camera::GetPropertyInfo - shutter";
+    FC2_CHECK << fc2GetPropertyInfo(context, &propInfo)
+              << "fc2GetPropertyInfo - shutter";
 
     VerifyRanges(propInfo);
 
@@ -904,10 +909,10 @@ void FC2Imager::Private::updateShutterCtrl()
 
 void FC2Imager::Private::createWhiteBalanceCtrls()
 {
-    FlyCapture2::PropertyInfo propInfo;
-    propInfo.type = FlyCapture2::WHITE_BALANCE;
-    FC2_CHECK << cam.GetPropertyInfo(&propInfo).GetType()
-              << "Camera::GetPropertyInfo - white balance";
+    fc2PropertyInfo propInfo;
+    propInfo.type = FC2_WHITE_BALANCE;
+    FC2_CHECK << fc2GetPropertyInfo(context, &propInfo)
+              << "fc2GetPropertyInfo - white balance";
 
     if (propInfo.present)
     {
@@ -915,10 +920,10 @@ void FC2Imager::Private::createWhiteBalanceCtrls()
 
         auto control = createControlFromFC2Property(propInfo);
 
-        FlyCapture2::Property prop;
-        prop.type = FlyCapture2::WHITE_BALANCE;
-        FC2_CHECK << cam.GetProperty(&prop).GetType()
-                  << "Camera::GetProperty - white balance";
+        fc2Property prop;
+        prop.type = FC2_WHITE_BALANCE;
+        FC2_CHECK << fc2GetProperty(context, &prop)
+                  << "fc2GetProperty - white balance";
 
         ctrlWhiteBalanceRed = control;
         ctrlWhiteBalanceBlue = control;

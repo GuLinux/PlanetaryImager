@@ -19,17 +19,15 @@
 #ifndef FC2_IMAGER_WORKER_H
 #define FC2_IMAGER_WORKER_H
 
+#include <C/FlyCapture2_C.h>
 #include <commons/utils.h>
-//#include <dc1394/dc1394.h>
 #include <drivers/imagerthread.h>
-#include <Camera.h>
-#include <Image.h>
 
 
-/// Contains either a value from FlyCapture2::VideoMode, or a value from FlyCapture2::Mode (i.e. a Format7 mode) + FMT7_BASE
+/// Contains either a value from fc2VideoMode, or a value from fc2Mode (i.e. a Format7 mode) + FMT7_BASE
 class FC2VideoMode
 {
-    static constexpr int FMT7_BASE = FlyCapture2::VideoMode::NUM_VIDEOMODES + 1;
+    static constexpr int FMT7_BASE = FC2_NUM_VIDEOMODES + 1;
 
     int mode;
 
@@ -38,41 +36,37 @@ public:
     FC2VideoMode(): mode(-1) { }
     FC2VideoMode(const FC2VideoMode &) = default;
     FC2VideoMode(int _mode): mode(_mode) { }
-    FC2VideoMode(FlyCapture2::VideoMode vidMode): mode(vidMode) { }
-    FC2VideoMode(FlyCapture2::Mode fmt7Mode): mode(fmt7Mode + FMT7_BASE) { }
+    FC2VideoMode(fc2VideoMode vidMode): mode(vidMode) { }
+    FC2VideoMode(fc2Mode fmt7Mode): mode(fmt7Mode + FMT7_BASE) { }
 
-    explicit operator FlyCapture2::VideoMode() const
+    explicit operator fc2VideoMode() const
     {
         if (isFormat7())
             throw std::runtime_error("Cannot treat Format7 mode as non-Format7");
         else
-            return (FlyCapture2::VideoMode)mode;
+            return (fc2VideoMode)mode;
     }
 
-    explicit operator FlyCapture2::Mode() const
+    explicit operator fc2Mode() const
     {
         if (!isFormat7())
             throw std::runtime_error("Cannot treat non-Format7 mode as Format7");
         else
-            return (FlyCapture2::Mode)(mode - FMT7_BASE);
+            return (fc2Mode)(mode - FMT7_BASE);
     }
 
-    explicit operator int()                    const { return mode; }
+    explicit operator int() const { return mode; }
 
-    bool isFormat7() const { return mode >= FMT7_BASE + FlyCapture2::MODE_0; }
+    bool isFormat7() const { return mode >= FMT7_BASE + FC2_MODE_0; }
 };
 
 
 class FC2ImagerWorker: public ImagerThread::Worker
 {
-    FlyCapture2::Camera &camera;
+    fc2Context context;
 
-    FlyCapture2::Image image;
+    fc2Image image;
 
-//    dc1394camera_t *camera;
-//    dc1394video_frame_t *nativeFrame; ///< The most recently captured frame
-//    dc1394video_mode_t vidMode;
-//
     struct
     {
         bool initialized; ///< If 'false', the remaining fields have not been set yet
@@ -82,27 +76,17 @@ class FC2ImagerWorker: public ImagerThread::Worker
         bool needsYUVtoRGBconversion;
         size_t srcBytesPerLine; ///< Set only for YUV formats
     } frameInfo;
-//
-//    /// Used for YUV->RGB conversion
-//    /** Required, because conversion function expects buffers without line padding,
-//        which may be present in a dequeued capture buffer. */
-//    struct
-//    {
-//        std::unique_ptr<uint8_t[]> src, dest;
-//    } conversionBuf;
-//
+
     void initFrameInfo();
-//
+
     LOG_C_SCOPE(FC2ImagerWorker);
 
 public:
 
-//    static constexpr uint32_t NUM_DMA_BUFFERS = 4;
-
-    FC2ImagerWorker(FlyCapture2::Camera &_camera,
+    FC2ImagerWorker(fc2Context _context,
                     FC2VideoMode vidMode,
-                    FlyCapture2::FrameRate frameRate,
-                    FlyCapture2::PixelFormat pixFmt,
+                    fc2FrameRate frameRate,
+                    fc2PixelFormat pixFmt,
                     /// Must be already validated; also used as the initial frame size for Format7 modes
                     const QRect &roi);
 

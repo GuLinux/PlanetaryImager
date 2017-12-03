@@ -16,7 +16,6 @@
  *
  */
 
-#include <thread> //TESTING ########
 #include <QRect>
 
 #include "fc2_exception.h"
@@ -30,152 +29,140 @@ constexpr int MAX_NUM_INCONSISTENT_FRAMES_TO_SKIP = 15;
 
 
 FC2ImagerWorker::FC2ImagerWorker(
-    FlyCapture2::Camera &_camera,
+    fc2Context _context,
     FC2VideoMode vidMode,
-    FlyCapture2::FrameRate frameRate,
-    FlyCapture2::PixelFormat pixFmt,
+    fc2FrameRate frameRate,
+    fc2PixelFormat pixFmt,
     /// Must be already validated; also used as the initial frame size for Format7 modes
     const QRect &roi)
-: camera(_camera)
+: context(_context)
 {
     frameInfo.initialized = false;
 
     if (vidMode.isFormat7())
     {
-        FlyCapture2::Format7ImageSettings fmt7settings;
-
-        fmt7settings.mode = (FlyCapture2::Mode)vidMode;
+        fc2Format7ImageSettings fmt7settings;
+        memset(&fmt7settings, 0, sizeof(fmt7settings));
+        fmt7settings.mode = (fc2Mode)vidMode;
         fmt7settings.offsetX = roi.left();
         fmt7settings.offsetY = roi.top();
         fmt7settings.width = roi.width();
         fmt7settings.height = roi.height();
         fmt7settings.pixelFormat = pixFmt;
 
-        FC2_CHECK << camera.SetFormat7Configuration(&fmt7settings, 100.0f).GetType()
-                  << "Camera::SetFormat7Configuration";
+        FC2_CHECK << fc2SetFormat7Configuration(context, &fmt7settings, 100.0f)
+                  << "fc2SetFormat7Configuration";
     }
     else
     {
-        std::cout << "Passing " << (int)vidMode << ", " << (int)frameRate << std::endl;  //TESTING ################
-        FC2_CHECK << camera.SetVideoModeAndFrameRate((FlyCapture2::VideoMode)vidMode, frameRate).GetType()
-                  << "Camera::SetVideoModeAndFrameRate";
+        FC2_CHECK << fc2SetVideoModeAndFrameRate(context, (fc2VideoMode)vidMode, frameRate)
+                  << "fc2SetVideoModeAndFrameRate";
     }
 
-    FC2_CHECK << camera.StartCapture(nullptr, nullptr).GetType()
-              << "Camera::StartCapture";
+    FC2_CHECK << fc2StartCapture(context)
+              << "fc2StartCapture";
+
+    memset(&image, 0, sizeof(image));
+    FC2_CHECK << fc2CreateImage(&image)
+              << "fc2CreateImage";
 }
 
 FC2ImagerWorker::~FC2ImagerWorker()
 {
-    FC2_CHECK << camera.StopCapture().GetType()
-              << "Camera::StopCapture";
+    FC2_CHECK << fc2StopCapture(context)
+              << "fc2StopCapture";
+
+    FC2_CHECK << fc2DestroyImage(&image)
+              << "fc2DestroyImage";
 }
 
 void FC2ImagerWorker::initFrameInfo()
 {
-    const auto pixFmt = image.GetPixelFormat();
-
-    switch (pixFmt)
+    switch (image.format)
     {
-    case FlyCapture2::PIXEL_FORMAT_MONO8:
-    case FlyCapture2::PIXEL_FORMAT_MONO12:
-    case FlyCapture2::PIXEL_FORMAT_MONO16:
-    case FlyCapture2::PIXEL_FORMAT_S_MONO16:
+    case FC2_PIXEL_FORMAT_MONO8:
+    case FC2_PIXEL_FORMAT_MONO12:
+    case FC2_PIXEL_FORMAT_MONO16:
+    case FC2_PIXEL_FORMAT_S_MONO16:
         frameInfo.colorFormat = Frame::ColorFormat::Mono; break;
 
     // YUV formats will be converted to RGB before returning the frame
-    case FlyCapture2::PIXEL_FORMAT_411YUV8:
-    case FlyCapture2::PIXEL_FORMAT_422YUV8:
-    case FlyCapture2::PIXEL_FORMAT_444YUV8:
-    case FlyCapture2::PIXEL_FORMAT_RGB8:
-    case FlyCapture2::PIXEL_FORMAT_RGB16:
+    case FC2_PIXEL_FORMAT_411YUV8:
+    case FC2_PIXEL_FORMAT_422YUV8:
+    case FC2_PIXEL_FORMAT_444YUV8:
+    case FC2_PIXEL_FORMAT_RGB8:
+    case FC2_PIXEL_FORMAT_RGB16:
         frameInfo.colorFormat = Frame::ColorFormat::RGB; break;
 
-    case FlyCapture2::PIXEL_FORMAT_RAW8:
-    case FlyCapture2::PIXEL_FORMAT_RAW12:
-    case FlyCapture2::PIXEL_FORMAT_RAW16:
-        switch (image.GetBayerTileFormat())
+    case FC2_PIXEL_FORMAT_RAW8:
+    case FC2_PIXEL_FORMAT_RAW12:
+    case FC2_PIXEL_FORMAT_RAW16:
+        switch (image.bayerFormat)
         {
-        case FlyCapture2::RGGB: frameInfo.colorFormat = Frame::ColorFormat::Bayer_RGGB; break;
-        case FlyCapture2::BGGR: frameInfo.colorFormat = Frame::ColorFormat::Bayer_BGGR; break;
-        case FlyCapture2::GBRG: frameInfo.colorFormat = Frame::ColorFormat::Bayer_GBRG; break;
-        case FlyCapture2::GRBG: frameInfo.colorFormat = Frame::ColorFormat::Bayer_GRBG; break;
+        case FC2_BT_RGGB: frameInfo.colorFormat = Frame::ColorFormat::Bayer_RGGB; break;
+        case FC2_BT_BGGR: frameInfo.colorFormat = Frame::ColorFormat::Bayer_BGGR; break;
+        case FC2_BT_GBRG: frameInfo.colorFormat = Frame::ColorFormat::Bayer_GBRG; break;
+        case FC2_BT_GRBG: frameInfo.colorFormat = Frame::ColorFormat::Bayer_GRBG; break;
         }
         break;
     }
 
-    frameInfo.bitsPerChannel = image.GetBitsPerPixel();
+    unsigned int bpch;
+    FC2_CHECK << fc2DetermineBitsPerPixel(image.format, &bpch)
+              << "fc2DetermineBitsPerPixel";
+    frameInfo.bitsPerChannel = bpch;
 
-    switch (pixFmt)
+    switch (image.format)
     {
-    case FlyCapture2::PIXEL_FORMAT_411YUV8: frameInfo.srcBytesPerLine = (3 * image.GetCols() + 1) / 2; break;
-    case FlyCapture2::PIXEL_FORMAT_422YUV8: frameInfo.srcBytesPerLine = 2 * image.GetCols(); break;
-    case FlyCapture2::PIXEL_FORMAT_444YUV8: frameInfo.srcBytesPerLine = 3 * image.GetCols(); break;
+    case FC2_PIXEL_FORMAT_411YUV8: frameInfo.srcBytesPerLine = (3 * image.cols + 1) / 2; break;
+    case FC2_PIXEL_FORMAT_422YUV8: frameInfo.srcBytesPerLine = 2 * image.cols; break;
+    case FC2_PIXEL_FORMAT_444YUV8: frameInfo.srcBytesPerLine = 3 * image.cols; break;
 
-    case FlyCapture2::PIXEL_FORMAT_RGB8:    frameInfo.srcBytesPerLine = 3 * image.GetCols(); break;
-    case FlyCapture2::PIXEL_FORMAT_RGB16:   frameInfo.srcBytesPerLine = 6 * image.GetCols(); break;
+    case FC2_PIXEL_FORMAT_RGB8:    frameInfo.srcBytesPerLine = 3 * image.cols; break;
+    case FC2_PIXEL_FORMAT_RGB16:   frameInfo.srcBytesPerLine = 6 * image.cols; break;
 
     default: frameInfo.srcBytesPerLine = 0; break;
     }
 
-    if (pixFmt == FlyCapture2::PIXEL_FORMAT_RGB8 ||
-        pixFmt == FlyCapture2::PIXEL_FORMAT_RGB16)
+    if (image.format == FC2_PIXEL_FORMAT_RGB8 ||
+        image.format == FC2_PIXEL_FORMAT_RGB16)
     {
         frameInfo.bitsPerChannel /= 3;
     }
 }
-
-//static bool isYUV(dc1394color_coding_t colorCoding)
-//{
-//    return colorCoding == DC1394_COLOR_CODING_YUV411 ||
-//           colorCoding == DC1394_COLOR_CODING_YUV422 ||
-//           colorCoding == DC1394_COLOR_CODING_YUV444;
-//}
 
 Frame::ptr FC2ImagerWorker::shoot()
 {
 //    //TODO: fail gracefully if cannot capture
 
     int badFrameCounter = 0;
-    FlyCapture2::Error result;
+    fc2Error result;
     while (badFrameCounter < MAX_NUM_INCONSISTENT_FRAMES_TO_SKIP &&
-           (result = camera.RetrieveBuffer(&image)).GetType() == FlyCapture2::PGRERROR_IMAGE_CONSISTENCY_ERROR)
+           (result = fc2RetrieveBuffer(context, &image)) == FC2_ERROR_IMAGE_CONSISTENCY_ERROR)
     {
         qWarning() << "Image consistency error detected, skipping frame";
         badFrameCounter++;
     }
 
-    FC2_CHECK << result.GetType() << "Camera::RetrieveBuffer";
+    FC2_CHECK << result << "fc2RetrieveBuffer";
 
     if (!frameInfo.initialized)
     {
         initFrameInfo();
         frameInfo.initialized = true;
-
-//        if (isYUV(nativeFrame->color_coding))
-//        {
-//            frameInfo.needsYUVtoRGBconversion = true;
-//            conversionBuf.src = std::make_unique<uint8_t[]>(nativeFrame->total_bytes); // Pass 'total_bytes' for simplicity; we may use less
-//            conversionBuf.dest = std::make_unique<uint8_t[]>(nativeFrame->size[0] * nativeFrame->size[1] * 3); // 3 bytes/pixel (R, G, B)
-//        }
-//        else
-//            frameInfo.needsYUVtoRGBconversion = false;
-
     }
 
     auto frame = std::make_shared<Frame>(frameInfo.bitsPerChannel,
                                          frameInfo.colorFormat,
-                                         QSize(image.GetCols(), image.GetRows()),
+                                         QSize(image.cols, image.rows),
                                          Frame::ByteOrder::LittleEndian);
 
-    const uint8_t *srcLine = image.GetData();
-    const ptrdiff_t srcStride = image.GetStride();
+    const uint8_t *srcLine = image.pData;
+    const ptrdiff_t srcStride = image.stride;
 
     uint8_t *destLine = frame->mat().data;
     const size_t destStride = frame->mat().step[0];
     size_t numDestCopyBytes; // Number of bytes per line to copy into 'frame'
-
-    //...
 
     numDestCopyBytes = std::min(destStride, (size_t)srcStride);
 

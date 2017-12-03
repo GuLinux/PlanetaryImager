@@ -19,8 +19,7 @@
 #ifndef FC2_EXCEPTION_H
 #define FC2_EXCEPTION_H
 
-#include <Error.h>
-#include <FlyCapture2Defs.h>
+#include <C/FlyCapture2_C.h>
 #include <QDebug>
 
 #include "drivers/imagerexception.h"
@@ -31,6 +30,6 @@ public:
     FC2Exception(int code, const std::string &message): Imager::exception(code, message) { }
 };
 
-#define FC2_CHECK C_ERROR_CHECK(std::not_equal_to<int>, FC2Exception, FlyCapture2::PGRERROR_OK)
+#define FC2_CHECK C_ERROR_CHECK(std::not_equal_to<int>, FC2Exception, FC2_ERROR_OK)
 
 #endif // FC2_EXCEPTION_H

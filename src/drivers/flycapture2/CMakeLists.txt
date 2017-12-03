@@ -6,7 +6,7 @@ if(CMAKE_SYSTEM_NAME STREQUAL "Windows")
     #set(FC2_DLL_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/FC2CCD_Windows_SDK_x64_LatestVersion/x64/dll)
 else()
   set(FC2_INCLUDE_DIRECTORY /usr/include/flycapture)
-  set(FC2_LIBRARY           flycapture)
+  set(FC2_LIBRARY flycapture flycapture-c)
 endif()
 
 file(GLOB fc2_SRCS *.cpp)
