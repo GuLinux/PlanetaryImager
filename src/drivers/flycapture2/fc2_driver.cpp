@@ -43,7 +43,6 @@ public:
 
 FC2Camera::FC2Camera(fc2Context context, const fc2PGRGuid &_guid): guid(_guid)
 {
-    std::cout << "Connect to " << context << std::endl;
     FC2_CHECK << fc2Connect(context, const_cast<fc2PGRGuid*>(&guid))
               << "fc2Connect";
 
