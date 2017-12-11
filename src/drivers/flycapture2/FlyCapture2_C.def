@@ -1,3 +1,8 @@
+;
+; libFlyCapture2_C.a can be regenerated from this file with:
+;
+;    dlltool -d FlyCapture2_C.def -l libFlyCapture2_C.a
+;
 LIBRARY FlyCapture2_C.dll
 EXPORTS
 fc2Connect
