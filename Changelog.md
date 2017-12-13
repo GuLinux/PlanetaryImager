@@ -1,5 +1,7 @@
 ## 0.8.0 2017-xx-xx
   - feature: scripting support
+  - feature: IIDC driver
+  - feature: FlyCapture2 driver
   
 ## 0.7.0 2017-10-01
  - feature: adding channel selection to histogram

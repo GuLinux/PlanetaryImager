@@ -1,0 +1,5 @@
+{
+  "name": "FlyCapture2",
+  "description": "FLIR/Point Grey native API",
+  "version": "0.8"
+}

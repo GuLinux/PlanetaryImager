@@ -176,6 +176,11 @@ void V4L2Imager::setControl(const Control &setting)
     Control new_value = setting;
     new_value.value = find_if( d->resolutions.begin(), d->resolutions.end(), [&](const V4L2Formats::Resolution::ptr &r){ return *r == *current; } ) - d->resolutions.begin();
     emit changed(new_value);
+    //TESTING ###############
+    Control newCtrl{ 1111 };
+    newCtrl.name = "Newly Added";
+    emit control_added(newCtrl);
+    //END TESTING ###############
     return;
   }
   auto control = find_if(begin(d->controls), end(d->controls), [=](const V4L2Control::ptr &c) { return setting.id == c->control().id; });

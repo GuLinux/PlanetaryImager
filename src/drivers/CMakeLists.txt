@@ -12,6 +12,7 @@ add_subdirectory(simulator)
 add_subdirectory(qhy)
 add_subdirectory(v4l2)
 add_subdirectory(iidc)
+add_subdirectory(flycapture2)
 
 
 message(STATUS "Will build the following drivers:")
