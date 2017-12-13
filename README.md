@@ -116,7 +116,7 @@ If you camera is not detected, you may need to use a newer version of `libdc1394
 FlyCapture2 (FLIR/Point Grey)
 -----------------------------
 
-Installation of FlyCapture2 SDK is required (available from the FLIR website). On Windows, make sure to add the binaries directory to `PATH` (by default, `C:\Program Files\Point Grey Research\FlyCapture2\bin64` or `C:\Program Files (x86)\Point Grey Research\FlyCapture2\bin`).
+Installation of FlyCapture2 SDK is required (available from the FLIR website). On Windows, make sure to add the binaries directory to `PATH` (by default, `C:\Program Files\Point Grey Research\FlyCapture2\bin64` or `C:\Program Files (x86)\Point Grey Research\FlyCapture2\bin`). On Linux, if your distribution does not use `.deb` package format (which is used by the SDK), simply unpack the packages manually. In any case, run the install script to create `udev` device rules.
 
 When building from sources, make sure that the `FC2_INCLUDE_DIR` variable in `src/drivers/flycapture2/CMakeLists.txt` is set correctly.
 
