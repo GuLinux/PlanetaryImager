@@ -3,6 +3,7 @@
 
 Qt capture software for astronomy, mainly planetary shooting.
 
+
 Useful Links
 ------------
 
@@ -11,10 +12,11 @@ Useful Links
  * [Development releases](https://www.dropbox.com/sh/7ofjp0s6gbelff4/AAAmNhLU4sDKuTKPojSxA-P7a/development?dl=0&lst=)
  * [Report a bug](https://github.com/GuLinux/PlanetaryImager/issues)
 
+ 
 Supported Cameras
 -----------------
 
-Mainly ZWO ASI Cameras (my camera is an ASI178mm), v4l2 (including DMK and Celestron Skyris), QHY, IIDC (including all FLIR/Point Grey FireWire and USB 2/3 models).
+ZWO ASI Cameras (my camera is an ASI178mm), v4l2 (including DMK and Celestron Skyris), QHY, FLIR/Point Grey via FlyCapture2 (all interfaces), IIDC (including all FLIR/Point Grey FireWire and USB models).
 
 
 Requirements
@@ -27,7 +29,9 @@ Requirements
  * fxload (to load firmware on QHY cameras)
  * ccfits
  * libdc1394 (for IIDC driver)
+ * FlyCapture2 SDK (for FLIR/Point Grey cameras)
 
+ 
 Source download
 ---------------
 
@@ -54,7 +58,7 @@ If not, please try binary releases first.
     cmake .. -DCMAKE_INSTALL_PREFIX=/usr
     make all && sudo make install
 
-To enable a driver not enabled by default, either add `DEFAULT_ON` as argument to `add_driver()` in driver's CMakeLists.txt file, or set `BUILD_DRIVER_xxx:BOOL=ON` in CMakeCache.txt in the build directory.
+To enable a driver not enabled by default, either add `DEFAULT_ON` as argument to `add_driver()` in driver's `CMakeLists.txt file`, or set `BUILD_DRIVER_xxx:BOOL=ON` in CMakeCache.txt in the build directory.
 
 To run without installing, you must specify the drivers location as a parameter. E.g. when in build directory, use:
 
@@ -79,6 +83,7 @@ Windows version
 Currently, windows snapshots are compiled using [MXE](http://mxe.cc/).
 It has not been really tested a lot, but to help investigating problems, please try another Windows application first, to see if your camera driver is properly working.
 
+
 OSX Version
 -----------
 
@@ -96,16 +101,24 @@ To get a working version, please follow these instructions:
    
      ```-DCMAKE_PREFIX_PATH=/usr/local/Cellar/qt5/5.8.0_1```
  * run `planetary_imager` from your command line
- 
 
+ 
 IIDC (libdc1394)
 ----------------
 
-If you camera is not detected, you may need to use a newer version of libdc1394. In case of building the library on your own, the supported USB device ids are hard-coded in usb/control.c in `usb_products[]`. You can check your camera's VID/PID by calling `lsusb`, e.g. (for the Firefly MV camera):
+If you camera is not detected, you may need to use a newer version of `libdc1394`. In case of building the library on your own, the supported USB device ids are hard-coded in `usb/control.c` in `usb_products[]`. You can check your camera's VID/PID by calling `lsusb`, e.g. (for the Firefly MV camera):
 
     ...
     Bus 002 Device 003: ID 1e10:2001 Point Grey Research, Inc.
     ...
+    
+    
+FlyCapture2 (FLIR/Point Grey)
+-----------------------------
+
+Installation of FlyCapture2 SDK is required (available from the FLIR website). On Windows, make sure to add the binaries directory to `PATH` (by default, `C:\Program Files\Point Grey Research\FlyCapture2\bin64` or `C:\Program Files (x86)\Point Grey Research\FlyCapture2\bin`). On Linux, if your distribution does not use `.deb` package format (which is used by the SDK), simply unpack the packages manually. In any case, run the install script to create `udev` device rules.
+
+When building from sources, make sure that the `FC2_INCLUDE_DIR` variable in `src/drivers/flycapture2/CMakeLists.txt` is set correctly.
 
  
 Credits
@@ -113,4 +126,4 @@ Credits
 
 Application Icon: [Hat Saturn](https://www.iconfinder.com/icons/37878/hat_planet_saturn_icon) by [Denis Sazhin](http://iconka.com/).
 Toolbar/action icons: [TWG Retina Display Icons](http://blog.twg.ca/2010/11/retina-display-icon-set/), darkened and with a few customizations to add more actions.
-IIDC driver: [Filip Szczerek](ga.software@yahoo.com) (GreatAttractor).
+IIDC & FlyCapture2 drivers: [Filip Szczerek](ga.software@yahoo.com) (GreatAttractor).
