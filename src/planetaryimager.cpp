@@ -142,8 +142,10 @@ void PlanetaryImager::Private::initDevicesWatcher()
   }
   if(usbfsdir.isEmpty())
     return;
+
+  static QStringList entries = QDir(usbfsdir).entryList();
+
   connect(notifyTimer, &QTimer::timeout, [=]{
-    static QStringList entries;
     auto current = QDir(usbfsdir).entryList();
     if(current != entries) {
       qDebug() << "usb devices changed";
