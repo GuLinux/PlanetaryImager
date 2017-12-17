@@ -26,7 +26,7 @@
      <x>0</x>
      <y>0</y>
      <width>997</width>
-     <height>30</height>
+     <height>40</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuDevice">
@@ -133,8 +133,8 @@
          <rect>
           <x>0</x>
           <y>0</y>
-          <width>80</width>
-          <height>162</height>
+          <width>82</width>
+          <height>137</height>
          </rect>
         </property>
        </widget>
@@ -145,7 +145,7 @@
   </widget>
   <widget class="QDockWidget" name="recording">
    <property name="windowTitle">
-    <string>Recor&amp;ding</string>
+    <string>&amp;Recording</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>2</number>
@@ -198,6 +198,21 @@
    <widget class="QWidget" name="dockWidgetContents_4">
     <layout class="QGridLayout" name="gridLayout_4"/>
    </widget>
+  </widget>
+  <widget class="QToolBar" name="trackingToolBar">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="windowTitle">
+    <string>Tracking</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionAddTrackingTarget"/>
   </widget>
   <action name="action_devices_rescan">
    <property name="icon">
@@ -397,7 +412,7 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Histogram equalization</string>
+    <string>&amp;Histogram equalization</string>
    </property>
   </action>
   <action name="actionStretch_colour_saturation">
@@ -405,7 +420,18 @@
     <bool>true</bool>
    </property>
    <property name="text">
-    <string>Stretch colour saturation</string>
+    <string>&amp;Stretch colour saturation</string>
+   </property>
+  </action>
+  <action name="actionAddTrackingTarget">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Add tracking target</string>
+   </property>
+   <property name="toolTip">
+    <string>Add tracking target</string>
    </property>
   </action>
  </widget>

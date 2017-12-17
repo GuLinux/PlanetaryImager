@@ -70,7 +70,7 @@ Q_DECLARE_METATYPE(cv::Mat)
 DPTR_IMPL(PlanetaryImagerMainWindow) {
   PlanetaryImager::ptr planetaryImager;
   FilesystemBrowser::ptr filesystemBrowser;
-  
+
   static PlanetaryImagerMainWindow *q;
   unique_ptr<Ui::PlanetaryImagerMainWindow> ui;
   Imager *imager = nullptr;
@@ -85,21 +85,22 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   HistogramWidget *histogramWidget = nullptr;
   ConfigurationDialog *configurationDialog;
   EditROIDialog *editROIDialog;
-  
+
   RecordingPanel* recording_panel;
   ExposureTimer exposure_timer;
-  
+
   ImageHandler::ptr imageHandler;
-  
-  
+
+
   void cameraDisconnected();
   void enableUIWidgets(bool cameraConnected);
   void editROI();
   ZoomableImage *image_widget;
-  
+
   void onImagerInitialized(Imager *imager);
   void onCamerasFound();
-  enum SelectionMode { NoSelection, ROI, Guide } selection_mode = NoSelection;
+
+  enum class SelectionMode { None, ROI, AddTrackingTarget } selection_mode = SelectionMode::None;
 };
 
 PlanetaryImagerMainWindow *PlanetaryImagerMainWindow::Private::q = nullptr;
@@ -135,7 +136,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
 {
     Private::q = this;
     d->ui.reset(new Ui::PlanetaryImagerMainWindow);
-    
+
     d->ui->setupUi(this);
     setWindowIcon(QIcon::fromTheme("planetary_imager"));
     d->ui->recording->setWidget(d->recording_panel = new RecordingPanel{d->planetaryImager->configuration(), filesystemBrowser});
@@ -147,7 +148,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
 
     imageHandlers->push_back(d->displayImage);
     imageHandlers->push_back(d->histogram);
-    
+
     connect(d->planetaryImager.get(), &PlanetaryImager::camerasChanged, this, bind(&Private::onCamerasFound, d.get()));
     connect(d->planetaryImager.get(), &PlanetaryImager::cameraConnected, this, [=]{ d->onImagerInitialized(d->planetaryImager->imager()); });
     d->ui->image->setLayout(new QGridLayout);
@@ -164,7 +165,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     for(auto item: d->image_widget->actions())
       d->ui->menuView->insertAction(d->ui->actionEdges_Detection, item);
     d->ui->menuView->insertSeparator(d->ui->actionEdges_Detection);
-    
+
     d->image_widget->actions()[ZoomableImage::Actions::ZoomIn]->setShortcut({Qt::CTRL + Qt::Key_Plus});
     d->image_widget->actions()[ZoomableImage::Actions::ZoomIn]->setIcon(QIcon{":/resources/zoom_in.png"});
     d->image_widget->actions()[ZoomableImage::Actions::ZoomOut]->setShortcut({Qt::CTRL + Qt::Key_Minus});
@@ -175,6 +176,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     d->image_widget->actions()[ZoomableImage::Actions::ZoomRealSize]->setIcon(QIcon{":/resources/real_size.png"});
     d->image_widget->toolbar()->setWindowTitle("Image Control");
     addToolBar(d->image_widget->toolbar());
+
     QToolBar *helpToolBar = new QToolBar;
     helpToolBar->setWindowTitle(tr("Help"));
     auto whatsThis = QWhatsThis::createAction();
@@ -183,7 +185,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     addToolBar(helpToolBar);
     d->image_widget->toolbar()->setFloatable(true);
     d->image_widget->toolbar()->setMovable(true);
-    
+
     restoreGeometry(d->planetaryImager->configuration().main_window_geometry());
     restoreState(d->planetaryImager->configuration().dock_status());
     connect(d->ui->actionAbout, &QAction::triggered, bind(&QMessageBox::about, this, tr("About"),
@@ -192,7 +194,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     connect(d->ui->actionAbout_Qt, &QAction::triggered, &QApplication::aboutQt);
     connect(d->ui->action_devices_rescan, &QAction::triggered, bind(&Private::rescan_devices, d.get()));
     connect(d->ui->actionShow_settings, &QAction::triggered, bind(&QDialog::show, d->configurationDialog));
-    
+
     auto dockWidgetToggleVisibility = [=](QDockWidget *widget, bool visible){ widget->setVisible(visible); };
     auto dockWidgetVisibleCheck = [=](QAction *action, QDockWidget *widget) { action->setChecked(widget->isVisible()); };
     QList<QDockWidget*> dock_widgets;
@@ -217,7 +219,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     connect(d->recording_panel, &RecordingPanel::start, [=]{d->planetaryImager->saveImages()->startRecording(d->imager);});
     connect(d->recording_panel, &RecordingPanel::stop, bind(&SaveImages::endRecording, d->planetaryImager->saveImages()));
     connect(d->recording_panel, &RecordingPanel::setPaused, bind(&SaveImages::setPaused, d->planetaryImager->saveImages(), _1));
-    
+
     connect(d->planetaryImager->saveImages().get(), &SaveImages::recording, this, bind(&DisplayImage::setRecording, d->displayImage, true), Qt::QueuedConnection);
     connect(d->planetaryImager->saveImages().get(), &SaveImages::recording, this, bind(&Histogram::setRecording, d->histogram, true), Qt::QueuedConnection);
     connect(d->planetaryImager->saveImages().get(), &SaveImages::recording, d->recording_panel, bind(&RecordingPanel::recording, d->recording_panel, true, _1), Qt::QueuedConnection);
@@ -258,19 +260,19 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
           }
 #endif
     });
-    
+
     connect(d->ui->actionHide_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::hide, _1) ); });
     connect(d->ui->actionShow_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::show, _1) ); });
     connect(MessagesLogger::instance(), &MessagesLogger::message, this, bind(&PlanetaryImagerMainWindow::notify, this, _1, _2, _3, _4), Qt::QueuedConnection);
     connect(d->displayImage.get(), &DisplayImage::gotImage, this, bind(&ZoomableImage::setImage, d->image_widget, _1), Qt::QueuedConnection);
-    
+
     connect(d->ui->actionNight_Mode, &QAction::toggled, this, [=](bool checked) {
       qApp->setStyleSheet(checked ? R"_(
         * { background-color: rgb(40, 0, 0); color: rgb(220, 220, 220); }
       )_" : "");
     });
 
-    
+
     connect(d->displayImage.get(), &DisplayImage::displayFPS, d->statusbar_info_widget, &StatusBarInfoWidget::displayFPS, Qt::QueuedConnection);
     connect(d->planetaryImager->saveImages().get(), &SaveImages::saveFPS, d->recording_panel, &RecordingPanel::saveFPS, Qt::QueuedConnection);
     connect(d->planetaryImager->saveImages().get(), &SaveImages::meanFPS, d->recording_panel, &RecordingPanel::meanFPS, Qt::QueuedConnection);
@@ -289,28 +291,28 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     connect(d->ui->actionStretch_histogram, &QAction::toggled, d->displayImage.get(), &DisplayImage::histogramEqualization);
     connect(d->ui->actionStretch_colour_saturation, &QAction::toggled, d->displayImage.get(), &DisplayImage::maximumSaturation);
 
-    
+
     connect(d->ui->actionClear_ROI, &QAction::triggered, [&] { d->imager->clearROI(); });
-    connect(d->ui->actionSelect_ROI, &QAction::triggered, [&] { 
-      d->selection_mode = Private::ROI;
-      d->image_widget->startSelectionMode();
+    connect(d->ui->actionSelect_ROI, &QAction::triggered, [&] {
+      d->selection_mode = Private::SelectionMode::ROI;
+      d->image_widget->startSelectionMode(ZoomableImage::SelectionMode::Rect);
     });
-    
+
     connect(d->ui->actionEdit_ROI, &QAction::triggered, this, bind(&Private::editROI, d.get()));
     QMap<Private::SelectionMode, function<void(const QRect &)>> handle_selection {
-      {Private::NoSelection, [](const QRect&) {}},
-      {Private::ROI, [&](const QRect &rect) { d->imager->setROI(rect.normalized()); }},
+      {Private::SelectionMode::None, [](const QRect&) {}},
+      {Private::SelectionMode::ROI, [&](const QRect &rect) { d->imager->setROI(rect.normalized()); }},
     };
     connect(d->image_widget, &ZoomableImage::selectedROI, [this, handle_selection](const QRectF &rect) {
       handle_selection[d->selection_mode](rect.toRect());
       d->image_widget->clearROI();
-      d->selection_mode = Private::NoSelection;
+      d->selection_mode = Private::SelectionMode::None;
     });
     connect(&d->exposure_timer, &ExposureTimer::progress, [=](double , double elapsed, double remaining){
       d->statusbar_info_widget->showMessage("Exposure: %1s, remaining: %2s"_q % QString::number(elapsed, 'f', 1) % QString::number(remaining, 'f', 1), 1000);
     });
     connect(&d->exposure_timer, &ExposureTimer::finished, [=]{ d->statusbar_info_widget->clearMessage(); });
-    
+
     d->editROIDialog = new EditROIDialog(this);
     connect(d->editROIDialog, &EditROIDialog::roiSelected, this, [=](const QRect &roi){ d->imager->setROI(roi); });
     auto readTemperature = new QTimer{this};
@@ -318,6 +320,14 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
         if(d->imager)
             QMetaObject::invokeMethod(d->imager, "readTemperature", Qt::QueuedConnection);
     });
+
+    connect(d->ui->actionAddTrackingTarget, &QAction::triggered, [&] {
+        d->selection_mode = Private::SelectionMode::AddTrackingTarget;
+        d->image_widget->startSelectionMode(ZoomableImage::SelectionMode::Point);
+    });
+
+    connect(d->image_widget, &ZoomableImage::selectedPoint, [](const QPointF &p) { std::cout << "Clicked: " << p.x() << ", " << p.y() << std::endl; });
+
     readTemperature->start(2000);
     d->rescan_devices();
 }
@@ -372,7 +382,7 @@ void PlanetaryImagerMainWindow::setImager(Imager* imager)
 
 
 void PlanetaryImagerMainWindow::Private::onImagerInitialized(Imager * imager)
-{  
+{
     GuLinux::Scope scope{[=]{  emit q->imagerChanged(); }};
     this->imager = imager;
     exposure_timer.set_imager(imager);
@@ -388,6 +398,7 @@ void PlanetaryImagerMainWindow::Private::onImagerInitialized(Imager * imager)
     ui->actionSelect_ROI->setEnabled(imager->supports(Imager::ROI));
     ui->actionEdit_ROI->setEnabled(imager->supports(Imager::ROI));
     ui->actionClear_ROI->setEnabled(imager->supports(Imager::ROI));
+    ui->actionAddTrackingTarget->setEnabled(true);
 }
 
 // TODO: sync issues when images are sent after the imagerDisconnected signal
@@ -399,7 +410,9 @@ void PlanetaryImagerMainWindow::Private::cameraDisconnected()
   ui->actionSelect_ROI->setEnabled(false);
   ui->actionEdit_ROI->setEnabled(false);
   ui->actionClear_ROI->setEnabled(false);
-  
+  ui->actionAddTrackingTarget->setEnabled(false);
+  //
+
   delete cameraSettingsWidget;
   cameraSettingsWidget = nullptr;
   delete cameraInfoWidget;

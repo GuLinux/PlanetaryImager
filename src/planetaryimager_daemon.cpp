@@ -43,12 +43,12 @@ int main(int argc, char** argv)
     QCoreApplication app(argc, argv);
     app.setApplicationName("PlanetaryImager-Daemon");
     app.setApplicationVersion(PLANETARY_IMAGER_VERSION);
-    
+
     CommandLine commandLine(app);
     commandLine.daemon("0.0.0.0").process();
-    
+
     LogHandler log_handler{commandLine};
-    
+
     Configuration configuration;
     auto driver = make_shared<SupportedDrivers>(commandLine.driversDirectories());
     auto dispatcher = make_shared<NetworkDispatcher>();
@@ -60,16 +60,16 @@ int main(int argc, char** argv)
     auto planetaryImager = make_shared<PlanetaryImager>(driver, imageHandlers, save_images, configuration);
     auto server = make_shared<NetworkServer>(planetaryImager, dispatcher, frames_forwarder);
     QObject::connect(save_files_forwarder.get(), &SaveFileForwarder::isRecording, frames_forwarder.get(), &FramesForwarder::recordingMode);
-    
-    QObject::connect(planetaryImager.get(), &PlanetaryImager::cameraConnected, save_files_forwarder.get(), [&]{ 
+
+    QObject::connect(planetaryImager.get(), &PlanetaryImager::cameraConnected, save_files_forwarder.get(), [&]{
       save_files_forwarder->setImager(planetaryImager->imager());
     });
-    QObject::connect(planetaryImager.get(), &PlanetaryImager::cameraDisconnected, save_files_forwarder.get(), [&]{ 
+    QObject::connect(planetaryImager.get(), &PlanetaryImager::cameraDisconnected, save_files_forwarder.get(), [&]{
       save_files_forwarder->setImager(nullptr);
     });
-    
+
 
     QMetaObject::invokeMethod(server.get(), "listen", Q_ARG(QString, commandLine.address()), Q_ARG(int, commandLine.port()));
-    
+
     return app.exec();
 }

@@ -20,8 +20,10 @@
 #include "planetaryimager.h"
 #include "Qt/qt_functional.h"
 #include "commons/messageslogger.h"
+#include "commons/tracking.h"
 #include <QThread>
 #include <QTimer>
+
 
 DPTR_IMPL(PlanetaryImager) {
   Driver::ptr driver;
@@ -29,10 +31,12 @@ DPTR_IMPL(PlanetaryImager) {
   SaveImages::ptr saveImages;
   Configuration &configuration;
   PlanetaryImager *q;
-  
+
   Driver::Cameras cameras;
   Imager *imager = nullptr;
-  
+
+  ImgTracker imgTracker;
+
   void initDevicesWatcher();
 };
 
@@ -98,7 +102,7 @@ void PlanetaryImager::open(const Driver::Camera::ptr& camera)
 {
   if(d->imager)
     d->imager->destroy();
-  
+
   auto openImager = [this, camera] {
     try {
       auto imager = camera->imager(d->imageHandler);
@@ -110,7 +114,7 @@ void PlanetaryImager::open(const Driver::Camera::ptr& camera)
       MessagesLogger::queue(MessagesLogger::Error, tr("Initialization Error"), tr("Error initializing imager %1: \n%2") % camera->name() % e.what());
     }
   };
-  
+
   auto onImagerOpened = [this](Imager *imager) {
     d->imager = imager;
     if(imager) {

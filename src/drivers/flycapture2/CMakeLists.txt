@@ -13,4 +13,4 @@ file(GLOB fc2_SRCS *.cpp)
 include_directories(${FC2_INCLUDE_DIR})
 link_directories(${FC2_LIB_DIR})
 
-add_driver(NAME flycapture2 OS Linux Windows Darwin DEFAULT_OFF SRCS ${fc2_SRCS} LINK ${FC2_LIB})
+add_driver(NAME flycapture2 OS Linux Windows Darwin DEFAULT_ON SRCS ${fc2_SRCS} LINK ${FC2_LIB})
