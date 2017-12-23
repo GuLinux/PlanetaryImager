@@ -46,7 +46,7 @@
         <x>0</x>
         <y>0</y>
         <width>670</width>
-        <height>747</height>
+        <height>745</height>
        </rect>
       </property>
       <layout class="QGridLayout" name="gridLayout_2">
@@ -131,6 +131,16 @@
         </size>
        </property>
       </spacer>
+     </item>
+     <item>
+      <widget class="QCheckBox" name="immediate">
+       <property name="toolTip">
+        <string>Apply changes immediately</string>
+       </property>
+       <property name="text">
+        <string>immediate</string>
+       </property>
+      </widget>
      </item>
      <item>
       <widget class="QPushButton" name="apply">

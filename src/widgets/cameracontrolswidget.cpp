@@ -297,6 +297,17 @@ CameraControlsWidget::CameraControlsWidget(Imager *imager, Configuration &config
     grid->addWidget(control->onOffValueWidget(), row++, 4);
   }
   connect(d->ui->restore, &QPushButton::clicked, this, bind(&Private::controls_changed, d.get()));
+
+  connect(d->ui->immediate, &QCheckBox::toggled, this,
+      [this] {
+                 const bool immChecked = d->ui->immediate->isChecked();
+                 if (immChecked)
+                 {
+                     if (d->ui->apply->isEnabled()) d->ui->apply->setEnabled(false);
+                     if (d->ui->restore->isEnabled()) d->ui->restore->setEnabled(false);
+                 }
+             });
+
   grid->addItem(new QSpacerItem(0, 0, QSizePolicy::MinimumExpanding, QSizePolicy::Expanding), row, 0, 3);
   grid->setRowStretch(row, 1);
   grid->setColumnStretch(1, 1);
@@ -404,9 +415,17 @@ QString CameraControlsWidget::Private::currentSelection() const
 
 void CameraControlsWidget::Private::controls_changed()
 {
-  bool any_changed = std::any_of(control_widgets.begin(), control_widgets.end(), bind(&CameraControl::is_pending, _1));
-  ui->apply->setEnabled(any_changed);
-  ui->restore->setEnabled(any_changed);
+    if (ui->immediate->isChecked())
+    {
+        for (auto &control: control_widgets)
+            control->apply();
+    }
+    else
+    {
+        bool any_changed = std::any_of(control_widgets.begin(), control_widgets.end(), bind(&CameraControl::is_pending, _1));
+        ui->apply->setEnabled(any_changed);
+        ui->restore->setEnabled(any_changed);
+    }
 }
 
 void CameraControlsWidget::Private::reloadRecentlyUsedPresets()
