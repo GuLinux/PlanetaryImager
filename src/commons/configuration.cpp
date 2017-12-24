@@ -167,6 +167,8 @@ define_setting(recording_pause_stops_timer, bool, false)
 
 define_setting_enum(capture_endianess, Configuration::CaptureEndianess, Configuration::CaptureEndianess::CameraDefault)
 
+define_setting(immediate_controls, bool, false)
+
 QString Configuration::savefile() const
 {
   QMap<SaveFormat, QString> extension {

@@ -298,11 +298,15 @@ CameraControlsWidget::CameraControlsWidget(Imager *imager, Configuration &config
   }
   connect(d->ui->restore, &QPushButton::clicked, this, bind(&Private::controls_changed, d.get()));
 
+  d->ui->immediate->setChecked(d->configuration.immediate_controls());
   connect(d->ui->immediate, &QCheckBox::toggled, this,
       [this] {
-                 const bool immChecked = d->ui->immediate->isChecked();
-                 if (immChecked)
+                 d->configuration.set_immediate_controls(d->ui->immediate->isChecked());
+                 if (d->ui->immediate->isChecked())
                  {
+                     for (auto &control: d->control_widgets)
+                         control->apply();
+
                      if (d->ui->apply->isEnabled()) d->ui->apply->setEnabled(false);
                      if (d->ui->restore->isEnabled()) d->ui->restore->setEnabled(false);
                  }
