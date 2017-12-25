@@ -741,18 +741,9 @@ Imager::Control FC2Imager::Private::createControlFromFC2Property(const fc2Proper
         case FC2_GAMMA:           control.name = "Gamma"; break;
 
         case FC2_SHUTTER:
-        {
             control.name = "Shutter";
             control.is_exposure = true;
-            control.is_duration = true;
-
-            const auto &unitLoc = DURATION_VALUE.find(propInfo.pUnitAbbr);
-            if (unitLoc != DURATION_VALUE.end())
-                control.duration_unit = unitLoc->second;
-            else
-                control.duration_unit = 1s;
             break;
-        }
 
         case FC2_GAIN:            control.name = "Gain"; break;
         case FC2_IRIS:            control.name = "Iris"; break;
@@ -798,6 +789,16 @@ Imager::Control FC2Imager::Private::createControlFromFC2Property(const fc2Proper
         }
         else
             control.value = propInfo.absMin;
+
+        if (propInfo.type == FC2_SHUTTER)
+        {
+            control.is_duration = true;
+            const auto &unitLoc = DURATION_VALUE.find(propInfo.pUnitAbbr);
+            if (unitLoc != DURATION_VALUE.end())
+                control.duration_unit = unitLoc->second;
+            else
+                control.duration_unit = 1s;
+        }
     }
     else
     {

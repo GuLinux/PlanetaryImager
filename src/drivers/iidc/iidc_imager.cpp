@@ -582,9 +582,6 @@ Imager::Controls IIDCImager::controls() const
                 case DC1394_FEATURE_SHUTTER:
                     control.name = "Shutter";
                     control.is_exposure = true;
-                    control.is_duration = true;
-                    // No way to check the unit using IIDC API, but PGR Firefly MV (FMVU-03MTM) and Chameleon3 (CM3-U3-13S2M) both use seconds
-                    control.duration_unit = 1s;
                     break;
 
                 case DC1394_FEATURE_GAIN:            control.name = "Gain"; break;
@@ -668,6 +665,13 @@ Imager::Controls IIDCImager::controls() const
                 }
                 else
                     control.value = absMin;
+
+                if (feature.id == DC1394_FEATURE_SHUTTER)
+                {
+                    control.is_duration = true;
+                    // No way to check the unit using IIDC API, but PGR Firefly MV (FMVU-03MTM) and Chameleon3 (CM3-U3-13S2M) both use seconds
+                    control.duration_unit = 1s;
+                }
             }
             else
             {
