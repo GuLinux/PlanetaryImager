@@ -95,8 +95,6 @@ DPTR_IMPL(IIDCImager)
     bool temperatureAvailable;
     bool temperatureAbsSupported;
 
-    void updateWorkerExposureTimeout();
-
     /// Returns a combo control listing all video modes, with 'currentVidMode' selected
     Control enumerateVideoModes();
 
@@ -124,11 +122,6 @@ DPTR_IMPL(IIDCImager)
 static void UpdateRangeAndStep(bool absoluteCapable, Imager::Control &control,
                                uint32_t rawMin, uint32_t rawMax,
                                float    absMin, float    absMax);
-
-void IIDCImager::Private::updateWorkerExposureTimeout()
-{
-//TODO: implement this
-}
 
 Imager::Control IIDCImager::Private::enumerateCurrentModePixelFormats()
 {
@@ -265,8 +258,6 @@ IIDCImager::IIDCImager(std::unique_ptr<dc1394camera_t, Deleters::camera> camera,
 
     IIDC_CHECK << dc1394_feature_get_all(d->camera.get(), &d->features)
                << "Get all features";
-
-    connect(this, &Imager::exposure_changed, this, std::bind(&Private::updateWorkerExposureTimeout, d.get()));
 }
 
 IIDCImager::~IIDCImager()
@@ -581,7 +572,6 @@ Imager::Controls IIDCImager::controls() const
 
                 case DC1394_FEATURE_SHUTTER:
                     control.name = "Shutter";
-                    control.is_exposure = true;
                     break;
 
                 case DC1394_FEATURE_GAIN:            control.name = "Gain"; break;
