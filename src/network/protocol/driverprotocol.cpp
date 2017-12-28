@@ -71,7 +71,7 @@ namespace {
       {"duration_unit", control.duration_unit.count()},
     };
   }
-  
+
   Imager::Control variant2control(const QVariant &variant) {
     QVariantMap ctrl = variant.toMap();
     Imager::Control::Choices choices;
@@ -193,16 +193,16 @@ void DriverProtocol::decode(Imager::Controls& controls, const NetworkPacket::ptr
   transform(begin(variant_controls), end(variant_controls), back_inserter(controls), bind(variant2control, _1));
 }
 
-NetworkPacket::ptr DriverProtocol::sendFrame(const Frame::ptr& frame)
+NetworkPacket::ptr DriverProtocol::sendFrame(Frame::const_ptr frame)
 {
   if(format_parameters.format == Configuration::Network_NoImage)
     return {};
-  
+
   vector<uint8_t> data;
   QByteArray image;
   string extension;
-  
-  
+
+
   if(format_parameters.format == Configuration::Network_JPEG) {
     extension = ".jpg";
   } else if(format_parameters.format == Configuration::Network_RAW) {
@@ -238,7 +238,7 @@ Frame::ptr DriverProtocol::decodeFrame(const NetworkPacket::ptr& packet)
   auto mat = cv::imdecode(data, CV_LOAD_IMAGE_UNCHANGED);
   auto frame = make_shared<Frame>(mat.channels() == 1 ? Frame::Mono : Frame::BGR, mat, Frame::LittleEndian);
   //qDebug() << "FRAME data size: " << image.size() << ", bpp: " << frame->bpp() << ", res: " << frame->resolution() << ", channels: " << frame->channels();
-  
+
   return frame;
 }
 

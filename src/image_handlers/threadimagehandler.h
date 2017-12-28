@@ -30,7 +30,7 @@ public:
 
 private:
 
-  void doHandle(Frame::ptr frame) override;
+  void doHandle(Frame::const_ptr frame) override;
 
   DPTR
 };

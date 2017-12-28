@@ -42,7 +42,7 @@ FramesForwarder::~FramesForwarder()
 {
 }
 
-void FramesForwarder::doHandle(Frame::ptr frame)
+void FramesForwarder::doHandle(Frame::const_ptr frame)
 {
   if(! DriverProtocol::isForwardingEnabled() || d->elapsed.elapsed() < (d->recording ? 2000 : 50 ) || ! d->enabled) // TODO: variable rate, depending on network delay?
     return;

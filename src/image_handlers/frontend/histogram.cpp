@@ -46,8 +46,8 @@ DPTR_IMPL(Histogram) {
   bool should_read_frame() const;
   bool logarithmic = false;
   Channel channel = All;
-  Frame::ptr last_frame;
-  void handle(const Frame::ptr &frame);
+  Frame::const_ptr last_frame;
+  void handle(Frame::const_ptr frame);
   struct HistogramOutput {
     cv::Mat histogram;
     QVariantMap stats;
@@ -86,7 +86,7 @@ Histogram::Histogram(const Configuration &configuration, QObject* parent) : QObj
   }
 }
 
-void Histogram::doHandle(Frame::ptr frame)
+void Histogram::doHandle(Frame::const_ptr frame)
 {
   if( ! d->should_read_frame() )
     return;
@@ -95,24 +95,24 @@ void Histogram::doHandle(Frame::ptr frame)
   d->last_frame = frame;
 }
 
-void Histogram::Private::handle(const Frame::ptr& frame)
+void Histogram::Private::handle(Frame::const_ptr frame)
 {
   BENCH(_histogram)->every(5)->ms();
   cv::Mat source;
-  
+
   static const  int hist_h = 600;
   histLib.SetHistImageHeight(hist_h);
   histLib.SetDrawSpreadOut(true);
-  
+
   cv::Mat plot;
   QMap<Histogram::Channel, QVariantMap> histogramStats;
-  
+
   vector<cv::Mat> channels(3);
   static map<Frame::ColorFormat, map<Channel, int>> channel_indexes {
     {Frame::RGB, { {Red, 0}, {Green, 1 }, {Blue, 2} }},
     {Frame::BGR, { {Red, 2}, {Green, 1 }, {Blue, 0} }},
   };
-  
+
   frame->mat().copyTo(source);
   if(frame->channels() == 1) {
     channel = Grayscale;
@@ -123,7 +123,7 @@ void Histogram::Private::handle(const Frame::ptr& frame)
   if(channel != Grayscale && channel != All) {
     source = channels[ channel_indexes[frame->colorFormat()][channel] ];
   }
-  
+
   if(channel !=  All) {
     static QMap<Channel, cv::Scalar> colors {
       {Grayscale, HIST_LIB_COLOR_WHITE},
@@ -134,7 +134,7 @@ void Histogram::Private::handle(const Frame::ptr& frame)
     histLib.SetPlotColor(colors[channel]);
     cv::MatND hist;
     histLib.ComputeHistogramValue(getHistogramImage(source), hist);
-    
+
     HistogramOutput out = calcHistogramStats(source, hist, frame->bpp());
     histogramStats[channel] = out.stats;
 
@@ -143,11 +143,11 @@ void Histogram::Private::handle(const Frame::ptr& frame)
   else {
     cv::MatND histB, histR, histG;
     histLib.ComputeHistogramBGR(getHistogramImage(source), histB, histG, histR);
-    
+
     histogramStats[Red]  = calcHistogramStats(channels[ channel_indexes[frame->colorFormat()][Red] ], histR, frame->bpp()).stats;
     histogramStats[Green]  = calcHistogramStats(channels[ channel_indexes[frame->colorFormat()][Green] ], histG, frame->bpp()).stats;
     histogramStats[Blue]  = calcHistogramStats(channels[ channel_indexes[frame->colorFormat()][Blue] ], histB, frame->bpp()).stats;
-    
+
     histLib.DrawHistogramBGR(histB, histG, histR, plot);
   }
   QImage hist_qimage(plot.data, plot.cols, plot.rows, static_cast<int>(plot.step), QImage::Format_RGB888);
@@ -164,7 +164,7 @@ Histogram::Private::HistogramOutput Histogram::Private::calcHistogram(const cv::
   int bins []{static_cast<int>(bins_size)};
   float range[]{0, static_cast<float>( pow(2, bpp)-1 ) };
   const float *ranges[]{range};
-  
+
   cv::calcHist(&source, nimages, channels, cv::Mat{}, hist, dims, bins, ranges);
   return calcHistogramStats(source, hist, bpp);
 }
@@ -176,17 +176,17 @@ Histogram::Private::HistogramOutput Histogram::Private::calcHistogramStats(const
   auto top_bin_position = top_bin_it - histogram.begin<float>();
   auto top_bin_value_min = maxBin/bins_size * top_bin_position;
   auto top_bin_value_max = top_bin_value_min + (maxBin/bins_size);
-  
+
   if(logarithmic)
     transform(histogram.begin<float>(), histogram.end<float>(), histogram.begin<float>(), [](float n){ return n==0?0:log10(n); });
-  
-  
+
+
   vector<uint16_t> mat_data;
   source.reshape(1, 1).copyTo(mat_data);
   uint16_t min_value = *min_element(begin(mat_data), end(mat_data));
   uint16_t max_value = *max_element(begin(mat_data), end(mat_data));
-  
-  
+
+
   QVariantMap stats{
     {"shadows_value", min_value},
     {"shadows_count", static_cast<int>(count(begin(mat_data), end(mat_data), min_value))},
