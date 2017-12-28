@@ -80,7 +80,7 @@ QString SERWriter::filename() const
   return d->file.fileName();
 }
 
-void SERWriter::doHandle(Frame::ptr frame)
+void SERWriter::doHandle(Frame::const_ptr frame)
 {
   if(! d->header->imageWidth) {
       // Force incorrect ENDIAN Type for compatibility with most readers ...

@@ -34,18 +34,18 @@ class ThreadImageHandler::Private::Worker : public QObject {
 public:
   Worker(const ImageHandler::ptr &imageHandler, QObject *parent = nullptr);
 public slots:
-  void handle(Frame::ptr frame);
+  void handle(Frame::const_ptr frame);
 private:
   ImageHandler::ptr imageHandler;
 };
 
-ThreadImageHandler::Private::Worker::Worker(const ImageHandler::ptr& imageHandler, QObject* parent) 
+ThreadImageHandler::Private::Worker::Worker(const ImageHandler::ptr& imageHandler, QObject* parent)
   : QObject{parent}, imageHandler{imageHandler}
 {
 }
 
 
-void ThreadImageHandler::Private::Worker::handle(Frame::ptr frame)
+void ThreadImageHandler::Private::Worker::handle(Frame::const_ptr frame)
 {
   imageHandler->handle(frame);
 }
@@ -64,9 +64,9 @@ ThreadImageHandler::~ThreadImageHandler()
   d->thread->wait();
 }
 
-void ThreadImageHandler::doHandle(Frame::ptr frame)
+void ThreadImageHandler::doHandle(Frame::const_ptr frame)
 {
-  QMetaObject::invokeMethod(d->worker.get(), "handle", Qt::QueuedConnection, Q_ARG(Frame::ptr, frame));
+  QMetaObject::invokeMethod(d->worker.get(), "handle", Qt::QueuedConnection, Q_ARG(Frame::const_ptr, frame));
 }
 
 #include "threadimagehandler.moc"

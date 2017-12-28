@@ -45,7 +45,7 @@ DPTR_IMPL(DisplayImage) {
   unique_ptr<fps_counter> capture_fps;
   atomic_bool recording;
   atomic_bool running;
-  
+
   // settings
   atomic_bool limit_fps;
   atomic_long min_milliseconds_elapsed;
@@ -55,34 +55,34 @@ DPTR_IMPL(DisplayImage) {
   atomic_int sobel_kernel;
   atomic<double> sobel_scale;
   atomic<double> sobel_delta;
-  
+
   atomic_bool edge_detection_canny;
   atomic_int canny_kernel_size;
   atomic_int canny_blur;
   atomic<double> canny_threshold_ratio;
   atomic<double> canny_low_threshold;
-  
+
   atomic_bool debayer;
-  
+
 //         d->sobel(*cv_image, d->configuration.sobel_blur_size(), d->configuration.sobel_kernel(), d->configuration.sobel_scale(), d->configuration.sobel_delta());
 
   QElapsedTimer elapsed;
   QRect imageRect;
-  boost::lockfree::spsc_queue<Frame::ptr, boost::lockfree::capacity<50>> queue;
+  boost::lockfree::spsc_queue<Frame::const_ptr, boost::lockfree::capacity<50>> queue;
   atomic_bool detectEdges;
   QVector<QRgb> grayScale;
-  
+
   atomic_bool histogramEqualization;
   atomic_bool maximumSaturation;
-  
+
   bool should_display_frame() const;
   void canny(cv::Mat& source, int lowThreshold = 1, int ratio = 3, int kernel_size = 3, int blurSize = 3);
   void sobel( cv::Mat& source, int blur_size = 3, int ker_size = 3, int scale = 1, int delta = 0 );
-  
-  void bayer2rgb(const Frame::ptr &frame, cv::Mat &image);
-  void bgr2rgb(const Frame::ptr &frame, cv::Mat &image);
-  void rgb2rgb(const Frame::ptr &frame, cv::Mat &image);
-  void gray2rgb(const Frame::ptr &frame, cv::Mat &image);
+
+  void bayer2rgb(Frame::const_ptr frame, cv::Mat &image);
+  void bgr2rgb(Frame::const_ptr frame, cv::Mat &image);
+  void rgb2rgb(Frame::const_ptr frame, cv::Mat &image);
+  void gray2rgb(Frame::const_ptr frame, cv::Mat &image);
 
   /// If 'src's endianess is not native, returns a copy of 'src' with bytes swapped; otherwise, returns 'src'
   cv::Mat getEndianCorrectMat(const cv::Mat &src, Frame::ByteOrder srcByteOrder);
@@ -128,7 +128,7 @@ void DisplayImage::read_settings()
 {
   d->limit_fps = d->recording ? d->configuration.limit_fps_recording() : d->configuration.limit_fps();
   d->min_milliseconds_elapsed = 1000/(d->recording ? d->configuration.max_display_fps_recording() : d->configuration.max_display_fps() );
-  
+
   d->edge_detection_sobel =  d->configuration.edge_algorithm() == Configuration::Sobel;
   d->sobel_kernel = d->configuration.sobel_kernel();
   d->sobel_blur_size = d->configuration.sobel_blur_size();
@@ -144,7 +144,7 @@ void DisplayImage::read_settings()
 }
 
 
-void DisplayImage::doHandle(Frame::ptr frame)
+void DisplayImage::doHandle(Frame::const_ptr frame)
 {
   if( ! d->should_display_frame()  || !frame->mat().data ) {
     return;
@@ -158,7 +158,7 @@ void DisplayImage::doHandle(Frame::ptr frame)
 
 void DisplayImage::create_qimages()
 {
-  Frame::ptr frame;
+  Frame::const_ptr frame;
   while(d->running) {
     if(!d->queue.pop(frame)) {
       QThread::msleep(1);
@@ -167,7 +167,7 @@ void DisplayImage::create_qimages()
 
     ++*d->capture_fps;
     auto cv_image = new cv::Mat;
-    static QHash<Frame::ColorFormat, std::function<void(const Frame::ptr &, cv::Mat&)>> converters {
+    static QHash<Frame::ColorFormat, std::function<void(Frame::const_ptr, cv::Mat&)>> converters {
       {Frame::Mono, bind(&Private::gray2rgb, d.get(), _1, _2)},
       {Frame::RGB, bind(&Private::rgb2rgb, d.get(), _1, _2)},
       {Frame::BGR, bind(&Private::bgr2rgb, d.get(), _1, _2)},
@@ -177,7 +177,7 @@ void DisplayImage::create_qimages()
       {Frame::Bayer_BGGR, bind(&Private::bayer2rgb, d.get(), _1, _2)},
     };
     converters[frame->colorFormat()](frame, *cv_image);
-    
+
 
     if(cv_image->depth() != CV_8U && cv_image->depth() != CV_8S) {
       cv_image->convertTo(*cv_image, CV_8UC3, BITS_16_TO_8);
@@ -208,7 +208,7 @@ void DisplayImage::create_qimages()
       cv::merge(h_s_v, hsv);
       cv::cvtColor(hsv, *cv_image, CV_HSV2RGB);
     }
-    QImage image{cv_image->data, cv_image->cols, cv_image->rows, static_cast<int>(cv_image->step), cv_image->channels() == 1 ? QImage::Format_Grayscale8: QImage::Format_RGB888, 
+    QImage image{cv_image->data, cv_image->cols, cv_image->rows, static_cast<int>(cv_image->step), cv_image->channels() == 1 ? QImage::Format_Grayscale8: QImage::Format_RGB888,
       [](void *data){ delete reinterpret_cast<cv::Mat*>(data); }, cv_image};
     if(cv_image->channels() == 1) {
       image.setColorTable(d->grayScale);
@@ -248,7 +248,7 @@ cv::Mat DisplayImage::Private::getEndianCorrectMat(const cv::Mat &src, Frame::By
         return src;
 }
 
-void DisplayImage::Private::bayer2rgb(const Frame::ptr& frame, cv::Mat& image)
+void DisplayImage::Private::bayer2rgb(Frame::const_ptr frame, cv::Mat& image)
 {
   if(! debayer) {
     gray2rgb(frame, image);
@@ -264,17 +264,17 @@ void DisplayImage::Private::bayer2rgb(const Frame::ptr& frame, cv::Mat& image)
   cv::cvtColor(getEndianCorrectMat(frame->mat(), frame->byteOrder()), image, bayer_patterns[frame->colorFormat()]);
 }
 
-void DisplayImage::Private::bgr2rgb(const Frame::ptr& frame, cv::Mat& image)
+void DisplayImage::Private::bgr2rgb(Frame::const_ptr frame, cv::Mat& image)
 {
   cv::cvtColor(getEndianCorrectMat(frame->mat(), frame->byteOrder()), image, CV_BGR2RGB);
 }
 
-void DisplayImage::Private::gray2rgb(const Frame::ptr& frame, cv::Mat& image)
+void DisplayImage::Private::gray2rgb(Frame::const_ptr frame, cv::Mat& image)
 {
   cv::cvtColor(getEndianCorrectMat(frame->mat(), frame->byteOrder()), image, CV_GRAY2RGB);
 }
 
-void DisplayImage::Private::rgb2rgb(const Frame::ptr& frame, cv::Mat& image)
+void DisplayImage::Private::rgb2rgb(Frame::const_ptr frame, cv::Mat& image)
 {
   getEndianCorrectMat(frame->mat(), frame->byteOrder()).copyTo(image);
 }

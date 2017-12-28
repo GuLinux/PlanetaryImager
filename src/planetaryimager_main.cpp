@@ -36,6 +36,7 @@ using namespace std;
 int main(int argc, char** argv)
 {
     qRegisterMetaType<Frame::ptr>("Frame::ptr");
+    qRegisterMetaType<Frame::const_ptr>("Frame::const_ptr");
     qRegisterMetaType<Imager*>("Imager*");
     CrashHandler crash_handler({SIGSEGV, SIGABRT});
     cerr << "Starting PlanetaryImager - version " << PLANETARY_IMAGER_VERSION << " (" << HOST_PROCESSOR << ")" << endl;
@@ -46,34 +47,34 @@ int main(int argc, char** argv)
     CommandLine commandLine(app);
     commandLine.backend().daemon("127.0.0.1").process();
     LogHandler log_handler{commandLine};
-    
+
     Configuration configuration;
     auto save_images = make_shared<LocalSaveImages>(configuration);
     auto drivers = make_shared<SupportedDrivers>(commandLine.driversDirectories());
-    
+
     auto dispatcher = make_shared<NetworkDispatcher>();
     auto save_files_forwarder = make_shared<SaveFileForwarder>(save_images, dispatcher);
     auto configuration_forwarder = make_shared<ConfigurationForwarder>(configuration, dispatcher);
     auto frames_forwarder = make_shared<FramesForwarder>(dispatcher);
-    
+
     auto compositeImageHandler = make_shared<ImageHandlers>(QList<ImageHandler::ptr>{save_images, frames_forwarder});
     auto threadedImageHandler = ImageHandler::ptr{new ThreadImageHandler{compositeImageHandler}};
-    
+
     auto planetaryImager = make_shared<PlanetaryImager>(drivers, threadedImageHandler, save_images, configuration);
-        
-    
+
+
     auto server = make_shared<NetworkServer>(planetaryImager, dispatcher, frames_forwarder);
     QObject::connect(save_files_forwarder.get(), &SaveFileForwarder::isRecording, frames_forwarder.get(), &FramesForwarder::recordingMode);
-    QObject::connect(planetaryImager.get(), &PlanetaryImager::cameraConnected, save_files_forwarder.get(), [&]{ 
+    QObject::connect(planetaryImager.get(), &PlanetaryImager::cameraConnected, save_files_forwarder.get(), [&]{
       save_files_forwarder->setImager(planetaryImager->imager());
     });
-    QObject::connect(planetaryImager.get(), &PlanetaryImager::cameraDisconnected, save_files_forwarder.get(), [&]{ 
+    QObject::connect(planetaryImager.get(), &PlanetaryImager::cameraDisconnected, save_files_forwarder.get(), [&]{
       save_files_forwarder->setImager(nullptr);
     });
     PlanetaryImagerMainWindow mainWindow{planetaryImager, compositeImageHandler, make_shared<LocalFilesystemBrowser>(), commandLine.logfile() };
-        
+
     QMetaObject::invokeMethod(server.get(), "listen", Q_ARG(QString, commandLine.address()), Q_ARG(int, commandLine.port()));
-    
+
     QObject::connect(server.get(), &NetworkServer::imagerConnected, &mainWindow, [&](Imager *imager) {
       mainWindow.setImager(imager);
     });
