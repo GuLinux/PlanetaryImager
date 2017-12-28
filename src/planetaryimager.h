@@ -43,7 +43,7 @@ public:
   Imager *imager() const;
   SaveImages::ptr saveImages() const;
   Configuration &configuration() const;
-  
+
 public slots:
   void scanCameras();
   void open(const Driver::Camera::ptr &camera);

@@ -57,6 +57,7 @@
 #include "c++/stlutils.h"
 #include "commons/exposuretimer.h"
 #include "Qt/qt_functional.h"
+#include "commons/tracking.h"
 
 #include "planetaryimager.h"
 
@@ -80,6 +81,7 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   StatusBarInfoWidget *statusbar_info_widget;
   shared_ptr<DisplayImage> displayImage;
   Histogram::ptr histogram;
+  shared_ptr<ImgTracker> imgTracker;
   CameraControlsWidget* cameraSettingsWidget = nullptr;
   CameraInfoWidget* cameraInfoWidget = nullptr;
   HistogramWidget *histogramWidget = nullptr;
@@ -146,8 +148,11 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     d->ui->histogram->setWidget(d->histogramWidget = new HistogramWidget(d->histogram, d->planetaryImager->configuration()));
     d->ui->statusbar->addPermanentWidget(d->statusbar_info_widget = new StatusBarInfoWidget(), 1);
 
+    d->imgTracker = make_shared<ImgTracker>();
+
     imageHandlers->push_back(d->displayImage);
     imageHandlers->push_back(d->histogram);
+    imageHandlers->push_back(d->imgTracker);
 
     connect(d->planetaryImager.get(), &PlanetaryImager::camerasChanged, this, bind(&Private::onCamerasFound, d.get()));
     connect(d->planetaryImager.get(), &PlanetaryImager::cameraConnected, this, [=]{ d->onImagerInitialized(d->planetaryImager->imager()); });
@@ -326,7 +331,11 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
         d->image_widget->startSelectionMode(ZoomableImage::SelectionMode::Point);
     });
 
-    connect(d->image_widget, &ZoomableImage::selectedPoint, [](const QPointF &p) { std::cout << "Clicked: " << p.x() << ", " << p.y() << std::endl; });
+    connect(d->image_widget, &ZoomableImage::selectedPoint, [this](const QPointF &p) {
+        std::cout << "Clicked: " << p.x() << ", " << p.y() << std::endl;//TESTING ########
+        d->imgTracker->addTarget(p.toPoint());
+
+    });
 
     readTemperature->start(2000);
     d->rescan_devices();

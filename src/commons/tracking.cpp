@@ -16,10 +16,14 @@
  *
  */
 
+#include <opencv2/tracking.hpp>
+#include <QDebug>
+#include <vector>
+
 #include "tracking.h"
 
 
-constexpr QPoint rect_center(const cv::Rect2d &r)
+constexpr QPoint rectCenter(const cv::Rect2d &r)
 {
     return { (int)(r.x + r.width/2),
              (int)(r.y + r.height/2) };
@@ -36,38 +40,55 @@ DPTR_IMPL(ImgTracker)
 {
     std::vector<Target> targets;
     cv::Ptr<cv::Tracker> tracker;
+    Frame::const_ptr prevFrame;
 };
-DPTR_DEL(ImgTracker)
 
 
 ImgTracker::ImgTracker(): dptr()
 {
     #if (CV_MINOR_VERSION < 3)
-    d->tracker = cv::Tracker::create("BOOSTING");
+    d->tracker = cv::Tracker::create("MIL");// Can't use "BOOSTING", as it does not work with grayscale frames.
     #else
     d->tracker = cv::TrackerKCF::create();
     #endif
-
-    std::cout << "Constructed!" << std::endl;
 }
 
 
-void ImgTracker::addTarget(const QPoint &pos, Frame::const_ptr initialImg)
+ImgTracker::~ImgTracker()
 {
+}
+
+
+void ImgTracker::addTarget(const QPoint &pos)
+{
+    if (!d->prevFrame)
+    {
+        qWarning() << "Attempted to set tracking target before any image has been received";
+        return;
+    }
+
     constexpr unsigned BBOX_SIZE = 32; //TODO: make it configurable
 
     Target newTarget{cv::Rect2d(pos.x() - BBOX_SIZE/2, pos.y() - BBOX_SIZE/2,
                                 BBOX_SIZE, BBOX_SIZE)};
 
-    d->tracker->init(initialImg->mat(), newTarget.bbox);
+    d->tracker->init(d->prevFrame->mat(), newTarget.bbox);
     d->targets.push_back(newTarget);
 }
 
 
-void ImgTracker::updatePositions(Frame::const_ptr newImg)
+void ImgTracker::doHandle(Frame::const_ptr frame)
 {
+    d->prevFrame = frame;
+
     for (auto &target: d->targets)
-        d->tracker->update(newImg->mat(), target.bbox);
+    {
+        d->tracker->update(frame->mat(), target.bbox);
+
+        //TESTING #######
+        const auto c = rectCenter(target.bbox);
+        std::cout << "New pos is: " << c.x() << ", " << c.y() << std::endl;
+    }
 }
 
 
@@ -79,5 +100,5 @@ void ImgTracker::clear()
 
 QPoint ImgTracker::getTargetPos(size_t index)
 {
-    return rect_center(d->targets.at(index).bbox);
+    return rectCenter(d->targets.at(index).bbox);
 }

@@ -20,25 +20,22 @@
 #define TRACKING_H
 
 #include <QtCore/qpoint.h>
-#include <opencv2/tracking.hpp>
-#include <vector>
 
 #include "commons/frame.h"
+#include "image_handlers/imagehandler.h"
 
 
-class ImgTracker
+class ImgTracker: public QObject, public ImageHandler
 {
-    DPTR_CUST_DEL
+    Q_OBJECT
+    DPTR
 
 public:
-
     ImgTracker();
+    ~ImgTracker();
 
     /// Adds new target to track
-    void addTarget(const QPoint &pos, Frame::const_ptr initialImg);
-
-    /// Updates positions of targets using the specified new image
-    void updatePositions(Frame::const_ptr newImg);
+    void addTarget(const QPoint &pos);
 
     /// Cancels tracking and removes all targets
     void clear();
@@ -47,7 +44,9 @@ public:
     QPoint getTargetPos(size_t index); //TODO: indicate "not updated"
 
     //TODO: "target lost" signal
-};
 
+private:
+    void doHandle(Frame::const_ptr frame) override;
+};
 
 #endif // TRACKING_H

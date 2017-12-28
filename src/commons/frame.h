@@ -49,6 +49,7 @@ public:
   uint8_t *data();
   QSize resolution() const;
   cv::Mat mat() const;
+  const cv::Mat cmat() const { return mat(); }
   uint8_t channels() const;
   uint8_t bpp() const;
   QDateTime created_utc() const;

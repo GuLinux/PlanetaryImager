@@ -20,7 +20,6 @@
 #include "planetaryimager.h"
 #include "Qt/qt_functional.h"
 #include "commons/messageslogger.h"
-#include "commons/tracking.h"
 #include <QThread>
 #include <QTimer>
 
@@ -34,8 +33,6 @@ DPTR_IMPL(PlanetaryImager) {
 
   Driver::Cameras cameras;
   Imager *imager = nullptr;
-
-  ImgTracker imgTracker;
 
   void initDevicesWatcher();
 };
