@@ -42,7 +42,7 @@ using namespace std::placeholders;
 DPTR_IMPL(DisplayImage) {
   const Configuration &configuration;
   DisplayImage *q;
-  unique_ptr<fps_counter> capture_fps;
+  unique_ptr<fps_counter> displayFps;
   atomic_bool recording;
   atomic_bool running;
 
@@ -99,7 +99,7 @@ DisplayImage::~DisplayImage()
 DisplayImage::DisplayImage(const Configuration &configuration, QObject* parent)
   : QObject(parent), dptr(configuration, this)
 {
-  d->capture_fps.reset(new fps_counter([=](double fps){ emit displayFPS(fps);}, fps_counter::Elapsed) );
+  d->displayFps.reset(new fps_counter([=](double fps){ emit displayFPS(fps);}, fps_counter::Elapsed) );
   d->running = true;
   d->detectEdges = false;
   d->maximumSaturation = false;
@@ -165,7 +165,7 @@ void DisplayImage::create_qimages()
       continue;
     }
 
-    ++*d->capture_fps;
+    ++*d->displayFps;
     auto cv_image = new cv::Mat;
     static QHash<Frame::ColorFormat, std::function<void(Frame::const_ptr, cv::Mat&)>> converters {
       {Frame::Mono, bind(&Private::gray2rgb, d.get(), _1, _2)},
