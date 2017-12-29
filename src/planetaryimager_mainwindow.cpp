@@ -46,6 +46,10 @@
 #include <QGraphicsScene>
 #include <QFileInfo>
 #include <QDesktopServices>
+#include <memory>
+#include <vector>
+#include <QGraphicsEllipseItem>
+#include <QGraphicsRectItem>
 
 #include "widgets/editroidialog.h"
 
@@ -93,6 +97,10 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
 
   ImageHandler::ptr imageHandler;
 
+  struct
+  {
+      std::vector<std::unique_ptr<QGraphicsEllipseItem>> trackingTargets;
+  } InfoOverlay;
 
   void cameraDisconnected();
   void enableUIWidgets(bool cameraConnected);
@@ -107,6 +115,14 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
 
 PlanetaryImagerMainWindow *PlanetaryImagerMainWindow::Private::q = nullptr;
 
+
+void PlanetaryImagerMainWindow::updateTargets()
+{
+    for (size_t i = 0; i < d->InfoOverlay.trackingTargets.size(); i++)
+    {
+        d->InfoOverlay.trackingTargets[i]->setPos(d->imgTracker->getTargetPos(i));
+    }
+}
 
 PlanetaryImagerMainWindow::~PlanetaryImagerMainWindow()
 {
@@ -270,6 +286,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     connect(d->ui->actionShow_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::show, _1) ); });
     connect(MessagesLogger::instance(), &MessagesLogger::message, this, bind(&PlanetaryImagerMainWindow::notify, this, _1, _2, _3, _4), Qt::QueuedConnection);
     connect(d->displayImage.get(), &DisplayImage::gotImage, this, bind(&ZoomableImage::setImage, d->image_widget, _1), Qt::QueuedConnection);
+    connect(d->displayImage.get(), &DisplayImage::gotImage, this, bind(&PlanetaryImagerMainWindow::updateTargets, this), Qt::QueuedConnection);
 
     connect(d->ui->actionNight_Mode, &QAction::toggled, this, [=](bool checked) {
       qApp->setStyleSheet(checked ? R"_(
@@ -332,14 +349,22 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     });
 
     connect(d->image_widget, &ZoomableImage::selectedPoint, [this](const QPointF &p) {
-        std::cout << "Clicked: " << p.x() << ", " << p.y() << std::endl;//TESTING ########
         d->imgTracker->addTarget(p.toPoint());
 
+        auto item = std::make_unique<QGraphicsEllipseItem>(-10, -10, 20, 20);
+        item->setPos(p);
+        item->setPen(QPen{QColor{ 0, 255, 0, 255 }});
+        item->setBrush(QBrush{Qt::NoBrush});
+        item->setZValue(1);
+
+        d->InfoOverlay.trackingTargets.emplace_back(std::move(item));
+        d->image_widget->scene()->addItem(d->InfoOverlay.trackingTargets.back().get());
     });
 
     readTemperature->start(2000);
     d->rescan_devices();
 }
+
 
 void PlanetaryImagerMainWindow::closeEvent(QCloseEvent* event)
 {

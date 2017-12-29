@@ -18,6 +18,7 @@
 
 #include <opencv2/tracking.hpp>
 #include <QDebug>
+#include <mutex>
 #include <vector>
 
 #include "tracking.h"
@@ -38,10 +39,13 @@ struct Target
 
 DPTR_IMPL(ImgTracker)
 {
+    std::mutex guard; ///< Synchronizes accesses to 'targets'
     std::vector<Target> targets;
     cv::Ptr<cv::Tracker> tracker;
     Frame::const_ptr prevFrame;
 };
+
+#define LOCK()  std::lock_guard<std::mutex> lock(d->guard)
 
 
 ImgTracker::ImgTracker(): dptr()
@@ -72,6 +76,7 @@ void ImgTracker::addTarget(const QPoint &pos)
     Target newTarget{cv::Rect2d(pos.x() - BBOX_SIZE/2, pos.y() - BBOX_SIZE/2,
                                 BBOX_SIZE, BBOX_SIZE)};
 
+    LOCK();
     d->tracker->init(d->prevFrame->mat(), newTarget.bbox);
     d->targets.push_back(newTarget);
 }
@@ -81,13 +86,14 @@ void ImgTracker::doHandle(Frame::const_ptr frame)
 {
     d->prevFrame = frame;
 
+    LOCK();
     for (auto &target: d->targets)
     {
-        d->tracker->update(frame->mat(), target.bbox);
+        //Too slow!   d->tracker->update(frame->mat(), target.bbox);
 
         //TESTING #######
-        const auto c = rectCenter(target.bbox);
-        std::cout << "New pos is: " << c.x() << ", " << c.y() << std::endl;
+//        const auto c = rectCenter(target.bbox);
+//        std::cout << "New pos is: " << c.x() << ", " << c.y() << std::endl;
     }
 }
 
@@ -100,5 +106,6 @@ void ImgTracker::clear()
 
 QPoint ImgTracker::getTargetPos(size_t index)
 {
+    LOCK();
     return rectCenter(d->targets.at(index).bbox);
 }

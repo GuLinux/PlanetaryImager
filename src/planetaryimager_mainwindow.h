@@ -49,6 +49,10 @@ public:
 public slots:
   void setImager(Imager *imager);
   void notify(const QDateTime &when, MessagesLogger::Type notification_type, const QString &title, const QString &message);
+
+private slots:
+    void updateTargets();
+
 protected:
   void closeEvent(QCloseEvent *event) override;
 signals:
