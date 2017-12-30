@@ -16,10 +16,12 @@
  *
  */
 
-#include <opencv2/tracking.hpp>
+#include <opencv2/core.hpp>
 #include <QDebug>
 #include <mutex>
+#include <numeric>
 #include <vector>
+#include <thread>//TESTING ##########
 
 #include "tracking.h"
 
@@ -31,9 +33,76 @@ constexpr QPoint rectCenter(const cv::Rect2d &r)
 }
 
 
+/// Finds new position of 'refBlock' in 'img' using block matching
+QPoint findNewPos(const QPoint &oldPos, ///< Old position of 'refBlock's center in 'img'
+                  cv::Mat refBlock,
+                  cv::Mat img)
+{
+    // At first using a coarse step when trying to match 'refBlock'
+    // with 'img' at different positions. Once an approximate matching
+    // position is determined, the search continues around it repeatedly
+    // using a smaller step, until the step becomes 1.
+    unsigned searchStep = 4;
+    const int searchRadius = 32;
+
+    // Range of positions where 'refBlock' will be match-tested with 'img'.
+    struct
+    {
+        int xmin, ymin; // inclusive
+        int xmax, ymax; // exclusive
+    } searchPos = { .xmin = oldPos.x() - searchRadius,
+                    .ymin = oldPos.y() - searchRadius,
+                    .xmax = oldPos.x() + searchRadius,
+                    .ymax = oldPos.y() + searchRadius };
+
+    QPoint bestPos{ 0, 0 };
+
+    cv::Mat absDiff = cv::Mat(refBlock.rows, refBlock.cols, refBlock.type());
+
+    while (searchStep)
+    {
+        // Min. sum of absolute differences between pixel values of
+        // the reference block and the image at candidate positions.
+        double minDiffSum = DBL_MAX;
+
+        const int rbwidth = refBlock.cols;
+        const int rbheight = refBlock.rows;
+
+        // (x, y) = position in 'img' for which a block match test is performed
+        for (int y = searchPos.ymin; y < searchPos.ymax;  y += searchStep)
+            for (int x = searchPos.xmin; x < searchPos.xmax;  x += searchStep)
+            {
+                cv::absdiff(refBlock,
+                            cv::Mat(img, cv::Rect{ x - rbwidth/2, y - rbheight/2, rbwidth, rbheight }),
+                            absDiff);
+
+                const auto sumAbsDiffChannels = cv::sum(absDiff);
+                const double sumAbsDiffs = std::accumulate(sumAbsDiffChannels.val, sumAbsDiffChannels.val + 4, 0.0);
+
+                if (sumAbsDiffs < minDiffSum)
+                {
+                    minDiffSum = sumAbsDiffs;
+                    bestPos = QPoint{ x, y };
+                }
+            }
+
+        searchPos.xmin = bestPos.x() - searchStep;
+        searchPos.ymin = bestPos.y() - searchStep;
+        searchPos.xmax = bestPos.x() + searchStep;
+        searchPos.ymax = bestPos.y() + searchStep;
+
+        searchStep /= 2;
+    }
+
+    return bestPos;
+}
+
+
 struct Target
 {
-    cv::Rect2d bbox; ///< Bounding box
+    /// Target position; corresponds with the middle of 'refBlock'
+    QPoint pos;
+    cv::Mat refBlock; ///< Reference block
 };
 
 
@@ -41,7 +110,6 @@ DPTR_IMPL(ImgTracker)
 {
     std::mutex guard; ///< Synchronizes accesses to 'targets'
     std::vector<Target> targets;
-    cv::Ptr<cv::Tracker> tracker;
     Frame::const_ptr prevFrame;
 };
 
@@ -50,11 +118,6 @@ DPTR_IMPL(ImgTracker)
 
 ImgTracker::ImgTracker(): dptr()
 {
-    #if (CV_MINOR_VERSION < 3)
-    d->tracker = cv::Tracker::create("MIL");// Can't use "BOOSTING", as it does not work with grayscale frames.
-    #else
-    d->tracker = cv::TrackerKCF::create();
-    #endif
 }
 
 
@@ -73,11 +136,11 @@ void ImgTracker::addTarget(const QPoint &pos)
 
     constexpr unsigned BBOX_SIZE = 32; //TODO: make it configurable
 
-    Target newTarget{cv::Rect2d(pos.x() - BBOX_SIZE/2, pos.y() - BBOX_SIZE/2,
-                                BBOX_SIZE, BBOX_SIZE)};
+    Target newTarget{ pos, cv::Mat(d->prevFrame->mat(), cv::Rect{ pos.x() - BBOX_SIZE/2,
+                                                                  pos.y() + BBOX_SIZE/2,
+                                                                  BBOX_SIZE, BBOX_SIZE }).clone() };
 
     LOCK();
-    d->tracker->init(d->prevFrame->mat(), newTarget.bbox);
     d->targets.push_back(newTarget);
 }
 
@@ -89,11 +152,7 @@ void ImgTracker::doHandle(Frame::const_ptr frame)
     LOCK();
     for (auto &target: d->targets)
     {
-        //Too slow!   d->tracker->update(frame->mat(), target.bbox);
-
-        //TESTING #######
-//        const auto c = rectCenter(target.bbox);
-//        std::cout << "New pos is: " << c.x() << ", " << c.y() << std::endl;
+        target.pos = findNewPos(target.pos, target.refBlock, frame->mat());
     }
 }
 
@@ -107,5 +166,5 @@ void ImgTracker::clear()
 QPoint ImgTracker::getTargetPos(size_t index)
 {
     LOCK();
-    return rectCenter(d->targets.at(index).bbox);
+    return d->targets.at(index).pos;
 }
