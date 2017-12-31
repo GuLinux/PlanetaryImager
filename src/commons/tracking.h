@@ -20,28 +20,57 @@
 #define TRACKING_H
 
 #include <QtCore/qpoint.h>
+#include <tuple>
 
 #include "commons/frame.h"
 #include "image_handlers/imagehandler.h"
 
 
+/// Tracks image movement
+/** Works in block matching or centroid mode. In case of block matching, multiple tracking targets
+    may be specified (to protect against local disturbances, e.g. due to a passing bird/satellite).
+    Centroid mode is best suited for planets.
+
+    Tracking position is updated on every call to ImageHandler::doHandle().
+*/
 class ImgTracker: public QObject, public ImageHandler
 {
     Q_OBJECT
     DPTR
 
 public:
+
+    enum class TrackingMode { Disabled, Centroid, BlockMatching };
+
     ImgTracker();
     ~ImgTracker();
 
-    /// Adds new target to track
-    void addTarget(const QPoint &pos);
+    ImgTracker(const ImgTracker &)             = delete;
+    ImgTracker(ImgTracker &&)                  = delete;
+    ImgTracker &operator =(const ImgTracker &) = delete;
+    ImgTracker &operator =(ImgTracker &&)      = delete;
+
+    TrackingMode getTrackingMode() const;
+
+    /// Sets the centroid calculation area
+    /** Removes any block-matching targets. */
+    void setCentroidCalcRect(const QRect &rect);
+
+    /// Returns either the centroid position or the block matching targets' common position
+    QPoint getTrackingPosition() const;
+
+    /// Returns centroid calculation area and centroid position in the image
+    const std::tuple<QRect, QPoint> getCentroidAreaAndPos() const;
+
+    /// Adds new target to track via block matching
+    /** Cancels centroid tracking (if enabled). */
+    void addBlockMatchingTarget(const QPoint &pos);
 
     /// Cancels tracking and removes all targets
     void clear();
 
-    /// Returns target's current position
-    QPoint getTargetPos(size_t index); //TODO: indicate "not updated"
+    /// Returns current positions of block matching targets
+    std::vector<QPoint> getBlockMatchingTargetPositions();
 
     //TODO: "target lost" signal
 

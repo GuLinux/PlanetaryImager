@@ -18,6 +18,7 @@
 
 #include <opencv2/core.hpp>
 #include <QDebug>
+#include <QtCore/qrect.h>
 #include <mutex>
 #include <numeric>
 #include <vector>
@@ -25,10 +26,9 @@
 #include "tracking.h"
 
 
-constexpr QPoint rectCenter(const cv::Rect2d &r)
+cv::Rect toCvRect(const QRect &qr)
 {
-    return { (int)(r.x + r.width/2),
-             (int)(r.y + r.height/2) };
+    return cv::Rect(qr.x(), qr.y(), qr.width(), qr.height());
 }
 
 
@@ -97,7 +97,20 @@ QPoint findNewPos(const QPoint &oldPos, ///< Old position of 'refBlock's center 
 }
 
 
-struct Target
+QPoint findCentroid(cv::Mat img)
+{
+    if (img.channels() > 1)
+        cv::cvtColor(img, img, CV_RGB2GRAY);
+
+    const auto moments = cv::moments(img);
+    if (moments.m00 == 0.0)
+        return QPoint{ 0, 0 };
+    else
+        return QPoint{ moments.m10 / moments.m00, moments.m01 / moments.m00 };
+}
+
+
+struct BlockMatchingTarget
 {
     /// Target position; corresponds with the middle of 'refBlock'
     QPoint pos;
@@ -107,8 +120,23 @@ struct Target
 
 DPTR_IMPL(ImgTracker)
 {
-    std::mutex guard; ///< Synchronizes accesses to 'targets'
-    std::vector<Target> targets;
+    TrackingMode mode = TrackingMode::Disabled;
+
+    std::mutex guard; ///< Synchronizes accesses to 'targets' and 'centroid'
+    std::vector<BlockMatchingTarget> targets;
+    struct
+    {
+        /// Fragment of the image to calculate the centroid for
+        /** Keeps its position (upper-left corner) constant relative to 'pos'. */
+        QRect area;
+        QPoint pos; ///< Desired position of the 'area's centroid relative to area's origin
+    } centroid;
+
+    /** Initially equals (0, 0) and corresponds to the first element in 'targets'. If the first element
+        later gets removed, the value will change to the new first element's coordinates and will be
+        updated with it, so that GetTrackingPosition()'s result does not suddenly change. */
+    QPoint blockMatchingReportedOffset = QPoint{ 0, 0 };
+
     Frame::const_ptr prevFrame;
 };
 
@@ -125,32 +153,53 @@ ImgTracker::~ImgTracker()
 }
 
 
-void ImgTracker::addTarget(const QPoint &pos)
+void ImgTracker::addBlockMatchingTarget(const QPoint &pos)
 {
     if (!d->prevFrame)
     {
-        qWarning() << "Attempted to set tracking target before any image has been received";
+        qWarning() << "Attempted to start tracking before any image has been received";
         return;
     }
 
     constexpr unsigned BBOX_SIZE = 32; //TODO: make it configurable
 
-    Target newTarget{ pos, cv::Mat(d->prevFrame->mat(), cv::Rect{ pos.x() - BBOX_SIZE/2,
-                                                                  pos.y() - BBOX_SIZE/2,
-                                                                  BBOX_SIZE, BBOX_SIZE }).clone() };
+    //TODO: change frame fragment's endianess if needed
+
+    BlockMatchingTarget newTarget{ pos, cv::Mat(d->prevFrame->mat(), cv::Rect{ pos.x() - BBOX_SIZE/2,
+                                                                               pos.y() - BBOX_SIZE/2,
+                                                                               BBOX_SIZE, BBOX_SIZE }).clone() };
 
     LOCK();
+    d->mode = TrackingMode::BlockMatching;
     d->targets.push_back(newTarget);
 }
 
 
 void ImgTracker::doHandle(Frame::const_ptr frame)
 {
+    //TODO: change frame fragments' endianess if needed
+
     d->prevFrame = frame;
+    if (d->mode == TrackingMode::Disabled)
+        return;
 
     LOCK();
-    for (auto &target: d->targets)
-        target.pos = findNewPos(target.pos, target.refBlock, frame->mat());
+
+    switch (d->mode)
+    {
+    case TrackingMode::BlockMatching:
+        for (auto &target: d->targets)
+            target.pos = findNewPos(target.pos, target.refBlock, frame->mat());
+        break;
+
+    case TrackingMode::Centroid:
+        {
+            const QPoint newPos = findCentroid(cv::Mat(frame->mat(), toCvRect(d->centroid.area)));
+            const QPoint delta = newPos - d->centroid.pos;
+            d->centroid.area.moveTopLeft(d->centroid.area.topLeft() + delta);
+        }
+        break;
+    }
 }
 
 
@@ -160,8 +209,54 @@ void ImgTracker::clear()
 }
 
 
-QPoint ImgTracker::getTargetPos(size_t index)
+/// Returns current positions of block matching targets
+std::vector<QPoint> ImgTracker::getBlockMatchingTargetPositions()
 {
     LOCK();
-    return d->targets.at(index).pos;
+    std::vector<QPoint> result;
+    for (const auto &target: d->targets)
+        result.push_back(target.pos);
+
+    return result;
+}
+
+
+ImgTracker::TrackingMode ImgTracker::getTrackingMode() const
+{
+    LOCK();
+    return d->mode;
+}
+
+
+QPoint ImgTracker::getTrackingPosition() const
+{
+    LOCK();
+
+    switch (d->mode)
+    {
+        //case TrackingMode::Centroid: return m_Centroid.area.GetTopLeft() + m_Centroid.pos;
+
+        case TrackingMode::BlockMatching:
+            return d->targets.at(0).pos - d->blockMatchingReportedOffset;
+    }
+
+    return { 0, 0 };
+}
+
+
+void ImgTracker::setCentroidCalcRect(const QRect &rect)
+{
+    if (!d->prevFrame)
+    {
+        qWarning() << "Attempted to start tracking before any image has been received";
+        return;
+    }
+
+    LOCK();
+    d->targets.clear();
+    d->mode = TrackingMode::Centroid;
+    d->blockMatchingReportedOffset = QPoint{ 0, 0 };
+    d->centroid.area = rect;
+    //TODO: change frame fragment's endianess if needed
+    d->centroid.pos = findCentroid(cv::Mat(d->prevFrame->mat(), toCvRect(rect)));
 }
