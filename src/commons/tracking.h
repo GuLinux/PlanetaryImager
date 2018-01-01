@@ -60,7 +60,7 @@ public:
     QPoint getTrackingPosition() const;
 
     /// Returns centroid calculation area and centroid position in the image
-    const std::tuple<QRect, QPoint> getCentroidAreaAndPos() const;
+    std::tuple<QRect, QPoint> getCentroidAreaAndPos() const;
 
     /// Adds new target to track via block matching
     /** Cancels centroid tracking (if enabled). */

@@ -97,10 +97,13 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
 
   ImageHandler::ptr imageHandler;
 
+  /// Contains elements of the "informational overlay", added to the graphics scene of 'displayImage'
   struct
   {
-      std::vector<std::unique_ptr<QGraphicsEllipseItem>> trackingTargets;
-  } InfoOverlay;
+      std::vector<QGraphicsEllipseItem*> trackingTargets;
+      QGraphicsRectItem *centroidArea;
+      //TODO: show centroid position
+  } infoOverlay;
 
   void cameraDisconnected();
   void enableUIWidgets(bool cameraConnected);
@@ -110,20 +113,33 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   void onImagerInitialized(Imager *imager);
   void onCamerasFound();
 
-  enum class SelectionMode { None, ROI, AddTrackingTarget } selection_mode = SelectionMode::None;
+  enum class SelectionMode { None, ROI, AddTrackingTarget, SelectCentroidRect } selection_mode = SelectionMode::None;
 };
 
 PlanetaryImagerMainWindow *PlanetaryImagerMainWindow::Private::q = nullptr;
 
 
-void PlanetaryImagerMainWindow::updateBlockMatchingTargets()
+void PlanetaryImagerMainWindow::updateInfoOverlay()
 {
-    const auto positions = d->imgTracker->getBlockMatchingTargetPositions();
-    for (size_t i = 0; i < d->InfoOverlay.trackingTargets.size(); i++)
+    switch (d->imgTracker->getTrackingMode())
     {
-        d->InfoOverlay.trackingTargets[i]->setPos(positions.at(i));
+    case ImgTracker::TrackingMode::BlockMatching:
+        {
+            const auto positions = d->imgTracker->getBlockMatchingTargetPositions();
+            for (size_t i = 0; i < d->infoOverlay.trackingTargets.size(); i++)
+            {
+                d->infoOverlay.trackingTargets[i]->setPos(positions.at(i));
+            }
+        }
+        break;
+
+    case ImgTracker::TrackingMode::Centroid:
+        const auto centroid = d->imgTracker->getCentroidAreaAndPos();
+        d->infoOverlay.centroidArea->setRect(std::get<0>(centroid));
+        break;
     }
 }
+
 
 PlanetaryImagerMainWindow::~PlanetaryImagerMainWindow()
 {
@@ -287,7 +303,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     connect(d->ui->actionShow_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::show, _1) ); });
     connect(MessagesLogger::instance(), &MessagesLogger::message, this, bind(&PlanetaryImagerMainWindow::notify, this, _1, _2, _3, _4), Qt::QueuedConnection);
     connect(d->displayImage.get(), &DisplayImage::gotImage, this, bind(&ZoomableImage::setImage, d->image_widget, _1), Qt::QueuedConnection);
-    connect(d->displayImage.get(), &DisplayImage::gotImage, this, bind(&PlanetaryImagerMainWindow::updateBlockMatchingTargets, this), Qt::QueuedConnection);
+    connect(d->displayImage.get(), &DisplayImage::gotImage, this, bind(&PlanetaryImagerMainWindow::updateInfoOverlay, this), Qt::QueuedConnection);
 
     connect(d->ui->actionNight_Mode, &QAction::toggled, this, [=](bool checked) {
       qApp->setStyleSheet(checked ? R"_(
@@ -325,6 +341,17 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     QMap<Private::SelectionMode, function<void(const QRect &)>> handle_selection {
       {Private::SelectionMode::None, [](const QRect&) {}},
       {Private::SelectionMode::ROI, [&](const QRect &rect) { d->imager->setROI(rect.normalized()); }},
+      {Private::SelectionMode::SelectCentroidRect, [&](const QRect &rect) {
+          d->imgTracker->setCentroidCalcRect(rect);
+
+          auto *r = new QGraphicsRectItem(rect);
+          r->setPen(QPen{ QColor{ 0, 255, 0, 255 } });
+          r->setBrush(QBrush{ Qt::NoBrush });
+          r->setZValue(1);
+
+          d->infoOverlay.centroidArea = r;
+          d->image_widget->scene()->addItem(d->infoOverlay.centroidArea);
+      }},
     };
     connect(d->image_widget, &ZoomableImage::selectedRect, [this, handle_selection](const QRectF &rect) {
       handle_selection[d->selection_mode](rect.toRect());
@@ -348,19 +375,24 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
         d->image_widget->startSelectionMode(ZoomableImage::SelectionMode::Point);
     });
 
+    connect(d->ui->actionSetCentroidArea, &QAction::triggered, [&] {
+        d->selection_mode = Private::SelectionMode::SelectCentroidRect;
+        d->image_widget->startSelectionMode(ZoomableImage::SelectionMode::Rect);
+    });
+
     connect(d->image_widget, &ZoomableImage::selectedPoint, [this](const QPointF &p) {
         if (d->selection_mode == Private::SelectionMode::AddTrackingTarget)
         {
             d->imgTracker->addBlockMatchingTarget(p.toPoint());
 
-            auto item = std::make_unique<QGraphicsEllipseItem>(-10, -10, 20, 20);
+            auto item = new QGraphicsEllipseItem(-10, -10, 20, 20);
             item->setPos(p);
-            item->setPen(QPen{QColor{ 0, 255, 0, 255 }});
-            item->setBrush(QBrush{Qt::NoBrush});
+            item->setPen(QPen{ QColor{ 0, 255, 0, 255 } });
+            item->setBrush(QBrush{ Qt::NoBrush });
             item->setZValue(1);
 
-            d->InfoOverlay.trackingTargets.emplace_back(std::move(item));
-            d->image_widget->scene()->addItem(d->InfoOverlay.trackingTargets.back().get());
+            d->infoOverlay.trackingTargets.push_back(item);
+            d->image_widget->scene()->addItem(item);
         }
     });
 
@@ -436,6 +468,7 @@ void PlanetaryImagerMainWindow::Private::onImagerInitialized(Imager * imager)
     ui->actionEdit_ROI->setEnabled(imager->supports(Imager::ROI));
     ui->actionClear_ROI->setEnabled(imager->supports(Imager::ROI));
     ui->actionAddTrackingTarget->setEnabled(true);
+    ui->actionSetCentroidArea->setEnabled(true);
 }
 
 // TODO: sync issues when images are sent after the imagerDisconnected signal
@@ -448,7 +481,7 @@ void PlanetaryImagerMainWindow::Private::cameraDisconnected()
   ui->actionEdit_ROI->setEnabled(false);
   ui->actionClear_ROI->setEnabled(false);
   ui->actionAddTrackingTarget->setEnabled(false);
-  //
+  ui->actionSetCentroidArea->setEnabled(false);
 
   delete cameraSettingsWidget;
   cameraSettingsWidget = nullptr;

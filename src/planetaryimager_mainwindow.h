@@ -51,7 +51,7 @@ public slots:
   void notify(const QDateTime &when, MessagesLogger::Type notification_type, const QString &title, const QString &message);
 
 private slots:
-    void updateBlockMatchingTargets(); ///< Updates positions of block matching targets for display
+    void updateInfoOverlay(); ///< Updates positions of block matching targets for display
 
 protected:
   void closeEvent(QCloseEvent *event) override;

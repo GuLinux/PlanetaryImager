@@ -260,3 +260,9 @@ void ImgTracker::setCentroidCalcRect(const QRect &rect)
     //TODO: change frame fragment's endianess if needed
     d->centroid.pos = findCentroid(cv::Mat(d->prevFrame->mat(), toCvRect(rect)));
 }
+
+
+std::tuple<QRect, QPoint> ImgTracker::getCentroidAreaAndPos() const
+{
+    return std::make_tuple(d->centroid.area, d->centroid.pos);
+}
