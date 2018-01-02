@@ -101,7 +101,7 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   struct
   {
       std::vector<QGraphicsEllipseItem*> trackingTargets;
-      QGraphicsRectItem *centroidArea;
+      QGraphicsRectItem *centroidArea = nullptr;
       //TODO: show centroid position
   } infoOverlay;
 
@@ -342,6 +342,14 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
       {Private::SelectionMode::None, [](const QRect&) {}},
       {Private::SelectionMode::ROI, [&](const QRect &rect) { d->imager->setROI(rect.normalized()); }},
       {Private::SelectionMode::SelectCentroidRect, [&](const QRect &rect) {
+
+          for (auto *i: d->infoOverlay.trackingTargets)
+          {
+              d->image_widget->scene()->removeItem(i);
+              delete i;
+          }
+          d->infoOverlay.trackingTargets.clear();
+
           d->imgTracker->setCentroidCalcRect(rect);
 
           auto *r = new QGraphicsRectItem(rect);
@@ -383,6 +391,13 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     connect(d->image_widget, &ZoomableImage::selectedPoint, [this](const QPointF &p) {
         if (d->selection_mode == Private::SelectionMode::AddTrackingTarget)
         {
+            if (d->infoOverlay.centroidArea)
+            {
+                d->image_widget->scene()->removeItem(d->infoOverlay.centroidArea);
+                delete d->infoOverlay.centroidArea;
+                d->infoOverlay.centroidArea = nullptr;
+            }
+
             d->imgTracker->addBlockMatchingTarget(p.toPoint());
 
             auto item = new QGraphicsEllipseItem(-10, -10, 20, 20);
