@@ -128,14 +128,17 @@ void PlanetaryImagerMainWindow::updateInfoOverlay()
             const auto positions = d->imgTracker->getBlockMatchingTargetPositions();
             for (size_t i = 0; i < d->infoOverlay.trackingTargets.size(); i++)
             {
-                d->infoOverlay.trackingTargets[i]->setPos(positions.at(i));
+                d->infoOverlay.trackingTargets[i]->setPos(d->image_widget->getImgTransform().map(positions.at(i)));
             }
         }
         break;
 
     case ImgTracker::TrackingMode::Centroid:
-        const auto centroid = d->imgTracker->getCentroidAreaAndPos();
-        d->infoOverlay.centroidArea->setRect(std::get<0>(centroid));
+        {
+            const auto imgT = d->image_widget->getImgTransform();
+            const auto centroid = d->imgTracker->getCentroidAreaAndPos();
+            d->infoOverlay.centroidArea->setRect(imgT.mapRect(std::get<0>(centroid)));
+        }
         break;
     }
 }
@@ -350,9 +353,15 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
           }
           d->infoOverlay.trackingTargets.clear();
 
+          if (d->infoOverlay.centroidArea)
+          {
+              d->image_widget->scene()->removeItem(d->infoOverlay.centroidArea);
+              delete d->infoOverlay.centroidArea;
+          }
+
           d->imgTracker->setCentroidCalcRect(rect);
 
-          auto *r = new QGraphicsRectItem(rect);
+          auto *r = new QGraphicsRectItem(d->image_widget->getImgTransform().mapRect(rect));
           r->setPen(QPen{ QColor{ 0, 255, 0, 255 } });
           r->setBrush(QBrush{ Qt::NoBrush });
           r->setZValue(1);
@@ -401,7 +410,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
             d->imgTracker->addBlockMatchingTarget(p.toPoint());
 
             auto item = new QGraphicsEllipseItem(-10, -10, 20, 20);
-            item->setPos(p);
+            item->setPos(d->image_widget->getImgTransform().map(p));
             item->setPen(QPen{ QColor{ 0, 255, 0, 255 } });
             item->setBrush(QBrush{ Qt::NoBrush });
             item->setZValue(1);
