@@ -153,25 +153,39 @@ ImgTracker::~ImgTracker()
 }
 
 
-void ImgTracker::addBlockMatchingTarget(const QPoint &pos)
+bool ImgTracker::addBlockMatchingTarget(const QPoint &pos)
 {
     if (!d->prevFrame)
     {
         qWarning() << "Attempted to start tracking before any image has been received";
-        return;
+        return false;
     }
 
     constexpr unsigned BBOX_SIZE = 32; //TODO: make it configurable
 
-    //TODO: change frame fragment's endianess if needed
+    const cv::Rect refBlockRect = cv::Rect{ pos.x() - BBOX_SIZE/2,
+                                            pos.y() - BBOX_SIZE/2,
+                                            BBOX_SIZE, BBOX_SIZE };
 
-    BlockMatchingTarget newTarget{ pos, cv::Mat(d->prevFrame->mat(), cv::Rect{ pos.x() - BBOX_SIZE/2,
-                                                                               pos.y() - BBOX_SIZE/2,
-                                                                               BBOX_SIZE, BBOX_SIZE }).clone() };
+    const cv::Rect frameRect = cv::Rect{ 0, 0, d->prevFrame->mat().size[1], d->prevFrame->mat().size[0] };
+
+    const auto intersection = frameRect & refBlockRect;
+
+    if (intersection.width != refBlockRect.width ||
+        intersection.height != refBlockRect.height)
+    {
+        qWarning() << "Reference block outside image";
+        return false;
+    }
+
+    //TODO: change frame fragment's endianess if needed
+    BlockMatchingTarget newTarget{ pos, cv::Mat(d->prevFrame->mat(), refBlockRect).clone() };
 
     LOCK();
     d->mode = TrackingMode::BlockMatching;
     d->targets.push_back(newTarget);
+
+    return true;
 }
 
 
@@ -244,12 +258,21 @@ QPoint ImgTracker::getTrackingPosition() const
 }
 
 
-void ImgTracker::setCentroidCalcRect(const QRect &rect)
+bool ImgTracker::setCentroidCalcRect(const QRect &rect)
 {
     if (!d->prevFrame)
     {
         qWarning() << "Attempted to start tracking before any image has been received";
-        return;
+        return false;
+    }
+
+    const cv::Rect frameRect = cv::Rect{ 0, 0, d->prevFrame->mat().size[1], d->prevFrame->mat().size[0] };
+    const cv::Rect intersection = frameRect & cv::Rect{ rect.x(), rect.y(), rect.width(), rect.height() };
+    if (intersection.width != rect.width() ||
+        intersection.height != rect.height())
+    {
+        qWarning() << "Centroid calculation rectangle outside image";
+        return false;
     }
 
     LOCK();
@@ -259,6 +282,8 @@ void ImgTracker::setCentroidCalcRect(const QRect &rect)
     d->centroid.area = rect;
     //TODO: change frame fragment's endianess if needed
     d->centroid.pos = findCentroid(cv::Mat(d->prevFrame->mat(), toCvRect(rect)));
+
+    return true;
 }
 
 

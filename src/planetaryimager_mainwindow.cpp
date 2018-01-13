@@ -346,28 +346,29 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
       {Private::SelectionMode::ROI, [&](const QRect &rect) { d->imager->setROI(rect.normalized()); }},
       {Private::SelectionMode::SelectCentroidRect, [&](const QRect &rect) {
 
-          for (auto *i: d->infoOverlay.trackingTargets)
+          if (d->imgTracker->setCentroidCalcRect(rect))
           {
-              d->image_widget->scene()->removeItem(i);
-              delete i;
+              for (auto *i: d->infoOverlay.trackingTargets)
+              {
+                  d->image_widget->scene()->removeItem(i);
+                  delete i;
+              }
+              d->infoOverlay.trackingTargets.clear();
+
+              if (d->infoOverlay.centroidArea)
+              {
+                  d->image_widget->scene()->removeItem(d->infoOverlay.centroidArea);
+                  delete d->infoOverlay.centroidArea;
+              }
+
+              auto *r = new QGraphicsRectItem(d->image_widget->getImgTransform().mapRect(rect));
+              r->setPen(QPen{ QColor{ 0, 255, 0, 255 } });
+              r->setBrush(QBrush{ Qt::NoBrush });
+              r->setZValue(1);
+
+              d->infoOverlay.centroidArea = r;
+              d->image_widget->scene()->addItem(d->infoOverlay.centroidArea);
           }
-          d->infoOverlay.trackingTargets.clear();
-
-          if (d->infoOverlay.centroidArea)
-          {
-              d->image_widget->scene()->removeItem(d->infoOverlay.centroidArea);
-              delete d->infoOverlay.centroidArea;
-          }
-
-          d->imgTracker->setCentroidCalcRect(rect);
-
-          auto *r = new QGraphicsRectItem(d->image_widget->getImgTransform().mapRect(rect));
-          r->setPen(QPen{ QColor{ 0, 255, 0, 255 } });
-          r->setBrush(QBrush{ Qt::NoBrush });
-          r->setZValue(1);
-
-          d->infoOverlay.centroidArea = r;
-          d->image_widget->scene()->addItem(d->infoOverlay.centroidArea);
       }},
     };
     connect(d->image_widget, &ZoomableImage::selectedRect, [this, handle_selection](const QRectF &rect) {
@@ -400,23 +401,24 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     connect(d->image_widget, &ZoomableImage::selectedPoint, [this](const QPointF &p) {
         if (d->selection_mode == Private::SelectionMode::AddTrackingTarget)
         {
-            if (d->infoOverlay.centroidArea)
+            if (d->imgTracker->addBlockMatchingTarget(p.toPoint()))
             {
-                d->image_widget->scene()->removeItem(d->infoOverlay.centroidArea);
-                delete d->infoOverlay.centroidArea;
-                d->infoOverlay.centroidArea = nullptr;
+                if (d->infoOverlay.centroidArea)
+                {
+                    d->image_widget->scene()->removeItem(d->infoOverlay.centroidArea);
+                    delete d->infoOverlay.centroidArea;
+                    d->infoOverlay.centroidArea = nullptr;
+                }
+
+                auto item = new QGraphicsEllipseItem(-10, -10, 20, 20);
+                item->setPos(d->image_widget->getImgTransform().map(p));
+                item->setPen(QPen{ QColor{ 0, 255, 0, 255 } });
+                item->setBrush(QBrush{ Qt::NoBrush });
+                item->setZValue(1);
+
+                d->infoOverlay.trackingTargets.push_back(item);
+                d->image_widget->scene()->addItem(item);
             }
-
-            d->imgTracker->addBlockMatchingTarget(p.toPoint());
-
-            auto item = new QGraphicsEllipseItem(-10, -10, 20, 20);
-            item->setPos(d->image_widget->getImgTransform().map(p));
-            item->setPen(QPen{ QColor{ 0, 255, 0, 255 } });
-            item->setBrush(QBrush{ Qt::NoBrush });
-            item->setZValue(1);
-
-            d->infoOverlay.trackingTargets.push_back(item);
-            d->image_widget->scene()->addItem(item);
         }
     });
 

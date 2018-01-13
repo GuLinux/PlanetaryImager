@@ -53,8 +53,8 @@ public:
     TrackingMode getTrackingMode() const;
 
     /// Sets the centroid calculation area
-    /** Removes any block-matching targets. */
-    void setCentroidCalcRect(const QRect &rect);
+    /** Removes any block-matching targets. Returns 'false' on failure. */
+    bool setCentroidCalcRect(const QRect &rect);
 
     /// Returns either the centroid position or the block matching targets' common position
     QPoint getTrackingPosition() const;
@@ -63,8 +63,8 @@ public:
     std::tuple<QRect, QPoint> getCentroidAreaAndPos() const;
 
     /// Adds new target to track via block matching
-    /** Cancels centroid tracking (if enabled). */
-    void addBlockMatchingTarget(const QPoint &pos);
+    /** Cancels centroid tracking (if enabled). Returns 'false' on failure. */
+    bool addBlockMatchingTarget(const QPoint &pos);
 
     /// Cancels tracking and removes all targets
     void clear();
@@ -72,7 +72,8 @@ public:
     /// Returns current positions of block matching targets
     std::vector<QPoint> getBlockMatchingTargetPositions();
 
-    //TODO: "target lost" signal
+signals:
+    void targetLost();
 
 private:
     void doHandle(Frame::const_ptr frame) override;
