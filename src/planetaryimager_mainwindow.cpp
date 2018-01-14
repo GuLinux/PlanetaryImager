@@ -140,6 +140,22 @@ void PlanetaryImagerMainWindow::updateInfoOverlay()
             d->infoOverlay.centroidArea->setRect(imgT.mapRect(std::get<0>(centroid)));
         }
         break;
+
+    case ImgTracker::TrackingMode::Disabled:
+        for (auto *i: d->infoOverlay.trackingTargets)
+        {
+            d->image_widget->scene()->removeItem(i);
+            delete i;
+        }
+        d->infoOverlay.trackingTargets.clear();
+
+        if (d->infoOverlay.centroidArea)
+        {
+            d->image_widget->scene()->removeItem(d->infoOverlay.centroidArea);
+            delete d->infoOverlay.centroidArea;
+            d->infoOverlay.centroidArea = nullptr;
+        }
+        break;
     }
 }
 
@@ -307,6 +323,7 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     connect(MessagesLogger::instance(), &MessagesLogger::message, this, bind(&PlanetaryImagerMainWindow::notify, this, _1, _2, _3, _4), Qt::QueuedConnection);
     connect(d->displayImage.get(), &DisplayImage::gotImage, this, bind(&ZoomableImage::setImage, d->image_widget, _1), Qt::QueuedConnection);
     connect(d->displayImage.get(), &DisplayImage::gotImage, this, bind(&PlanetaryImagerMainWindow::updateInfoOverlay, this), Qt::QueuedConnection);
+    connect(d->imgTracker.get(), &ImgTracker::targetLost, this, bind(&PlanetaryImagerMainWindow::updateInfoOverlay, this), Qt::QueuedConnection);
 
     connect(d->ui->actionNight_Mode, &QAction::toggled, this, [=](bool checked) {
       qApp->setStyleSheet(checked ? R"_(

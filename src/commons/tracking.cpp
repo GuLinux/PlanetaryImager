@@ -210,7 +210,16 @@ void ImgTracker::doHandle(Frame::const_ptr frame)
         {
             const QPoint newPos = findCentroid(cv::Mat(frame->mat(), toCvRect(d->centroid.area)));
             const QPoint delta = newPos - d->centroid.pos;
+            const QRect oldArea = d->centroid.area;
             d->centroid.area.moveTopLeft(d->centroid.area.topLeft() + delta);
+            const QRect intersection = d->centroid.area.intersected(QRect{ 0, 0, frame->mat().size[1], frame->mat().size[0] });
+            if (intersection.width() != oldArea.width() ||
+                intersection.height() != oldArea.height())
+            {
+                qWarning() << "Centroid calculation rect outside image";
+                emit targetLost();
+                d->mode = TrackingMode::Disabled;
+            }
         }
         break;
     }
