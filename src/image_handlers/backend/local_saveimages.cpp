@@ -54,7 +54,7 @@ DPTR_IMPL(LocalSaveImages) {
 
 
 namespace {
-typedef boost::lockfree::spsc_queue<Frame::ptr> FramesQueue;
+typedef boost::lockfree::spsc_queue<Frame::const_ptr> FramesQueue;
 typedef function< FileWriter::Ptr() > CreateFileWriter;
 
 struct RecordingParameters {
@@ -87,9 +87,9 @@ public:
     Recording(const RecordingParameters &parameters, LocalSaveImages *saveImagesObject);
   ~Recording();
   RecordingParameters parameters() const { return _parameters; }
-  void evaluate(const Frame::ptr &frame);
+  void evaluate(Frame::const_ptr frame);
   bool accepting_frames() const;
-  void handle(const Frame::ptr &frame);
+  void handle(Frame::const_ptr frame);
   inline void stop() { isRecording = false; }
   void setPaused(bool paused);
 private:
@@ -101,7 +101,7 @@ private:
   FileWriter::Ptr file_writer;
   ElapsedTimer elapsed;
   size_t frames = 0;
-  Frame::ptr reference;
+  Frame::const_ptr reference;
   QDateTime timelapse_last_shot;
 };
 
@@ -112,7 +112,7 @@ public:
   virtual ~WriterThreadWorker();
   void stop();
 public slots:
-  virtual void queue(const Frame::ptr &frame);
+  virtual void queue(Frame::const_ptr frame);
   void start(const RecordingParameters &recording, qlonglong max_memory_usage);
   void setPaused(bool paused);
 private:
@@ -128,7 +128,7 @@ private:
 Q_DECLARE_METATYPE(RecordingParameters)
 
 
-Recording::Recording(const RecordingParameters &parameters, LocalSaveImages *saveImagesObject) : 
+Recording::Recording(const RecordingParameters &parameters, LocalSaveImages *saveImagesObject) :
   _parameters{parameters},
   saveImagesObject{saveImagesObject},
             isRecording(true),
@@ -153,14 +153,14 @@ void Recording::setPaused(bool paused) {
 }
 
 
-void Recording::handle(const Frame::ptr &frame) {
+void Recording::handle(Frame::const_ptr frame) {
   file_writer->handle(frame);
   ++savefps;
   ++meanfps;
   emit saveImagesObject->savedFrames(++frames);
 }
 
-void Recording::evaluate(const Frame::ptr &frame) {
+void Recording::evaluate(Frame::const_ptr frame) {
   if(isPaused)
     return;
   if(frames == 0) {
@@ -177,9 +177,9 @@ void Recording::evaluate(const Frame::ptr &frame) {
 }
 
 bool Recording::accepting_frames() const {
-  return 
+  return
         isRecording && (
-    _parameters.limit_type == Configuration::Infinite || 
+    _parameters.limit_type == Configuration::Infinite ||
     ( _parameters.limit_type == Configuration::FramesNumber && frames < _parameters.max_frames ) ||
     ( _parameters.limit_type == Configuration::Duration && elapsed.seconds() < _parameters.max_seconds.count()) ||
     ( _parameters.limit_type == Configuration::FileSize && (! reference || reference->size() * frames < _parameters.max_size) )
@@ -218,7 +218,7 @@ void WriterThreadWorker::setPaused(bool paused) {
 }
 
 
-void WriterThreadWorker::queue(const Frame::ptr &frame)
+void WriterThreadWorker::queue(Frame::const_ptr frame)
 {
   if(!recording)
     return;
@@ -226,7 +226,7 @@ void WriterThreadWorker::queue(const Frame::ptr &frame)
     framesQueue.reset(new FramesQueue{ std::max(max_memory_usage/frame->size(), size_t{1})  } );
     qDebug() << "allocated framesqueue with " << max_memory_usage << " bytes capacity (" << max_memory_usage/frame->size()<< " frames)";
   }
-  
+
   if(!framesQueue->push(frame)) {
     qWarning() << "Frames queue too high, dropping frame";
     emit saveImages->droppedFrames(++dropped_frames);
@@ -238,7 +238,7 @@ void WriterThreadWorker::start(const RecordingParameters & recording_parameters,
   this->max_memory_usage = static_cast<size_t>(max_memory_usage);
   dropped_frames = 0;
   framesQueue.reset();
-  
+
   GuLinux::Scope cleanup{[this]{
     emit saveImages->finished();
     recording.reset();
@@ -246,7 +246,7 @@ void WriterThreadWorker::start(const RecordingParameters & recording_parameters,
   try {
     recording = make_unique<Recording>(recording_parameters, saveImages);
     while(recording->accepting_frames() ) {
-      Frame::ptr frame;
+      Frame::const_ptr frame;
       if(framesQueue && framesQueue->pop(frame)) {
           recording->evaluate(frame);
       } else {
@@ -287,7 +287,7 @@ LocalSaveImages::~LocalSaveImages()
 }
 
 
-void LocalSaveImages::doHandle(Frame::ptr frame)
+void LocalSaveImages::doHandle(Frame::const_ptr frame)
 {
   d->worker->queue(frame);
 //   QtConcurrent::run(bind(&WriterThreadWorker::handle, d->worker, frame));

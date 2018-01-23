@@ -30,6 +30,7 @@ class Frame
 {
 public:
   typedef std::shared_ptr<Frame> ptr;
+  using const_ptr = std::shared_ptr<const Frame>;
   enum ColorFormat {
       Mono,
       RGB,
