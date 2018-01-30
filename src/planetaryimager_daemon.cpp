@@ -38,6 +38,7 @@ using namespace std;
 int main(int argc, char** argv)
 {
     qRegisterMetaType<Frame::ptr>("Frame::ptr");
+    qRegisterMetaType<Frame::const_ptr>("Frame::const_ptr");
     CrashHandler crash_handler({SIGSEGV, SIGABRT});
     cerr << "Starting PlanetaryImager Daemon - version " << PLANETARY_IMAGER_VERSION << " (" << HOST_PROCESSOR << ")" << endl;
     QCoreApplication app(argc, argv);

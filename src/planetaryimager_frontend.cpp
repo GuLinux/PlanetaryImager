@@ -34,16 +34,17 @@ using namespace std;
 int main(int argc, char** argv)
 {
     qRegisterMetaType<Frame::ptr>("Frame::ptr");
+    qRegisterMetaType<Frame::const_ptr>("Frame::const_ptr");
     CrashHandler crash_handler({SIGSEGV, SIGABRT});
     cerr << "Starting PlanetaryImager - version " << PLANETARY_IMAGER_VERSION << " (" << HOST_PROCESSOR << ")" << endl;
     QApplication app(argc, argv);
     app.setApplicationName("PlanetaryImager-Frontend");
     app.setApplicationDisplayName("Planetary Imager");
     app.setApplicationVersion(PLANETARY_IMAGER_VERSION);
-    
+
     CommandLine commandLine(app);
     commandLine.frontend().process();
-    
+
     LogHandler log_handler{commandLine};
     app.setQuitOnLastWindowClosed(false);
 

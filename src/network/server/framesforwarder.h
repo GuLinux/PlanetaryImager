@@ -32,7 +32,7 @@ public:
   bool enabled() const;
 private:
 
-  void doHandle(Frame::ptr frame) override;
+  void doHandle(Frame::const_ptr frame) override;
 
   DPTR
 public slots:
