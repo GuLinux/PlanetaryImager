@@ -59,7 +59,7 @@ public:
   bool is_pending() const;
   void importing(const QVariantList &controls);
 private:
-  
+
   Imager::Control control;
   Imager::Control new_value;
   Imager *imager;
@@ -90,11 +90,11 @@ CameraControl::CameraControl(const Imager::Control& control, Imager* imager, QWi
     control_widget = new MenuControlWidget;
   else if(control.type == Imager::Control::Bool)
     control_widget = new BoolControlWidget;
-  
+
   control_widget->update(control);
   control_changed_led = new QLabel();
   control_changed_led->setHidden(true);
-  
+
   auto_value_widget = new QCheckBox("auto");
   auto_value_widget->setVisible(control.supports_auto);
   auto_value_widget->setChecked(control.value_auto);
@@ -102,14 +102,14 @@ CameraControl::CameraControl(const Imager::Control& control, Imager* imager, QWi
   on_off_value_widget = new QCheckBox("on");
   on_off_value_widget->setVisible(control.supports_onOff);
   on_off_value_widget->setChecked(control.value_onOff);
-  
+
   connect(control_widget, &ControlWidget::valueChanged, [=](const QVariant &v) {
     new_value.value = v;
     emit changed();
   });
   connect(auto_value_widget, &QCheckBox::toggled, this, &CameraControl::auto_changed);
   connect(on_off_value_widget, &QCheckBox::toggled, this, &CameraControl::on_off_changed);
-  
+
   control_widget->setEnabled(!control.readonly && ! control.value_auto && !(control.supports_onOff && !control.value_onOff));
   connect(imager, &Imager::changed, this, &CameraControl::control_updated, Qt::QueuedConnection);
 }
@@ -254,7 +254,7 @@ CameraControlsWidget::CameraControlsWidget(Imager *imager, Configuration &config
   d->ui->presets->setModel(d->presetsModel.get());
   d->reloadPresets();
   connect(d->ui->presets, F_PTR(QComboBox, currentIndexChanged, int), this, bind(&Private::selectionChanged, d.get()));
-  
+
   auto addPresetAction = [this](auto action, auto slot, auto signal) {
     d->ui->presetsButton->menu()->addAction(action);
     connect(action, signal, this, slot);
@@ -277,10 +277,10 @@ CameraControlsWidget::CameraControlsWidget(Imager *imager, Configuration &config
     d->reloadPresets();
     d->reloadRecentlyUsedPresets();
   }, &QAction::toggled);
-  
+
   connect(&d->configuration, &Configuration::presets_changed, this, bind(&Private::reloadRecentlyUsedPresets, d.get()));
   d->reloadRecentlyUsedPresets();
-  
+
   auto grid = new QGridLayout(d->ui->controls_box);
   int row = 0;
   for(auto imager_control: imager->controls()) {
@@ -350,7 +350,7 @@ void CameraControlsWidget::Private::pickPresetFromFile()
 }
 
 void CameraControlsWidget::Private::loadPresetFromFile(const QString& filename)
-{  
+{
   loadToImager(Configuration::Preset{filename});
   configuration.preset_saved(filename);
 }
@@ -372,7 +372,7 @@ void CameraControlsWidget::Private::savePresetToFile()
   if(filename.isEmpty())
     return;
   configuration.set_last_controls_folder(QFileInfo{filename}.dir().canonicalPath());
-  
+
   QFile file{filename};
   file.open(QIODevice::WriteOnly);
   file.write(QJsonDocument::fromVariant(currentPresets()).toJson());
