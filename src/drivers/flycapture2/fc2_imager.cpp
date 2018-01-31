@@ -162,8 +162,6 @@ DPTR_IMPL(FC2Imager)
 
     bool temperatureAvailable;
 
-    void updateWorkerExposureTimeout();
-
     Control enumerateVideoModes();
 
     /// Returns a combo control listing all pixel formats for 'currentVidMode'
@@ -199,11 +197,6 @@ static void VerifyRanges(fc2PropertyInfo &propInfo)
 }
 
 static void UpdateRangeAndStep(Imager::Control &control, const fc2PropertyInfo &propInfo);
-
-void FC2Imager::Private::updateWorkerExposureTimeout()
-{
-//TODO: implement this
-}
 
 static void ForEachPossiblePixelFormat(const std::function<void (fc2PixelFormat)> &func)
 {
@@ -398,8 +391,6 @@ FC2Imager::FC2Imager(const fc2PGRGuid &guid, const ImageHandler::ptr &handler)
     }
     else
         d->currentPixFmt = VID_MODE_PIX_FMT[(fc2VideoMode)d->currentVidMode];
-
-    connect(this, &Imager::exposure_changed, this, std::bind(&Private::updateWorkerExposureTimeout, d.get()));
 }
 
 FC2Imager::~FC2Imager()
@@ -741,18 +732,8 @@ Imager::Control FC2Imager::Private::createControlFromFC2Property(const fc2Proper
         case FC2_GAMMA:           control.name = "Gamma"; break;
 
         case FC2_SHUTTER:
-        {
             control.name = "Shutter";
-            control.is_exposure = true;
-            control.is_duration = true;
-
-            const auto &unitLoc = DURATION_VALUE.find(propInfo.pUnitAbbr);
-            if (unitLoc != DURATION_VALUE.end())
-                control.duration_unit = unitLoc->second;
-            else
-                control.duration_unit = 1s;
             break;
-        }
 
         case FC2_GAIN:            control.name = "Gain"; break;
         case FC2_IRIS:            control.name = "Iris"; break;
@@ -798,6 +779,16 @@ Imager::Control FC2Imager::Private::createControlFromFC2Property(const fc2Proper
         }
         else
             control.value = propInfo.absMin;
+
+        if (propInfo.type == FC2_SHUTTER)
+        {
+            control.is_duration = true;
+            const auto &unitLoc = DURATION_VALUE.find(propInfo.pUnitAbbr);
+            if (unitLoc != DURATION_VALUE.end())
+                control.duration_unit = unitLoc->second;
+            else
+                control.duration_unit = 1s;
+        }
     }
     else
     {
