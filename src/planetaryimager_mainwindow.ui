@@ -443,11 +443,6 @@
     <string>Add tracking target</string>
    </property>
   </action>
-  <action name="actionSelect_centroid_area">
-   <property name="text">
-    <string>Select centroid area</string>
-   </property>
-  </action>
   <action name="actionSetCentroidArea">
    <property name="enabled">
     <bool>false</bool>
