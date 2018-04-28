@@ -228,6 +228,8 @@ void ImgTracker::doHandle(Frame::const_ptr frame)
 
 void ImgTracker::clear()
 {
+    LOCK();
+    d->mode = TrackingMode::Disabled;
     d->targets.clear();
 }
 

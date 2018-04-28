@@ -90,6 +90,8 @@
     </property>
     <addaction name="actionAddTrackingTarget"/>
     <addaction name="actionSetCentroidArea"/>
+    <addaction name="separator"/>
+    <addaction name="actionDisableTracking"/>
    </widget>
    <addaction name="menuDevice"/>
    <addaction name="menuPanels"/>
@@ -222,6 +224,7 @@
    </attribute>
    <addaction name="actionAddTrackingTarget"/>
    <addaction name="actionSetCentroidArea"/>
+   <addaction name="actionDisableTracking"/>
   </widget>
   <action name="action_devices_rescan">
    <property name="icon">
@@ -449,6 +452,14 @@
    </property>
    <property name="text">
     <string>&amp;Set centroid area</string>
+   </property>
+  </action>
+  <action name="actionDisableTracking">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>&amp;Disable tracking</string>
    </property>
   </action>
  </widget>

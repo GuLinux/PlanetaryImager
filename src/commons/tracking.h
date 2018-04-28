@@ -73,6 +73,7 @@ public:
     std::vector<QPoint> getBlockMatchingTargetPositions();
 
 signals:
+    /// Emitted when tracking target is lost (moves outside image or moves away too fast)
     void targetLost();
 
 private:

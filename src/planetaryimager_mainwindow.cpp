@@ -385,6 +385,8 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
 
               d->infoOverlay.centroidArea = r;
               d->image_widget->scene()->addItem(d->infoOverlay.centroidArea);
+
+              d->ui->actionDisableTracking->setEnabled(true);
           }
       }},
     };
@@ -435,8 +437,16 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
 
                 d->infoOverlay.trackingTargets.push_back(item);
                 d->image_widget->scene()->addItem(item);
+
+                d->ui->actionDisableTracking->setEnabled(true);
             }
         }
+    });
+
+    connect(d->ui->actionDisableTracking, &QAction::triggered, [&] {
+        d->imgTracker->clear();
+        d->ui->actionDisableTracking->setEnabled(false);
+        updateInfoOverlay();
     });
 
     readTemperature->start(2000);
@@ -525,6 +535,7 @@ void PlanetaryImagerMainWindow::Private::cameraDisconnected()
   ui->actionClear_ROI->setEnabled(false);
   ui->actionAddTrackingTarget->setEnabled(false);
   ui->actionSetCentroidArea->setEnabled(false);
+  ui->actionDisableTracking->setEnabled(false);
 
   delete cameraSettingsWidget;
   cameraSettingsWidget = nullptr;
