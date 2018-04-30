@@ -31,7 +31,7 @@
    </property>
    <widget class="QMenu" name="menuDevice">
     <property name="title">
-     <string>Camera</string>
+     <string>C&amp;amera</string>
     </property>
     <widget class="QMenu" name="menu_device_load">
      <property name="title">
@@ -55,6 +55,7 @@
     <addaction name="actionCamera_Settings"/>
     <addaction name="actionRecording"/>
     <addaction name="actionHistogram"/>
+    <addaction name="actionMount"/>
     <addaction name="actionHide_all"/>
     <addaction name="actionShow_all"/>
    </widget>
@@ -144,7 +145,7 @@
           <x>0</x>
           <y>0</y>
           <width>80</width>
-          <height>162</height>
+          <height>130</height>
          </rect>
         </property>
        </widget>
@@ -200,7 +201,7 @@
     <bool>false</bool>
    </property>
    <property name="windowTitle">
-    <string>Histogram</string>
+    <string>Histo&amp;gram</string>
    </property>
    <attribute name="dockWidgetArea">
     <number>2</number>
@@ -225,6 +226,15 @@
    <addaction name="actionAddTrackingTarget"/>
    <addaction name="actionSetCentroidArea"/>
    <addaction name="actionDisableTracking"/>
+  </widget>
+  <widget class="QDockWidget" name="mount">
+   <property name="windowTitle">
+    <string>Mo&amp;unt</string>
+   </property>
+   <attribute name="dockWidgetArea">
+    <number>2</number>
+   </attribute>
+   <widget class="QWidget" name="dockWidgetContents_5"/>
   </widget>
   <action name="action_devices_rescan">
    <property name="icon">
@@ -460,6 +470,14 @@
    </property>
    <property name="text">
     <string>&amp;Disable tracking</string>
+   </property>
+  </action>
+  <action name="actionMount">
+   <property name="checkable">
+    <bool>true</bool>
+   </property>
+   <property name="text">
+    <string>Mount</string>
    </property>
   </action>
  </widget>

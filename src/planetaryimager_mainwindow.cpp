@@ -289,10 +289,12 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     setupDockWidget(d->ui->actionCamera_Settings, d->ui->camera_settings);
     setupDockWidget(d->ui->actionRecording, d->ui->recording);
     setupDockWidget(d->ui->actionHistogram, d->ui->histogram);
+    setupDockWidget(d->ui->actionMount, d->ui->mount);
     if(! d->planetaryImager->configuration().widgets_setup_first_run() ) {
       tabifyDockWidget(d->ui->chipInfoWidget, d->ui->camera_settings);
       tabifyDockWidget(d->ui->chipInfoWidget, d->ui->histogram);
       tabifyDockWidget(d->ui->chipInfoWidget, d->ui->recording);
+      tabifyDockWidget(d->ui->chipInfoWidget, d->ui->mount);
       d->planetaryImager->configuration().set_widgets_setup_first_run(true);
     }
     qDebug() << "file " << logFilePath << "exists: " << QFile::exists(logFilePath);
