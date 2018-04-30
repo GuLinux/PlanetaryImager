@@ -101,7 +101,16 @@ public:
     declare_setting(last_controls_folder, QString)
     
     declare_setting(timelapse_mode, bool)
+    enum class TimeLapseType
+    {
+        SaveFrame, ///< Save a frame to one video using the specified time interval
+        SaveVideo  ///< Save multiple videos using specified time interval
+    };
+    declare_setting(timelapse_type, TimeLapseType)
+    /// Time interval for TimeLapseType::SaveFrame
     declare_setting(timelapse_msecs, qlonglong)
+    /// Time interval for TimeLapseType::SaveVideo
+    declare_setting(timelapse_vid_msecs, qlonglong)
     
     declare_setting(filter_presets_by_camera, bool)
     declare_setting(deprecated_video_warning_shown, bool)

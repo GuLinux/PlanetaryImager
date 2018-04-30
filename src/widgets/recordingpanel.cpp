@@ -165,11 +165,24 @@ The best file format for planetary imaging is SER. You can also save frames as P
   check_directory();
   connect(d->ui->saveDirectory, &QLineEdit::textChanged, check_directory);
   connect(d->ui->timelapse, &QCheckBox::toggled, this, [=, &configuration](bool checked) {
-    d->ui->timelapse_frame->setVisible(checked);
+    d->ui->tlapseSaveFrame->setVisible(checked);
+    d->ui->tlapseSaveVideo->setVisible(checked);
     configuration.set_timelapse_mode(checked);
   });
-  connect(d->ui->timelapse_duration, &QTimeEdit::timeChanged, this, [=, &configuration](const QTime &time) {
+
+  connect(d->ui->tlapseButtonGroup, static_cast<void (QButtonGroup::*)(QAbstractButton *)>(&QButtonGroup::buttonClicked), this,
+    [=, &configuration](QAbstractButton *button) {
+      configuration.set_timelapse_type(
+          button == d->ui->tlapseSaveFrameBtn ? Configuration::TimeLapseType::SaveFrame
+                                              : Configuration::TimeLapseType::SaveVideo);
+  });
+
+  connect(d->ui->tlapseSaveFrameInterval, &QTimeEdit::timeChanged, this, [=, &configuration](const QTime &time) {
     configuration.set_timelapse_msecs(QTime{0,0,0}.msecsTo(time));
+  });
+
+  connect(d->ui->tlapseSaveVideoInterval, &QTimeEdit::timeChanged, this, [=, &configuration](const QTime &time) {
+      configuration.set_timelapse_vid_msecs(QTime{0,0,0}.msecsTo(time));
   });
 
   d->reload_config();
@@ -182,7 +195,13 @@ void RecordingPanel::Private::reload_config()
   ui->save_recording_info->setCurrentIndex( (configuration.save_json_info_file() ? 1 : 0) + (configuration.save_info_file() ? 2 : 0) );
   
   ui->timelapse->setChecked(configuration.timelapse_mode());
-  ui->timelapse_duration->setTime(QTime{0,0,0}.addMSecs(configuration.timelapse_msecs()));
+
+  ui->tlapseSaveFrameBtn->setChecked(configuration.timelapse_type() == Configuration::TimeLapseType::SaveFrame);
+  ui->tlapseSaveVideoBtn->setChecked(configuration.timelapse_type() == Configuration::TimeLapseType::SaveVideo);
+
+  ui->tlapseSaveFrameInterval->setTime(QTime{0,0,0}.addMSecs(configuration.timelapse_msecs()));
+  ui->tlapseSaveVideoInterval->setTime(QTime{0,0,0}.addMSecs(configuration.timelapse_vid_msecs()));
+
   ui->saveDirectory->setText(configuration.save_directory());
   ui->duration_limit->setValue(configuration.recording_seconds_limit());
   ui->saveFramesLimit->setCurrentText(QString::number(configuration.recording_frames_limit()));

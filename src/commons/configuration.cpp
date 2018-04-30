@@ -159,7 +159,9 @@ define_setting(server_force8bit, bool, true)
 define_setting(server_jpeg_quality, int, 85)
 
 define_setting(timelapse_mode, bool, false)
+define_setting_enum(timelapse_type, Configuration::TimeLapseType, Configuration::TimeLapseType::SaveFrame)
 define_setting(timelapse_msecs, qlonglong, 1000)
+define_setting(timelapse_vid_msecs, qlonglong, 1000)
 
 define_setting(filter_presets_by_camera, bool, true)
 define_setting(deprecated_video_warning_shown, bool, false)
