@@ -37,6 +37,7 @@
 #include "widgets/recordingpanel.h"
 #include "widgets/camerainfowidget.h"
 #include "widgets/histogramwidget.h"
+#include "widgets/mountwidget.h"
 #include "Qt/zoomableimage.h"
 #include <QGridLayout>
 #include <QToolBar>
@@ -94,6 +95,7 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
 
   RecordingPanel* recording_panel;
   ExposureTimer exposure_timer;
+  MountWidget* mount_widget;
 
   ImageHandler::ptr imageHandler;
 
@@ -199,6 +201,8 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     d->histogram = make_shared<Histogram>(d->planetaryImager->configuration());
     d->ui->histogram->setWidget(d->histogramWidget = new HistogramWidget(d->histogram, d->planetaryImager->configuration()));
     d->ui->statusbar->addPermanentWidget(d->statusbar_info_widget = new StatusBarInfoWidget(), 1);
+
+    d->ui->mount->setWidget(d->mount_widget = new MountWidget());
 
     d->imgTracker = make_shared<ImgTracker>();
 
