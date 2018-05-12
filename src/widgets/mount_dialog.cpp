@@ -1,5 +1,4 @@
 /*
- * GuLinux Planetary Imager - https://github.com/GuLinux/PlanetaryImager
  * Copyright (C) 2018  Filip Szczerek <ga.software@yahoo.com>
  *
  * This program is free software: you can redistribute it and/or modify
@@ -17,33 +16,24 @@
  *
  */
 
-#include <functional>
 #include <memory>
-#include <QDebug>
 
 #include "mount_dialog.h"
-#include "mountwidget.h"
-#include "ui_mountwidget.h"
+#include "ui_mount_dialog.h"
 
 
-DPTR_IMPL(MountWidget)
-{
-    std::unique_ptr<Ui::MountWidget> ui;
+DPTR_IMPL(MountDialog) {
 
-    MountDialog *mountDialog;
+  MountDialog *q;
+  std::unique_ptr<Ui::MountDialog> ui;
 };
 
-MountWidget::~MountWidget()
+MountDialog::~MountDialog()
 {
 }
 
-MountWidget::MountWidget(QWidget *parent): QWidget(parent), dptr()
+MountDialog::MountDialog(QWidget *parent): QDialog(parent), dptr(this)
 {
-    d->ui.reset(new Ui::MountWidget);
+    d->ui.reset(new Ui::MountDialog);
     d->ui->setupUi(this);
-
-    //d->mountDialog->setLayout(d->ui->verticalLayout);
-
-    d->mountDialog = new MountDialog(this);
-    connect(d->ui->btnConnect, &QPushButton::clicked, this, std::bind(&QDialog::open, d->mountDialog));
 }
