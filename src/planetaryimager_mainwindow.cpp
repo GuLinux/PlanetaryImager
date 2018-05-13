@@ -37,7 +37,7 @@
 #include "widgets/recordingpanel.h"
 #include "widgets/camerainfowidget.h"
 #include "widgets/histogramwidget.h"
-#include "widgets/mountwidget.h"
+#include "widgets/mount_widget.h"
 #include "Qt/zoomableimage.h"
 #include <QGridLayout>
 #include <QToolBar>

@@ -17,12 +17,12 @@
  *
  */
 
+#include <mount_widget.h>
 #include <functional>
 #include <memory>
 #include <QDebug>
 
 #include "mount_dialog.h"
-#include "mountwidget.h"
 #include "ui_mountwidget.h"
 
 

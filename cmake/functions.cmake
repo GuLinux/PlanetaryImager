@@ -39,3 +39,8 @@ function(add_driver)
   install(TARGETS ${add_driver_NAME} LIBRARY DESTINATION ${drivers_destination})
   set(enabled_drivers ${enabled_drivers} ${add_driver_NAME} CACHE INTERNAL "")
 endfunction()
+
+# Updates the specified CMake variable in the parent scope
+macro(update_parent VAR_NAME)
+    set(${VAR_NAME} ${${VAR_NAME}} PARENT_SCOPE)
+endmacro(update_parent)

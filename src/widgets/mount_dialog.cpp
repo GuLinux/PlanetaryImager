@@ -18,6 +18,7 @@
 
 #include <memory>
 
+#include "commons/mount/mount.h"
 #include "mount_dialog.h"
 #include "ui_mount_dialog.h"
 
@@ -36,4 +37,8 @@ MountDialog::MountDialog(QWidget *parent): QDialog(parent), dptr(this)
 {
     d->ui.reset(new Ui::MountDialog);
     d->ui->setupUi(this);
+
+    auto *tabW = d->ui->tabWidget;
+    tabW->setTabEnabled(tabW->indexOf(d->ui->tabIndi), Mount::isConnectionSupported(Mount::ConnectionType::INDI));
+    tabW->setTabEnabled(tabW->indexOf(d->ui->tabSWDirect), Mount::isConnectionSupported(Mount::ConnectionType::SkyWatcher));
 }

@@ -106,7 +106,8 @@ QPoint findCentroid(cv::Mat img)
     if (moments.m00 == 0.0)
         return QPoint{ 0, 0 };
     else
-        return QPoint{ moments.m10 / moments.m00, moments.m01 / moments.m00 };
+        return QPoint{ static_cast<int>(moments.m10 / moments.m00),
+                       static_cast<int>(moments.m01 / moments.m00) };
 }
 
 
