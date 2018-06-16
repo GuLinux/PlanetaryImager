@@ -22,6 +22,7 @@
 #include "savefileconfiguration.h"
 #include "commons/messageslogger.h"
 #include "Qt/qt_functional.h"
+#include <QAction>
 #include <QDir>
 #include <QDialog>
 #include <QElapsedTimer>

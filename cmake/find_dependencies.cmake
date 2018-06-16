@@ -36,7 +36,7 @@ endif()
 
 # Cfitsio
 pkg_check_modules(CFITSIO REQUIRED cfitsio)
-include_directories(${CFITSIO_INCLUDEDIR})
+include_directories(${CFITSIO_INCLUDE_DIRS})
 message("CFITSIO: ${CFITSIO_LDFLAGS}")
 
 # LibUSB
