@@ -25,9 +25,32 @@
 
 DPTR_IMPL(MountDialog) {
 
-  MountDialog *q;
-  std::unique_ptr<Ui::MountDialog> ui;
+    MountDialog *q;
+    std::unique_ptr<Ui::MountDialog> ui;
+    bool indiMountsFound;
+
+    void setupIndiTab();
+    void setupSWTab();
 };
+
+void MountDialog::Private::setupIndiTab()
+{
+    connect(ui->btnScan, &QPushButton::clicked, q, [this](bool checked)
+        {
+            const auto devices = Mount::getIndiDevices("test", 0);
+            if (!devices.empty())
+            {
+                indiMountsFound = true;
+                ui->indiDevices->clear();
+                for (const auto &dev: devices)
+                    ui->indiDevices->addItem(dev.c_str());
+            }
+        });
+}
+
+void MountDialog::Private::setupSWTab()
+{
+}
 
 MountDialog::~MountDialog()
 {
@@ -38,7 +61,12 @@ MountDialog::MountDialog(QWidget *parent): QDialog(parent), dptr(this)
     d->ui.reset(new Ui::MountDialog);
     d->ui->setupUi(this);
 
+    d->indiMountsFound = false;
+
     auto *tabW = d->ui->tabWidget;
     tabW->setTabEnabled(tabW->indexOf(d->ui->tabIndi), Mount::isConnectionSupported(Mount::ConnectionType::INDI));
     tabW->setTabEnabled(tabW->indexOf(d->ui->tabSWDirect), Mount::isConnectionSupported(Mount::ConnectionType::SkyWatcher));
+
+    d->setupIndiTab();
+    d->setupSWTab();
 }

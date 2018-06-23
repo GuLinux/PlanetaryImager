@@ -16,27 +16,14 @@
  *
  */
 
-#ifndef MOUNT_H
-#define MOUNT_H
-
-#include <string>
-#include <vector>
-
+#include "mount.h"
 
 namespace Mount
 {
 
-enum class ConnectionType
+std::vector<std::string> getIndiDevices(const char *hostname, unsigned port)
 {
-    INDI,      ///< INDI server
-    SkyWatcher ///< Sky-Watcher direct serial connection
-};
-
-bool isConnectionSupported(ConnectionType connType);
-
-std::vector<std::string> getIndiDevices(const char *hostname, unsigned port);
-
+    return { "some device 1" };
+}
 
 } // namespace Mount
-
-#endif // MOUNT_H

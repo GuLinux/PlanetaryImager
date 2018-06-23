@@ -2,7 +2,10 @@ pkg_check_modules(LIBINDI libindi)
 if(LIBINDI_FOUND)
     set(enabled_mounts ${enabled_mounts} INDI CACHE INTERNAL "")
 
-    set(mount-SRCS ${CMAKE_CURRENT_SOURCE_DIR}/mount.cpp)
+    set(mount-SRCS
+        ${CMAKE_CURRENT_SOURCE_DIR}/mount.cpp
+        ${CMAKE_CURRENT_SOURCE_DIR}/indi.cpp
+    )
 
     list(APPEND planetaryimager-commons-SRCS ${mount-SRCS})
     update_parent(planetaryimager-commons-SRCS)
