@@ -1,0 +1,4 @@
+DEB_BASE_IMAGE="gulinux/planetaryimager_build:ubuntu_artful_arm_base"
+DEB_VERSION=18.04
+DEB_CONFIG_NAME="ubuntu-18.04"
+. ../debian-based-commons/Dockerfile.in
