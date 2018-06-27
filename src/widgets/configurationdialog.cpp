@@ -21,6 +21,7 @@
 #include "ui_configurationdialog.h"
 #include "commons/utils.h"
 #include <functional>
+#include <QButtonGroup>
 #include <QSpinBox>
 #include <QMessageBox>
 #include "Qt/qt_strings_helper.h"
