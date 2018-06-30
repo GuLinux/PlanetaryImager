@@ -69,15 +69,15 @@ struct RecordingParameters {
   bool timelapse;
   qlonglong timelapse_msecs;
   Configuration *configuration = nullptr;
-  RecordingInformation::Writer::ptr recording_information_writer(const FileWriter::Ptr &file_writer) const;
+  RecordingInformation::Writer::ptr recording_information_writer(const QString &fileName) const;
 };
 
-RecordingInformation::Writer::ptr RecordingParameters::recording_information_writer(const FileWriter::Ptr &file_writer) const {
+RecordingInformation::Writer::ptr RecordingParameters::recording_information_writer(const QString &fileName) const {
   QList<RecordingInformation::Writer::ptr> writers;
   if(write_txt_info)
-    writers.push_back(RecordingInformation::txt(file_writer->filename()));
+    writers.push_back(RecordingInformation::txt(fileName));
   if(write_json_info)
-    writers.push_back(RecordingInformation::json(file_writer->filename(), *configuration));
+    writers.push_back(RecordingInformation::json(fileName, *configuration));
   return RecordingInformation::composite(writers);
 }
 
@@ -138,7 +138,7 @@ Recording::Recording(const RecordingParameters &parameters, LocalSaveImages *sav
   file_writer{parameters.fileWriterFactory()}
 {
   elapsed.start();
-  _parameters.recording_information->set_writer(_parameters.recording_information_writer(file_writer));
+  _parameters.recording_information->set_writer(_parameters.recording_information_writer(file_writer->filename()));
   emit saveImagesObject->recording(file_writer->filename());
 }
 
