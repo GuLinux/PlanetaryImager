@@ -1,4 +1,0 @@
-FEDORA_BASE_IMAGE="fedora:25"
-FEDORA_VERSION=25
-. ../fedora-commons/Dockerfile.in
-

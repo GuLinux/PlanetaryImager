@@ -25,6 +25,7 @@
 #include <QAction>
 #include <QDir>
 #include <QDialog>
+#include <QAction>
 #include <QElapsedTimer>
 #include <QTimer>
 #include <QTime>

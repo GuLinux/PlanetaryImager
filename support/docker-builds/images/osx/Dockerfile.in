@@ -9,7 +9,7 @@ EOF
 
 
 cat <<EOF
-FROM ubuntu:16.10
+FROM ubuntu:18.04
 RUN apt-get update && apt-get install -y git build-essential cmake clang wget autoconf automake libtool-bin libtool pkg-config genisoimage libz-dev python-pip qtbase5-dev-tools && \
     git clone https://github.com/tpoechtrager/osxcross && \
     git clone https://github.com/planetbeing/libdmg-hfsplus && \

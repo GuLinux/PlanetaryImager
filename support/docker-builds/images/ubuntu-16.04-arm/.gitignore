@@ -2,4 +2,5 @@ arm-root*
 Dockerfile
 configuration-*.cmake
 debian-package-checker.sh
+qemu-arm-static
 

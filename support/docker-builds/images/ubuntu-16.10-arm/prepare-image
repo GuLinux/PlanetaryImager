@@ -1,3 +1,0 @@
-#!/bin/bash
-. Dockerfile.in > Dockerfile
-( cd ../ubuntu-arm-base/ && ./prepare-image yakkety )

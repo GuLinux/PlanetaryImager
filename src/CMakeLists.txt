@@ -100,6 +100,16 @@ if(build_network_server)
 
   set(install_targets ${install_targets} planetary_imager_daemon planetary_imager_frontend)
 endif()
+    
+set(CMAKE_INCLUDE_POST_FILE CACHE INTERNAL "Per-environment post configuration include file")
+if(CMAKE_INCLUDE_POST_FILE)
+  message("Using cmake post configuration: ${CMAKE_INCLUDE_POST_FILE}")
+  include(${CMAKE_INCLUDE_POST_FILE})
+else()
+  message("CMake post configuration file ${CMAKE_INCLUDE_POST_FILE} NOT found")
+endif()
+
+
 
 install(TARGETS ${install_targets} RUNTIME DESTINATION ${binary_destination})
 

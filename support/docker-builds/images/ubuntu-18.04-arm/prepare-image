@@ -1,3 +1,8 @@
 #!/bin/bash
+if ! which qemu-arm-static >/dev/null 2>&1; then
+    echo "Error: unable to find qemu-arm-static in path. Please install it first" >&2
+    exit 1
+fi
+cp "$( which qemu-arm-static )" .
+PREPARATION_COMMAND="COPY qemu-arm-static /usr/bin"
 . Dockerfile.in > Dockerfile
-( cd ../ubuntu-arm-base/ && ./prepare-image artful)
