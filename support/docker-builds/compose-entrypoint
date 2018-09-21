@@ -7,6 +7,8 @@ fi
 
 CMAKE_BIN="${CMAKE_BIN:-cmake}"
 PACKAGE_COMMAND="${PACKAGE_COMMAND:-make package}"
+rm -f /tmp/on_error_handler
+
 set -x
 ${CMAKE_BIN} /code \
           -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH} \
@@ -18,6 +20,17 @@ ${CMAKE_BIN} /code \
           make ${MAKE_OPTS} && $PACKAGE_COMMAND
 had_errors=$?
 if [[ "$had_errors" != 0 ]]; then
+    set +x
+    touch /tmp/on_error_handler
+    echo -n "Error $had_errors on make" >&2
+    if [ "$DEBUG_BUILD" == 'yes' ]; then
+        echo -n "Please remove /tmp/on_error_handler to exit this container" >&2
+        while [ -r /tmp/on_error_handler ]; do
+            echo -n . >&2
+            sleep 1
+        done
+        echo >&2
+    fi
     exit ${had_errors}
 fi
 

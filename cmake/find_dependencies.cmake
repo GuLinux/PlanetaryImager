@@ -17,13 +17,7 @@ include_directories(${Qt5Widgets_INCLUDE_DIRS} ${Qt5PrintSupport_INCLUDE_DIRS})
 find_package(Boost REQUIRED)
 
 # OpenCV
-if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
-    message(STATUS "Temporary workaround for Windows build - MXE BUG https://github.com/mxe/mxe/issues/1576#issuecomment-263007248")
-    include_directories(/opt/opencv/include/opencv2/)
-    set(OpenCV_LIBS opencv_core opencv_imgproc opencv_highgui opencv_video opencv_videoio opencv_imgcodecs CACHE INTERNAL "")
-else()
-    find_package(OpenCV REQUIRED )
-endif()
+find_package(OpenCV REQUIRED )
 
 include_directories(${OpenCV_INCLUDE_DIRS})
 include(FindPkgConfig)

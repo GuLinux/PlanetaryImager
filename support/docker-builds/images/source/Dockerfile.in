@@ -1,4 +1,4 @@
-UBUNTU_BASE_IMAGE="ubuntu:16.10"
+UBUNTU_BASE_IMAGE="ubuntu:18.04"
 cat <<EOF
 FROM ${UBUNTU_BASE_IMAGE}
 ENV COMPOSE_ENTRYPOINT_OVERRIDE=/usr/local/bin/create_source_tarball

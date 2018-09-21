@@ -15,4 +15,5 @@ services:
             - PACKAGE_NAME_SUFFIX
             - MAKE_OPTS=${MAKE_OPTS}
             - CMAKE_OVERRIDE_OPTIONS=${CMAKE_OVERRIDE_OPTIONS}
+            - DEBUG_BUILD=${DEBUG_BUILD}
 
