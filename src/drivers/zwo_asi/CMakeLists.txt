@@ -26,6 +26,7 @@ endif()
 add_definitions(-DASI_SDK_VERSION="${ASI_SDK_VERSION}")
 set(ASI_ARCH_x86_64 x64)
 set(ASI_ARCH_i686 x86)
+set(ASI_ARCH_armv8 armv8)
 set(ASI_ARCH_armv7 armv7)
 set(ASI_ARCH_armv6 armv6)
 
