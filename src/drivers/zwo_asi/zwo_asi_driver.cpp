@@ -76,3 +76,5 @@ Driver::Cameras ZWO_ASI_Driver::cameras() const
   }
   return cameras;
 }
+
+DECLARE_DRIVER_PLUGIN_INIT(ZWO_ASI_Driver)

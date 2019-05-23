@@ -66,3 +66,4 @@ Driver::Cameras V4L2Driver::cameras() const
 }
 
 
+DECLARE_DRIVER_PLUGIN_INIT(V4L2Driver)

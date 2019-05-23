@@ -17,7 +17,7 @@
  */
 
 #include "supporteddrivers.h"
-#include <QPluginLoader>
+#include <QLibrary>
 #include <QDebug>
 #include <QDirIterator>
 #include <QFile>
@@ -30,7 +30,8 @@ using namespace std;
 
 DPTR_IMPL(SupportedDrivers) {
   SupportedDrivers *q;
-  QList<shared_ptr<QPluginLoader>> drivers;
+  QList<shared_ptr<QLibrary>> drivers;
+
   void find_drivers(const QString &directory);
   void load_driver(const QString &filename);
   list<Driver*> instances() const;
@@ -57,18 +58,25 @@ void SupportedDrivers::Private::find_drivers(const QString& directory)
 
 void SupportedDrivers::Private::load_driver(const QString& filename)
 {
-  auto plugin = make_shared<QPluginLoader>(filename);
-  qDebug() << "trying " << filename << ": " << plugin->metaData();
-  auto getClassName = [](const auto &p) { return p->metaData().value("className"); };
-  if(plugin->metaData().value("IID").toString() == DRIVER_IID && 
-        find_if(drivers.begin(), drivers.end(), [&](const auto &p) { return getClassName(p) == getClassName(plugin); }) == drivers.end() ) {
-      if(plugin->load()) {
-        auto metadata = QJsonDocument{plugin->metaData()}.toVariant().toMap();
-        qInfo() << "driver " << plugin->fileName() << "loaded:" << metadata["className"].toString() << metadata["MetaData"].toMap()["description"].toString();
-        drivers.push_back(plugin);
-      } else {
-        qWarning() << "Error loading driver " << plugin->fileName() << ": " << plugin->errorString();
-      }
+  if(!filename.startsWith("driver_") && ! filename.endsWith(".json")) {
+    return;
+  }
+  QString library_name = filename;
+  library_name.remove(".json");
+
+  qDebug() << "trying " << filename << ": " << library_name;
+
+  auto driver = make_shared<QLibrary>(library_name);
+  if(driver->load()) {
+    qDebug() << "Driver " << library_name << " loaded successfully";
+    if(driver->resolve(PLANETARY_IMAGER_DRIVER_LOAD_F)) {
+        qDebug() << "PlanetaryImager_loadDriver resolved on " << library_name;
+        drivers.push_back(driver);
+    } else {
+        qWarning() << "Error resolving PlanetaryImager_loadDriver function on " << library_name;
+    }
+  } else {
+    qWarning() << "Error loading driver: " << library_name;
   }
 }
 
@@ -101,7 +109,8 @@ list<Driver *> SupportedDrivers::Private::instances() const
   transform(begin(drivers), end(drivers), back_inserter(instances), [](const auto &p) -> Driver* {
     qDebug() << "Initializing driver" << p->fileName();
     try {
-      return qobject_cast<Driver*>(p->instance());
+      auto driver_load_function = (LoadDriverFunction) p->resolve(PLANETARY_IMAGER_DRIVER_LOAD_F);
+      return qobject_cast<Driver*>(driver_load_function());
     } catch(const Imager::exception &e) {
       qWarning() << "Error loading driver: " << e.what();
       return nullptr;

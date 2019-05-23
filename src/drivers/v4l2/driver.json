@@ -1,5 +1,5 @@
 {
   "name": "V4L2",
   "description": "V4L2 Devices driver (webcams, The Imaging Soure, Celestron Skyris",
-  "version": "0.7"
+  "version": "${FULL_VERSION}"
 }

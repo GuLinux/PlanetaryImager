@@ -1,5 +1,5 @@
 {
   "name": "Simulator",
   "description": "Various simulator imagers, useful mostly for debugging",
-  "version": "0.7"
+  "version": "${FULL_VERSION}"
 }

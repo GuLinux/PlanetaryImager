@@ -108,3 +108,5 @@ FC2Driver::FC2Driver(): dptr()
 FC2Driver::~FC2Driver()
 {
 }
+
+DECLARE_DRIVER_PLUGIN_INIT(FC2Driver)
