@@ -1,0 +1,4 @@
+VOLUME /dest
+COPY entrypoint /entrypoint
+ENTRYPOINT ["bash", "/entrypoint"]
+

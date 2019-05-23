@@ -1,0 +1,2 @@
+RUN cd / && git clone https://github.com/libusb/libusb.git libusb-git && cd libusb-git && ./autogen.sh --enable-static=yes --enable-shared=no --with-pic --prefix=/opt/libusb-git $LIBUSB_CONFIGURE_OPTS && make all install $LIBUSB_MAKE_OPTS && cd / && rm -rf /libusb-git
+ENV CMAKE_PREFIX_PATH="/opt/libusb-git;$CMAKE_PREFIX_PATH"

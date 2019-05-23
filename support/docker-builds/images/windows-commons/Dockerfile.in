@@ -20,7 +20,7 @@ RUN apt-get update && apt-get install -y \
     wget \
     autopoint autoconf automake bash bison bzip2 flex \
     libgdk-pixbuf2.0-dev gettext git gperf intltool make \
-    sed libffi-dev libtool p7zip-full patch \
+    sed libffi-dev libtool p7zip-full patch lzip \
     perl python ruby scons unzip wget xz-utils libtool-bin \
     && apt-get clean
 RUN cd / && git clone https://github.com/mxe/mxe.git && cd /mxe && \

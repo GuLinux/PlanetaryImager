@@ -1,0 +1,4 @@
+DEB_BASE_IMAGE="arm32v7/ubuntu:19.04"
+DEB_VERSION=19.04
+DEB_CONFIG_NAME="ubuntu-19.04"
+. ../debian-based-commons/Dockerfile.in
