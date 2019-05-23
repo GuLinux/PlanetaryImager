@@ -28,6 +28,7 @@ class Dockerfile:
         snippets = []
 
         snippets.extend(self.snippets)
+        snippets.append(Snippet('snippets/workdir.in'))
         snippets.append(Snippet('snippets/entrypoint.in'))
 
         for snippet in snippets:

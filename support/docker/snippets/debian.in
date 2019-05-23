@@ -1,4 +1,4 @@
-FROM %{DEB_BASE_IMAGE}
+FROM %{BASE_IMAGE}
 COPY qemu-arm-static /usr/bin
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
     libccfits-dev \
     && apt-get clean
 
-COPY configuration-%{DEB_CONFIG_NAME}.cmake /
+COPY configuration-%{CONFIG_NAME}.cmake /
 COPY debian-package-checker.sh /usr/local/bin/
-ENV CMAKE_EXTRA_OPTIONS -DCMAKE_INCLUDE_EXT_FILE=/configuration-%{DEB_CONFIG_NAME}.cmake -DCPACK_GENERATOR=DEB $CMAKE_EXTRA_OPTIONS
+ENV CMAKE_EXTRA_OPTIONS -DCMAKE_INCLUDE_EXT_FILE=/configuration-%{CONFIG_NAME}.cmake -DCPACK_GENERATOR=DEB $CMAKE_EXTRA_OPTIONS
 ENV TEST_PACKAGE_CMD="/usr/local/bin/debian-package-checker.sh"

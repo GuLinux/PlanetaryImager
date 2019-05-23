@@ -11,7 +11,7 @@ class Windows(Dockerfile):
             'MXE_PREFIX': mxe_prefix,
             'ARCH': arch,
         }
-        snippets = ['windows', 'workdir']
+        snippets = ['windows']
         files = [
             'files/windows-deps-{}.cmake'.format(arch),
         ]

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 from debian import Debian, Ubuntu
+from fedora import Fedora
 from windows import Windows
 import sys
 
@@ -7,8 +8,13 @@ import sys
 images = [
     Ubuntu('19.04', 'x86_64'),
     Ubuntu('19.04', 'arm32v7'),
+    Ubuntu('18.04', 'x86_64'),
+    Ubuntu('18.04', 'arm32v7'),
+    Ubuntu('16.04', 'x86_64'),
+    Ubuntu('16.04', 'arm32v7'),
     Debian('testing', 'x86_64'),
     Debian('testing', 'arm32v7'),
+    Fedora('27', 'x86_64'),
     Windows('x86_64'),
 ]
 
