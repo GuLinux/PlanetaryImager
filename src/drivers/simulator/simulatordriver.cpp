@@ -65,4 +65,5 @@ SimulatorDriver::SimulatorDriver()
 
 
 
+DECLARE_DRIVER_PLUGIN_INIT(SimulatorDriver)
 #include "simulatordriver.moc"

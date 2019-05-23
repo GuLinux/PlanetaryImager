@@ -25,9 +25,9 @@ class SimulatorDriver : public Driver
 {
   Q_OBJECT
 public:
-  DECLARE_DRIVER_PLUGIN
   SimulatorDriver();
   virtual Driver::Cameras cameras() const;
 };
+
 
 #endif // SIMULATORDRIVER_H

@@ -138,3 +138,6 @@ IIDCDriver::IIDCDriver(): dptr()
 }
 
 IIDCDriver::~IIDCDriver() { }
+
+
+DECLARE_DRIVER_PLUGIN_INIT(IIDCDriver)
