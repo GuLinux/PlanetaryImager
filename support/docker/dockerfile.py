@@ -33,14 +33,17 @@ class Dockerfile:
 
         for snippet in snippets:
             with open(dockerfile, 'a') as f:
-                f.write(snippet.substitute(self.substitutions))
+                try:
+                    f.write(snippet.substitute(self.substitutions))
+                except Exception as e:
+                    raise RuntimeError('Error creating Dockerfile for {}: {}'.format(self.name, e))
         for file in self.files:
             shutil.copy(file, self.image_dir)
         shutil.copy('files/entrypoint', self.image_dir)
 
     def build(self):
         os.makedirs(logs_dir, exist_ok=True)
-        with open(os.path.join(logs_dir, '{}-{}.log'.format(datetime.now().strftime('%Y-%m-%dT%H-%M-%S'), self.name)), 'w') as logfile:
+        with open(os.path.join(logs_dir, '{}-{}.log'.format(self.name, datetime.now().strftime('%Y-%m-%dT%H-%M-%S'))), 'w') as logfile:
             args = ['docker', 'build', '-t', self.image_name, '.']
             logfile.write('running command line: `{}`\n'.format(' '.join(args)))
             logfile.flush()

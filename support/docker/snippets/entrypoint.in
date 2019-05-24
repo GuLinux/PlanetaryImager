@@ -1,4 +1,4 @@
 VOLUME /dest
 COPY entrypoint /entrypoint
-ENTRYPOINT ["bash", "/entrypoint"]
+ENTRYPOINT ["bash", "/entrypoint", "-C", "/cmake/%{CMAKE_CACHE_INIT}"]
 

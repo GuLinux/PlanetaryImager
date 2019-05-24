@@ -1,0 +1,7 @@
+#!/bin/bash
+FILE="$1"
+
+function trim() {
+    echo $*
+}
+trim $(grep QMAKE_PRL_LIBS "$FILE" | cut -d= -f2) | tr ' ' ';' | tr -d '\n' | sed "s|\$\$\[QT_INSTALL_LIBS\]|$2|g"

@@ -2,6 +2,9 @@ set(PlanetaryImager_GUI_SRCS planetaryimager_mainwindow.cpp planetaryimager_main
 set(PlanetaryImager_SRCS planetaryimager_main.cpp ${PlanetaryImager_GUI_SRCS})
 
 
+if(static_qt_windows)
+add_definitions(-DSTATIC_WINDOWS_PLUGIN)
+endif()
 
 set(drivers_destination lib/${CMAKE_PROJECT_NAME}/drivers)
 set(binary_destination bin)

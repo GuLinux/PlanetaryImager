@@ -13,10 +13,14 @@ class LinuxBase(Dockerfile):
 
         if arch != 'x86_64':
             base_image = arch + '/' + base_image
+
+        configuration_file = 'configuration-{}.cmake'.format(config_name)
+
         substitutions = {
             'CONFIG_NAME': config_name,
             'BASE_IMAGE': base_image,
             'CMAKE_BIN': 'cmake',
+            'CMAKE_CACHE_INIT': configuration_file,
         }
         substitutions.update(extra_substitutions)
 
@@ -27,8 +31,10 @@ class LinuxBase(Dockerfile):
         if qemu_arm_static is None:
             raise RuntimeError('qemu-arm-static not found in PATH')
  
+
         files = [
-            'files/configuration-{}.cmake'.format(config_name),
+            'files/' + configuration_file,
+            'files/configuration-linux.cmake',
             qemu_arm_static,
         ]
         files.extend(extra_files)

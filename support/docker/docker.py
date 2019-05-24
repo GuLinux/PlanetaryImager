@@ -15,7 +15,7 @@ images = [
     Debian('testing', 'x86_64'),
     Debian('testing', 'arm32v7'),
     Fedora('27', 'x86_64'),
-    Windows('x86_64'),
+    Windows('x86_64', 'static'),
 ]
 
 

@@ -14,7 +14,7 @@ RUN apt-get update && apt-get install -y \
     libccfits-dev \
     && apt-get clean
 
-COPY configuration-%{CONFIG_NAME}.cmake /
+RUN mkdir /cmake
+COPY configuration-%{CONFIG_NAME}.cmake /cmake
 COPY debian-package-checker.sh /usr/local/bin/
-ENV CMAKE_EXTRA_OPTIONS -DCMAKE_INCLUDE_EXT_FILE=/configuration-%{CONFIG_NAME}.cmake -DCPACK_GENERATOR=DEB $CMAKE_EXTRA_OPTIONS
 ENV TEST_PACKAGE_CMD="/usr/local/bin/debian-package-checker.sh"
