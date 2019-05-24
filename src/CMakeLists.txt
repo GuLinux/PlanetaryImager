@@ -8,6 +8,8 @@ endif()
 
 set(drivers_destination lib/${CMAKE_PROJECT_NAME}/drivers)
 set(binary_destination bin)
+set(CMAKE_INSTALL_DEFAULT_DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
+
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
   set(drivers_destination drivers)
   set(binary_destination .)
