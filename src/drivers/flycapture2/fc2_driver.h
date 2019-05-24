@@ -28,8 +28,6 @@ class FC2Driver: public Driver
 
 public:
 
-    DECLARE_DRIVER_PLUGIN
-
     FC2Driver();
 
     ~FC2Driver();

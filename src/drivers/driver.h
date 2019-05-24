@@ -38,10 +38,15 @@ public:
   virtual Cameras cameras() const = 0;
 };
 typedef QList<Driver::ptr> Drivers;
-#define DRIVER_IID "net.gulinux.planetaryimager.driver"
-Q_DECLARE_INTERFACE(Driver, DRIVER_IID)
-#define DECLARE_DRIVER_PLUGIN   \
-Q_INTERFACES(Driver) \
-Q_PLUGIN_METADATA(IID DRIVER_IID FILE "driver.json")
+typedef Driver *(*LoadDriverFunction)();
+
+#ifdef Q_OS_WIN
+#define EXPORT_DECL __declspec(dllexport)
+#else
+#define EXPORT_DECL
+#endif
+
+#define PLANETARY_IMAGER_DRIVER_LOAD_F "PlanetaryImager_loadDriver"
+#define DECLARE_DRIVER_PLUGIN_INIT(DriverClass) extern "C" EXPORT_DECL Driver *PlanetaryImager_loadDriver() { return new DriverClass(); }
 
 #endif

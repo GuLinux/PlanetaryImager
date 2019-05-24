@@ -82,3 +82,4 @@ Driver::Cameras QHYDriver::cameras() const
   return cameras;
 }
 
+DECLARE_DRIVER_PLUGIN_INIT(QHYDriver)
