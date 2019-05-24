@@ -34,12 +34,15 @@ function(add_driver)
     set(disabled_drivers ${disabled_drivers} ${add_driver_NAME} CACHE INTERNAL "")
     return()
   endif()
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/driver.json ${CMAKE_CURRENT_BINARY_DIR}/driver_${add_driver_NAME}.json)
+  set(DRIVER_JSON_FILE ${CMAKE_CURRENT_BINARY_DIR}/driver_${add_driver_NAME}.json)
+
+  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/driver.json ${DRIVER_JSON_FILE})
   add_library(${add_driver_NAME} MODULE ${add_driver_SRCS})
   target_link_libraries(${add_driver_NAME} GuLinux_Qt_Commons GuLinux_c++_Commons drivers planetaryimager-commons ${add_driver_LINK} Qt5::Core Qt5::Qml ${OpenCV_LIBS})
 
   set_target_properties(${add_driver_NAME} PROPERTIES PREFIX "driver_")
+
+  install(FILES ${DRIVER_JSON_FILE} DESTINATION ${drivers_destination})
   install(TARGETS ${add_driver_NAME} LIBRARY DESTINATION ${drivers_destination})
-  install(FILES ${CMAKE_CURRENT_BINARY_DIR}/${add_driver_NAME}.json DESTINATION ${drivers_destination})
   set(enabled_drivers ${enabled_drivers} ${add_driver_NAME} CACHE INTERNAL "")
 endfunction()
