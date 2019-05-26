@@ -56,6 +56,7 @@ ZWO_ASI_Driver::ZWO_ASI_Driver() : dptr(this)
     metatypes_registered = true;
     qRegisterMetaType<ASI_IMG_TYPE>("ASI_IMG_TYPE");
   }
+  qDebug() << "ZWO ASI Driver initialised";
 }
 
 ZWO_ASI_Driver::~ZWO_ASI_Driver()
@@ -66,6 +67,7 @@ ZWO_ASI_Driver::~ZWO_ASI_Driver()
 Driver::Cameras ZWO_ASI_Driver::cameras() const
 {
   int ncams = ASIGetNumOfConnectedCameras();
+  qDebug() << "ZWO AI Driver: detected" << ncams << "cameras";
   Driver::Cameras cameras;
   int index=0;
   for(int index=0; index<ncams; index++) {
