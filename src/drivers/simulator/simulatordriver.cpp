@@ -54,12 +54,14 @@ Driver::Cameras SimulatorDriver::cameras() const
     make_shared<SimulatorCamera>("Simulator: Planet", [](const ImageHandler::ptr& imageHandler){ return new SimulatorImager(imageHandler); }),
     make_shared<SimulatorCamera>("Simulator: SER file", [](const ImageHandler::ptr& imageHandler){ return new SERImager(imageHandler); }),
   };
+  qDebug() << "(Simulator) Loaded cameras: " << _cameras.size();
   return _cameras;
 }
 
 
 SimulatorDriver::SimulatorDriver()
 {
+  qDebug() << "(Simulator) Initialising";
   Q_INIT_RESOURCE(simulator);
 }
 

@@ -25,6 +25,8 @@
 #include <QFileInfo>
 #include <QDir>
 #include "commons/commandline.h"
+#include <QMutex>
+#include <QMutexLocker>
 
 using namespace std;
 using namespace std::placeholders;
@@ -53,6 +55,8 @@ QHash<QtMsgType, string> LogHandler::log_levels()
 
 void LogHandler::Private::log_handler(QtMsgType type, const QMessageLogContext &context, const QString &msg)
 {
+  static QMutex log_mutex;
+  
   static QHash<QtMsgType, int> priority {
     {QtFatalMsg   , 10},
     {QtCriticalMsg, 20},
@@ -70,6 +74,7 @@ void LogHandler::Private::log_handler(QtMsgType type, const QMessageLogContext &
       position = QString("%1:%2").arg(context.file).arg(context.line).replace(SRC_DIR, "");
     }
     QString function = context.function ? context.function : "";
+    QMutexLocker lock(&log_mutex);
     output.stream.get() << setw(8) << LogHandler::log_levels()[type] << " - " /*<< qPrintable(position) << "@"*/<< qPrintable(function) << " " << qPrintable(msg) << endl;
     output.stream.get().flush();
   }

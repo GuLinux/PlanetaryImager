@@ -40,13 +40,16 @@ public:
 typedef QList<Driver::ptr> Drivers;
 typedef Driver *(*LoadDriverFunction)();
 
-#ifdef Q_OS_WIN
-#define EXPORT_DECL __declspec(dllexport)
-#else
-#define EXPORT_DECL
-#endif
 
 #define PLANETARY_IMAGER_DRIVER_LOAD_F "PlanetaryImager_loadDriver"
-#define DECLARE_DRIVER_PLUGIN_INIT(DriverClass) extern "C" EXPORT_DECL Driver *PlanetaryImager_loadDriver() { return new DriverClass(); }
+
+#ifdef Q_OS_WIN
+#define DECL_EXPORT Q_DECL_EXPORT
+#else
+#define DECL_EXPORT
+#endif
+#define DECLARE_DRIVER_PLUGIN_INIT(DriverClass) \
+extern "C" DECL_EXPORT Driver *PlanetaryImager_loadDriver() { return new DriverClass(); }
+  
 
 #endif
