@@ -50,6 +50,5 @@ typedef Driver *(*LoadDriverFunction)();
 #endif
 #define DECLARE_DRIVER_PLUGIN_INIT(DriverClass) \
 extern "C" DECL_EXPORT Driver *PlanetaryImager_loadDriver() { return new DriverClass(); }
-  
 
 #endif
