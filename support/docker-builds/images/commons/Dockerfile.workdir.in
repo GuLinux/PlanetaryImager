@@ -1,4 +1,0 @@
-cat <<EOF
-WORKDIR /build
-EOF
-

@@ -3,7 +3,7 @@ from linux import LinuxBase
 
 class DebianBase(LinuxBase):
     def __init__(self, flavour, version, arch):
-        super().__init__('debian', flavour, version, arch, ['files/debian-package-checker.sh'], ['libusb'])
+        super().__init__('debian', flavour, version, arch, ['libusb'])
  
 
 class Debian(DebianBase):

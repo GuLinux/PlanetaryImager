@@ -39,7 +39,6 @@ class Dockerfile:
                     raise RuntimeError('Error creating Dockerfile for {}: {}'.format(self.name, e))
         for file in self.files:
             shutil.copy(file, self.image_dir)
-        shutil.copy('files/entrypoint', self.image_dir)
 
     def build(self):
         os.makedirs(logs_dir, exist_ok=True)

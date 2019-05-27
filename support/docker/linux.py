@@ -3,7 +3,7 @@ from dockerfile import Dockerfile
 
 
 class LinuxBase(Dockerfile):
-    def __init__(self, snippet, flavour, version, arch, extra_files=[], extra_snippets = [], extra_substitutions={}):
+    def __init__(self, snippet, flavour, version, arch, extra_snippets = [], extra_substitutions={}):
         self.flavour = flavour
         self.version = version
         self.arch = arch
@@ -21,6 +21,7 @@ class LinuxBase(Dockerfile):
             'BASE_IMAGE': base_image,
             'CMAKE_BIN': 'cmake',
             'CMAKE_CACHE_INIT': configuration_file,
+            'PACKAGE_SYSTEM_NAME': '{}-{}'.format(flavour, version),
         }
         substitutions.update(extra_substitutions)
 
@@ -30,14 +31,8 @@ class LinuxBase(Dockerfile):
         qemu_arm_static = shutil.which('qemu-arm-static')
         if qemu_arm_static is None:
             raise RuntimeError('qemu-arm-static not found in PATH')
- 
 
-        files = [
-            'files/' + configuration_file,
-            'files/configuration-linux.cmake',
-            qemu_arm_static,
-        ]
-        files.extend(extra_files)
+        files = [qemu_arm_static]
         super().__init__(name, snippets, files, substitutions)
  
 

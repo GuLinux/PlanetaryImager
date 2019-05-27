@@ -15,6 +15,4 @@ RUN apt-get update && apt-get install -y \
     && apt-get clean
 
 RUN mkdir /cmake
-COPY configuration-%{CONFIG_NAME}.cmake /cmake
-COPY debian-package-checker.sh /usr/local/bin/
 ENV TEST_PACKAGE_CMD="/usr/local/bin/debian-package-checker.sh"

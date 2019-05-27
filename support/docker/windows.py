@@ -14,11 +14,7 @@ class Windows(Dockerfile):
             'ARCH': arch,
             'LINKTYPE': linktype,
             'CMAKE_CACHE_INIT': configuration_file,
+            'PACKAGE_SYSTEM_NAME': 'Windows-' + arch,
         }
-        snippets = ['windows']
-        files = [
-            'files/' + configuration_file,
-            'files/get-libs-from-qt-prl',
-        ]
-        super().__init__(name, snippets, files, substitutions)
+        super().__init__(name, ['windows'], [], substitutions)
 
