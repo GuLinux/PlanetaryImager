@@ -1,0 +1,7 @@
+#!/bin/bash
+set -e
+env
+
+docker run -v $PWD:/code -v $PWD/build:/build --entrypoint cmake --name "planetary_imager_cmake" gulinux/planetaryimager_build:ubuntu-19.04-x86_64 /code 
+docker run -v $PWD:/code -v $PWD/build:/build --entrypoint make --name "planetary_imager_build" gulinux/planetaryimager_build:ubuntu-19.04-x86_64 -j4
+

@@ -3,9 +3,9 @@ matrix:
     - language: python
       python: 3.6
       before_install:
-        - pwd
-        - ls
         - bash -x .travis-ci/before_install
+      script:
+        - bash -x .travis-ci/ci-build
 #    - language: cpp
 #      os: osx
 
