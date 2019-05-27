@@ -5,12 +5,8 @@ PACKAGE_COMMAND="${PACKAGE_COMMAND:-make package}"
 
 set -x
 ${CMAKE_BIN} \
-          "$@" \
           -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH} \
-          -DCMAKE_BUILD_TYPE=${CMAKE_BUILD_TYPE:-Debug} \
-          -DPACKAGE_VERSION_SUFFIX=${PACKAGE_VERSION_SUFFIX} \
-          -DPACKAGE_NAME_SUFFIX=${PACKAGE_NAME_SUFFIX} \
-          ${CMAKE_EXTRA_OPTIONS} ${CMAKE_OVERRIDE_OPTIONS} \
+          "$@" \
           /code && \
           make ${MAKE_OPTS} && $PACKAGE_COMMAND
 

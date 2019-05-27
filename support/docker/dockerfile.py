@@ -1,11 +1,16 @@
 from snippet import Snippet
 import os
+import sys
 import shutil
 import subprocess
 from datetime import datetime
 
 images_dir = 'images'
 logs_dir = os.path.abspath('./logs')
+
+def cleanup_logs():
+    shutil.rmtree(logs_dir, ignore_errors=True)
+  
 
 class Dockerfile:
     def __init__(self, name, snippets, files, substitutions):
@@ -40,14 +45,28 @@ class Dockerfile:
         for file in self.files:
             shutil.copy(file, self.image_dir)
 
-    def build(self):
-        os.makedirs(logs_dir, exist_ok=True)
-        with open(os.path.join(logs_dir, '{}-{}.log'.format(self.name, datetime.now().strftime('%Y-%m-%dT%H-%M-%S'))), 'w') as logfile:
-            args = ['docker', 'build', '-t', self.image_name, '.']
-            logfile.write('running command line: `{}`\n'.format(' '.join(args)))
-            logfile.flush()
-            print('Building image `{}`: running command `{}`'.format(self.name, ' '.join(args)))
-            self.result = subprocess.run(args, stdout=logfile, stderr=subprocess.STDOUT, cwd=self.image_dir)
+    def build(self, stderr=False):
+      self.__create_logsdir()
+      args = ['docker', 'build', '-t', self.image_name, '.']
+      self.__run_command(args, 'build', stderr, run_directory=self.image_dir)
+           
+    def package(self, code_path, destination_path, make_jobs, cmake_defines, stderr=False):
+      self.__create_logsdir()
+      cmdline = [
+        'docker',
+        'run',
+#        '-it',
+        '--rm',
+        '-v',
+        '{}:/code'.format(code_path),
+        '-v',
+        '{}:/dest'.format(destination_path),
+        '-e',
+        'MAKE_OPTS=-j{}'.format(make_jobs),
+        self.image_name,
+      ]
+      cmdline.extend(['-D' + x for x in cmake_defines])
+      self.__run_command(cmdline, 'package', stderr)
 
     def report_build(self):
         is_error = False
@@ -60,6 +79,33 @@ class Dockerfile:
             is_error = True
         print('{: <40}: {}'.format(self.name, status))
         return not is_error
+      
+    def __run_command(self, cmdline, command_name, stderr=False, run_directory=None):
+      def run(output):
+        output.write('{}: running command line: `{}`\n'.format(command_name, ' '.join(cmdline)))
+        output.flush()
+        self.result = subprocess.run(cmdline, stdout=output, stderr=subprocess.STDOUT, cwd=run_directory)
+
+      if stderr:
+        run(sys.stderr)
+      else:
+        sys.stdout.write('{} for {} (`{}`)...'.format(command_name, self.name, ' '.join(cmdline)))
+        logfile_path = os.path.join(logs_dir, '{}-{}-{}.log'.format(self.name, command_name, datetime.now().strftime('%Y-%m-%dT%H-%M-%S')))
+        with open(logfile_path, 'w') as logfile:
+          run(logfile)
+        if self.result.returncode == 0:
+          sys.stdout.write('[OK]\n')
+        else:
+          with open(logfile_path, 'r') as logfile:
+            sys.stdout.write('[ERROR]\n')
+            sys.stderr.write(''.join(logfile.readlines()[-10:]))
+            sys.stderr.write('\n')
+            sys.stderr.flush()
+            
+      
+    def __create_logsdir(self):
+       os.makedirs(logs_dir, exist_ok=True)
+ 
 
     def __str__(self):
         return 'Dockerfile: ' + self.name
