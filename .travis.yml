@@ -1,0 +1,12 @@
+matrix:
+  include:
+    - language: python
+      python: 3.6
+      before_install:
+        - .travis-ci/before_install
+    - language: cpp
+      os: osx
+
+services:
+  - docker
+
