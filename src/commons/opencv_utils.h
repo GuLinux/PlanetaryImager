@@ -20,6 +20,7 @@
 #include <opencv2/opencv.hpp>
 #include <QDebug>
 
+#define CV_FOURCC_COMPAT(a,b,c,d) cv::VideoWriter::fourcc(a,b,c,d)
 
 #ifdef CV_VERSION_EPOCH
 #if CV_VERSION_EPOCH < 3 
@@ -48,10 +49,9 @@ namespace cv {
 namespace Error {
     const int StsUnsupportedFormat = CV_StsUnsupportedFormat;
 }
+#undef CV_FOURCC_COMPAT
 #define CV_FOURCC_COMPAT CV_FOURCC
 }
-#else
-#define CV_FOURCC_COMPAT(a,b,c,d) cv::VideoWriter::fourcc(a,b,c,d)
 #endif
 #endif
 
