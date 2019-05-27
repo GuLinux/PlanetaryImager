@@ -2,13 +2,13 @@ matrix:
   include:
     - language: python
       python: 3.6
+      services:
+        - docker
       before_install:
         - bash -x .travis-ci/before_install
       script:
         - bash -x .travis-ci/ci-build
+        - bash -x .travis-ci/tests
 #    - language: cpp
 #      os: osx
-
-services:
-  - docker
 

@@ -1,3 +1,6 @@
 #!/bin/bash
-echo running tests
-env
+set -e
+
+if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
+    docker run -v $PWD:/code -v $PWD/build:/build --entrypoint make --name "planetary_imager_tests" -e GTEST_OUTPUT=xml:/build/tests_result/ test 
+fi

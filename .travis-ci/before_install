@@ -1,5 +1,6 @@
 #!/bin/bash
 set -e
-sudo apt-get install -y binfmt-support
-docker run --rm --privileged multiarch/qemu-user-static:register
-
+if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
+    sudo apt-get install -y binfmt-support
+    docker run --rm --privileged multiarch/qemu-user-static:register
+fi
