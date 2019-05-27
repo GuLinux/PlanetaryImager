@@ -21,6 +21,7 @@
 #include <QThread>
 #include <QFile>
 #include "commons/utils.h"
+#include "commons/opencv_utils.h"
 #include <QTimer>
 #include <QRect>
 #include "drivers/imagerthread.h"

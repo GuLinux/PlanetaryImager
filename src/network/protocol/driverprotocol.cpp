@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <functional>
 #include <opencv2/opencv.hpp>
+#include "commons/opencv_utils.h"
 #include <QJsonDocument>
 
 using namespace std;
