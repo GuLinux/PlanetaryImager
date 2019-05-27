@@ -30,5 +30,14 @@ if(DEBUG_NETWORK_PACKETS)
 endif()
 
 # Extra executables to be built
-option(build_network_server "Build PlanetaryImager network daemon and frontend" On)
-
+if(NOT "${CPACK_GENERATOR}" STREQUAL "DragNDrop")
+    option(build_network_server "Build PlanetaryImager network daemon and frontend" On)
+else()
+    message("Disabling PlanetaryImager network daemon and frontend in bundle mode")
+    set(build_network_server Off)
+    set(OSX_BUNDLE On)
+    add_definitions(-DOSX_BUNDLE=1)
+    set(CMAKE_INSTALL_PREFIX /)
+    set(MACOSX_BUNDLE_BUNDLE_NAME PlanetaryImager)
+    set(APPBUNDLE_INSTALL_PREFIX "${MACOSX_BUNDLE_BUNDLE_NAME}.app/")
+endif()

@@ -6,7 +6,7 @@ if(static_qt_windows)
 add_definitions(-DSTATIC_WINDOWS_PLUGIN)
 endif()
 
-set(drivers_destination lib/${CMAKE_PROJECT_NAME}/drivers)
+set(drivers_destination ${APPBUNDLE_INSTALL_PREFIX}lib/${CMAKE_PROJECT_NAME}/drivers)
 set(binary_destination bin)
 set(CMAKE_INSTALL_DEFAULT_DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
@@ -15,8 +15,13 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
   set(binary_destination .)
   add_definitions(-DDRIVERS_DIRECTORY="${drivers_destination}")
 else()
-  add_definitions(-DDRIVERS_DIRECTORY="${CMAKE_INSTALL_PREFIX}/${drivers_destination}")
+  if(OSX_BUNDLE)
+      add_definitions(-DDRIVERS_DIRECTORY="../../lib/PlanetaryImager/drivers")
+  else()
+      add_definitions(-DDRIVERS_DIRECTORY="${CMAKE_INSTALL_PREFIX}/${drivers_destination}")
+  endif()
 endif()
+
 
 SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${drivers_destination};$ORIGIN")
 
@@ -36,16 +41,21 @@ message("common dependencies: ${planetary_imager_commons_DEPS}")
 message("backend dependencies: ${planetary_imager_backend_DEPS}")
 message("frontend dependencies: ${planetary_imager_frontend_DEPS}")
 
+set(appname planetary_imager)
 set(install_targets planetary_imager)
 if(WIN32 AND NOT DEVELOPER_MODE)
   set(WIN32_APP_FLAG WIN32)
   set(PlanetaryImager_SRCS ${PlanetaryImager_SRCS} ${CMAKE_SOURCE_DIR}/files/planetary_imager.rc)
 endif()
+if(OSX_BUNDLE)
+  set(MACOSX_BUNDLE_FLAG MACOSX_BUNDLE)
+  set(appname ${MACOSX_BUNDLE_BUNDLE_NAME})
+endif()
 
-add_executable(planetary_imager ${WIN32_APP_FLAG} ${PlanetaryImager_SRCS} planetaryimager.cpp )
+add_executable(${appname} ${WIN32_APP_FLAG} ${MACOSX_BUNDLE_FLAG} ${PlanetaryImager_SRCS} planetaryimager.cpp )
 
 
-target_link_libraries(planetary_imager
+target_link_libraries(${appname}
     network_server
     ${planetary_imager_backend_DEPS}
     ${planetary_imager_frontend_DEPS}
@@ -115,7 +125,14 @@ else()
 endif()
 
 
-
-install(TARGETS ${install_targets} RUNTIME DESTINATION ${binary_destination})
+if(OSX_BUNDLE)
+    install(
+        TARGETS ${appname} 
+        BUNDLE DESTINATION /
+    )
+  add_subdirectory(bundle_install)
+else()
+    install(TARGETS ${install_targets} RUNTIME DESTINATION ${binary_destination})
+endif()
 
 

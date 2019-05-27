@@ -17,8 +17,9 @@ include(cmake/functions.cmake)
 
 add_definitions(-DSRC_DIR="${CMAKE_SOURCE_DIR}")
 
-
-install(FILES README.md Changelog.md DESTINATION share/doc/PlanetaryImager)
+if(NOT OSX_BUNDLE)
+    install(FILES README.md Changelog.md DESTINATION share/doc/PlanetaryImager)
+endif()
 
 
 

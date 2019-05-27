@@ -59,7 +59,13 @@ CommandLine::~CommandLine()
 
 CommandLine & CommandLine::backend()
 {
-  d->parser.addOption({"drivers", "Drivers directory", "drivers_directory_path", DRIVERS_DIRECTORY});
+
+#ifdef OSX_BUNDLE
+  QString driversDirectory = QCoreApplication::applicationDirPath() + "/" + DRIVERS_DIRECTORY;
+#else
+  QString driversDirectory = DRIVERS_DIRECTORY;
+#endif
+  d->parser.addOption({"drivers", "Drivers directory", "drivers_directory_path", driversDirectory});
   d->loggingOptions();
   return *this;
 }
