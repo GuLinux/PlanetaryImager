@@ -21,7 +21,7 @@
 #include <QDebug>
 
 
-#if CV_VERSION_MAJOR < 3
+#if ! CV_VERSION_MAJOR >= 3
 namespace cv {
     const int IMREAD_COLOR = CV_LOAD_IMAGE_COLOR;
     const int COLOR_BGR2GRAY = CV_BGR2GRAY;
