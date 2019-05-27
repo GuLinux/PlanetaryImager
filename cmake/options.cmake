@@ -1,20 +1,11 @@
 # Enable fPIC (Default: ON)
-option(cflags_fpic "Use -fPIC for compilation " on)
+option(cflags_fpic "Use -fPIC for compilation " On)
 if(cflags_fpic)
   message("Compiling with -fPIC")
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 endif(cflags_fpic)
 if(WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -mno-ms-bitfields")
-endif()
-
-# Extra options for cmake in an external file
-set(CMAKE_INCLUDE_EXT_FILE CACHE INTERNAL "Per-environment include file")
-if(CMAKE_INCLUDE_EXT_FILE)
-  message("Using cmake environment: ${CMAKE_INCLUDE_EXT_FILE}")
-  include(${CMAKE_INCLUDE_EXT_FILE})
-else()
-  message("CMake environment file ${CMAKE_INCLUDE_EXT_FILE} NOT found")
 endif()
 
 # Extra libraries
@@ -40,3 +31,4 @@ endif()
 
 # Extra executables to be built
 option(build_network_server "Build PlanetaryImager network daemon and frontend" On)
+

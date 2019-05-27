@@ -23,6 +23,13 @@
 #include <QThread>
 #include <QTimer>
 
+#ifdef STATIC_WINDOWS_PLUGIN
+#pragma message("Initializing Qt static plugins")
+#include <QtPlugin>
+Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
+#endif
+
+
 DPTR_IMPL(PlanetaryImager) {
   Driver::ptr driver;
   ImageHandler::ptr imageHandler;
@@ -43,6 +50,7 @@ PlanetaryImager::PlanetaryImager(
   Configuration &configuration
 ) : QObject{}, dptr(driver, imageHandler, saveImages, configuration, this)
 {
+  QThreadPool::globalInstance()->setMaxThreadCount(std::max(5, QThread::idealThreadCount()));
   d->initDevicesWatcher();
 }
 

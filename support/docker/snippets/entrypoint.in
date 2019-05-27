@@ -1,0 +1,3 @@
+VOLUME /dest
+ENTRYPOINT ["bash", "/code/support/docker/files/entrypoint", "-DPACKAGE_SYSTEM_NAME=%{PACKAGE_SYSTEM_NAME}", "-C", "/code/support/docker/files/%{CMAKE_CACHE_INIT}"]
+

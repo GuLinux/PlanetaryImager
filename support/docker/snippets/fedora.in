@@ -1,0 +1,5 @@
+FROM %{BASE_IMAGE}
+RUN yum install -y     rpm-build     autoconf     automake     qt5-qtbase-devel     qt5-qtdeclarative-devel     gcc-c++     cmake     opencv-devel     boost-devel     git     libusb-devel     CCfits-devel     && yum clean all -y
+WORKDIR /build
+RUN mkdir /cmake
+ENV TEST_PACKAGE_CMD="/usr/local/bin/rpm-package-checker.sh"

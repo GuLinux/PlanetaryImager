@@ -1,0 +1,17 @@
+#!/bin/bash
+
+CMAKE_BIN="${CMAKE_BIN:-cmake}"
+PACKAGE_COMMAND="${PACKAGE_COMMAND:-make package}"
+
+set -x
+${CMAKE_BIN} \
+          -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH} \
+          "$@" \
+          /code && \
+          make ${MAKE_OPTS} && $PACKAGE_COMMAND
+
+if [ -r package_name.cfg ]; then
+    . package_name.cfg
+    cp -av "${CPACK_PACKAGE_FILENAME}" "/dest/${CPACK_PACKAGE_FILENAME}"
+fi
+
