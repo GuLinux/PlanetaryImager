@@ -90,6 +90,7 @@ class Dockerfile:
         run(sys.stderr)
       else:
         sys.stdout.write('{} for {} (`{}`)...'.format(command_name, self.name, ' '.join(cmdline)))
+        sys.stdout.flush()
         logfile_path = os.path.join(logs_dir, '{}-{}-{}.log'.format(self.name, command_name, datetime.now().strftime('%Y-%m-%dT%H-%M-%S')))
         with open(logfile_path, 'w') as logfile:
           run(logfile)
