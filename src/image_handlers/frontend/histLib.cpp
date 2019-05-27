@@ -218,13 +218,13 @@ void CHistLib::ComputeHistogramBGR(
 
     case CV_8UC4:
     {
-      cvtColor(Image, ImageBGR, CV_RGBA2RGB);
+      cvtColor(Image, ImageBGR, cv::COLOR_RGBA2RGB);
       pImageBGR = &ImageBGR;
     }
     break;
 
     default:
-      CV_Error(CV_StsUnsupportedFormat, "CHistLib::DrawHistogramGray");
+      CV_Error(cv::Error::StsUnsupportedFormat, "CHistLib::DrawHistogramGray");
     break;
   }
 
@@ -281,7 +281,7 @@ void CHistLib::ComputeHistogramValue(const cv::Mat& Image, cv::MatND& Hist)
       Mat ImageHSV = Mat(Image.size(), CV_8UC3);
       vector<Mat> ChannlesHsv;
 
-      cvtColor(Image, ImageHSV, CV_BGR2HSV);
+      cvtColor(Image, ImageHSV, cv::COLOR_BGR2HSV);
       cv::split(ImageHSV, ChannlesHsv);
       ImageValue = ChannlesHsv[2];
     }
@@ -293,15 +293,15 @@ void CHistLib::ComputeHistogramValue(const cv::Mat& Image, cv::MatND& Hist)
       Mat ImageBGR = Mat(Image.size(), CV_8UC3);
       vector<Mat> ChannlesHsv;
 
-      cvtColor(Image, ImageBGR, CV_RGBA2RGB);
-      cvtColor(ImageBGR, ImageHSV, CV_RGBA2RGB);
+      cvtColor(Image, ImageBGR, cv::COLOR_RGBA2RGB);
+      cvtColor(ImageBGR, ImageHSV, cv::COLOR_RGBA2RGB);
       cv::split(ImageHSV, ChannlesHsv);
       ImageValue = ChannlesHsv[2];
     }
     break;
 
     default:
-      CV_Error(CV_StsUnsupportedFormat, "CHistLib::DrawHistogramValue");
+      CV_Error(cv::Error::StsUnsupportedFormat, "CHistLib::DrawHistogramValue");
     break;
   }
 
@@ -476,7 +476,7 @@ void CHistLib::NormalizeImageBGR(const Mat& ImageBGR, Mat& ImageBGRNorm)
   Mat ImageHSV     = Mat(ImageBGR.size(), CV_8UC3);
   Mat ImageHSVNorm = Mat(ImageBGR.size(), CV_8UC3);
 
-  cvtColor(ImageBGR, ImageHSV, CV_BGR2HSV);
+  cvtColor(ImageBGR, ImageHSV, cv::COLOR_BGR2HSV);
 
   unsigned char* data     = ImageHSV.data;
   unsigned char* dataNorm = ImageHSVNorm.data;
@@ -518,7 +518,7 @@ void CHistLib::NormalizeImageBGR(const Mat& ImageBGR, Mat& ImageBGRNorm)
     dataNorm[3*i+2] = newPixelByte;
 
   }
-  cvtColor(ImageHSVNorm, ImageBGRNorm, CV_HSV2BGR);
+  cvtColor(ImageHSVNorm, ImageBGRNorm, cv::COLOR_HSV2BGR);
 }
 
 //-----------------------------------------------------------------------------
@@ -534,7 +534,7 @@ void CHistLib::NormalizeClipImageBGR(
   Mat ImageHSV     = Mat(ImageBGR.size(), CV_8UC3);
   Mat ImageHSVNorm = Mat(ImageBGR.size(), CV_8UC3);
 
-  cvtColor(ImageBGR, ImageHSV, CV_BGR2HSV);
+  cvtColor(ImageBGR, ImageHSV, cv::COLOR_BGR2HSV);
 
   unsigned char* data     = ImageHSV.data;
   unsigned char* dataNorm = ImageHSVNorm.data;
@@ -613,7 +613,7 @@ void CHistLib::NormalizeClipImageBGR(
 
     dataNorm[3*i+2] = newPixelByte;
   }
-  cvtColor(ImageHSVNorm, ImageBGRNorm, CV_HSV2BGR);
+  cvtColor(ImageHSVNorm, ImageBGRNorm, cv::COLOR_HSV2BGR);
 }
 
 //-----------------------------------------------------------------------------
