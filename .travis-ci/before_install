@@ -4,3 +4,6 @@ if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
     sudo apt-get install -y binfmt-support
     docker run --rm --privileged multiarch/qemu-user-static:register
 fi
+if [ "${TRAVIS_OS_NAME}" == "osx" ]; then
+    bash support/osx/install-deps
+fi

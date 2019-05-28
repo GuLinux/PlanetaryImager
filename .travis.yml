@@ -1,33 +1,31 @@
-matrix:
-  include:
-  - language: python
-    python: 3.6
-    services:
-    - docker
-    before_install:
-    - bash -x .travis-ci/before_install
-    script:
-    - bash -x .travis-ci/ci-build
-    - bash -x .travis-ci/tests
-    - bash -x .travis-ci/package
-    deploy:
-      provider: releases
-      api_key: "$GITHUB_OAUTH_TOKEN"
-      file_glob: true
-      file: packages/*
-      skip_cleanup: true
-      draft: true
-      prerelease: true
-      name: "$( source build/scripts/version.sh && echo $PLANETARY_IMAGER_VERSION )"
-      body: |
-        ${TRAVIS_COMMIT_MESSAGE}
-        
-        Commit id: [$TRAVIS_COMMIT](https://github.com/GuLinux/PlanetaryImager/commit/$TRAVIS_COMMIT)
-        
-        Pull Request: [$TRAVIS_PULL_REQUEST](https://github.com/GuLinux/PlanetaryImager/pull/$TRAVIS_PULL_REQUEST)
-
-      on:
-        repo: GuLinux/PlanetaryImager
-        all_branches: true
+language: python
+os:
+- linux
+- osx
+python: 3.6
+services:
+ - docker
+before_install:
+- bash -x .travis-ci/before_install
+script:
+ - bash -x .travis-ci/ci-build
+ - bash -x .travis-ci/tests
+ - bash -x .travis-ci/package
+deploy:
+  provider: releases
+  api_key: "$GITHUB_OAUTH_TOKEN"
+  file_glob: true
+  file: packages/*
+  skip_cleanup: true
+  draft: true
+  prerelease: true
+  name: "$( source build/scripts/version.sh && echo $PLANETARY_IMAGER_VERSION )"
+  body: |-
+    ${TRAVIS_COMMIT_MESSAGE}!  
+    Commit id: [$TRAVIS_COMMIT](https://github.com/GuLinux/PlanetaryImager/commit/$TRAVIS_COMMIT)  
+    Pull Request: [$TRAVIS_PULL_REQUEST](https://github.com/GuLinux/PlanetaryImager/pull/$TRAVIS_PULL_REQUEST)
+  on:
+    repo: GuLinux/PlanetaryImager
+    all_branches: true
 
 

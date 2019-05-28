@@ -7,3 +7,12 @@ if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
     docker run -v $PWD:/code -v $PWD/build:/build --entrypoint make --name "planetary_imager_build" gulinux/planetaryimager_build:ubuntu-19.04-x86_64 -j4
 fi
 
+if [ "${TRAVIS_OS_NAME}" == "osx" ]; then
+    mkdir "$TRAVIS_BUILD_DIR/build"
+    cd "$TRAVIS_BUILD_DIR/build"
+    bash "$TRAVIS_BUILD_DIR/support/osx/cmake" -DBUILD_DRIVER_iidc=Off \
+        -DPACKAGE_VERSION_SUFFIX="_$( date +%Y%m%d )_ci${TRAVIS_BUILD_NUMBER}" -DCMAKE_BUILD_TYPE=RelWithDebInfo -DENABLE_PLANETARYIMAGER_TESTING=On \
+        "$TRAVIS_BUILD_DIR"
+    make -j4
+fi
+

@@ -1,28 +1,2 @@
 #!/bin/bash
-
-CCFITS_VERSION="2.5"
-
-if ! which brew &>/dev/null; then
-    echo "You must install brew in order to run this script" >&2
-    exit 1
-fi
-
-for pkg in qt opencv pkg-config cmake boost cfitsio; do
-    brew list "$pkg" &>/dev/null || brew install "$pkg"
-done
-
-if ! [ -r "$(brew --prefix)/lib/libCCfits.a" ]; then
-(
-    wget "https://heasarc.gsfc.nasa.gov/fitsio/CCfits/CCfits-${CCFITS_VERSION}.tar.gz"
-    tar xf "CCfits-${CCFITS_VERSION}.tar.gz"
-    rm -f "CCfits-${CCFITS_VERSION}.tar.gz"
-    cd CCfits
-    ./configure --prefix="$(brew --prefix)" --enable-static --disable-shared
-    make -j4
-    make install
-    cd ..
-    rm -rf CCfits
-)
-fi
-
 cmake -DCMAKE_PREFIX_PATH=$( brew --prefix qt) "$@"
