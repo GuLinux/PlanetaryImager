@@ -9,6 +9,15 @@ matrix:
       script:
         - bash -x .travis-ci/ci-build
         - bash -x .travis-ci/tests
+        - bash -x .travis-ci/package
+      deploy:
+        provider: releases
+        api_key: "$GITHUB OAUTH TOKEN"
+        file_glob: true
+        file: packages/*
+        skip_cleanup: true
+        # on:
+        #   tags: true 
 #    - language: cpp
 #      os: osx
 
