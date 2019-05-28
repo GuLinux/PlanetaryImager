@@ -16,6 +16,7 @@ include(cmake/utils.cmake)
 include(cmake/functions.cmake)
 
 add_definitions(-DSRC_DIR="${CMAKE_SOURCE_DIR}")
+configure_file(${CMAKE_SOURCE_DIR}/scripts/version.sh.in ${CMAKE_BINARY_DIR}/scripts/version.sh)
 
 if(NOT OSX_BUNDLE)
     install(FILES README.md Changelog.md DESTINATION share/doc/PlanetaryImager)

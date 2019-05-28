@@ -3,5 +3,5 @@ echo "deploy"
 env
 
 if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
-   ./support/docker/docker.py package -j 4 -d packages --stderr -D PACKAGE_VERSION_SUFFIX="_$( date +%Y%m%d )_ci${TRAVIS_BUILD_NUMBER}" -i ubuntu-19.04-x86_64
+   ./support/docker/docker.py package -j 4 -d "${TRAVIS_BUILD_DIR}/packages" --stderr -D PACKAGE_VERSION_SUFFIX="_$( date +%Y%m%d )_ci${TRAVIS_BUILD_NUMBER}" -i ubuntu-19.04-x86_64
 fi
