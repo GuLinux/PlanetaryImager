@@ -1,23 +1,23 @@
 matrix:
   include:
-    - language: python
-      python: 3.6
-      services:
-        - docker
-      before_install:
-        - bash -x .travis-ci/before_install
-      script:
-        - bash -x .travis-ci/ci-build
-        - bash -x .travis-ci/tests
-        - bash -x .travis-ci/package
-      deploy:
-        provider: releases
-        api_key: "$GITHUB OAUTH TOKEN"
-        file_glob: true
-        file: packages/*
-        skip_cleanup: true
-        # on:
-        #   tags: true 
-#    - language: cpp
-#      os: osx
+  - language: python
+    python: 3.6
+    services:
+    - docker
+    before_install:
+    - bash -x .travis-ci/before_install
+    script:
+    - bash -x .travis-ci/ci-build
+    - bash -x .travis-ci/tests
+    - bash -x .travis-ci/package
+    deploy:
+      provider: releases
+      api_key:
+        secure: Rx9DgO/XPYBy6pSO9YdFDH/Q3N0HiSJs00dKfEYf2B/eU0rgdjrwL3pMl7lhFrKND0Lriqq4HUVGg+V7i93yHhZKtYqpsL5fNW9phtjOmn7u7e4GRZ6PTfRxdP7dOyY6nIUoLXYke09LX19ZNfGRv+XTqqZ3GvRkOizFnKHHohUiXiIkEdV13vY5/4WflIzV0aI9zcLiDA42q3gvbYVxaJskBR80HVH/Orkux4Rvd/CxefU4emv6PA067NTctVj4t6qB6gTxlUmYHkjd7B4ba/ygKuhW2wuyaou/XHRKUuSS9uLdbsqgqcnADibLwUEnKAUh3nMCbN+D4oO07nAgGg1r4aghqhD4LhNBqcawrRbDWwpD7IlE091gzNDMG7ecemThjzAgia/23oP+9qAO1efaJGpaJc3CT3HOjqXTSj5VIwPl25vQGO8igtWZach1ELvDBBJIWN9i/o9lYbiTmgzcae1w36/oVQpFVcom+yQQiVmyse59LJ3W8Vj6Kli6be2LyP/opyFkdSiWTsFc4M8eY3qnKkJdH2vQ9V2CrpbWboKZGduWWxBy4wLjfqt0ZgXp3AA96LZuZpEMDEGaoSKzDKjIFOdVzQbC/QmdPZxuBWUq3xpe2GJY882XXvLjOSHjv74uXAbHL5xvyuy0GxWaRPC47d3iokXrESGKmDQ=
+      file_glob: true
+      file: packages/*
+      skip_cleanup: true
+      on:
+        repo: GuLinux/PlanetaryImager
+        branch: travis_ci
 
