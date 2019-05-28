@@ -5,6 +5,3 @@ if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
     docker run -v $PWD:/code -v $PWD/build:/build --entrypoint make --name "planetary_imager_tests" -e GTEST_OUTPUT=xml:/build/tests_result/ gulinux/planetaryimager_build:ubuntu-19.04-x86_64 test 
 fi
 
-if [ "${TRAVIS_OS_NAME}" == "osx" ]; then
-    GTEST_OUTPUT=xml:/build/tests_result/ make test 
-fi
