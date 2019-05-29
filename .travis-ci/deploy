@@ -2,6 +2,7 @@
 
 #if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
 source ~/virtualenv/python3.6/bin/activate
+source ${TRAVIS_BUILD_DIR}/git_commit_date.sh
 #fi
 
 source "${TRAVIS_BUILD_DIR}/build/scripts/version.sh"
@@ -9,6 +10,7 @@ cat <<EOF
 Deployment variables:
  - GITHUB_OAUTH_USER=${GITHUB_OAUTH_USER}
  - GITHUB_OAUTH_TOKEN=<secret>
+ - GIT_COMMIT_DATE=${GIT_COMMIT_DATE}
  - TRAVIS_BUILD_DIR=${TRAVIS_BUILD_DIR}
  - TRAVIS_COMMIT=${TRAVIS_COMMIT}
  - TRAVIS_PULL_REQUEST=${TRAVIS_PULL_REQUEST}

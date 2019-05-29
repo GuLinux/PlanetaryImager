@@ -1,9 +1,10 @@
 #!/bin/bash
 set -e
+. ${TRAVIS_BUILD_DIR}/git_commit_date.sh
+
 if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
     source ~/virtualenv/python3.6/bin/activate
-    # PACKAGE_VERSION_SUFFIX="$( python3 -c "import datetime; print(datetime.datetime.strptime('$(git show -s --format='%cI')', '%Y-%m-%dT%H:%M:%S%z').strftime('%Y%m%d'))" )"
-   ./support/docker/docker.py package -j 4 -d "${TRAVIS_BUILD_DIR}/packages" -b $TRAVIS_BUILD_DIR/build --stderr -D PACKAGE_VERSION_SUFFIX="_$( date +%Y%m%d )_ci${TRAVIS_BUILD_NUMBER}" -i ${DOCKER_IMAGE}
+   ./support/docker/docker.py package -j 4 -d "${TRAVIS_BUILD_DIR}/packages" -b $TRAVIS_BUILD_DIR/build --stderr -D PACKAGE_VERSION_SUFFIX="_${GIT_COMMIT_DATE}_ci${TRAVIS_BUILD_NUMBER}" -i ${DOCKER_IMAGE}
 fi
 
 if [ "${TRAVIS_OS_NAME}" == "osx" ]; then
