@@ -73,7 +73,7 @@ def package(args):
   cmake_defines = args.cmake_define
   cmake_defines.append('CMAKE_BUILD_TYPE=' + args.cmake_build_type)
   for image in filtered_images:
-    image.package(code_path, destination_path, args.make_jobs, cmake_defines, stderr=args.stderr)
+    image.package(code_path, destination_path, args.make_jobs, cmake_defines, stderr=args.stderr, build_directory=args.build_directory)
     
   print('\nPackages build report:\n')
   build_success = True
@@ -96,6 +96,7 @@ parser_list = subparsers.add_parser('list', help='List supported images')
 parser_list.set_defaults(action='list')
 parser_package = subparsers.add_parser('package', help='Run packager on built images')
 parser_package.add_argument('-d', '--dest', required=True, help='Destination directory (i.e. where to put packages)')
+parser_package.add_argument('-b', '--build-directory', required=False, help='Bind build directory on docker')
 parser_package.add_argument('--cmake-build-type', default='RelWithDebInfo', help='CMAKE_BUILD_TYPE')
 parser_package.add_argument('-j', '--make-jobs', default=1, help='Make parallel jobs')
 parser_package.add_argument('-D', '--cmake-define', action='append', default=[], help='CMake definitions to be passed to docker container (use multiple times if necessary)')
