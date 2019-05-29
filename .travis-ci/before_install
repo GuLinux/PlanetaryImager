@@ -6,4 +6,5 @@ if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
 fi
 if [ "${TRAVIS_OS_NAME}" == "osx" ]; then
     bash support/osx/install-deps
+    brew install python@3
 fi

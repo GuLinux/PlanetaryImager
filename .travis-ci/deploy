@@ -1,5 +1,9 @@
 #!/bin/bash
-source ~/virtualenv/python3.6/bin/activate
+
+if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
+    source ~/virtualenv/python3.6/bin/activate
+fi
+
 source "${TRAVIS_BUILD_DIR}/build/scripts/version.sh"
 cat <<EOF
 Deployment variables:
@@ -12,5 +16,5 @@ Deployment variables:
  - TRAVIS_COMMIT_MESSAGE=${TRAVIS_COMMIT_MESSAGE}
 EOF
 
-sudo pip install PyGithub
-python "scripts/release-travis.py" packages/*
+sudo pip3 install PyGithub
+python3 "scripts/release-travis.py" packages/*
