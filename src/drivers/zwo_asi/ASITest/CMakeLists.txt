@@ -1,6 +1,6 @@
 project(ASITest)
 set (CMAKE_CXX_STANDARD 14)
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.0)
 set(ASI_SDK_PATH "${CMAKE_CURRENT_SOURCE_DIR}/../ASI_SDK_v0.4.0929" CACHE STRING "Path for ZWO ASI SDK")
 set(ASI_TARGET_PLATFORM "x64" CACHE STRING "Target platform (default: x64)")
 if(NOT EXISTS ${ASI_SDK_PATH}/include/ASICamera2.h)
