@@ -19,8 +19,6 @@ images = [
   Ubuntu('18.04', 'arm32v7'),
   Ubuntu('16.04', 'x86_64'),
   Ubuntu('16.04', 'arm32v7'),
-  Debian('jessie', 'x86_64'),
-  Debian('jessie', 'arm32v7'),
   Debian('stretch', 'x86_64'),
   Debian('stretch', 'arm32v7'),
   Debian('buster', 'x86_64'),

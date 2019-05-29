@@ -7,8 +7,8 @@ set -e
 ${CMAKE_BIN} \
           -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH} \
           "$@" \
-          /code && \
-          make ${MAKE_OPTS} && $PACKAGE_COMMAND
+          /code 
+make ${MAKE_OPTS} && $PACKAGE_COMMAND
 
 if [ -r package_name.cfg ]; then
     . package_name.cfg
