@@ -1,4 +1,5 @@
 language: cpp
+if: branch = master OR type = pull_request
 os:
 - linux
 - osx
@@ -16,5 +17,5 @@ deploy:
   skip_cleanup: true
   on:
     repo: GuLinux/PlanetaryImager
-    all_branches: true
+    branch: master
 
