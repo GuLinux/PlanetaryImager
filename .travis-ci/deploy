@@ -1,0 +1,3 @@
+#!/bin/bash
+source "${TRAVIS_BUILD_DIR}/build/scripts/version.sh"
+python "scripts/release-travis.py" packages/*
