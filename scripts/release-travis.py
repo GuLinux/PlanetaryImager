@@ -39,4 +39,5 @@ except UnknownObjectException:
 
 print('Release created/updated: ' + release_tag)
 for asset in sys.argv[1:]:
+    print(' - deploying asset: ' + asset)
     release.upload_asset(asset)
