@@ -61,7 +61,7 @@ TEST(TestNetworkPacket, testPayloadDecode)
   NetworkPacket packet;
   packet.receiveFrom(buffer);
   ASSERT_EQ(name, packet.name());
-  ASSERT_EQ(0, packet.payload().size());
+  ASSERT_EQ(1, packet.payload().size());
 }
 
 TEST(TestNetworkPacket, testPacketEncode)

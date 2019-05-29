@@ -21,9 +21,9 @@
 #define EXPOSURETIMER_H
 
 #include <QObject>
-#include "drivers/imager.h"
 #include "c++/dptr.h"
 
+class Imager;
 class ExposureTimer : public QObject
 {
     Q_OBJECT
