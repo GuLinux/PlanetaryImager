@@ -14,6 +14,7 @@ before_deploy: sudo pip install PyGithub
 deploy:
   provider: script
   script: bash -x .travis-ci/deploy
+  skip_cleanup: true
   on:
     repo: GuLinux/PlanetaryImager
     all_branches: true

@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.1)
 enable_testing()
 project(PlanetaryImager)
 set(CMAKE_CXX_STANDARD 14)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(MAJOR_VERSION 0)
 set(MINOR_VERSION 7)
