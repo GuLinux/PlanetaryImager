@@ -20,6 +20,7 @@ EOF
     cat >> "$travis_yml" <<EOF
     - os: linux
       env: DOCKER_IMAGE=${docker_tag} CMAKE_BINARY=${CMAKE_BINARY:-cmake} DEST_OS=${DEST_OS:-linux}" DOCKER_IMAGE_ARCHITECTURE=${DOCKER_IMAGE_ARCHITECTURE}
+      dist: xenial
       services:
         - docker
 EOF
@@ -28,7 +29,7 @@ done
 cat >> "$travis_yml" <<EOF
 before_install:
   - bash -x .travis-ci/before_install
-script: bash .travis-ci/ci-build && bash .travis-ci/tests && bash .travis-ci/package
+script: bash -x .travis-ci/ci-build && bash -x .travis-ci/tests && bash -x .travis-ci/package
 deploy:
   provider: script
   script: bash -x .travis-ci/deploy
