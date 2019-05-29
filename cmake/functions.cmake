@@ -46,3 +46,18 @@ function(add_driver)
   install(TARGETS ${add_driver_NAME} LIBRARY DESTINATION ${drivers_destination})
   set(enabled_drivers ${enabled_drivers} ${add_driver_NAME} CACHE INTERNAL "")
 endfunction()
+
+
+add_custom_target(build_tests)
+
+function(add_pi_test)
+  set(options "")
+  set(oneValueArgs NAME)
+  set(multiValueArgs SRCS TARGET_LINK_LIBRARIES)
+  cmake_parse_arguments(add_pi_test "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+ 
+  add_executable(test_${add_pi_test_NAME} ${add_pi_test_SRCS})
+  target_link_libraries(test_${add_pi_test_NAME} gtest_main Qt5::Widgets ${add_pi_test_TARGET_LINK_LIBRARIES})
+  add_test(${add_pi_test_NAME} test_${add_pi_test_NAME})
+  add_dependencies(build_tests test_${add_pi_test_NAME})
+endfunction()

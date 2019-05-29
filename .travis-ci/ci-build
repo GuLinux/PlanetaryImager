@@ -4,6 +4,7 @@ set -e
 if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
     docker run -v $PWD:/code -v $PWD/build:/build --entrypoint cmake --name "planetary_imager_cmake" gulinux/planetaryimager_build:${DOCKER_IMAGE} \
         -DPACKAGE_VERSION_SUFFIX="_$( date +%Y%m%d )_ci${TRAVIS_BUILD_NUMBER}" -DCMAKE_BUILD_TYPE=Debug -DENABLE_PLANETARYIMAGER_TESTING=On /code 
+    docker run -v $PWD:/code -v $PWD/build:/build --entrypoint make --name "planetary_imager_build" gulinux/planetaryimager_build:${DOCKER_IMAGE} build_tests -j4
 #    docker run -v $PWD:/code -v $PWD/build:/build --entrypoint make --name "planetary_imager_build" gulinux/planetaryimager_build:${DOCKER_IMAGE} -j4
 fi
 
