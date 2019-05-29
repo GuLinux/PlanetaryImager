@@ -5,12 +5,12 @@ set -e
 if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
     source ~/virtualenv/python3.6/bin/activate
     sudo rm -f "$TRAVIS_BUILD_DIR/build/CMakeCache.txt"
-    ./support/docker/docker.py package -j 4 -d "${TRAVIS_BUILD_DIR}/packages" -b $TRAVIS_BUILD_DIR/build --stderr -D PACKAGE_VERSION_SUFFIX="_${GIT_COMMIT_DATE}_ci${TRAVIS_BUILD_NUMBER}" -i ${DOCKER_IMAGE}
+    ./support/docker/docker.py package -j 8 -d "${TRAVIS_BUILD_DIR}/packages" -b $TRAVIS_BUILD_DIR/build --stderr -D PACKAGE_VERSION_SUFFIX="_${GIT_COMMIT_DATE}_ci${TRAVIS_BUILD_NUMBER}" -i ${DOCKER_IMAGE}
 fi
 
 if [ "${TRAVIS_OS_NAME}" == "osx" ]; then
     cd "$TRAVIS_BUILD_DIR/build"
-    make package -j4
+    make package -j6
     mkdir -p "$TRAVIS_BUILD_DIR/packages"
     cp -av *.dmg "$TRAVIS_BUILD_DIR/packages"
 fi
