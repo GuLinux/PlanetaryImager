@@ -5,8 +5,10 @@ set -e
 if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
     docker run -v $TRAVIS_BUILD_DIR:/code -v $TRAVIS_BUILD_DIR/build:/build --entrypoint ${CMAKE_BINARY:-cmake} --name "planetary_imager_cmake" gulinux/planetaryimager_build:${DOCKER_IMAGE} \
         -DPACKAGE_VERSION_SUFFIX="_${GIT_COMMIT_DATE}_ci${TRAVIS_BUILD_NUMBER}" -DCMAKE_BUILD_TYPE=Debug -DENABLE_PLANETARYIMAGER_TESTING=On /code 
+    docker commit planetary_imager_cmake planetary_imager_img
     if [ "$DOCKER_IMAGE_ARCHITECTURE" != "arm" ]; then
-        docker run -v $TRAVIS_BUILD_DIR:/code -v $TRAVIS_BUILD_DIR/build:/build --entrypoint make --name "planetary_imager_build" gulinux/planetaryimager_build:${DOCKER_IMAGE} build_tests -j4
+        docker run -v $TRAVIS_BUILD_DIR:/code -v $TRAVIS_BUILD_DIR/build:/build --entrypoint make --name "planetary_imager_build" planetary_imager_img build_tests -j4
+        docker commit planetary_imager_build planetary_imager_img
     fi
 #    docker run -v $TRAVIS_BUILD_DIR:/code -v $TRAVIS_BUILD_DIR/build:/build --entrypoint make --name "planetary_imager_build" gulinux/planetaryimager_build:${DOCKER_IMAGE} -j4
 fi
