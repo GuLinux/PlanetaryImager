@@ -1,0 +1,36 @@
+#!/bin/bash
+project_dir="$( cd "$( dirname "$0")/.."; pwd )"
+travis_yml="$project_dir/.travis.yml"
+
+cat > "$travis_yml" <<EOF
+language: cpp
+if: branch = master OR type = pull_request
+matrix:
+  include:
+    - os: osx
+EOF
+
+"$project_dir/support/docker/docker.py" list | cut -d: -f2 | while read docker_tag; do
+    cat >> "$travis_yml" <<EOF
+    - os: linux
+      env: DOCKER_IMAGE=${docker_tag}
+      services:
+        - docker
+EOF
+done
+
+cat >> "$travis_yml" <<EOF
+before_install:
+- bash -x .travis-ci/before_install
+script:
+ - bash -x .travis-ci/ci-build
+ - bash -x .travis-ci/tests
+ - bash -x .travis-ci/package
+deploy:
+  provider: script
+  script: bash -x .travis-ci/deploy
+  skip_cleanup: true
+  on:
+    repo: GuLinux/PlanetaryImager
+    branch: master
+EOF
