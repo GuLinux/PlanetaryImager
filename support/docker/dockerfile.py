@@ -70,6 +70,16 @@ class Dockerfile:
       cmdline.extend(['-D' + x for x in cmake_defines])
       self.__run_command(cmdline, 'package', stderr)
 
+    def push(self):
+      cmdline = [
+        'docker',
+        'push',
+        self.image_name,
+      ]
+      self.__run_command(cmdline, 'package', True)
+
+
+
     def report_build(self):
         is_error = False
         if self.result is None:

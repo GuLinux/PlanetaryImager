@@ -1,9 +1,0 @@
-#!/bin/bash
-set -e
-
-if [ "${TRAVIS_OS_NAME}" == "linux" ] && [ "${DEST_OS}" == "linux" ]; then
-    if [ "$DOCKER_IMAGE_ARCHITECTURE" != "arm" ]; then
-        docker run -v $TRAVIS_BUILD_DIR:/code -v $TRAVIS_BUILD_DIR/build:/build --entrypoint make --name "planetary_imager_tests" -e GTEST_OUTPUT=xml:/build/tests_result/ gulinux/planetaryimager_build:${DOCKER_IMAGE} test CTEST_OUTPUT_ON_FAILURE=1
-    fi
-fi
-

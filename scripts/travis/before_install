@@ -2,7 +2,7 @@
 set -e
 if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
     current_arch="$(uname -i)"
-    if [ "$current_arch" != "${DOCKER_IMAGE: -${#current_arch} }" ]; then
+    if [ "$current_arch" != "${IMAGE_ARCH}" ]; then
         echo "Architecture $current_arch different than specified docker image ($DOCKER_IMAGE); enabling qemu-arm-static"
         sudo apt-get install -y binfmt-support
         docker run --rm --privileged multiarch/qemu-user-static:register

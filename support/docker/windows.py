@@ -7,9 +7,11 @@ class Windows(Dockerfile):
         name = 'windows-{}'.format(arch)
         mxe_prefix = '{}-w64-mingw32.{}'.format(arch, linktype)
         configuration_file = 'configuration-windows-{}-{}.cmake'.format(arch, linktype)
+        self.cmake_binary = mxe_prefix + '-cmake'
+        self.os_family = 'windows'
 
         substitutions = {
-            'CMAKE_BIN': mxe_prefix + 'cmake',
+            'CMAKE_BIN': self.cmake_binary,
             'MXE_PREFIX': mxe_prefix,
             'ARCH': arch,
             'LINKTYPE': linktype,

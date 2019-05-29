@@ -1,0 +1,14 @@
+#!/bin/bash
+set -e
+
+if [ "${TRAVIS_OS_NAME}" == "${BUILD_OS_FAMILY}" ] && [ "${SKIP_TESTS}" == "0" ]; then
+    if [ "$TRAVIS_OS_NAME" == 'linux' ]; then
+        docker run -v $TRAVIS_BUILD_DIR:/code -v $TRAVIS_BUILD_DIR/build:/build --entrypoint make --name "planetary_imager_build" ${DOCKER_IMAGE} build_tests -j4
+        docker run -v $TRAVIS_BUILD_DIR:/code -v $TRAVIS_BUILD_DIR/build:/build --entrypoint make --name "planetary_imager_tests" ${DOCKER_IMAGE} test CTEST_OUTPUT_ON_FAILURE=1 GTEST_OUTPUT=xml:/build/tests_result/
+    fi
+
+    if [ "$TRAVIS_OS_NAME" == 'osx' ]; then
+        make test GTEST_OUTPUT=xml:/build/tests_result/  CTEST_OUTPUT_ON_FAILURE=1
+    fi
+fi
+

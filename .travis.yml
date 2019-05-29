@@ -1,60 +1,61 @@
+before_install:
+  - 'bash -x ${TRAVIS_BUILD_DIR}/scripts/travis/before_install'
+deploy:
+  on:
+    branch: master
+    repo: GuLinux/PlanetaryImager
+  provider: script
+  script: 'bash -x ${TRAVIS_BUILD_DIR}/scripts/travis/deploy'
+  skip_cleanup: true
+if: 'branch = master OR type = pull_request'
 language: cpp
-if: branch = master OR type = pull_request
 matrix:
   include:
-    - os: osx
-    - os: linux
-      env: DOCKER_IMAGE=ubuntu-19.04-x86_64 CMAKE_BINARY=cmake DEST_OS=linux" DOCKER_IMAGE_ARCHITECTURE=amd64
-      dist: xenial
+    - env: 'SKIP_TESTS=0 BUILD_OS_FAMILY=osx'
+      os: osx
+    - dist: xenial
+      env: 'SKIP_TESTS=0 DOCKER_IMAGE=gulinux/planetaryimager_build:ubuntu-19.04-x86_64 IMAGE_ARCH=x86_64 BUILD_OS_FAMILY=linux CMAKE_BINARY=cmake'
+      os: linux
       services:
         - docker
-    - os: linux
-      env: DOCKER_IMAGE=ubuntu-18.04-x86_64 CMAKE_BINARY=cmake DEST_OS=linux" DOCKER_IMAGE_ARCHITECTURE=amd64
-      dist: xenial
+    - dist: xenial
+      env: 'SKIP_TESTS=0 DOCKER_IMAGE=gulinux/planetaryimager_build:ubuntu-18.04-x86_64 IMAGE_ARCH=x86_64 BUILD_OS_FAMILY=linux CMAKE_BINARY=cmake'
+      os: linux
       services:
         - docker
-    - os: linux
-      env: DOCKER_IMAGE=ubuntu-16.04-x86_64 CMAKE_BINARY=cmake DEST_OS=linux" DOCKER_IMAGE_ARCHITECTURE=amd64
-      dist: xenial
+    - dist: xenial
+      env: 'SKIP_TESTS=0 DOCKER_IMAGE=gulinux/planetaryimager_build:ubuntu-16.04-x86_64 IMAGE_ARCH=x86_64 BUILD_OS_FAMILY=linux CMAKE_BINARY=cmake'
+      os: linux
       services:
         - docker
-    - os: linux
-      env: DOCKER_IMAGE=debian-stretch-x86_64 CMAKE_BINARY=cmake DEST_OS=linux" DOCKER_IMAGE_ARCHITECTURE=amd64
-      dist: xenial
+    - dist: xenial
+      env: 'SKIP_TESTS=0 DOCKER_IMAGE=gulinux/planetaryimager_build:debian-stretch-x86_64 IMAGE_ARCH=x86_64 BUILD_OS_FAMILY=linux CMAKE_BINARY=cmake'
+      os: linux
       services:
         - docker
-    - os: linux
-      env: DOCKER_IMAGE=debian-buster-x86_64 CMAKE_BINARY=cmake DEST_OS=linux" DOCKER_IMAGE_ARCHITECTURE=amd64
-      dist: xenial
+    - dist: xenial
+      env: 'SKIP_TESTS=0 DOCKER_IMAGE=gulinux/planetaryimager_build:debian-buster-x86_64 IMAGE_ARCH=x86_64 BUILD_OS_FAMILY=linux CMAKE_BINARY=cmake'
+      os: linux
       services:
         - docker
-    - os: linux
-      env: DOCKER_IMAGE=fedora-29-x86_64 CMAKE_BINARY=cmake DEST_OS=linux" DOCKER_IMAGE_ARCHITECTURE=amd64
-      dist: xenial
+    - dist: xenial
+      env: 'SKIP_TESTS=0 DOCKER_IMAGE=gulinux/planetaryimager_build:fedora-29-x86_64 IMAGE_ARCH=x86_64 BUILD_OS_FAMILY=linux CMAKE_BINARY=cmake'
+      os: linux
       services:
         - docker
-    - os: linux
-      env: DOCKER_IMAGE=fedora-30-x86_64 CMAKE_BINARY=cmake DEST_OS=linux" DOCKER_IMAGE_ARCHITECTURE=amd64
-      dist: xenial
+    - dist: xenial
+      env: 'SKIP_TESTS=0 DOCKER_IMAGE=gulinux/planetaryimager_build:fedora-30-x86_64 IMAGE_ARCH=x86_64 BUILD_OS_FAMILY=linux CMAKE_BINARY=cmake'
+      os: linux
       services:
         - docker
-    - os: linux
-      env: DOCKER_IMAGE=fedora-31-x86_64 CMAKE_BINARY=cmake DEST_OS=linux" DOCKER_IMAGE_ARCHITECTURE=amd64
-      dist: xenial
+    - dist: xenial
+      env: 'SKIP_TESTS=0 DOCKER_IMAGE=gulinux/planetaryimager_build:fedora-31-x86_64 IMAGE_ARCH=x86_64 BUILD_OS_FAMILY=linux CMAKE_BINARY=cmake'
+      os: linux
       services:
         - docker
-    - os: linux
-      env: DOCKER_IMAGE=windows-x86_64 CMAKE_BINARY=x86_64-w64-mingw32.static-cmake DEST_OS=windows" DOCKER_IMAGE_ARCHITECTURE=amd64
-      dist: xenial
+    - dist: xenial
+      env: 'SKIP_TESTS=1 DOCKER_IMAGE=gulinux/planetaryimager_build:windows-x86_64 IMAGE_ARCH=x86_64 BUILD_OS_FAMILY=windows CMAKE_BINARY=x86_64-w64-mingw32.static-cmake'
+      os: linux
       services:
         - docker
-before_install:
-  - bash -x .travis-ci/before_install
-script: bash -x .travis-ci/ci-build && bash -x .travis-ci/tests && bash -x .travis-ci/package
-deploy:
-  provider: script
-  script: bash -x .travis-ci/deploy
-  skip_cleanup: true
-  on:
-    repo: GuLinux/PlanetaryImager
-    branch: master
+script: 'bash -x ${TRAVIS_BUILD_DIR}/scripts/travis/ci-build && bash -x ${TRAVIS_BUILD_DIR}/scripts/travis/tests && bash -x ${TRAVIS_BUILD_DIR}/scripts/travis/package'

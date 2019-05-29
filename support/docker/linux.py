@@ -10,6 +10,8 @@ class LinuxBase(Dockerfile):
         name = '{}-{}-{}'.format(flavour, version, arch)
         base_image = '{}:{}'.format(flavour, version)
         config_name = '{}-{}'.format(flavour, version)
+        self.cmake_binary = 'cmake'
+        self.os_family = 'linux'
 
         if arch != 'x86_64':
             base_image = arch + '/' + base_image
@@ -19,7 +21,7 @@ class LinuxBase(Dockerfile):
         substitutions = {
             'CONFIG_NAME': config_name,
             'BASE_IMAGE': base_image,
-            'CMAKE_BIN': 'cmake',
+            'CMAKE_BIN': self.cmake_binary,
             'CMAKE_CACHE_INIT': configuration_file,
             'PACKAGE_SYSTEM_NAME': '{}-{}'.format(flavour, version),
         }
