@@ -8,6 +8,7 @@ if [ "${TRAVIS_OS_NAME}" == "${BUILD_OS_FAMILY}" ] && [ "${SKIP_TESTS}" == "0" ]
     fi
 
     if [ "$TRAVIS_OS_NAME" == 'osx' ]; then
+        make build_tests -j4
         make test GTEST_OUTPUT=xml:/build/tests_result/  CTEST_OUTPUT_ON_FAILURE=1
     fi
 fi
