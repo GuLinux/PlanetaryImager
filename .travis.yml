@@ -10,7 +10,6 @@ script:
  - bash -x .travis-ci/ci-build
  - bash -x .travis-ci/tests
  - bash -x .travis-ci/package
-before_deploy: sudo pip install PyGithub
 deploy:
   provider: script
   script: bash -x .travis-ci/deploy

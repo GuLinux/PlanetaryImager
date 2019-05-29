@@ -1,3 +1,16 @@
 #!/bin/bash
+source ~/virtualenv/python3.6/bin/activate
 source "${TRAVIS_BUILD_DIR}/build/scripts/version.sh"
+cat <<EOF
+Deployment variables:
+ - GITHUB_OAUTH_USER=${GITHUB_OAUTH_USER}
+ - GITHUB_OAUTH_TOKEN=<secret>
+ - TRAVIS_BUILD_DIR=${TRAVIS_BUILD_DIR}
+ - TRAVIS_COMMIT=${TRAVIS_COMMIT}
+ - TRAVIS_PULL_REQUEST=${TRAVIS_PULL_REQUEST}
+ - PLANETARY_IMAGER_VERSION=${PLANETARY_IMAGER_VERSION}
+ - TRAVIS_COMMIT_MESSAGE=${TRAVIS_COMMIT_MESSAGE}
+EOF
+
+sudo pip install PyGithub
 python "scripts/release-travis.py" packages/*
