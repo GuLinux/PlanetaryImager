@@ -1,7 +1,4 @@
 include_directories(googletest/include)
-include(GoogleTest)
-
-
 
 add_custom_target(build_tests)
 
@@ -14,7 +11,8 @@ function(add_pi_test)
   add_executable(test_${add_pi_test_NAME} ${add_pi_test_SRCS})
   target_link_libraries(test_${add_pi_test_NAME} gtest_main Qt5::Widgets ${add_pi_test_TARGET_LINK_LIBRARIES})
   #add_test(${add_pi_test_NAME} test_${add_pi_test_NAME})
-  gtest_add_tests(TARGET test_${add_pi_test_NAME})
+  add_test(${add_pi_test_NAME} test_${add_pi_test_NAME})
+
   add_dependencies(build_tests test_${add_pi_test_NAME})
 endfunction()
 

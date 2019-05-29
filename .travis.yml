@@ -8,15 +8,7 @@ matrix:
       services:
         - docker
     - os: linux
-      env: DOCKER_IMAGE=ubuntu-19.04-arm32v7 CMAKE_BINARY=cmake DEST_OS=linux" DOCKER_IMAGE_ARCHITECTURE=arm
-      services:
-        - docker
-    - os: linux
       env: DOCKER_IMAGE=ubuntu-18.04-x86_64 CMAKE_BINARY=cmake DEST_OS=linux" DOCKER_IMAGE_ARCHITECTURE=amd64
-      services:
-        - docker
-    - os: linux
-      env: DOCKER_IMAGE=ubuntu-18.04-arm32v7 CMAKE_BINARY=cmake DEST_OS=linux" DOCKER_IMAGE_ARCHITECTURE=arm
       services:
         - docker
     - os: linux
@@ -24,23 +16,11 @@ matrix:
       services:
         - docker
     - os: linux
-      env: DOCKER_IMAGE=ubuntu-16.04-arm32v7 CMAKE_BINARY=cmake DEST_OS=linux" DOCKER_IMAGE_ARCHITECTURE=arm
-      services:
-        - docker
-    - os: linux
       env: DOCKER_IMAGE=debian-stretch-x86_64 CMAKE_BINARY=cmake DEST_OS=linux" DOCKER_IMAGE_ARCHITECTURE=amd64
       services:
         - docker
     - os: linux
-      env: DOCKER_IMAGE=debian-stretch-arm32v7 CMAKE_BINARY=cmake DEST_OS=linux" DOCKER_IMAGE_ARCHITECTURE=arm
-      services:
-        - docker
-    - os: linux
       env: DOCKER_IMAGE=debian-buster-x86_64 CMAKE_BINARY=cmake DEST_OS=linux" DOCKER_IMAGE_ARCHITECTURE=amd64
-      services:
-        - docker
-    - os: linux
-      env: DOCKER_IMAGE=debian-buster-arm32v7 CMAKE_BINARY=cmake DEST_OS=linux" DOCKER_IMAGE_ARCHITECTURE=arm
       services:
         - docker
     - os: linux
