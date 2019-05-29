@@ -27,8 +27,8 @@ endif()
 
 
 
-add_subdirectory(${CMAKE_BINARY_DIR}/GuLinux-Commons/Qt)
-add_subdirectory(${CMAKE_BINARY_DIR}/GuLinux-Commons/c++)
+add_subdirectory(${CMAKE_BINARY_DIR}/GuLinux-Commons/Qt ${CMAKE_BINARY_DIR}/GuLinux-Commons-build/Qt)
+add_subdirectory(${CMAKE_BINARY_DIR}/GuLinux-Commons/c++ ${CMAKE_BINARY_DIR}/GuLinux-Commons-build/c++)
 include_directories(
     ${CMAKE_BINARY_DIR}/GuLinux-Commons/Qt
     ${CMAKE_BINARY_DIR}/GuLinux-Commons/c++
