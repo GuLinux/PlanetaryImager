@@ -16,3 +16,5 @@ RUN apt-get update && apt-get install -y \
 
 RUN mkdir /cmake
 ENV TEST_PACKAGE_CMD="/usr/local/bin/debian-package-checker.sh"
+ENV PACKAGE_INSTALL_COMMAND="/code/support/docker/files/debian-package-checker.sh"
+

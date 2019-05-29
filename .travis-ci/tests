@@ -1,7 +1,9 @@
 #!/bin/bash
 set -e
 
-if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
-    docker run -v $PWD:/code -v $PWD/build:/build --entrypoint make --name "planetary_imager_tests" -e GTEST_OUTPUT=xml:/build/tests_result/ gulinux/planetaryimager_build:${DOCKER_IMAGE} test 
+if [ "${TRAVIS_OS_NAME}" == "linux" ] && [ "${DEST_OS}" == "linux" ]; then
+    if [ "$DOCKER_IMAGE_ARCHITECTURE" != "arm" ]; then
+        docker run -v $PWD:/code -v $PWD/build:/build --entrypoint make --name "planetary_imager_tests" -e GTEST_OUTPUT=xml:/build/tests_result/ gulinux/planetaryimager_build:${DOCKER_IMAGE} test 
+    fi
 fi
 

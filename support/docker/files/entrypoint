@@ -3,7 +3,7 @@
 CMAKE_BIN="${CMAKE_BIN:-cmake}"
 PACKAGE_COMMAND="${PACKAGE_COMMAND:-make package}"
 
-set -x
+set -e
 ${CMAKE_BIN} \
           -DCMAKE_PREFIX_PATH=${CMAKE_PREFIX_PATH} \
           "$@" \
@@ -12,6 +12,9 @@ ${CMAKE_BIN} \
 
 if [ -r package_name.cfg ]; then
     . package_name.cfg
+    if [ -n "${PACKAGE_INSTALL_COMMAND}" ]; then
+        "${PACKAGE_INSTALL_COMMAND}" "${CPACK_PACKAGE_FILENAME}"
+    fi
     cp -av "${CPACK_PACKAGE_FILENAME}" "/dest/${CPACK_PACKAGE_FILENAME}"
 fi
 

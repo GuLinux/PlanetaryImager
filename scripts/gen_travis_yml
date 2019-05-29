@@ -10,10 +10,16 @@ matrix:
     - os: osx
 EOF
 
-"$project_dir/support/docker/docker.py" list | cut -d: -f2 | while read docker_tag; do
+"$project_dir/support/docker/docker.py" list | while read docker_image; do
+    docker_tag="$( cut -d: -f2 <<<"$docker_image")"
+    if [ "${docker_tag:0:7}" == "windows" ]; then
+        CMAKE_BINARY="${docker_tag:8}-w64-mingw32.static-cmake"
+        DEST_OS="windows"
+    fi
+    DOCKER_IMAGE_ARCHITECTURE="$( docker inspect "$docker_image" | python -c "import sys; import json; print(json.load(sys.stdin)[0]['Architecture'])" )"
     cat >> "$travis_yml" <<EOF
     - os: linux
-      env: DOCKER_IMAGE=${docker_tag}
+      env: DOCKER_IMAGE=${docker_tag} CMAKE_BINARY=${CMAKE_BINARY:-cmake} DEST_OS=${DEST_OS:-linux}" DOCKER_IMAGE_ARCHITECTURE=${DOCKER_IMAGE_ARCHITECTURE}
       services:
         - docker
 EOF

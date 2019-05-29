@@ -18,3 +18,4 @@ RUN yum install -y \
 WORKDIR /build
 RUN mkdir /cmake
 ENV TEST_PACKAGE_CMD="/usr/local/bin/rpm-package-checker.sh"
+ENV PACKAGE_INSTALL_COMMAND="/code/support/docker/files/rpm-package-checker.sh"

@@ -19,9 +19,15 @@ images = [
   Ubuntu('18.04', 'arm32v7'),
   Ubuntu('16.04', 'x86_64'),
   Ubuntu('16.04', 'arm32v7'),
-  Debian('testing', 'x86_64'),
-  Debian('testing', 'arm32v7'),
-  Fedora('27', 'x86_64'),
+  Debian('jessie', 'x86_64'),
+  Debian('jessie', 'arm32v7'),
+  Debian('stretch', 'x86_64'),
+  Debian('stretch', 'arm32v7'),
+  Debian('buster', 'x86_64'),
+  Debian('buster', 'arm32v7'),
+  Fedora('29', 'x86_64'),
+  Fedora('30', 'x86_64'),
+  Fedora('31', 'x86_64'),
   Windows('x86_64', 'static'),
 ]
 
