@@ -16,6 +16,8 @@ include(cmake/options.cmake)
 include(cmake/utils.cmake)
 include(cmake/functions.cmake)
 
+external_project_download(cmake/GuLinux-Commons.cmake.in GuLinux-Commons)
+
 add_definitions(-DSRC_DIR="${CMAKE_SOURCE_DIR}")
 configure_file(${CMAKE_SOURCE_DIR}/scripts/version.sh.in ${CMAKE_BINARY_DIR}/scripts/version.sh)
 
@@ -25,8 +27,13 @@ endif()
 
 
 
-add_subdirectory(GuLinux-Commons/Qt)
-add_subdirectory(GuLinux-Commons/c++)
+add_subdirectory(${CMAKE_BINARY_DIR}/GuLinux-Commons/Qt)
+add_subdirectory(${CMAKE_BINARY_DIR}/GuLinux-Commons/c++)
+include_directories(
+    ${CMAKE_BINARY_DIR}/GuLinux-Commons/Qt
+    ${CMAKE_BINARY_DIR}/GuLinux-Commons/c++
+    ${CMAKE_BINARY_DIR}/GuLinux-Commons
+)
 
 add_subdirectory(src)
 if(ENABLE_PLANETARYIMAGER_TESTING)

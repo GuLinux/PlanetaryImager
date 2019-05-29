@@ -1,0 +1,15 @@
+cmake_minimum_required(VERSION 3.1)
+
+project(GuLinux-Commons-Download NONE)
+
+include(ExternalProject)
+ExternalProject_Add(GuLinux-Commons
+  GIT_REPOSITORY    https://github.com/GuLinux/GuLinux-Commons.git
+  GIT_TAG           7aafede7ec32b576ba6648fa53613f319f215111
+  SOURCE_DIR        "${CMAKE_CURRENT_BINARY_DIR}/GuLinux-Commons"
+  BINARY_DIR        ""
+  CONFIGURE_COMMAND ""
+  BUILD_COMMAND     ""
+  INSTALL_COMMAND   ""
+  TEST_COMMAND      ""
+)
