@@ -36,7 +36,9 @@ QBuffer *readBuffer(const QByteArray &data) {
 QByteArray emptyPayloadData(const QString &name) {
   QByteArray data(name.toLatin1());
   data.prepend(static_cast<char>(name.size()));
-  data.append("\0\0\0\0");
+  for(int i=0; i<4; i++) {
+      data.append('\0');
+  }
   return data;
 }
 

@@ -6,5 +6,32 @@ add_pi_test(NAME ser_header SRCS test_ser_header.cpp ${CMAKE_SOURCE_DIR}/src/com
 add_pi_test(NAME frame SRCS test_frame.cpp ${CMAKE_SOURCE_DIR}/src/commons/frame.cpp TARGET_LINK_LIBRARIES opencv_core)
 add_pi_test(NAME networkpacket SRCS test_networkpacket.cpp ${CMAKE_SOURCE_DIR}/src/network/networkpacket.cpp TARGET_LINK_LIBRARIES ${OpenCV_LIBS})
 
+function(add_external_download IN_FILE OUT_DIR)
+  # Download and unpack googletest at configure time
+  configure_file(${IN_FILE} ${OUT_DIR}_download/CMakeLists.txt)
+  execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+    RESULT_VARIABLE result
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${OUT_DIR}_download)
+  if(result)
+    message(FATAL_ERROR "CMake step for ${OUT_DIR} failed: ${result}")
+  endif()
+  execute_process(COMMAND ${CMAKE_COMMAND} --build .
+    RESULT_VARIABLE result
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${OUT_DIR}_download )
+  if(result)
+    message(FATAL_ERROR "Build step for ${OUT_DIR} failed: ${result}")
+  endif()
+endfunction()
 
-add_subdirectory(googletest)
+add_external_download(GoogleTest.cmake.in googletest)
+  
+# Prevent overriding the parent project's compiler/linker
+# settings on Windows
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
+# Add googletest directly to our build. This defines
+# the gtest and gtest_main targets.
+add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
+                 ${CMAKE_CURRENT_BINARY_DIR}/googletest-build
+                 EXCLUDE_FROM_ALL)
+
