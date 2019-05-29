@@ -20,14 +20,6 @@ matrix:
       services:
         - docker
     - os: linux
-      env: DOCKER_IMAGE=ubuntu-16.04-x86_64
-      services:
-        - docker
-    - os: linux
-      env: DOCKER_IMAGE=ubuntu-16.04-arm32v7
-      services:
-        - docker
-    - os: linux
       env: DOCKER_IMAGE=debian-testing-x86_64
       services:
         - docker
@@ -45,10 +37,7 @@ matrix:
         - docker
 before_install:
 - bash -x .travis-ci/before_install
-script:
- - bash -x .travis-ci/ci-build
- - bash -x .travis-ci/tests
- - bash -x .travis-ci/package
+script: bash .travis-ci/ci-build && bash .travis-ci/tests && bash .travis-ci/package
 deploy:
   provider: script
   script: bash -x .travis-ci/deploy
