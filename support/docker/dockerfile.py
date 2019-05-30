@@ -50,7 +50,7 @@ class Dockerfile:
       args = ['docker', 'build', '-t', self.image_name, '.']
       self.__run_command(args, 'build', stderr, run_directory=self.image_dir)
            
-    def package(self, code_path, destination_path, make_jobs, cmake_defines, stderr=False, build_directory=None, append_docker_args=[]):
+    def package(self, code_path, destination_path, make_jobs, cmake_defines, stderr=False, build_directory=None, append_security_opt_unconfined=False):
       self.__create_logsdir()
       cmdline = [
         'docker',
@@ -68,7 +68,8 @@ class Dockerfile:
         cmdline.extend(['-v', '{}:/build'.format(os.path.abspath(build_directory))])
       cmdline.append(self.image_name)
       cmdline.extend(['-D' + x for x in cmake_defines])
-      cmdline.extend(append_docker_args)
+      if append_security_opt_unconfined:
+      cmdline.extend(['--security-opt', 'seccomp:unconfined'])
       self.__run_command(cmdline, 'package', stderr)
 
     def push(self):

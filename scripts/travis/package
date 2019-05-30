@@ -5,7 +5,7 @@ set -e
 if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
     source ~/virtualenv/python3.6/bin/activate
     pip install pyaml
-    ./support/docker/docker.py package -j 4 -d "${TRAVIS_BUILD_DIR}/packages" --stderr -D PACKAGE_VERSION_SUFFIX="_${GIT_COMMIT_DATE}_ci${TRAVIS_BUILD_NUMBER}" -i ${DOCKER_IMAGE} --append-docker-arg "--security-opt seccomp:unconfined"
+    ./support/docker/docker.py package -j 4 -d "${TRAVIS_BUILD_DIR}/packages" --stderr -D PACKAGE_VERSION_SUFFIX="_${GIT_COMMIT_DATE}_ci${TRAVIS_BUILD_NUMBER}" -i ${DOCKER_IMAGE} --security-opt-unconfined
 fi
 
 if [ "${TRAVIS_OS_NAME}" == "osx" ]; then
