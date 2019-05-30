@@ -13,7 +13,11 @@ ExecStart=
 ExecStart=/usr/bin/dockerd -H fd:// --containerd=/run/containerd/containerd.sock --security-opt seccomp:unconfined
 EOF
     sudo systemctl daemon-reload
-    sudo systemctl restart docker
+    if ! sudo systemctl restart docker; then
+        systemctl status docker.service
+        journalctl -xeu docker
+        exit 1
+    fi
     docker --version
     current_arch="$(uname -i)"
     if [ "$current_arch" != "${IMAGE_ARCH}" ]; then
