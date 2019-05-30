@@ -74,7 +74,7 @@ def package(args):
   cmake_defines = args.cmake_define
   cmake_defines.append('CMAKE_BUILD_TYPE=' + args.cmake_build_type)
   for image in filtered_images:
-    image.package(code_path, destination_path, args.make_jobs, cmake_defines, stderr=args.stderr, build_directory=args.build_directory)
+    image.package(code_path, destination_path, args.make_jobs, cmake_defines, stderr=args.stderr, build_directory=args.build_directory, append_docker_args=args.append_docker_arg)
     
   print('\nPackages build report:\n')
   build_success = True
@@ -94,8 +94,6 @@ def push(args):
   if not push_success:
     print('Some images could not be pushed. Please check the logs')
     sys.exit(1)
-
-
 
 def generate_travis(args):
   travis.generate(args)
@@ -120,6 +118,7 @@ parser_package.add_argument('--cmake-build-type', default='RelWithDebInfo', help
 parser_package.add_argument('-j', '--make-jobs', default=1, help='Make parallel jobs')
 parser_package.add_argument('-D', '--cmake-define', action='append', default=[], help='CMake definitions to be passed to docker container (use multiple times if necessary)')
 parser_package.add_argument('-i', '--images-filter', action='append', default=[], help='Filter images by name (use multiple times if necessary)')
+parser_package.add_argument('-append-docker-arg', action='append', default=[], help='Extra arguments to pass to `docker run`')
 parser_package.add_argument('-c', '--clean-logs', action='store_true', default=False, help='Clean logs directory')
 parser_package.add_argument('--stderr', action='store_true', default=False, help='Log to stderr instead of log file')
 parser_package.set_defaults(action='package')

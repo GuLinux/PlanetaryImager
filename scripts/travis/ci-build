@@ -9,7 +9,7 @@ else
 fi
 
 if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
-    docker run -v $TRAVIS_BUILD_DIR:/code -v $TRAVIS_BUILD_DIR/build:/build --entrypoint ${CMAKE_BINARY} --name "planetary_imager_cmake" ${DOCKER_IMAGE} \
+    docker run --security-opt seccomp:unconfined -v $TRAVIS_BUILD_DIR:/code -v $TRAVIS_BUILD_DIR/build:/build --entrypoint ${CMAKE_BINARY} --name "planetary_imager_cmake" ${DOCKER_IMAGE} \
         -DPACKAGE_VERSION_SUFFIX="_${GIT_COMMIT_DATE}_ci${TRAVIS_BUILD_NUMBER}" -DCMAKE_BUILD_TYPE=Debug -DENABLE_PLANETARYIMAGER_TESTING=${ENABLE_PLANETARYIMAGER_TESTING} /code 
 fi
 
