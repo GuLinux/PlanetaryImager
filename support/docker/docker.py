@@ -74,7 +74,7 @@ def package(args):
   cmake_defines = args.cmake_define
   cmake_defines.append('CMAKE_BUILD_TYPE=' + args.cmake_build_type)
   for image in filtered_images:
-    image.package(code_path, destination_path, args.make_jobs, cmake_defines, stderr=args.stderr, build_directory=args.build_directory)
+    image.package(code_path, destination_path, args.make_jobs, cmake_defines, stderr=args.stderr, build_directory=args.build_directory, privileged=args.privileged)
     
   print('\nPackages build report:\n')
   build_success = True
@@ -120,6 +120,7 @@ parser_package.add_argument('-D', '--cmake-define', action='append', default=[],
 parser_package.add_argument('-i', '--images-filter', action='append', default=[], help='Filter images by name (use multiple times if necessary)')
 parser_package.add_argument('-c', '--clean-logs', action='store_true', default=False, help='Clean logs directory')
 parser_package.add_argument('--stderr', action='store_true', default=False, help='Log to stderr instead of log file')
+parser_package.add_argument('--privileged', action='store_true', default=False, help='Run docker container in privileged mode')
 parser_package.set_defaults(action='package')
 
 parser_push = subparsers.add_parser('push', help='Push images to docker hub')

@@ -44,6 +44,7 @@ class Travis:
       if not exclude_image:
         includes.append({
           'os': 'linux',
+          'dist': 'xenial',
           'services': ['docker'],
           'env': 'SKIP_TESTS={} DOCKER_IMAGE={} IMAGE_ARCH={} BUILD_OS_FAMILY={} CMAKE_BINARY={}'.format(
             b2i(skip_tests), image.image_name, image.arch, image.os_family, image.cmake_binary

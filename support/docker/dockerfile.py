@@ -50,7 +50,7 @@ class Dockerfile:
       args = ['docker', 'build', '-t', self.image_name, '.']
       self.__run_command(args, 'build', stderr, run_directory=self.image_dir)
            
-    def package(self, code_path, destination_path, make_jobs, cmake_defines, stderr=False, build_directory=None):
+    def package(self, code_path, destination_path, make_jobs, cmake_defines, stderr=False, build_directory=None, privileged=False):
       self.__create_logsdir()
       cmdline = [
         'docker',
@@ -64,6 +64,8 @@ class Dockerfile:
         '-e',
         'MAKE_OPTS=-j{}'.format(make_jobs),
       ]
+      if privileged:
+        cmdline.append('--privileged')
       if build_directory:
         cmdline.extend(['-v', '{}:/build'.format(os.path.abspath(build_directory))])
       cmdline.append(self.image_name)
