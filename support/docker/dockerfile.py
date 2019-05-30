@@ -69,7 +69,7 @@ class Dockerfile:
       cmdline.append(self.image_name)
       cmdline.extend(['-D' + x for x in cmake_defines])
       if append_security_opt_unconfined:
-      cmdline.extend(['--security-opt', 'seccomp:unconfined'])
+          cmdline.extend(['--security-opt', 'seccomp:unconfined'])
       self.__run_command(cmdline, 'package', stderr)
 
     def push(self):
