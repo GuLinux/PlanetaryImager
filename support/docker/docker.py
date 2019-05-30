@@ -118,7 +118,7 @@ parser_package.add_argument('--cmake-build-type', default='RelWithDebInfo', help
 parser_package.add_argument('-j', '--make-jobs', default=1, help='Make parallel jobs')
 parser_package.add_argument('-D', '--cmake-define', action='append', default=[], help='CMake definitions to be passed to docker container (use multiple times if necessary)')
 parser_package.add_argument('-i', '--images-filter', action='append', default=[], help='Filter images by name (use multiple times if necessary)')
-parser_package.add_argument('-append-docker-arg', action='append', default=[], help='Extra arguments to pass to `docker run`')
+parser_package.add_argument('--append-docker-arg', action='append', default=[], help='Extra arguments to pass to `docker run`')
 parser_package.add_argument('-c', '--clean-logs', action='store_true', default=False, help='Clean logs directory')
 parser_package.add_argument('--stderr', action='store_true', default=False, help='Log to stderr instead of log file')
 parser_package.set_defaults(action='package')
