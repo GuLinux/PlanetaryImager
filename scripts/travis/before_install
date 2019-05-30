@@ -1,6 +1,12 @@
 #!/bin/bash
 set -e
 if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
+    curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+    sudo apt-get update
+    sudo apt-get -y -o Dpkg::Options::="--force-confnew" install docker-ce
+    sudo systemctl restart docker
+    docker --version
     current_arch="$(uname -i)"
     if [ "$current_arch" != "${IMAGE_ARCH}" ]; then
         echo "Architecture $current_arch different than specified docker image ($DOCKER_IMAGE); enabling qemu-arm-static"
@@ -14,3 +20,4 @@ if [ "${TRAVIS_OS_NAME}" == "osx" ]; then
 fi
 echo "export GIT_COMMIT_DATE=\"$(git show -s --format='%cd' --date=short | tr -d '-')\"" > ${TRAVIS_BUILD_DIR}/git_commit_date.sh
 cat ${TRAVIS_BUILD_DIR}/git_commit_date.sh
+
