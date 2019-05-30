@@ -13,48 +13,39 @@ matrix:
   include:
     - env: 'SKIP_TESTS=0 BUILD_OS_FAMILY=osx'
       os: osx
-    - dist: xenial
-      env: 'SKIP_TESTS=0 DOCKER_IMAGE=gulinux/planetaryimager_build:ubuntu-19.04-x86_64 IMAGE_ARCH=x86_64 BUILD_OS_FAMILY=linux CMAKE_BINARY=cmake'
+    - env: 'SKIP_TESTS=0 DOCKER_IMAGE=gulinux/planetaryimager_build:ubuntu-19.04-x86_64 IMAGE_ARCH=x86_64 BUILD_OS_FAMILY=linux CMAKE_BINARY=cmake'
       os: linux
       services:
         - docker
-    - dist: xenial
-      env: 'SKIP_TESTS=0 DOCKER_IMAGE=gulinux/planetaryimager_build:ubuntu-18.04-x86_64 IMAGE_ARCH=x86_64 BUILD_OS_FAMILY=linux CMAKE_BINARY=cmake'
+    - env: 'SKIP_TESTS=0 DOCKER_IMAGE=gulinux/planetaryimager_build:ubuntu-18.04-x86_64 IMAGE_ARCH=x86_64 BUILD_OS_FAMILY=linux CMAKE_BINARY=cmake'
       os: linux
       services:
         - docker
-    - dist: xenial
-      env: 'SKIP_TESTS=0 DOCKER_IMAGE=gulinux/planetaryimager_build:ubuntu-16.04-x86_64 IMAGE_ARCH=x86_64 BUILD_OS_FAMILY=linux CMAKE_BINARY=cmake'
+    - env: 'SKIP_TESTS=0 DOCKER_IMAGE=gulinux/planetaryimager_build:ubuntu-16.04-x86_64 IMAGE_ARCH=x86_64 BUILD_OS_FAMILY=linux CMAKE_BINARY=cmake'
       os: linux
       services:
         - docker
-    - dist: xenial
-      env: 'SKIP_TESTS=0 DOCKER_IMAGE=gulinux/planetaryimager_build:debian-stretch-x86_64 IMAGE_ARCH=x86_64 BUILD_OS_FAMILY=linux CMAKE_BINARY=cmake'
+    - env: 'SKIP_TESTS=0 DOCKER_IMAGE=gulinux/planetaryimager_build:debian-stretch-x86_64 IMAGE_ARCH=x86_64 BUILD_OS_FAMILY=linux CMAKE_BINARY=cmake'
       os: linux
       services:
         - docker
-    - dist: xenial
-      env: 'SKIP_TESTS=0 DOCKER_IMAGE=gulinux/planetaryimager_build:debian-buster-x86_64 IMAGE_ARCH=x86_64 BUILD_OS_FAMILY=linux CMAKE_BINARY=cmake'
+    - env: 'SKIP_TESTS=0 DOCKER_IMAGE=gulinux/planetaryimager_build:debian-buster-x86_64 IMAGE_ARCH=x86_64 BUILD_OS_FAMILY=linux CMAKE_BINARY=cmake'
       os: linux
       services:
         - docker
-    - dist: xenial
-      env: 'SKIP_TESTS=0 DOCKER_IMAGE=gulinux/planetaryimager_build:fedora-29-x86_64 IMAGE_ARCH=x86_64 BUILD_OS_FAMILY=linux CMAKE_BINARY=cmake'
+    - env: 'SKIP_TESTS=0 DOCKER_IMAGE=gulinux/planetaryimager_build:fedora-29-x86_64 IMAGE_ARCH=x86_64 BUILD_OS_FAMILY=linux CMAKE_BINARY=cmake'
       os: linux
       services:
         - docker
-    - dist: xenial
-      env: 'SKIP_TESTS=0 DOCKER_IMAGE=gulinux/planetaryimager_build:fedora-30-x86_64 IMAGE_ARCH=x86_64 BUILD_OS_FAMILY=linux CMAKE_BINARY=cmake'
+    - env: 'SKIP_TESTS=0 DOCKER_IMAGE=gulinux/planetaryimager_build:fedora-30-x86_64 IMAGE_ARCH=x86_64 BUILD_OS_FAMILY=linux CMAKE_BINARY=cmake'
       os: linux
       services:
         - docker
-    - dist: xenial
-      env: 'SKIP_TESTS=0 DOCKER_IMAGE=gulinux/planetaryimager_build:fedora-31-x86_64 IMAGE_ARCH=x86_64 BUILD_OS_FAMILY=linux CMAKE_BINARY=cmake'
+    - env: 'SKIP_TESTS=0 DOCKER_IMAGE=gulinux/planetaryimager_build:fedora-31-x86_64 IMAGE_ARCH=x86_64 BUILD_OS_FAMILY=linux CMAKE_BINARY=cmake'
       os: linux
       services:
         - docker
-    - dist: xenial
-      env: 'SKIP_TESTS=1 DOCKER_IMAGE=gulinux/planetaryimager_build:windows-x86_64 IMAGE_ARCH=x86_64 BUILD_OS_FAMILY=windows CMAKE_BINARY=x86_64-w64-mingw32.static-cmake'
+    - env: 'SKIP_TESTS=1 DOCKER_IMAGE=gulinux/planetaryimager_build:windows-x86_64 IMAGE_ARCH=x86_64 BUILD_OS_FAMILY=windows CMAKE_BINARY=x86_64-w64-mingw32.static-cmake'
       os: linux
       services:
         - docker
