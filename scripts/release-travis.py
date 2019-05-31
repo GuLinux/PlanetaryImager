@@ -25,7 +25,7 @@ if not pr:
     all_pulls = [pr for pr in repo.get_pulls(state='closed', sort='updated')]
     all_pulls.reverse()
     for merged_pr in all_pulls:
-        if pr.merge_commit_sha == commit_id:
+        if merged_pr.merge_commit_sha == commit_id:
             pr = merged_pr
 
     
