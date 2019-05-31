@@ -50,7 +50,7 @@ class Dockerfile:
       args = ['docker', 'build', '-t', self.image_name, '.']
       self.__run_command(args, 'build', stderr, run_directory=self.image_dir)
            
-    def package(self, code_path, destination_path, make_jobs, cmake_defines, stderr=False):
+    def package(self, code_path, destination_path, make_jobs, cmake_defines, stderr=False, build_directory=None, privileged=False):
       self.__create_logsdir()
       cmdline = [
         'docker',
@@ -58,15 +58,29 @@ class Dockerfile:
 #        '-it',
         '--rm',
         '-v',
-        '{}:/code'.format(code_path),
+        '{}:/code'.format(os.path.abspath(code_path)),
         '-v',
-        '{}:/dest'.format(destination_path),
+        '{}:/dest'.format(os.path.abspath(destination_path)),
         '-e',
         'MAKE_OPTS=-j{}'.format(make_jobs),
-        self.image_name,
       ]
+      if privileged:
+        cmdline.append('--privileged')
+      if build_directory:
+        cmdline.extend(['-v', '{}:/build'.format(os.path.abspath(build_directory))])
+      cmdline.append(self.image_name)
       cmdline.extend(['-D' + x for x in cmake_defines])
       self.__run_command(cmdline, 'package', stderr)
+
+    def push(self):
+      cmdline = [
+        'docker',
+        'push',
+        self.image_name,
+      ]
+      self.__run_command(cmdline, 'package', True)
+
+
 
     def report_build(self):
         is_error = False

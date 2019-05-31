@@ -46,3 +46,20 @@ function(add_driver)
   install(TARGETS ${add_driver_NAME} LIBRARY DESTINATION ${drivers_destination})
   set(enabled_drivers ${enabled_drivers} ${add_driver_NAME} CACHE INTERNAL "")
 endfunction()
+
+function(external_project_download IN_FILE OUT_DIR)
+  configure_file(${IN_FILE} ${OUT_DIR}_download/CMakeLists.txt)
+  execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .
+    RESULT_VARIABLE result
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${OUT_DIR}_download)
+  if(result)
+    message(FATAL_ERROR "CMake step for ${OUT_DIR} failed: ${result}")
+  endif()
+  execute_process(COMMAND ${CMAKE_COMMAND} --build .
+    RESULT_VARIABLE result
+    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/${OUT_DIR}_download )
+  if(result)
+    message(FATAL_ERROR "Build step for ${OUT_DIR} failed: ${result}")
+  endif()
+endfunction()
+

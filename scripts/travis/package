@@ -1,0 +1,16 @@
+#!/bin/bash
+set -e
+. ${TRAVIS_BUILD_DIR}/git_commit_date.sh
+
+if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
+    source ~/virtualenv/python3.6/bin/activate
+    pip install pyaml
+    ./support/docker/docker.py package -j 4 -d "${TRAVIS_BUILD_DIR}/packages" --stderr -D PACKAGE_VERSION_SUFFIX="_${GIT_COMMIT_DATE}_ci${TRAVIS_BUILD_NUMBER}" --privileged -i ${DOCKER_IMAGE}
+fi
+
+if [ "${TRAVIS_OS_NAME}" == "osx" ]; then
+    cd "$TRAVIS_BUILD_DIR/build"
+    make package -j4
+    mkdir -p "$TRAVIS_BUILD_DIR/packages"
+    cp -av *.dmg "$TRAVIS_BUILD_DIR/packages"
+fi

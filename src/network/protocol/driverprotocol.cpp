@@ -21,6 +21,7 @@
 #include <algorithm>
 #include <functional>
 #include <opencv2/opencv.hpp>
+#include "commons/opencv_utils.h"
 #include <QJsonDocument>
 
 using namespace std;
@@ -105,10 +106,10 @@ void DriverProtocol::setFormatParameters(const FormatParameters& parameters)
   format_parameters = parameters;
   opencv_encode_parameters.clear();
   if(parameters.format == Configuration::Network_JPEG) {
-    opencv_encode_parameters = {CV_IMWRITE_JPEG_QUALITY  , parameters.jpegQuality };
+    opencv_encode_parameters = {cv::IMWRITE_JPEG_QUALITY  , parameters.jpegQuality };
   }
   if(parameters.format == Configuration::Network_RAW) {
-    opencv_encode_parameters = {CV_IMWRITE_PXM_BINARY , 1 };
+    opencv_encode_parameters = {cv::IMWRITE_PXM_BINARY , 1 };
   }
 }
 
@@ -235,7 +236,7 @@ Frame::ptr DriverProtocol::decodeFrame(const NetworkPacket::ptr& packet)
   }
   vector<uint8_t> data(image.size());
   move(begin(image), end(image), begin(data));
-  auto mat = cv::imdecode(data, CV_LOAD_IMAGE_UNCHANGED);
+  auto mat = cv::imdecode(data, cv::IMREAD_UNCHANGED);
   auto frame = make_shared<Frame>(mat.channels() == 1 ? Frame::Mono : Frame::BGR, mat, Frame::LittleEndian);
   //qDebug() << "FRAME data size: " << image.size() << ", bpp: " << frame->bpp() << ", res: " << frame->resolution() << ", channels: " << frame->channels();
 

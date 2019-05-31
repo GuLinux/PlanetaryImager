@@ -78,7 +78,7 @@ DPTR_IMPL(IIDCImager)
     std::unordered_map<dc1394video_mode_t, dc1394format7mode_t, EnumHash> fmt7Info; ///< Key: scalable video mode form 'videoModes'
 
     dc1394featureset_t features;
-    std::unordered_map<dc1394feature_t, bool> hasAbsoluteControl;
+    std::unordered_map<dc1394feature_t, bool, EnumHash> hasAbsoluteControl;
 
     Properties properties;
 

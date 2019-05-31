@@ -48,7 +48,7 @@ QString cvVideoWriter::filename() const
 
 void cvVideoWriter::doHandle(Frame::const_ptr frame)
 {
-  auto fourcc = [](const string &s) { return CV_FOURCC(s[0], s[1], s[2], s[3]); };
+  auto fourcc = [](const string &s) { return CV_FOURCC_COMPAT(s[0], s[1], s[2], s[3]); };
   auto size = cv::Size{frame->mat().cols, frame->mat().rows};
   try {
     if(!d->videoWriter.isOpened())

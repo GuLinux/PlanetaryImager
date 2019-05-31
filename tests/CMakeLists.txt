@@ -1,23 +1,37 @@
 include_directories(googletest/include)
-add_executable(test_qimage_destructor test_qimage_destructor.cpp)
-target_link_libraries(test_qimage_destructor gtest_main Qt5::Widgets)
-add_test(qimage_destructor test_qimage_destructor)
 
-add_executable(test_roi_validator test_roi_validator.cpp)
-target_link_libraries(test_roi_validator gtest_main drivers Qt5::Widgets)
-add_test(roi_validator_test test_roi_validator)
+add_custom_target(build_tests)
 
-add_executable(test_ser_header test_ser_header.cpp ${CMAKE_SOURCE_DIR}/src/commons/ser_header.cpp)
-target_link_libraries(test_ser_header gtest_main ${OpenCV_LIBS} Qt5::Widgets)
-add_test(ser_header_test test_ser_header)
+function(add_pi_test)
+  set(options "")
+  set(oneValueArgs NAME)
+  set(multiValueArgs SRCS TARGET_LINK_LIBRARIES)
+  cmake_parse_arguments(add_pi_test "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN})
+ 
+  add_executable(test_${add_pi_test_NAME} ${add_pi_test_SRCS})
+  target_link_libraries(test_${add_pi_test_NAME} gtest_main Qt5::Widgets ${add_pi_test_TARGET_LINK_LIBRARIES})
+  #add_test(${add_pi_test_NAME} test_${add_pi_test_NAME})
+  add_test(${add_pi_test_NAME} test_${add_pi_test_NAME})
 
-add_executable(test_frame test_frame.cpp ${CMAKE_SOURCE_DIR}/src/commons/frame.cpp)
-target_link_libraries(test_frame gtest_main opencv_core Qt5::Widgets)
-add_test(test_frame test_frame)
-
-add_executable(test_networkpacket test_networkpacket.cpp ${CMAKE_SOURCE_DIR}/src/network/networkpacket.cpp)
-target_link_libraries(test_networkpacket gtest_main ${OpenCV_LIBS} Qt5::Widgets)
-add_test(test_networkpacket test_networkpacket)
+  add_dependencies(build_tests test_${add_pi_test_NAME})
+endfunction()
 
 
-add_subdirectory(googletest)
+add_pi_test(NAME qimage_destructor SRCS test_qimage_destructor.cpp)
+add_pi_test(NAME roi_validator SRCS test_roi_validator.cpp TARGET_LINK_LIBRARIES drivers)
+add_pi_test(NAME ser_header SRCS test_ser_header.cpp ${CMAKE_SOURCE_DIR}/src/commons/ser_header.cpp TARGET_LINK_LIBRARIES ${OpenCV_LIBS})
+add_pi_test(NAME frame SRCS test_frame.cpp ${CMAKE_SOURCE_DIR}/src/commons/frame.cpp TARGET_LINK_LIBRARIES opencv_core)
+add_pi_test(NAME networkpacket SRCS test_networkpacket.cpp ${CMAKE_SOURCE_DIR}/src/network/networkpacket.cpp TARGET_LINK_LIBRARIES ${OpenCV_LIBS})
+
+external_project_download(GoogleTest.cmake.in googletest)
+  
+# Prevent overriding the parent project's compiler/linker
+# settings on Windows
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
+# Add googletest directly to our build. This defines
+# the gtest and gtest_main targets.
+add_subdirectory(${CMAKE_CURRENT_BINARY_DIR}/googletest-src
+                 ${CMAKE_CURRENT_BINARY_DIR}/googletest-build
+                 EXCLUDE_FROM_ALL)
+

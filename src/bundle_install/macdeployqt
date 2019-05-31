@@ -1,0 +1,4 @@
+#!/bin/bash
+MACDEPLOY_PATH="${Qt5Core_DIR}/../../../bin/macdeployqt"
+MACDEPLOY_EXTRA_LIBS="$( find . -type f -name *.so -exec echo -n "-executable={} " \; )"
+$MACDEPLOY_PATH "$1" $MACDEPLOY_EXTRA_LIBS

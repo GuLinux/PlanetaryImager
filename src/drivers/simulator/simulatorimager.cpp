@@ -21,6 +21,7 @@
 #include <QThread>
 #include <QFile>
 #include "commons/utils.h"
+#include "commons/opencv_utils.h"
 #include <QTimer>
 #include <QRect>
 #include "drivers/imagerthread.h"
@@ -140,9 +141,9 @@ SimulatorImagerWorker::SimulatorImagerWorker(SimulatorSettings &settings) : sett
     QFile file(":/simulator/jupiter_hubble.jpg");
     file.open(QIODevice::ReadOnly);
     QByteArray file_data = file.readAll();
-    images[BGR] = cv::imdecode(cv::InputArray{file_data.data(), file_data.size()}, CV_LOAD_IMAGE_COLOR);
+    images[BGR] = cv::imdecode(cv::InputArray{file_data.data(), file_data.size()}, cv::IMREAD_COLOR);
     enum ChannelIndexes {B = 0, G = 1, R = 2 };
-    cv::cvtColor(images[BGR], images[Mono], CV_BGR2GRAY);
+    cv::cvtColor(images[BGR], images[Mono], cv::COLOR_BGR2GRAY);
     images[Bayer] = cv::Mat(images[BGR].rows, images[BGR].cols, CV_8UC1);
     
     QHash<QPair<int,int>, int> bayer_pattern_channels {
