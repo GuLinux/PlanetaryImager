@@ -12,14 +12,26 @@ release_tag = 'v' + release_name
 release_body = os.environ['TRAVIS_COMMIT_MESSAGE']
 commit_id = os.environ['TRAVIS_COMMIT']
 
+pr = None
+
 pr_number = os.environ.get('TRAVIS_PULL_REQUEST', 'false')
 if pr_number and pr_number != 'false':
     try:
         pr = repo.get_pull(int(pr_number))
-        print(pr)
-        print(pr.title)
-        print(pr.body)
-        release_body='''# {}  
+    except ValueError:
+        pass
+
+if not pr:
+    all_pulls = [pr for pr in repo.get_pulls(state='closed', sort='updated')]
+    all_pulls.reverse()
+    for merged_pr in all_pulls:
+        if pr.merge_commit_sha == commit_id:
+            pr = merged_pr
+
+    
+
+if pr:
+    release_body='''# {}  
 {}
 
 ## Commit message:
@@ -27,9 +39,6 @@ if pr_number and pr_number != 'false':
 {}
 ```
 '''.format(pr.title, pr.body, release_body)
-        print(release_body)
-    except ValueError:
-        pass
 
 release = None
 try:
