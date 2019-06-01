@@ -11,20 +11,7 @@ if: 'branch = master OR type = pull_request'
 language: cpp
 matrix:
   include:
-    - addons:
-        homebrew:
-          packages:
-            - python@3
-            - libusb
-            - wget
-            - qt
-            - opencv
-            - pkg-config
-            - cmake
-            - boost
-            - cfitsio
-            - libdc1394
-      env: 'SKIP_TESTS=0 BUILD_OS_FAMILY=osx'
+    - env: 'SKIP_TESTS=0 BUILD_OS_FAMILY=osx'
       os: osx
       osx_image: xcode10.2
     - dist: xenial

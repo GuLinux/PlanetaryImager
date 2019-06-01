@@ -7,15 +7,11 @@ if ! which brew &>/dev/null; then
     exit 1
 fi
 
-script_dir="$( cd "$( dirname "$0")"; pwd )"
-
-if [ "$1" != "skip-brew" ]; then
-    while read pkg; do 
-        if ! brew list "$pkg" &>/dev/null; then
-            brew install "$pkg"
-        fi
-    done < "$script_dir/homebrew_deps"
-fi
+for pkg in libusb wget qt opencv pkg-config cmake boost cfitsio libdc1394; do
+    if ! brew list "$pkg" &>/dev/null; then
+        brew install "$pkg"
+    fi
+done
 
 if ! [ -r "$(brew --prefix)/lib/libCCfits.a" ]; then
 (

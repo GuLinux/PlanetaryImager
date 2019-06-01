@@ -1,9 +1,0 @@
-libusb
-wget
-qt
-opencv
-pkg-config
-cmake
-boost
-cfitsio
-libdc1394

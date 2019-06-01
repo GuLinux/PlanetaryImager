@@ -1,5 +1,4 @@
 import sys
-import os
 import pyaml 
 
 def b2i(bool_value):
@@ -31,18 +30,10 @@ class Travis:
     }
     includes = []
     if not 'osx' in args.exclude_images:
-      brew_dependencies = ['python@3']
-      with open(os.path.join(os.path.dirname(os.path.dirname(__file__)), 'osx', 'homebrew_deps')) as homebrew_deps:
-        brew_dependencies.extend([x.strip() for x in homebrew_deps.readlines()])
       includes.append({
         'os': 'osx',
-        'osx_image': 'xcode10.2',
         'env': 'SKIP_TESTS={} BUILD_OS_FAMILY=osx'.format(b2i('osx' in args.skip_tests)),
-        'addons': {
-          'homebrew': {
-            'packages': brew_dependencies
-          },
-        },
+        'osx_image': 'xcode10.2',
       })
     for image in self.images:
       exclude_image = False
