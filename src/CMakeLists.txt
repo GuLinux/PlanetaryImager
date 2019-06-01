@@ -6,7 +6,12 @@ if(static_qt_windows)
 add_definitions(-DSTATIC_WINDOWS_PLUGIN)
 endif()
 
-set(drivers_destination ${APPBUNDLE_INSTALL_PREFIX}lib/${CMAKE_PROJECT_NAME}/drivers)
+if(OSX_BUNDLE)
+    set(drivers_destination ${APPBUNDLE_INSTALL_PREFIX}/Contents/Plugins/${CMAKE_PROJECT_NAME})
+else()
+    set(drivers_destination ${APPBUNDLE_INSTALL_PREFIX}lib/${CMAKE_PROJECT_NAME}/drivers)
+endif()
+
 set(binary_destination bin)
 set(CMAKE_INSTALL_DEFAULT_DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXECUTE GROUP_READ GROUP_EXECUTE WORLD_READ WORLD_EXECUTE)
 
@@ -16,14 +21,15 @@ if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
   add_definitions(-DDRIVERS_DIRECTORY="${drivers_destination}")
 else()
   if(OSX_BUNDLE)
-      add_definitions(-DDRIVERS_DIRECTORY="../../lib/PlanetaryImager/drivers")
+      add_definitions(-DDRIVERS_DIRECTORY="../Plugins/${CMAKE_PROJECT_NAME}")
+      set(CMAKE_INSTALL_RPATH "@executable_path/../Frameworks" "@executable_path/../../Frameworks")
   else()
       add_definitions(-DDRIVERS_DIRECTORY="${CMAKE_INSTALL_PREFIX}/${drivers_destination}")
   endif()
 endif()
 
 
-SET(CMAKE_INSTALL_RPATH "${CMAKE_INSTALL_PREFIX}/${drivers_destination};$ORIGIN")
+
 
 if(ADD_DRIVERS_BUILD_DIRECTORY)
   add_definitions(-DADDITIONAL_DRIVERS_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}/drivers")
