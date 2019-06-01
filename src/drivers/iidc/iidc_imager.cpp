@@ -27,7 +27,7 @@
 #include <map>
 #include <QRect>
 #include "Qt/qt_strings_helper.h"
-#include <QMap>
+#include <QHash>
 
 using namespace std::chrono;
 
@@ -49,7 +49,7 @@ struct EnumHash
     size_t operator()(T t) const { return static_cast<size_t>(t); }
 };
 
-static QMap<dc1394color_coding_t, const char *> COLOR_CODING_NAME
+static QHash<dc1394color_coding_t, const char *> COLOR_CODING_NAME
 {
     { DC1394_COLOR_CODING_MONO8,   "Mono 8-bit"           },
     { DC1394_COLOR_CODING_YUV411,  "YUV411"               },
@@ -74,11 +74,11 @@ DPTR_IMPL(IIDCImager)
     dc1394video_modes_t  videoModes;
     dc1394video_mode_t   currentVidMode;
     dc1394color_coding_t currentPixFmt;
-    QMap<dc1394video_mode_t, dc1394framerates_t> frameRates; ///< Key: non-scalable video mode from 'videoModes'
-    QMap<dc1394video_mode_t, dc1394format7mode_t> fmt7Info; ///< Key: scalable video mode form 'videoModes'
+    QHash<dc1394video_mode_t, dc1394framerates_t> frameRates; ///< Key: non-scalable video mode from 'videoModes'
+    QHash<dc1394video_mode_t, dc1394format7mode_t> fmt7Info; ///< Key: scalable video mode form 'videoModes'
 
     dc1394featureset_t features;
-    QMap<dc1394feature_t, bool> hasAbsoluteControl;
+    QHash<dc1394feature_t, bool> hasAbsoluteControl;
 
     Properties properties;
 
