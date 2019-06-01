@@ -26,6 +26,7 @@ matrix:
             - libdc1394
       env: 'SKIP_TESTS=0 BUILD_OS_FAMILY=osx'
       os: osx
+      osx_image: xcode10.2
     - dist: xenial
       env: 'SKIP_TESTS=0 DOCKER_IMAGE=gulinux/planetaryimager_build:ubuntu-19.04-x86_64 IMAGE_ARCH=x86_64 BUILD_OS_FAMILY=linux CMAKE_BINARY=cmake'
       os: linux

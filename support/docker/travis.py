@@ -36,6 +36,7 @@ class Travis:
         brew_dependencies.extend([x.strip() for x in homebrew_deps.readlines()])
       includes.append({
         'os': 'osx',
+        'osx_image': 'xcode10.2',
         'env': 'SKIP_TESTS={} BUILD_OS_FAMILY=osx'.format(b2i('osx' in args.skip_tests)),
         'addons': {
           'homebrew': {
