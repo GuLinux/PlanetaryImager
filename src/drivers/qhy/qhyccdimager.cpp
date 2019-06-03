@@ -17,6 +17,12 @@
  */
 
 #include "qhyccdimager.h"
+
+#ifndef _WIN32
+#include <libusb.h>
+#endif
+
+
 #include "qhydriver.h"
 #include "qhyccd.h"
 #include <QDebug>
