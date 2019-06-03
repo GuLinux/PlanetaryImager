@@ -15,36 +15,25 @@ elseif(CMAKE_SYSTEM_NAME STREQUAL Linux)
   set(QHY_INCLUDE_DIRECTORY ${QHY_Linux_x86_64_SDK_DIR}/usr/local/include)
   set(QHY_LIBS_DIRECTORY ${QHY_Linux_x86_64_SDK_DIR}/usr/local/lib)
   set(QHY_LIBRARY ${QHY_LIBS_DIRECTORY}/libqhyccd.a)
+  file(READ ${QHY_Linux_x86_64_SDK_DIR}/etc/udev/rules.d/85-qhyccd.rules QHY_UDEV_RULES)
+  string(REPLACE "/sbin/fxload" "${CMAKE_INSTALL_PREFIX}/bin/fxload_planetaryimager" QHY_UDEV_RULES "${QHY_UDEV_RULES}")
+  string(REPLACE "/lib/firmware/qhy" "/lib/firmware/qhy_planetaryimager" QHY_UDEV_RULES "${QHY_UDEV_RULES}")
+  file(WRITE "${CMAKE_CURRENT_BINARY_DIR}/qhyccd.rules" "${QHY_UDEV_RULES}")
 endif()
 
 include_directories(${QHY_INCLUDE_DIRECTORY})
 
 execute_process(COMMAND ${CMAKE_SOURCE_DIR}/scripts/qhy_errors_to_map ${QHY_INCLUDE_DIRECTORY}/qhyccderr.h OUTPUT_VARIABLE qhy_error_codes)
 
-# add_custom_command(
-#   OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/qhyccdstruct.h 
-#   COMMAND python ${CMAKE_CURRENT_SOURCE_DIR}/qhy_fix_libusb_include.py ${QHY_INCLUDE_DIRECTORY}/qhyccdstruct.h ${CMAKE_CURRENT_BINARY_DIR}/qhyccdstruct.h
-# )
-# add_custom_target(qhyccdstruct DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/qhyccdstruct.h )
-
-# if(NOT CMAKE_SYSTEM_NAME STREQUAL Windows)
-#   configure_file(${QHY_INCLUDE_DIRECTORY}/qhyccd.h ${CMAKE_CURRENT_BINARY_DIR}/ COPYONLY)
-#   configure_file(${QHY_INCLUDE_DIRECTORY}/qhyccdcamdef.h ${CMAKE_CURRENT_BINARY_DIR}/ COPYONLY)
-#   configure_file(${QHY_INCLUDE_DIRECTORY}/qhyccderr.h ${CMAKE_CURRENT_BINARY_DIR}/ COPYONLY)
-#   include_directories(${CMAKE_CURRENT_BINARY_DIR})
-# endif()
-
-
 set(qhy_SOURCES qhyccdimager.cpp qhydriver.cpp qhyimagingworker.cpp qhyexception.cpp qhycontrol.cpp)
 add_driver(NAME qhy OS Linux Windows Darwin SRCS ${qhy_SOURCES} ${qhy_GENERATED_SOURCES} LINK ${QHY_LIBRARY} ${QHY_EXTRA_LIBRARIES})
 
 if(BUILD_DRIVER_qhy)
   if(CMAKE_SYSTEM_NAME STREQUAL Linux)
-    install(FILES QHYCCD_Linux/85-qhy.rules DESTINATION ${UDEVRULES_INSTALL_DIR})
-    install(FILES ${QHY_LIBRARY} DESTINATION ${drivers_destination} RENAME libqhy.so.${LIBQHY_VERSION})
-
-    file(GLOB QHY_FIRMWARE_FILES QHYCCD_Linux/firmware/*)
-    install(FILES ${QHY_FIRMWARE_FILES} DESTINATION ${FIRMWARE_INSTALL_BASEDIR}/qhy)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/qhyccd.rules DESTINATION ${UDEVRULES_INSTALL_DIR} RENAME 80-qhyccd_planetaryimager.rules)
+    file(GLOB QHY_FIRMWARE_FILES ${QHY_Linux_x86_64_SDK_DIR}/lib/firmware/qhy/*)
+    install(FILES ${QHY_FIRMWARE_FILES} DESTINATION ${FIRMWARE_INSTALL_BASEDIR}/qhy_planetaryimager)
+    install(PROGRAMS ${QHY_Linux_x86_64_SDK_DIR}/sbin/fxload DESTINATION ${CMAKE_INSTALL_PREFIX}/bin RENAME fxload_planetaryimager)
   endif()
   if(CMAKE_SYSTEM_NAME STREQUAL Windows)
     install(FILES ${QHY_LIBRARY} DESTINATION .)
