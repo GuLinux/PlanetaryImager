@@ -1,27 +1,17 @@
 file(GLOB asi_imager_SRCS *.cpp)
-set(ASI_LINUX_MAC_SDK_MAJOR 1)
-set(ASI_LINUX_MAC_SDK_MINOR 14)
-set(ASI_LINUX_MAC_SDK_PATCH 0425)
-set(ASI_LINUX_MAC_SDK_VERSION ${ASI_LINUX_MAC_SDK_MAJOR}.${ASI_LINUX_MAC_SDK_MINOR}.${ASI_LINUX_MAC_SDK_PATCH})
-set(ASI_LINUX_MAC_SDK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ASI_LINUX_MAC_SDK_v${ASI_LINUX_MAC_SDK_VERSION}/)
 
-set(ASI_WINDOWS_SDK_MAJOR 1)
-set(ASI_WINDOWS_SDK_MINOR 14)
-set(ASI_WINDOWS_SDK_PATCH 0425)
-set(ASI_WINDOWS_SDK_PATCH_SUB "")
-set(ASI_WINDOWS_SDK_VERSION ${ASI_WINDOWS_SDK_MAJOR}.${ASI_WINDOWS_SDK_MINOR}.${ASI_WINDOWS_SDK_PATCH}${ASI_WINDOWS_SDK_PATCH_SUB})
-set(ASI_WINDOWS_SDK_DIR ${CMAKE_CURRENT_SOURCE_DIR}/ASI_WINDOWS_SDK_v${ASI_WINDOWS_SDK_VERSION}/)
+add_sdk(NAME ASI_Linux_Mac MAJOR 1 MINOR 14 PATCH 0425 URL "http://astronomy-imaging-camera.com/software/ASI_linux_mac_SDK_V\${ASI_Linux_Mac_SDK_VERSION}.tar.bz2" HASH_ALGO MD5 HASH f1faced49f0aca0b8ebf34feb15eec3b) 
+add_sdk(NAME ASI_Windows   MAJOR 1 MINOR 14 PATCH 0425 URL "http://astronomy-imaging-camera.com/software/ASI_Windows_SDK_V\${ASI_Windows_SDK_VERSION}.zip" HASH_ALGO MD5 HASH b33e384377f6862fbbf623a0450d2488) 
 
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
-    set(ASI_SDK_VERSION ${ASI_WINDOWS_SDK_VERSION})
-    set(ASI_SDK_DIR ${ASI_WINDOWS_SDK_DIR})
+    set(ASI_SDK_VERSION ${ASI_Windows_SDK_VERSION})
+    set(ASI_SDK_DIR ${ASI_Windows_SDK_DIR})
     set(asi_libfilename "ASICamera2.dll")
 else()
-    set(ASI_SDK_VERSION ${ASI_LINUX_MAC_SDK_VERSION})
-    set(ASI_SDK_DIR ${ASI_LINUX_MAC_SDK_DIR})
+    set(ASI_SDK_VERSION ${ASI_Linux_Mac_SDK_VERSION})
+    set(ASI_SDK_DIR ${ASI_Linux_Mac_SDK_DIR})
     set(asi_libfilename "libASICamera2.a")
 endif()
-
 
 add_definitions(-DASI_SDK_VERSION="${ASI_SDK_VERSION}")
 set(ASI_ARCH_x86_64 x64)
@@ -37,53 +27,6 @@ endif()
 
 include_directories(${ASI_SDK_DIR}/include)
 set(asi_driver_library ${ASI_SDK_DIR}/lib/${ASI_TARGET_ARCH}/${asi_libfilename})
-
-if(NOT EXISTS ${ASI_LINUX_MAC_SDK_DIR})
-  message(STATUS "Downloading ASI Linux/Mac SDK v${ASI_LINUX_MAC_SDK_VERSION}")
-  file(DOWNLOAD
-        http://astronomy-imaging-camera.com/software/ASI_linux_mac_SDK_V${ASI_LINUX_MAC_SDK_VERSION}.tar.bz2
-        ${CMAKE_CURRENT_SOURCE_DIR}/asi_sdk.tar.bz2
-        SHOW_PROGRESS LOG asi_sdk_download_log STATUS asi_sdk_download_status)
-
-  list(GET ${asi_sdk_download_status} 0 asi_sdk_download_status_code)
-  list(GET ${asi_sdk_download_status} 1 asi_sdk_download_status_message)
-  if(${asi_sdk_download_status_code})
-    message(FATAL_ERROR "Error while downloading ASI Linux/Mac SDK: ${asi_sdk_download_status_message}(code: ${asi_sdk_download_status_message}. Full log: ${asi_sdk_download_log}")
-  endif()
-  message(STATUS "ASI Linux/Mac SDK downloaded, extracting")
-  file(MAKE_DIRECTORY ${ASI_LINUX_MAC_SDK_DIR})
-  execute_process(COMMAND tar xvf ${CMAKE_CURRENT_SOURCE_DIR}/asi_sdk.tar.bz2 WORKING_DIRECTORY ${ASI_LINUX_MAC_SDK_DIR} RESULT_VARIABLE UNPACK_ERROR)
-  if(NOT ${UNPACK_ERROR} EQUAL 0)
-    file(REMOVE_RECURSE ${ASI_LINUX_MAC_SDK_DIR})
-    message(FATAL_ERROR "Error unpacking ZWO ASI SDK: ${UNPACK_ERROR}")
-  endif()
-  file(REMOVE ${CMAKE_CURRENT_SOURCE_DIR}/asi_sdk.tar.bz2)
-endif()
-
-if(NOT EXISTS ${ASI_WINDOWS_SDK_DIR})
-  message(STATUS "Downloading ASI Windows SDK v${ASI_WINDOWS_SDK_VERSION}")
-  file(DOWNLOAD
-         http://astronomy-imaging-camera.com/software/ASI_Windows_SDK_V${ASI_WINDOWS_SDK_VERSION}.zip
-         ${CMAKE_CURRENT_SOURCE_DIR}/asi_sdk.zip
-         SHOW_PROGRESS LOG asi_sdk_download_log STATUS asi_sdk_download_status)
- 
-  list(GET ${asi_sdk_download_status} 0 asi_sdk_download_status_code)
-  list(GET ${asi_sdk_download_status} 1 asi_sdk_download_status_message)
-  if(${asi_sdk_download_status_code})
-    message(FATAL_ERROR "Error while downloading ASI Windows SDK: ${asi_sdk_download_status_message}(code: ${asi_sdk_download_status_message}. Full log: ${asi_sdk_download_log}")
-  endif()
-  message(STATUS "ASI Windows SDK downloaded, extracting")
-  file(MAKE_DIRECTORY ${ASI_WINDOWS_SDK_DIR})
-  execute_process(COMMAND unzip asi_sdk.zip WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} RESULT_VARIABLE UNPACK_ERROR)
-  if(NOT ${UNPACK_ERROR} EQUAL 0)
-    file(REMOVE_RECURSE ${ASI_WINDOWS_SDK_DIR} "${CMAKE_CURRENT_SOURCE_DIR}/ASI SDK")
-    message(FATAL_ERROR "Error unpacking ZWO ASI SDK: ${UNPACK_ERROR}")
-  endif()
-
-  file(RENAME "${CMAKE_CURRENT_SOURCE_DIR}/ASI SDK" ${ASI_WINDOWS_SDK_DIR})
-  file(REMOVE ${CMAKE_CURRENT_SOURCE_DIR}/asi_sdk.zip)
-endif()
-
 
 
 add_driver(NAME zwo_asi_imager OS Linux Darwin Windows DEFAULT_ON SRCS ${asi_imager_SRCS} LINK ${asi_driver_library})
