@@ -24,7 +24,7 @@ if pr_number and pr_number != 'false':
         pass
 
 
-def find_pr()
+def find_pr():
     all_pulls = [pr for pr in repo.get_pulls(state='closed', sort='updated')]
     all_pulls.reverse()
     for merged_pr in all_pulls:
