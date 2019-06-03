@@ -32,7 +32,8 @@ class Travis:
     if not 'osx' in args.exclude_images:
       includes.append({
         'os': 'osx',
-        'env': 'SKIP_TESTS={} BUILD_OS_FAMILY=osx'.format(b2i('osx' in args.skip_tests))
+        'env': 'SKIP_TESTS={} BUILD_OS_FAMILY=osx'.format(b2i('osx' in args.skip_tests)),
+        'osx_image': 'xcode10.2',
       })
     for image in self.images:
       exclude_image = False

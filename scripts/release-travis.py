@@ -3,6 +3,8 @@ from github import Github
 from github.GithubException import UnknownObjectException
 import os
 import sys
+import traceback
+import time
 
 github = Github(os.environ['GITHUB_OAUTH_USER'], os.environ['GITHUB_OAUTH_TOKEN'])
 repo = github.get_repo('GuLinux/PlanetaryImager')
@@ -21,14 +23,24 @@ if pr_number and pr_number != 'false':
     except ValueError:
         pass
 
-if not pr:
+
+def find_pr()
     all_pulls = [pr for pr in repo.get_pulls(state='closed', sort='updated')]
     all_pulls.reverse()
     for merged_pr in all_pulls:
         if merged_pr.merge_commit_sha == commit_id:
-            pr = merged_pr
+            return merged_pr
+    return None
 
-    
+if not pr:
+    retry = 0
+    while not pr and retry < 5:
+        time.sleep(retry * 10)
+        try:
+            pr = find_pr()
+        except:
+            traceback.print_exc()
+            retry += 1
 
 if pr:
     release_body='''# {}  
