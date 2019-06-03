@@ -1,5 +1,6 @@
 include(${CMAKE_CURRENT_LIST_DIR}/configuration-linux.cmake)
 set(CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST ${CPACK_RPM_EXCLUDE_FROM_AUTO_FILELIST} /lib /lib/udev /lib/udev/rules.d /usr/bin /usr/lib CACHE STRING "")
 set(CPACK_RPM_PACKAGE_AUTOREQ 0 CACHE STRING "")
+set(CPACK_RPM_SPEC_INSTALL_POST "/bin/true" CACHE STRING "")
 set(CPACK_GENERATOR "RPM" CACHE STRING "")
 
