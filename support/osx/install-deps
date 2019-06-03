@@ -7,7 +7,7 @@ if ! which brew &>/dev/null; then
     exit 1
 fi
 
-for pkg in qt opencv pkg-config cmake boost cfitsio; do
+for pkg in libusb wget qt opencv pkg-config cmake boost cfitsio libdc1394; do
     if ! brew list "$pkg" &>/dev/null; then
         brew install "$pkg"
     fi
