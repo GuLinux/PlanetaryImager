@@ -28,7 +28,7 @@ class V4L2Driver : public Driver
 public:
 V4L2Driver();
 ~V4L2Driver();
-virtual Driver::Cameras cameras() const;
+virtual QList<CameraPtr> cameras() const;
 
 private:
     DPTR

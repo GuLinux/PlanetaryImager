@@ -23,6 +23,7 @@
 #include <QThread>
 #include <QTimer>
 #include "image_handlers/saveimages.h"
+#include "drivers/driver.h"
 
 #ifdef STATIC_WINDOWS_PLUGIN
 #pragma message("Initializing Qt static plugins")
@@ -32,20 +33,20 @@ Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
 
 
 DPTR_IMPL(PlanetaryImager) {
-  Driver::ptr driver;
+  DriverPtr driver;
   ImageHandlerPtr imageHandler;
   SaveImagesPtr saveImages;
   Configuration &configuration;
   PlanetaryImager *q;
   
-  Driver::Cameras cameras;
+  QList<CameraPtr> cameras;
   Imager *imager = nullptr;
   
   void initDevicesWatcher();
 };
 
 PlanetaryImager::PlanetaryImager(
-  const Driver::ptr &driver,
+  const DriverPtr &driver,
   const ImageHandlerPtr &imageHandler,
   const SaveImagesPtr &saveImages,
   Configuration &configuration
@@ -75,7 +76,7 @@ Configuration &PlanetaryImager::configuration() const
 }
 
 
-Driver::Cameras PlanetaryImager::cameras() const
+QList<CameraPtr> PlanetaryImager::cameras() const
 {
   return d->cameras;
 }
@@ -97,13 +98,13 @@ void PlanetaryImager::stopRecording()
 
 void PlanetaryImager::scanCameras()
 {
-  GuLinux::qAsyncR<Driver::Cameras>([this] { return d->driver->cameras(); }, [this](const Driver::Cameras &cameras) {
+  GuLinux::qAsyncR<QList<CameraPtr>>([this] { return d->driver->cameras(); }, [this](const QList<CameraPtr> &cameras) {
     d->cameras = cameras;
     emit camerasChanged();
   }, this);
 }
 
-void PlanetaryImager::open(const Driver::Camera::ptr& camera)
+void PlanetaryImager::open(const CameraPtr& camera)
 {
   if(d->imager)
     d->imager->destroy();

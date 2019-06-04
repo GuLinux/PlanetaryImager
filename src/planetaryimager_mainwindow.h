@@ -24,6 +24,11 @@
 #include "commons/messageslogger.h"
 #include "commons/filesystembrowser.h"
 #include "planetaryimager.h"
+#include "commons/fwd.h"
+
+FWD_PTR(ImageHandler)
+FWD_PTR(ImageHandlers)
+
 namespace Ui
 {
 class PlanetaryImagerMainWindow;
@@ -42,7 +47,7 @@ public:
       QWidget* parent = 0,
       Qt::WindowFlags flags = 0
   );
-  void connectCamera(const Driver::Camera::ptr &camera);
+  void connectCamera(const CameraPtr &camera);
   ImageHandlerPtr imageHandler() const;
   Imager *imager() const;
 public slots:

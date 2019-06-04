@@ -19,11 +19,13 @@
 
 #ifndef DRIVERPROTOCOL_H
 #define DRIVERPROTOCOL_H
-#include "drivers/driver.h"
 #include "network/protocol/protocol.h"
 #include <QList>
 #include "commons/fwd.h"
+#include "drivers/imager.h"
+
 FWD_PTR(Frame)
+FWD_PTR(Camera)
 
 class DriverProtocol : public NetworkProtocol {
 public:
@@ -52,9 +54,9 @@ public:
 
   // TODO: remove all the static methods, particularly since most of them are stateful
 
-  static NetworkPacket::ptr sendCameraListReply(const Driver::Cameras &cameras);
-  typedef std::function<Driver::Camera::ptr(const QString &, qlonglong)> CameraFactory;
-  static void decode(Driver::Cameras &cameras, const NetworkPacket::ptr &packet, const CameraFactory &factory);
+  static NetworkPacket::ptr sendCameraListReply(const QList<CameraPtr> &cameras);
+  typedef std::function<CameraPtr(const QString &, qlonglong)> CameraFactory;
+  static void decode(QList<CameraPtr> &cameras, const NetworkPacket::ptr &packet, const CameraFactory &factory);
 
   static NetworkPacket::ptr sendGetPropertiesReply(const Imager::Properties &properties);
   static void decode(Imager::Properties &properties, const NetworkPacket::ptr &packet);

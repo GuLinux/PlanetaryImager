@@ -29,7 +29,7 @@ class ZWO_ASI_Driver : public Driver
 public:
     ZWO_ASI_Driver();
     ~ZWO_ASI_Driver();
-    virtual Driver::Cameras cameras() const;
+    virtual QList<CameraPtr> cameras() const;
 private:
   DPTR
 };

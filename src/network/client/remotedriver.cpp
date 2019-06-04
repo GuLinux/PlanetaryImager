@@ -24,11 +24,11 @@
 using namespace std;
 
 DPTR_IMPL(RemoteDriver) {
-  Cameras cameras;
+  QList<CameraPtr> cameras;
   DriverProtocol::DriverStatus status;
 };
 
-class RemoteCamera : public Driver::Camera {
+class RemoteCamera : public Camera {
 public:
   RemoteCamera(const QString &name, qlonglong address, const NetworkDispatcher::ptr &dispatcher) : _name{name}, _address{address}, _dispatcher{dispatcher} {}
   Imager * imager(const ImageHandlerPtr & imageHandler) const override;
@@ -64,14 +64,14 @@ RemoteDriver::~RemoteDriver()
 }
 
 
-Driver::Cameras RemoteDriver::cameras() const
+QList<CameraPtr> RemoteDriver::cameras() const
 {
   dispatcher()->queue_send(DriverProtocol::packetCameraList() );
   wait_for_processed(DriverProtocol::CameraListReply);
   return d->cameras;;
 }
 
-Driver::Camera::ptr RemoteDriver::existing_running_camera() const
+CameraPtr RemoteDriver::existing_running_camera() const
 {
   if(! d->status.imager_running)
     return {};

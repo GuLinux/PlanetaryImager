@@ -26,7 +26,7 @@ class SimulatorDriver : public Driver
   Q_OBJECT
 public:
   SimulatorDriver();
-  virtual Driver::Cameras cameras() const;
+  virtual QList<CameraPtr> cameras() const;
 };
 
 

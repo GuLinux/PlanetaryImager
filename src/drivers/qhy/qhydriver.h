@@ -27,7 +27,7 @@ class QHYDriver : public Driver
 public:
     QHYDriver();
     virtual ~QHYDriver();
-    Cameras cameras() const override;
+    QList<CameraPtr> cameras() const override;
     void aboutToQuit() override;
 private:
   DPTR

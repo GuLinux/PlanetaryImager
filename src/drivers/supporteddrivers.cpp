@@ -132,10 +132,10 @@ void SupportedDrivers::aboutToQuit()
 }
 
 
-Driver::Cameras SupportedDrivers::cameras() const
+QList<CameraPtr> SupportedDrivers::cameras() const
 {
   qDebug() << "Detecting active cameras";
-  Cameras cameras;
+  QList<CameraPtr> cameras;
   for(auto supported_driver: d->supported_drivers) {
     qDebug() << "Checking cameras on driver " << supported_driver->name;
     if(supported_driver->driver()) {

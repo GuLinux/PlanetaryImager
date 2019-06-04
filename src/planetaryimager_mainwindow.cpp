@@ -49,6 +49,7 @@
 
 #include "widgets/editroidialog.h"
 
+#include "image_handlers/imagehandler.h"
 #include "image_handlers/frontend/displayimage.h"
 #include "image_handlers/saveimages.h"
 #include "image_handlers/threadimagehandler.h"
@@ -60,6 +61,7 @@
 #include <opencv2/opencv.hpp>
 
 #include "planetaryimager.h"
+#include "drivers/driver.h"
 
 using namespace GuLinux;
 using namespace std;
@@ -365,7 +367,7 @@ void PlanetaryImagerMainWindow::Private::onCamerasFound()
 }
 
 
-void PlanetaryImagerMainWindow::connectCamera(const Driver::Camera::ptr& camera)
+void PlanetaryImagerMainWindow::connectCamera(const CameraPtr& camera)
 {
   d->planetaryImager->open(camera);
 }

@@ -31,8 +31,8 @@ public:
   typedef std::shared_ptr<RemoteDriver> ptr;
   RemoteDriver(const NetworkDispatcher::ptr &dispatcher);
   ~RemoteDriver();
-  Cameras cameras() const override;
-  Camera::ptr existing_running_camera() const;
+  QList<CameraPtr> cameras() const override;
+  CameraPtr existing_running_camera() const;
 private:
   DPTR
 };

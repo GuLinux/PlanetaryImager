@@ -24,6 +24,7 @@
 #include "commons/opencv_utils.h"
 #include "commons/frame.h"
 #include <QJsonDocument>
+#include "drivers/driver.h"
 
 using namespace std;
 using namespace std::placeholders;
@@ -120,10 +121,10 @@ bool DriverProtocol::isForwardingEnabled()
 }
 
 
-NetworkPacket::ptr DriverProtocol::sendCameraListReply(const Driver::Cameras& cameras)
+NetworkPacket::ptr DriverProtocol::sendCameraListReply(const QList<CameraPtr>& cameras)
 {
   QVariantList v_cameras;
-  transform(begin(cameras), end(cameras), back_inserter(v_cameras), [](const Driver::Camera::ptr &c){
+  transform(begin(cameras), end(cameras), back_inserter(v_cameras), [](const CameraPtr &c){
     QVariantMap p;
     p["n"] = c->name();
     p["a"] = reinterpret_cast<qlonglong>(c.get());
@@ -132,7 +133,7 @@ NetworkPacket::ptr DriverProtocol::sendCameraListReply(const Driver::Cameras& ca
   return packetCameraListReply() << v_cameras;
 }
 
-void DriverProtocol::decode(Driver::Cameras& cameras, const NetworkPacket::ptr& packet, const CameraFactory& factory)
+void DriverProtocol::decode(QList<CameraPtr>& cameras, const NetworkPacket::ptr& packet, const CameraFactory& factory)
 {
   auto v_cameras = packet->payloadVariant().toList();
   transform(begin(v_cameras), end(v_cameras), back_inserter(cameras), [&](const QVariant &v) { return factory(v.toMap()["n"].toString(), v.toMap()["a"].toLongLong()); });

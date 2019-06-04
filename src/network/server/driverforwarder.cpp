@@ -30,7 +30,7 @@ using namespace std::placeholders;
 DPTR_IMPL(DriverForwarder) {
   PlanetaryImager::ptr planetaryImager;
   DriverForwarder *q;
-  Driver::Cameras cameras;
+  QList<CameraPtr> cameras;
   DECLARE_HANDLER(CameraList)
   DECLARE_HANDLER(ConnectCamera)
   DECLARE_HANDLER(GetCameraName)
@@ -86,8 +86,8 @@ void DriverForwarder::Private::CameraList(const NetworkPacket::ptr& p)
 
 void DriverForwarder::Private::ConnectCamera(const NetworkPacket::ptr& p)
 {
-  auto address = reinterpret_cast<Driver::Camera *>(p->payloadVariant().toLongLong());
-  auto camera = find_if(begin(cameras), end(cameras), [address](const Driver::Camera::ptr &p){ return p.get() == address; });
+  auto address = reinterpret_cast<Camera *>(p->payloadVariant().toLongLong());
+  auto camera = find_if(begin(cameras), end(cameras), [address](const CameraPtr &p){ return p.get() == address; });
   qDebug()<< "address: " << address;
   for(auto camera: cameras)
     qDebug() << camera.get();

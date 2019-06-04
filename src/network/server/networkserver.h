@@ -21,7 +21,6 @@
 #define NETWORKSERVER_H
 #include <QObject>
 #include "c++/dptr.h"
-#include "drivers/driver.h"
 #include "network/server/savefileforwarder.h"
 #include "network/networkdispatcher.h"
 #include "framesforwarder.h"
