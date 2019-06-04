@@ -23,11 +23,14 @@
 #include "image_handlers/imagehandler.h"
 #include "dptr.h"
 #include "commons/configuration.h"
+#include "commons/fwd.h"
+
+FWD_PTR(Histogram)
+
 class Histogram : public QObject, public ImageHandler
 {
   Q_OBJECT
 public:
-  typedef std::shared_ptr<Histogram> ptr;
   enum Channel {
     Grayscale,
     Red,

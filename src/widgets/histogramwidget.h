@@ -21,15 +21,18 @@
 
 #include <QWidget>
 #include "c++/dptr.h"
-#include "image_handlers/frontend/histogram.h"
 #include "commons/configuration.h"
+#include "commons/fwd.h"
+
+FWD_PTR(Histogram)
+
 
 class HistogramWidget : public QWidget
 {
     Q_OBJECT
 public:
 ~HistogramWidget();
-HistogramWidget(const Histogram::ptr &histogram, Configuration &configuration, QWidget* parent = 0);
+HistogramWidget(const HistogramPtr &histogram, Configuration &configuration, QWidget* parent = 0);
 
 private:
     DPTR

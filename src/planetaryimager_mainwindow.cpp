@@ -50,6 +50,7 @@
 #include "widgets/editroidialog.h"
 
 #include "image_handlers/imagehandler.h"
+#include "image_handlers/frontend/histogram.h"
 #include "image_handlers/frontend/displayimage.h"
 #include "image_handlers/saveimages.h"
 #include "image_handlers/threadimagehandler.h"
@@ -82,7 +83,7 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
 
   StatusBarInfoWidget *statusbar_info_widget;
   shared_ptr<DisplayImage> displayImage;
-  Histogram::ptr histogram;
+  HistogramPtr histogram;
   CameraControlsWidget* cameraSettingsWidget = nullptr;
   CameraInfoWidget* cameraInfoWidget = nullptr;
   HistogramWidget *histogramWidget = nullptr;
