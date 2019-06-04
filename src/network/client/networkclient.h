@@ -27,7 +27,7 @@
 #include "commons/fwd.h"
 
 FWD_PTR(NetworkDispatcher)
-FWD_PTR(NetworkClientPtr)
+FWD_PTR(NetworkClient)
 
 class NetworkClient : public QObject, public NetworkReceiver
 {
