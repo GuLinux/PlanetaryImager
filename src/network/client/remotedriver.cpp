@@ -22,6 +22,8 @@
 #include "network/networkdispatcher.h"
 #include <QCoreApplication>
 #include "remoteimager.h"
+#include "network/networkpacket.h"
+
 using namespace std;
 
 DPTR_IMPL(RemoteDriver) {
@@ -49,12 +51,12 @@ Imager * RemoteCamera::imager(const ImageHandlerPtr& imageHandler) const
 RemoteDriver::RemoteDriver(const NetworkDispatcherPtr &dispatcher) : NetworkReceiver{dispatcher}, dptr()
 {
   d->status.imager_running = false;
-  register_handler(DriverProtocol::CameraListReply, [this](const NetworkPacket::ptr &packet){
+  register_handler(DriverProtocol::CameraListReply, [this](const NetworkPacketPtr &packet){
     qDebug() << "Processing cameras: " << packet;
     d->cameras.clear();
     DriverProtocol::decode(d->cameras, packet, [&](const QString &name, qlonglong address) { return make_shared<RemoteCamera>(name, address, this->dispatcher() ); });
   });
-  register_handler(NetworkProtocol::HelloReply, [this](const NetworkPacket::ptr &p) {
+  register_handler(NetworkProtocol::HelloReply, [this](const NetworkPacketPtr &p) {
     qDebug() << "hello reply handler";
     d->status = DriverProtocol::decodeStatus(p);
   });

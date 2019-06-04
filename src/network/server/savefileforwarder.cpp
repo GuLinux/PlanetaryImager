@@ -22,6 +22,7 @@
 #include "network/protocol/savefileprotocol.h"
 #include "image_handlers/saveimages.h"
 #include "network/networkdispatcher.h"
+#include "network/networkpacket.h"
 
 DPTR_IMPL(SaveFileForwarder) {
   const SaveImagesPtr save_images;
@@ -31,9 +32,9 @@ DPTR_IMPL(SaveFileForwarder) {
 
 SaveFileForwarder::SaveFileForwarder(const SaveImagesPtr& save_images, const NetworkDispatcherPtr& dispatcher) : NetworkReceiver{dispatcher}, dptr(save_images)
 {
-  register_handler(SaveFileProtocol::StartRecording, [this](const NetworkPacket::ptr &) { d->save_images->startRecording(d->imager); });
-  register_handler(SaveFileProtocol::slotSetPaused, [this](const NetworkPacket::ptr &p) { d->save_images->setPaused(p->payloadVariant().toBool()); });
-  register_handler(SaveFileProtocol::EndRecording, [this](const NetworkPacket::ptr &) { d->save_images->endRecording(); });
+  register_handler(SaveFileProtocol::StartRecording, [this](const NetworkPacketPtr &) { d->save_images->startRecording(d->imager); });
+  register_handler(SaveFileProtocol::slotSetPaused, [this](const NetworkPacketPtr &p) { d->save_images->setPaused(p->payloadVariant().toBool()); });
+  register_handler(SaveFileProtocol::EndRecording, [this](const NetworkPacketPtr &) { d->save_images->endRecording(); });
   QObject::connect(save_images.get(), &SaveImages::saveFPS, save_images.get(), [this](double fps) { this->dispatcher()->queue_send(SaveFileProtocol::packetsignalSaveFPS() << QVariant{fps}); } );
   QObject::connect(save_images.get(), &SaveImages::meanFPS, save_images.get(), [this](double fps) { this->dispatcher()->queue_send(SaveFileProtocol::packetsignalMeanFPS() << QVariant{fps}); } );
   QObject::connect(save_images.get(), &SaveImages::savedFrames, save_images.get(), [this](long frames) { this->dispatcher()->queue_send(SaveFileProtocol::packetsignalSavedFrames() << QVariant{static_cast<qlonglong>(frames)}); } );

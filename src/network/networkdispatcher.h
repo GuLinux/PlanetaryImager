@@ -22,13 +22,13 @@
 
 #include <functional>
 #include <QObject>
-#include <QtNetwork/QTcpSocket>
 #include "c++/dptr.h"
-#include "networkpacket.h"
 #include "commons/fwd.h"
 
 FWD(NetworkReceiver)
+FWD_PTR(NetworkPacket)
 FWD_PTR(NetworkDispatcher)
+FWD(QTcpSocket)
 
 class NetworkDispatcher : public QObject
 {
@@ -39,10 +39,10 @@ public:
   void attach(NetworkReceiver *receiver);
   void detach(NetworkReceiver *receiver);
   void setSocket(QTcpSocket *socket);
-  void queue_send(const NetworkPacket::ptr &packet);
+  void queue_send(const NetworkPacketPtr &packet);
   bool is_connected() const;
 public slots:
-  void send(const NetworkPacket::ptr &packet);
+  void send(const NetworkPacketPtr &packet);
 signals:
   void bytes(quint64 written, quint64 transmitted);
 private:

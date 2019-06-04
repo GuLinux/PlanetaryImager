@@ -18,6 +18,7 @@
  */
 
 #include "driverprotocol.h"
+#include "network/networkpacket.h"
 #include <algorithm>
 #include <functional>
 #include <opencv2/opencv.hpp>
@@ -121,7 +122,7 @@ bool DriverProtocol::isForwardingEnabled()
 }
 
 
-NetworkPacket::ptr DriverProtocol::sendCameraListReply(const QList<CameraPtr>& cameras)
+NetworkPacketPtr DriverProtocol::sendCameraListReply(const QList<CameraPtr>& cameras)
 {
   QVariantList v_cameras;
   transform(begin(cameras), end(cameras), back_inserter(v_cameras), [](const CameraPtr &c){
@@ -133,7 +134,7 @@ NetworkPacket::ptr DriverProtocol::sendCameraListReply(const QList<CameraPtr>& c
   return packetCameraListReply() << v_cameras;
 }
 
-void DriverProtocol::decode(QList<CameraPtr>& cameras, const NetworkPacket::ptr& packet, const CameraFactory& factory)
+void DriverProtocol::decode(QList<CameraPtr>& cameras, const NetworkPacketPtr& packet, const CameraFactory& factory)
 {
   auto v_cameras = packet->payloadVariant().toList();
   transform(begin(v_cameras), end(v_cameras), back_inserter(cameras), [&](const QVariant &v) { return factory(v.toMap()["n"].toString(), v.toMap()["a"].toLongLong()); });
@@ -141,7 +142,7 @@ void DriverProtocol::decode(QList<CameraPtr>& cameras, const NetworkPacket::ptr&
 
 
 
-NetworkPacket::ptr DriverProtocol::sendGetPropertiesReply(const Imager::Properties& properties)
+NetworkPacketPtr DriverProtocol::sendGetPropertiesReply(const Imager::Properties& properties)
 {
   QVariantList l;
   QVariantList caps;
@@ -158,7 +159,7 @@ NetworkPacket::ptr DriverProtocol::sendGetPropertiesReply(const Imager::Properti
 }
 
 
-void DriverProtocol::decode(Imager::Properties& properties, const NetworkPacket::ptr& packet)
+void DriverProtocol::decode(Imager::Properties& properties, const NetworkPacketPtr& packet)
 {
   properties.capabilities.clear();
   properties.properties.clear();
@@ -177,7 +178,7 @@ void DriverProtocol::decode(Imager::Properties& properties, const NetworkPacket:
     properties.capabilities.insert( static_cast<Imager::Capability>(v.toInt()) );
 }
 
-NetworkPacket::ptr DriverProtocol::sendGetControlsReply(const Imager::Controls& controls)
+NetworkPacketPtr DriverProtocol::sendGetControlsReply(const Imager::Controls& controls)
 {
   QVariantList v;
   transform(begin(controls), end(controls), back_inserter(v), bind(control2variant, _1));
@@ -187,7 +188,7 @@ NetworkPacket::ptr DriverProtocol::sendGetControlsReply(const Imager::Controls& 
 }
 
 
-void DriverProtocol::decode(Imager::Controls& controls, const NetworkPacket::ptr& packet)
+void DriverProtocol::decode(Imager::Controls& controls, const NetworkPacketPtr& packet)
 {
   controls.clear();
 //   QVariantList variant_controls = QJsonDocument::fromBinaryData(packet->payload()).toVariant().toList();
@@ -196,7 +197,7 @@ void DriverProtocol::decode(Imager::Controls& controls, const NetworkPacket::ptr
   transform(begin(variant_controls), end(variant_controls), back_inserter(controls), bind(variant2control, _1));
 }
 
-NetworkPacket::ptr DriverProtocol::sendFrame(FrameConstPtr frame)
+NetworkPacketPtr DriverProtocol::sendFrame(FrameConstPtr frame)
 {
   if(format_parameters.format == Configuration::Network_NoImage)
     return {};
@@ -230,7 +231,7 @@ NetworkPacket::ptr DriverProtocol::sendFrame(FrameConstPtr frame)
   return packet;
 }
 
-FramePtr DriverProtocol::decodeFrame(const NetworkPacket::ptr& packet)
+FramePtr DriverProtocol::decodeFrame(const NetworkPacketPtr& packet)
 {
   QByteArray image = packet->payload();
   if(format_parameters.compression && format_parameters.format == Configuration::Network_RAW) {
@@ -245,21 +246,21 @@ FramePtr DriverProtocol::decodeFrame(const NetworkPacket::ptr& packet)
   return frame;
 }
 
-NetworkPacket::ptr DriverProtocol::setControl(const Imager::Control& control)
+NetworkPacketPtr DriverProtocol::setControl(const Imager::Control& control)
 {
   return packetSetControl() << control2variant(control);
 }
 
-NetworkPacket::ptr DriverProtocol::controlChanged(const Imager::Control& control)
+NetworkPacketPtr DriverProtocol::controlChanged(const Imager::Control& control)
 {
   return packetsignalControlChanged() << control2variant(control);
 }
 
-Imager::Control DriverProtocol::decodeControl(const NetworkPacket::ptr &packet) {
+Imager::Control DriverProtocol::decodeControl(const NetworkPacketPtr &packet) {
   return variant2control(packet->payloadVariant());
 }
 
-DriverProtocol::DriverStatus DriverProtocol::decodeStatus(const NetworkPacket::ptr& packet)
+DriverProtocol::DriverStatus DriverProtocol::decodeStatus(const NetworkPacketPtr& packet)
 {
   return { packet->payloadVariant().toMap()["imager_running"].toBool() };
 }

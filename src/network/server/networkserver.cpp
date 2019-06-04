@@ -19,7 +19,9 @@
 
 #include "networkserver.h"
 #include <QtNetwork/QTcpServer>
+#include <QtNetwork/QTcpSocket>
 #include "network/server/driverforwarder.h"
+#include "network/networkpacket.h"
 #include "network/networkdispatcher.h"
 #include "network/protocol/protocol.h"
 #include "network/protocol/driverprotocol.h"
@@ -58,17 +60,17 @@ NetworkServer::NetworkServer(
   d->filesystemForwarder = make_shared<FilesystemForwarder>(dispatcher);
   connect(d->server.get(), &QTcpServer::newConnection, bind(&Private::new_connection, d.get()));
   d->forwarder = make_shared<DriverForwarder>(dispatcher, planetaryImager);
-  register_handler(NetworkProtocol::Hello, [this](const NetworkPacket::ptr &p){
+  register_handler(NetworkProtocol::Hello, [this](const NetworkPacketPtr &p){
     DriverProtocol::setFormatParameters(NetworkProtocol::decodeHello(p));
     QVariantMap status;
     d->forwarder->getStatus(status);
     d->dispatcher->send(NetworkProtocol::packetHelloReply() << status);
   });
   
-  register_handler(NetworkProtocol::ping, [this](const NetworkPacket::ptr &) {
+  register_handler(NetworkProtocol::ping, [this](const NetworkPacketPtr &) {
     d->dispatcher->send(NetworkProtocol::packetpong());
   });
-  register_handler(DriverProtocol::StartLive, [this](const NetworkPacket::ptr &){
+  register_handler(DriverProtocol::StartLive, [this](const NetworkPacketPtr &){
       d->elapsed.restart();
   });
   connect(d->dispatcher.get(), &NetworkDispatcher::bytes, this, bind(&Private::bytes_sent, d.get(), _1, _2));

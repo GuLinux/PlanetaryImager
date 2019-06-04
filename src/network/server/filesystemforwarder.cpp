@@ -19,6 +19,7 @@
 #include "filesystemforwarder.h"
 #include "network/protocol/filesystemprotocol.h"
 #include "network/networkdispatcher.h"
+#include "network/networkpacket.h"
 #include <QFileInfo>
 #include <QDir>
 #include "commons/utils.h"
@@ -28,8 +29,8 @@ using namespace std::placeholders;
 
 DPTR_IMPL(FilesystemForwarder) {
   FilesystemForwarder *q;
-  void entry(const NetworkPacket::ptr &packet);
-  void listChildren(const NetworkPacket::ptr &packet);
+  void entry(const NetworkPacketPtr &packet);
+  void listChildren(const NetworkPacketPtr &packet);
 };
 
 FilesystemForwarder::FilesystemForwarder(const NetworkDispatcherPtr& dispatcher) : NetworkReceiver{dispatcher}, dptr(this)
@@ -42,14 +43,14 @@ FilesystemForwarder::~FilesystemForwarder()
 {
 }
 
-void FilesystemForwarder::Private::entry(const NetworkPacket::ptr& packet)
+void FilesystemForwarder::Private::entry(const NetworkPacketPtr& packet)
 {
   LOG_F_SCOPE
   QFileInfo info{packet->payloadVariant().toString()};
   q->dispatcher()->send(FilesystemProtocol::fileInfoReply(info));
 }
 
-void FilesystemForwarder::Private::listChildren(const NetworkPacket::ptr& packet)
+void FilesystemForwarder::Private::listChildren(const NetworkPacketPtr& packet)
 {
   LOG_F_SCOPE
   QDir dir{packet->payloadVariant().toString()};

@@ -18,15 +18,16 @@
  */
 
 #include "protocol.h"
+#include "network/networkpacket.h"
 
 using namespace std;
 
-NetworkPacket::ptr NetworkProtocol::packet(const NetworkPacket::Type& name)
+NetworkPacketPtr NetworkProtocol::packet(const NetworkPacketType& name)
 {
   return make_shared<NetworkPacket>(name);
 }
 
-NetworkPacket::ptr NetworkProtocol::hello(const FormatParameters &parameters)
+NetworkPacketPtr NetworkProtocol::hello(const FormatParameters &parameters)
 {
   QVariantMap params {
     {"format", static_cast<int>(parameters.format) },
@@ -37,7 +38,7 @@ NetworkPacket::ptr NetworkProtocol::hello(const FormatParameters &parameters)
   return packetHello() << params;
 }
 
-NetworkProtocol::FormatParameters NetworkProtocol::decodeHello(const NetworkPacket::ptr& packet)
+NetworkProtocol::FormatParameters NetworkProtocol::decodeHello(const NetworkPacketPtr& packet)
 {
   QVariantMap params = packet->payloadVariant().toMap();
   return {

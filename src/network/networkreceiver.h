@@ -22,23 +22,23 @@
 
 #include <functional>
 #include <QObject>
-#include <QtNetwork/QTcpSocket>
 #include "c++/dptr.h"
-#include "networkpacket.h"
 #include "commons/fwd.h"
+#include "network/protocol/networkpackettype.h"
 
 FWD_PTR(NetworkDispatcher)
 FWD_PTR(NetworkReceiver)
+FWD_PTR(NetworkPacket)
 
 class NetworkReceiver {
 public:
   NetworkReceiver(const NetworkDispatcherPtr &dispatcher);
-  void handle(const NetworkPacket::ptr &packet);
+  void handle(const NetworkPacketPtr &packet);
   virtual ~NetworkReceiver();
 protected:
-  typedef std::function<void(const NetworkPacket::ptr &)> HandlePacket;
-  void register_handler(const NetworkPacket::Type &name, const HandlePacket handler);
-  void wait_for_processed(const NetworkPacket::Type &name) const;
+  typedef std::function<void(const NetworkPacketPtr &)> HandlePacket;
+  void register_handler(const NetworkPacketType &name, const HandlePacket handler);
+  void wait_for_processed(const NetworkPacketType &name) const;
   NetworkDispatcherPtr dispatcher() const;
 private:
   DPTR

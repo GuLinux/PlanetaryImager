@@ -20,6 +20,10 @@
 #ifndef SAVEFILEPROTOCOL_H
 #define SAVEFILEPROTOCOL_H
 #include "protocol/protocol.h"
+#include "commons/fwd.h"
+
+FWD_PTR(NetworkPacket)
+
 class SaveFileProtocol : public NetworkProtocol
 {
 public:
@@ -32,7 +36,7 @@ public:
   ADD_PROTOCOL_PACKET_NAME(signalDroppedFrames)
   ADD_PROTOCOL_PACKET_NAME(signalRecording)
   ADD_PROTOCOL_PACKET_NAME(signalFinished)
-  static NetworkPacket::ptr setPaused(bool paused);
+  static NetworkPacketPtr setPaused(bool paused);
 };
 
 #endif // SAVEFILEPROTOCOL_H

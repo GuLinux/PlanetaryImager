@@ -21,6 +21,7 @@
 #include "network/protocol/filesystemprotocol.h"
 #include "commons/utils.h"
 #include "network/networkdispatcher.h"
+#include "network/networkpacket.h"
 
 using namespace std;
 using namespace std::placeholders;
@@ -101,8 +102,8 @@ DPTR_IMPL(RemoteFilesystem) {
   void entry(OnEntry onEntry, const QString &name, const QString &path, bool isFile, bool isDir);
   FilesystemEntry::ptr last_entry;
   FilesystemEntry::List last_list;
-  void fileInfoReply(const NetworkPacket::ptr &p);
-  void childrenReply(const NetworkPacket::ptr &p);
+  void fileInfoReply(const NetworkPacketPtr &p);
+  void childrenReply(const NetworkPacketPtr &p);
 };
 
 
@@ -138,13 +139,13 @@ void RemoteFilesystem::Private::entry(OnEntry onEntry, const QString& name, cons
   onEntry(make_shared<FilesystemEntry>(name, path, isDir ? FilesystemEntry::Directory : FilesystemEntry::File, q->shared_from_this()));
 }
 
-void RemoteFilesystem::Private::fileInfoReply(const NetworkPacket::ptr& p)
+void RemoteFilesystem::Private::fileInfoReply(const NetworkPacketPtr& p)
 {
   LOG_F_SCOPE
   FilesystemProtocol::decodeFileInfoReply(p, bind(&Private::entry, this, [=](const FilesystemEntry::ptr &e){ last_entry = e; }, _1, _2, _3, _4));
 }
 
-void RemoteFilesystem::Private::childrenReply(const NetworkPacket::ptr& p)
+void RemoteFilesystem::Private::childrenReply(const NetworkPacketPtr& p)
 {
   LOG_F_SCOPE
   FilesystemProtocol::decodeChildrenReply(p, bind(&Private::entry, this, [=](const FilesystemEntry::ptr &e){ last_list.push_back(e);}, _1, _2, _3, _4));

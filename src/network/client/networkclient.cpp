@@ -19,6 +19,7 @@
 
 #include "networkclient.h"
 #include <QtNetwork/QTcpSocket>
+#include "network/networkpacket.h"
 #include "network/networkdispatcher.h"
 #include "protocol/protocol.h"
 #include "protocol/driverprotocol.h"
@@ -30,7 +31,7 @@ DPTR_IMPL(NetworkClient) {
   NetworkDispatcherPtr dispatcher;
   unique_ptr<QTcpSocket> socket;
   bool imager_is_running = false;
-  NetworkPacket::ptr helloPacket;
+  NetworkPacketPtr helloPacket;
 };
 
 NetworkClient::NetworkClient(const NetworkDispatcherPtr &dispatcher, QObject *parent)

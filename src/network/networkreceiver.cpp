@@ -17,16 +17,17 @@
  *
  */
 
-#include "networkdispatcher.h"
-#include "networkreceiver.h"
+#include "network/networkdispatcher.h"
+#include "network/networkreceiver.h"
+#include "network/networkpacket.h"
 #include <QCoreApplication>
 
 using namespace std;
 
 DPTR_IMPL(NetworkReceiver) {
   const NetworkDispatcherPtr dispatcher;
-  QHash<NetworkPacket::Type, bool> packets_processed;
-  QHash<NetworkPacket::Type, NetworkReceiver::HandlePacket> handlers;
+  QHash<NetworkPacketType, bool> packets_processed;
+  QHash<NetworkPacketType, NetworkReceiver::HandlePacket> handlers;
 };
 
 NetworkReceiver::NetworkReceiver(const NetworkDispatcherPtr &dispatcher) : dptr(dispatcher)
@@ -45,7 +46,7 @@ NetworkDispatcherPtr NetworkReceiver::dispatcher() const
 }
 
 
-void NetworkReceiver::wait_for_processed(const NetworkPacket::Type &name) const
+void NetworkReceiver::wait_for_processed(const NetworkPacketType &name) const
 {
   if(! d->dispatcher->is_connected())
     return;
@@ -56,12 +57,12 @@ void NetworkReceiver::wait_for_processed(const NetworkPacket::Type &name) const
 
 
 
-void NetworkReceiver::register_handler(const NetworkPacket::Type& name, const HandlePacket handler)
+void NetworkReceiver::register_handler(const NetworkPacketType& name, const HandlePacket handler)
 {
   d->handlers[name] = handler;
 }
 
-void NetworkReceiver::handle(const NetworkPacket::ptr& packet)
+void NetworkReceiver::handle(const NetworkPacketPtr& packet)
 {
   auto handler = d->handlers[packet->name()];
   if(handler)
