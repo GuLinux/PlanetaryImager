@@ -21,7 +21,6 @@
 #define CONNECTIONMANAGER_H
 #include <QDialog>
 #include "c++/dptr.h"
-#include "network/client/networkclient.h"
 
 class ConnectionManager : public QDialog
 {

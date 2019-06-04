@@ -27,12 +27,12 @@
 #include "commons/fwd.h"
 
 FWD_PTR(NetworkDispatcher)
+FWD_PTR(NetworkClientPtr)
 
 class NetworkClient : public QObject, public NetworkReceiver
 {
     Q_OBJECT
 public:
-  typedef std::shared_ptr<NetworkClient> ptr;
   NetworkClient(const NetworkDispatcherPtr &dispatcher, QObject *parent = nullptr);
   ~NetworkClient();
   enum Status { Connecting, Connected, Disconnected, Error};

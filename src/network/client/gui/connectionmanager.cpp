@@ -46,7 +46,7 @@ DPTR_IMPL(ConnectionManager) {
   unique_ptr<Ui::ConnectionManager> ui;
   NetworkDispatcherPtr dispatcher;
   RemoteDriverPtr remoteDriver;
-  NetworkClient::ptr client;
+  NetworkClientPtr client;
   unique_ptr<RemoteConfiguration> configuration;
   
   PlanetaryImagerMainWindow *mainWindow = nullptr;

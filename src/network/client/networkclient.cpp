@@ -17,7 +17,7 @@
  *
  */
 
-#include "networkclient.h"
+#include "network/client/networkclient.h"
 #include <QtNetwork/QTcpSocket>
 #include "network/networkpacket.h"
 #include "network/networkdispatcher.h"
