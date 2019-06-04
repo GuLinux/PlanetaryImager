@@ -22,15 +22,18 @@
 
 #include <QObject>
 #include "c++/dptr.h"
-#include "network/networkdispatcher.h"
 #include "network/protocol/protocol.h"
+#include "network/networkreceiver.h"
+#include "commons/fwd.h"
+
+FWD_PTR(NetworkDispatcher)
 
 class NetworkClient : public QObject, public NetworkReceiver
 {
     Q_OBJECT
 public:
   typedef std::shared_ptr<NetworkClient> ptr;
-  NetworkClient(const NetworkDispatcher::ptr &dispatcher, QObject *parent = nullptr);
+  NetworkClient(const NetworkDispatcherPtr &dispatcher, QObject *parent = nullptr);
   ~NetworkClient();
   enum Status { Connecting, Connected, Disconnected, Error};
 public slots:

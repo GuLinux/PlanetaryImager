@@ -23,18 +23,19 @@
 #include <QtConcurrent/QtConcurrent>
 #include <atomic>
 #include "commons/frame.h"
+#include "network/networkdispatcher.h"
 
 using namespace std;
 
 DPTR_IMPL(FramesForwarder) {
-  NetworkDispatcher::ptr dispatcher;
+  NetworkDispatcherPtr dispatcher;
   atomic_bool enabled;
   FramesForwarder *q;
   QElapsedTimer elapsed;
   bool recording = false;
 };
 
-FramesForwarder::FramesForwarder(const NetworkDispatcher::ptr& dispatcher) : dptr(dispatcher, {true}, this)
+FramesForwarder::FramesForwarder(const NetworkDispatcherPtr& dispatcher) : dptr(dispatcher, {true}, this)
 {
   d->elapsed.restart();
 }

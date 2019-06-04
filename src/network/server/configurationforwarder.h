@@ -20,14 +20,17 @@
 #ifndef CONFIGURATIONFORWARDER_H
 #define CONFIGURATIONFORWARDER_H
 
-#include "network/networkdispatcher.h"
 #include "c++/dptr.h"
+#include "commons/fwd.h"
 #include "commons/configuration.h"
+#include "network/networkreceiver.h"
+
+FWD_PTR(NetworkDispatcher)
 
 class ConfigurationForwarder : public NetworkReceiver
 {
 public:
-  ConfigurationForwarder(Configuration &configuration, const NetworkDispatcher::ptr &dispatcher);
+  ConfigurationForwarder(Configuration &configuration, const NetworkDispatcherPtr &dispatcher);
   ~ConfigurationForwarder();
 private:
   DPTR

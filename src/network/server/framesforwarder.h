@@ -19,15 +19,18 @@
 #ifndef FRAMESFORWARDER_H
 #define FRAMESFORWARDER_H
 #include "image_handlers/imagehandler.h"
-#include "network/networkdispatcher.h"
 #include "c++/dptr.h"
 #include <QObject>
+#include "commons/fwd.h"
+
+FWD_PTR(NetworkDispatcher)
+
 class FramesForwarder : public QObject, public ImageHandler
 {
 Q_OBJECT
 public:
   typedef std::shared_ptr<FramesForwarder> ptr;
-  FramesForwarder(const NetworkDispatcher::ptr &dispatcher);
+  FramesForwarder(const NetworkDispatcherPtr &dispatcher);
   ~FramesForwarder();
   bool enabled() const;
 private:

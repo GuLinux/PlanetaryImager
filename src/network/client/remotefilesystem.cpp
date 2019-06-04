@@ -20,6 +20,7 @@
 #include <QDebug>
 #include "network/protocol/filesystemprotocol.h"
 #include "commons/utils.h"
+#include "network/networkdispatcher.h"
 
 using namespace std;
 using namespace std::placeholders;
@@ -105,7 +106,7 @@ DPTR_IMPL(RemoteFilesystem) {
 };
 
 
-RemoteFilesystem::RemoteFilesystem(const NetworkDispatcher::ptr& dispatcher) : NetworkReceiver{dispatcher}, dptr(this)
+RemoteFilesystem::RemoteFilesystem(const NetworkDispatcherPtr& dispatcher) : NetworkReceiver{dispatcher}, dptr(this)
 {
   register_handler(FilesystemProtocol::FileInfoReply, bind(&Private::fileInfoReply, d.get(), _1));
   register_handler(FilesystemProtocol::ChildrenReply, bind(&Private::childrenReply, d.get(), _1));

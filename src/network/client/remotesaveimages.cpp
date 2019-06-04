@@ -18,6 +18,7 @@
 
 #include "remotesaveimages.h"
 #include "network/protocol/savefileprotocol.h"
+#include "network/networkdispatcher.h"
 
 using namespace std;
 
@@ -25,7 +26,7 @@ DPTR_IMPL(RemoteSaveImages) {
   RemoteSaveImages *q;
 };
 
-RemoteSaveImages::RemoteSaveImages(const NetworkDispatcher::ptr& dispatcher) : NetworkReceiver{dispatcher}, dptr(this)
+RemoteSaveImages::RemoteSaveImages(const NetworkDispatcherPtr& dispatcher) : NetworkReceiver{dispatcher}, dptr(this)
 {
   register_handler(SaveFileProtocol::signalSaveFPS, [this](const NetworkPacket::ptr &p) { emit saveFPS(p->payloadVariant().toDouble()); });
   register_handler(SaveFileProtocol::signalMeanFPS, [this](const NetworkPacket::ptr &p) { emit meanFPS(p->payloadVariant().toDouble()); });

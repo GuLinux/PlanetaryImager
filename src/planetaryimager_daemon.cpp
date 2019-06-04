@@ -33,6 +33,7 @@
 #include "Qt/qt_strings_helper.h"
 #include "commons/commandline.h"
 #include "commons/frame.h"
+#include "network/networkdispatcher.h"
 
 using namespace std;
 

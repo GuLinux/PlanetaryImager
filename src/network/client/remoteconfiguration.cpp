@@ -20,6 +20,7 @@
 #include "remoteconfiguration.h"
 #include "Qt/qt_strings_helper.h"
 #include "network/protocol/configurationprotocol.h"
+#include "network/networkdispatcher.h"
 #include <QCoreApplication>
 #include <QTimer>
 
@@ -33,7 +34,7 @@ DPTR_IMPL(RemoteConfiguration) {
   QVariantMap values;
 };
 
-RemoteConfiguration::RemoteConfiguration(const NetworkDispatcher::ptr& dispatcher) : NetworkReceiver{dispatcher}, dptr(this)
+RemoteConfiguration::RemoteConfiguration(const NetworkDispatcherPtr& dispatcher) : NetworkReceiver{dispatcher}, dptr(this)
 {
   register_handler(ConfigurationProtocol::GetReply, [this](const NetworkPacket::ptr &packet) {
     QString name;

@@ -27,13 +27,13 @@
 using namespace std;
 
 DPTR_IMPL(NetworkClient) {
-  NetworkDispatcher::ptr dispatcher;
+  NetworkDispatcherPtr dispatcher;
   unique_ptr<QTcpSocket> socket;
   bool imager_is_running = false;
   NetworkPacket::ptr helloPacket;
 };
 
-NetworkClient::NetworkClient(const NetworkDispatcher::ptr &dispatcher, QObject *parent)
+NetworkClient::NetworkClient(const NetworkDispatcherPtr &dispatcher, QObject *parent)
   : QObject{parent}, NetworkReceiver{dispatcher}, dptr(dispatcher, make_unique<QTcpSocket>())
 {
   static bool metatypes_registered = false;

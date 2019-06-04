@@ -21,7 +21,6 @@
 #define NETWORK_PROTOCOL_H
 
 #include <QString>
-#include "network/networkdispatcher.h"
 #include "network/networkpacket.h"
 #include "commons/configuration.h"
 #define ADD_PROTOCOL_NAME(name) static const NetworkPacket::Type name;

@@ -44,7 +44,7 @@ using namespace std;
 DPTR_IMPL(ConnectionManager) {
   ConnectionManager *q;
   unique_ptr<Ui::ConnectionManager> ui;
-  NetworkDispatcher::ptr dispatcher;
+  NetworkDispatcherPtr dispatcher;
   RemoteDriverPtr remoteDriver;
   NetworkClient::ptr client;
   unique_ptr<RemoteConfiguration> configuration;

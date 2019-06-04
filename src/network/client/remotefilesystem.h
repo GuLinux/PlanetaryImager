@@ -19,9 +19,12 @@
 #ifndef REMOTEFILESYSTEM_H
 #define REMOTEFILESYSTEM_H
 
-#include "network/networkdispatcher.h"
 #include "c++/dptr.h"
 #include <QList>
+#include "commons/fwd.h"
+#include "network/networkreceiver.h"
+
+FWD_PTR(NetworkDispatcher)
 
 class RemoteFilesystem;
 class FilesystemEntry {
@@ -45,7 +48,7 @@ class RemoteFilesystem : public NetworkReceiver, public std::enable_shared_from_
 {
 public:
   typedef std::shared_ptr<RemoteFilesystem> ptr;
-  RemoteFilesystem(const NetworkDispatcher::ptr &dispatcher);
+  RemoteFilesystem(const NetworkDispatcherPtr &dispatcher);
   ~RemoteFilesystem();
   
   FilesystemEntry::ptr entry(const QString &path);

@@ -19,6 +19,7 @@
 
 #include "configurationforwarder.h"
 #include "network/protocol/configurationprotocol.h"
+#include "network/networkdispatcher.h"
 
 using namespace std;
 using namespace std::placeholders;
@@ -53,7 +54,7 @@ d->settings_list[#name] = #type;
 }; \
 d->settings_list[#name] = #type;
 
-ConfigurationForwarder::ConfigurationForwarder(Configuration &configuration, const NetworkDispatcher::ptr& dispatcher) : NetworkReceiver{dispatcher}, dptr(configuration, this)
+ConfigurationForwarder::ConfigurationForwarder(Configuration &configuration, const NetworkDispatcherPtr& dispatcher) : NetworkReceiver{dispatcher}, dptr(configuration, this)
 {
   register_handler(ConfigurationProtocol::Get, bind(&Private::get, d.get(), _1));
   register_handler(ConfigurationProtocol::Set, bind(&Private::set, d.get(), _1));

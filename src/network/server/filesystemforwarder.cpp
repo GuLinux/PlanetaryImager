@@ -18,6 +18,7 @@
 
 #include "filesystemforwarder.h"
 #include "network/protocol/filesystemprotocol.h"
+#include "network/networkdispatcher.h"
 #include <QFileInfo>
 #include <QDir>
 #include "commons/utils.h"
@@ -31,7 +32,7 @@ DPTR_IMPL(FilesystemForwarder) {
   void listChildren(const NetworkPacket::ptr &packet);
 };
 
-FilesystemForwarder::FilesystemForwarder(const NetworkDispatcher::ptr& dispatcher) : NetworkReceiver{dispatcher}, dptr(this)
+FilesystemForwarder::FilesystemForwarder(const NetworkDispatcherPtr& dispatcher) : NetworkReceiver{dispatcher}, dptr(this)
 {
   register_handler(FilesystemProtocol::FileInfo, bind(&Private::entry, d.get(), _1));
   register_handler(FilesystemProtocol::Children, bind(&Private::listChildren, d.get(), _1));

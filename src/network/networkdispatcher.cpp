@@ -18,9 +18,9 @@
  */
 
 #include "networkdispatcher.h"
+#include "networkreceiver.h"
 #include <QHash>
 #include <QHash>
-#include <QCoreApplication>
 #include "commons/utils.h"
 #include <QCoreApplication>
 #include "Qt/qt_strings_helper.h"
@@ -38,53 +38,6 @@ DPTR_IMPL(NetworkDispatcher) {
   uint64_t sent;
   void debugPacket(const NetworkPacket::ptr &packet, const QString &prefix);
 };
-
-
-DPTR_IMPL(NetworkReceiver) {
-  const NetworkDispatcher::ptr dispatcher;
-  QHash<NetworkPacket::Type, bool> packets_processed;
-  QHash<NetworkPacket::Type, NetworkReceiver::HandlePacket> handlers;
-};
-
-NetworkReceiver::NetworkReceiver(const NetworkDispatcher::ptr &dispatcher) : dptr(dispatcher)
-{
-  dispatcher->attach(this);
-}
-
-NetworkReceiver::~NetworkReceiver()
-{
-  d->dispatcher->detach(this);
-}
-
-NetworkDispatcher::ptr NetworkReceiver::dispatcher() const
-{
-  return d->dispatcher;
-}
-
-
-void NetworkReceiver::wait_for_processed(const NetworkPacket::Type &name) const
-{
-  if(! d->dispatcher->is_connected())
-    return;
-  d->packets_processed[name] = false;
-  while(! d->packets_processed[name] && d->dispatcher->is_connected())
-    qApp->processEvents();
-}
-
-
-
-void NetworkReceiver::register_handler(const NetworkPacket::Type& name, const HandlePacket handler)
-{
-  d->handlers[name] = handler;
-}
-
-void NetworkReceiver::handle(const NetworkPacket::ptr& packet)
-{
-  auto handler = d->handlers[packet->name()];
-  if(handler)
-    handler(packet);
-  d->packets_processed[packet->name()] = true;
-}
 
 
 

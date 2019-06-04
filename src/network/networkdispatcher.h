@@ -25,27 +25,15 @@
 #include <QtNetwork/QTcpSocket>
 #include "c++/dptr.h"
 #include "networkpacket.h"
+#include "commons/fwd.h"
 
-class NetworkDispatcher;
-class NetworkReceiver {
-public:
-  NetworkReceiver(const std::shared_ptr<NetworkDispatcher> &dispatcher);
-  void handle(const NetworkPacket::ptr &packet);
-  virtual ~NetworkReceiver();
-protected:
-  typedef std::function<void(const NetworkPacket::ptr &)> HandlePacket;
-  void register_handler(const NetworkPacket::Type &name, const HandlePacket handler);
-  void wait_for_processed(const NetworkPacket::Type &name) const;
-  std::shared_ptr<NetworkDispatcher> dispatcher() const;
-private:
-  DPTR
-};
+FWD(NetworkReceiver)
+FWD_PTR(NetworkDispatcher)
 
 class NetworkDispatcher : public QObject
 {
   Q_OBJECT
 public:
-  typedef std::shared_ptr<NetworkDispatcher> ptr;
   NetworkDispatcher(QObject *parent = nullptr);
   ~NetworkDispatcher();
   void attach(NetworkReceiver *receiver);

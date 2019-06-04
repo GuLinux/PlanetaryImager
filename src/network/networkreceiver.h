@@ -1,6 +1,6 @@
 /*
  * GuLinux Planetary Imager - https://github.com/GuLinux/PlanetaryImager
- * Copyright (C) 2016  Marco Gulino <marco@gulinux.net>
+ * Copyright (C) 2019  Marco Gulino <marco@gulinux.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -17,27 +17,31 @@
  *
  */
 
-#ifndef NETWORKDRIVER_H
-#define NETWORKDRIVER_H
+#ifndef NETWORKRECEIVER_H
+#define NETWORKRECEIVER_H
 
+#include <functional>
+#include <QObject>
+#include <QtNetwork/QTcpSocket>
 #include "c++/dptr.h"
+#include "networkpacket.h"
 #include "commons/fwd.h"
-#include "network/networkreceiver.h"
 
-FWD_PTR(PlanetaryImager)
-FWD(Imager)
-FWD_PTR(DriverForwarder)
 FWD_PTR(NetworkDispatcher)
+FWD_PTR(NetworkReceiver)
 
-class DriverForwarder : public NetworkReceiver
-{
+class NetworkReceiver {
 public:
-    typedef std::function<void(Imager *)> OnImagerChanged;
-    DriverForwarder(const NetworkDispatcherPtr &dispatcher, const PlanetaryImagerPtr &planetaryImager);
-    ~DriverForwarder();
-    void getStatus(QVariantMap &status);
+  NetworkReceiver(const NetworkDispatcherPtr &dispatcher);
+  void handle(const NetworkPacket::ptr &packet);
+  virtual ~NetworkReceiver();
+protected:
+  typedef std::function<void(const NetworkPacket::ptr &)> HandlePacket;
+  void register_handler(const NetworkPacket::Type &name, const HandlePacket handler);
+  void wait_for_processed(const NetworkPacket::Type &name) const;
+  NetworkDispatcherPtr dispatcher() const;
 private:
   DPTR
 };
 
-#endif // NETWORKDRIVER_H
+#endif // NETWORKRECEIVER_H

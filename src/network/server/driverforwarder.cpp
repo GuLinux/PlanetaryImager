@@ -21,6 +21,7 @@
 #include <QObject>
 #include "driverforwarder.h"
 #include "network/protocol/driverprotocol.h"
+#include "network/networkdispatcher.h"
 #include "Qt/qt_functional.h"
 #include "planetaryimager.h"
 
@@ -50,7 +51,7 @@ DPTR_IMPL(DriverForwarder) {
 
 #define REGISTER_HANDLER(protocol, name) register_handler(protocol::name, bind(&Private::name, d.get(), _1));
 
-DriverForwarder::DriverForwarder(const NetworkDispatcher::ptr &dispatcher, const PlanetaryImagerPtr &planetaryImager) 
+DriverForwarder::DriverForwarder(const NetworkDispatcherPtr &dispatcher, const PlanetaryImagerPtr &planetaryImager) 
   : NetworkReceiver{dispatcher}, dptr(planetaryImager, this)
 {
   REGISTER_HANDLER(DriverProtocol, CameraList)

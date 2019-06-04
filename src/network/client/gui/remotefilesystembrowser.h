@@ -20,13 +20,15 @@
 #define REMOTEFILESYSTEMBROWSER_H
 
 #include "commons/filesystembrowser.h"
-#include "network/networkdispatcher.h"
 #include "c++/dptr.h"
+#include "commons/fwd.h"
+
+FWD_PTR(NetworkDispatcher)
 
 class RemoteFilesystemBrowser : public FilesystemBrowser
 {
 public:
-  RemoteFilesystemBrowser(const NetworkDispatcher::ptr &dispatcher);
+  RemoteFilesystemBrowser(const NetworkDispatcherPtr &dispatcher);
   ~RemoteFilesystemBrowser();
   bool isLocal() const override { return false; }
 public slots:

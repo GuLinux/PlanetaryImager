@@ -35,7 +35,7 @@ using namespace std::placeholders;
 DPTR_IMPL(NetworkServer) {
   NetworkServer *q;
   PlanetaryImagerPtr planetaryImager;
-  NetworkDispatcher::ptr dispatcher;
+  NetworkDispatcherPtr dispatcher;
   FramesForwarder::ptr framesForwarder;
   unique_ptr<QTcpServer> server;
   DriverForwarderPtr forwarder;
@@ -49,7 +49,7 @@ DPTR_IMPL(NetworkServer) {
 
 NetworkServer::NetworkServer(
   const PlanetaryImagerPtr &planetaryImager,
-  const NetworkDispatcher::ptr &dispatcher,
+  const NetworkDispatcherPtr &dispatcher,
   const FramesForwarder::ptr &framesForwarder,
   QObject *parent)
   : QObject{parent}, NetworkReceiver{dispatcher}, dptr(this, planetaryImager, dispatcher, framesForwarder, make_unique<QTcpServer>())

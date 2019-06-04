@@ -21,14 +21,16 @@
 #define REMOTECONFIGURATION_H
 
 #include "commons/configuration.h"
-#include "network/networkdispatcher.h"
 #include "c++/dptr.h"
+#include "commons/fwd.h"
+#include "network/networkreceiver.h"
 
-class RemoteConfiguration : public Configuration, public NetworkReceiver
-{
+FWD_PTR(NetworkDispatcher)
+
+class RemoteConfiguration : public Configuration, public NetworkReceiver {
 Q_OBJECT
 public:
-  RemoteConfiguration(const NetworkDispatcher::ptr &dispatcher);
+  RemoteConfiguration(const NetworkDispatcherPtr &dispatcher);
   ~RemoteConfiguration();
   
   declare_setting(buffered_output, bool )

@@ -19,6 +19,7 @@
 
 #include "remotedriver.h"
 #include "network/protocol/driverprotocol.h"
+#include "network/networkdispatcher.h"
 #include <QCoreApplication>
 #include "remoteimager.h"
 using namespace std;
@@ -30,13 +31,13 @@ DPTR_IMPL(RemoteDriver) {
 
 class RemoteCamera : public Camera {
 public:
-  RemoteCamera(const QString &name, qlonglong address, const NetworkDispatcher::ptr &dispatcher) : _name{name}, _address{address}, _dispatcher{dispatcher} {}
+  RemoteCamera(const QString &name, qlonglong address, const NetworkDispatcherPtr &dispatcher) : _name{name}, _address{address}, _dispatcher{dispatcher} {}
   Imager * imager(const ImageHandlerPtr & imageHandler) const override;
   QString name() const override { return _name; }
 private:
   const QString _name;
   const qlonglong _address;
-  const NetworkDispatcher::ptr _dispatcher;
+  const NetworkDispatcherPtr _dispatcher;
 };
 
 Imager * RemoteCamera::imager(const ImageHandlerPtr& imageHandler) const
@@ -45,7 +46,7 @@ Imager * RemoteCamera::imager(const ImageHandlerPtr& imageHandler) const
 }
 
 
-RemoteDriver::RemoteDriver(const NetworkDispatcher::ptr &dispatcher) : NetworkReceiver{dispatcher}, dptr()
+RemoteDriver::RemoteDriver(const NetworkDispatcherPtr &dispatcher) : NetworkReceiver{dispatcher}, dptr()
 {
   d->status.imager_running = false;
   register_handler(DriverProtocol::CameraListReply, [this](const NetworkPacket::ptr &packet){
