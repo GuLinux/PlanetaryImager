@@ -22,15 +22,18 @@
 
 #include "network/networkdispatcher.h"
 #include "c++/dptr.h"
-#include "image_handlers/saveimages.h"
 #include <QObject>
+#include "commons/fwd.h"
+
+FWD_PTR(SaveImages)
+FWD(Imager)
 
 class SaveFileForwarder : public QObject, public NetworkReceiver
 {
   Q_OBJECT
 public:
   typedef std::shared_ptr<SaveFileForwarder> ptr;
-  SaveFileForwarder(const SaveImages::ptr &save_images, const NetworkDispatcher::ptr &dispatcher);
+  SaveFileForwarder(const SaveImagesPtr &save_images, const NetworkDispatcher::ptr &dispatcher);
   ~SaveFileForwarder();
   void setImager(Imager *imager);
 signals:

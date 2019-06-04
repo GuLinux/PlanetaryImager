@@ -20,14 +20,15 @@
 #include "savefileforwarder.h"
 #include <QObject>
 #include "network/protocol/savefileprotocol.h"
+#include "image_handlers/saveimages.h"
 
 DPTR_IMPL(SaveFileForwarder) {
-  const SaveImages::ptr save_images;
+  const SaveImagesPtr save_images;
   SaveFileForwarder *q;
   Imager *imager = nullptr;
 };
 
-SaveFileForwarder::SaveFileForwarder(const SaveImages::ptr& save_images, const NetworkDispatcher::ptr& dispatcher) : NetworkReceiver{dispatcher}, dptr(save_images)
+SaveFileForwarder::SaveFileForwarder(const SaveImagesPtr& save_images, const NetworkDispatcher::ptr& dispatcher) : NetworkReceiver{dispatcher}, dptr(save_images)
 {
   register_handler(SaveFileProtocol::StartRecording, [this](const NetworkPacket::ptr &) { d->save_images->startRecording(d->imager); });
   register_handler(SaveFileProtocol::slotSetPaused, [this](const NetworkPacket::ptr &p) { d->save_images->setPaused(p->payloadVariant().toBool()); });

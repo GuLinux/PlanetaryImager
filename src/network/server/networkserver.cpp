@@ -26,6 +26,7 @@
 #include "Qt/qt_strings_helper.h"
 #include <QElapsedTimer>
 #include "network/server/filesystemforwarder.h"
+#include "image_handlers/saveimages.h"
 
 using namespace std;
 using namespace std::placeholders;

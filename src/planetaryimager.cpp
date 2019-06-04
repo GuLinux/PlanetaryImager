@@ -22,6 +22,7 @@
 #include "commons/messageslogger.h"
 #include <QThread>
 #include <QTimer>
+#include "image_handlers/saveimages.h"
 
 #ifdef STATIC_WINDOWS_PLUGIN
 #pragma message("Initializing Qt static plugins")
@@ -33,7 +34,7 @@ Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
 DPTR_IMPL(PlanetaryImager) {
   Driver::ptr driver;
   ImageHandlerPtr imageHandler;
-  SaveImages::ptr saveImages;
+  SaveImagesPtr saveImages;
   Configuration &configuration;
   PlanetaryImager *q;
   
@@ -46,7 +47,7 @@ DPTR_IMPL(PlanetaryImager) {
 PlanetaryImager::PlanetaryImager(
   const Driver::ptr &driver,
   const ImageHandlerPtr &imageHandler,
-  const SaveImages::ptr &saveImages,
+  const SaveImagesPtr &saveImages,
   Configuration &configuration
 ) : QObject{}, dptr(driver, imageHandler, saveImages, configuration, this)
 {
@@ -63,7 +64,7 @@ Imager * PlanetaryImager::imager() const
   return d->imager;
 }
 
-SaveImages::ptr PlanetaryImager::saveImages() const
+SaveImagesPtr PlanetaryImager::saveImages() const
 {
   return d->saveImages;
 }

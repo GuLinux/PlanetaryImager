@@ -23,10 +23,11 @@
 #include "c++/dptr.h"
 #include "drivers/driver.h"
 #include "drivers/imager.h"
-#include "image_handlers/saveimages.h"
 #include "commons/configuration.h"
+#include "commons/fwd.h"
 
 FWD_PTR(ImageHandler)
+FWD_PTR(SaveImages)
 
 class PlanetaryImager : public QObject
 {
@@ -36,13 +37,13 @@ public:
     PlanetaryImager(
         const Driver::ptr &driver,
         const ImageHandlerPtr &imageHandler,
-        const SaveImages::ptr &saveImages,
+        const SaveImagesPtr &saveImages,
         Configuration &configuration
     );
     ~PlanetaryImager();
   Driver::Cameras cameras() const;
   Imager *imager() const;
-  SaveImages::ptr saveImages() const;
+  SaveImagesPtr saveImages() const;
   Configuration &configuration() const;
   
 public slots:
