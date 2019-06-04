@@ -28,12 +28,12 @@
 FWD_PTR(SaveImages)
 FWD(Imager)
 FWD_PTR(NetworkDispatcher)
+FWD_PTR(SaveFileForwarder)
 
 class SaveFileForwarder : public QObject, public NetworkReceiver
 {
   Q_OBJECT
 public:
-  typedef std::shared_ptr<SaveFileForwarder> ptr;
   SaveFileForwarder(const SaveImagesPtr &save_images, const NetworkDispatcherPtr &dispatcher);
   ~SaveFileForwarder();
   void setImager(Imager *imager);

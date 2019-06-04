@@ -17,7 +17,7 @@
  *
  */
 
-#include "savefileforwarder.h"
+#include "network/server/savefileforwarder.h"
 #include <QObject>
 #include "network/protocol/savefileprotocol.h"
 #include "image_handlers/saveimages.h"
