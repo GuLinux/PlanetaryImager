@@ -21,10 +21,13 @@
 
 #include "ASICamera2.h"
 #include "drivers/imager.h"
+#include "commons/fwd.h"
+
+
+FWD_PTR(ASIControl)
 
 struct ASIControl {
-  typedef std::shared_ptr<ASIControl> ptr;
-  typedef std::vector<ptr> vector;
+  typedef std::vector<ASIControlPtr> vector;
   int index;
   int camera_id;
   ASIControl(int index, int camera_id);
@@ -37,5 +40,6 @@ struct ASIControl {
   ASIControl &reload();
   ASIControl &set(qlonglong new_value, bool is_auto);
 };
+
 
 #endif // ASICONTROL_H

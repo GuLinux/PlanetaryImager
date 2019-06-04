@@ -18,6 +18,7 @@
 
 #include "threadimagehandler.h"
 #include <QThread>
+#include "commons/frame.h"
 
 using namespace std;
 
@@ -34,7 +35,7 @@ class ThreadImageHandler::Private::Worker : public QObject {
 public:
   Worker(const ImageHandler::ptr &imageHandler, QObject *parent = nullptr);
 public slots:
-  void handle(Frame::const_ptr frame);
+  void handle(FrameConstPtr frame);
 private:
   ImageHandler::ptr imageHandler;
 };
@@ -45,7 +46,7 @@ ThreadImageHandler::Private::Worker::Worker(const ImageHandler::ptr& imageHandle
 }
 
 
-void ThreadImageHandler::Private::Worker::handle(Frame::const_ptr frame)
+void ThreadImageHandler::Private::Worker::handle(FrameConstPtr frame)
 {
   imageHandler->handle(frame);
 }
@@ -64,9 +65,9 @@ ThreadImageHandler::~ThreadImageHandler()
   d->thread->wait();
 }
 
-void ThreadImageHandler::doHandle(Frame::const_ptr frame)
+void ThreadImageHandler::doHandle(FrameConstPtr frame)
 {
-  QMetaObject::invokeMethod(d->worker.get(), "handle", Qt::QueuedConnection, Q_ARG(Frame::const_ptr, frame));
+  QMetaObject::invokeMethod(d->worker.get(), "handle", Qt::QueuedConnection, Q_ARG(FrameConstPtr, frame));
 }
 
 #include "threadimagehandler.moc"

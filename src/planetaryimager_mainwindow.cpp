@@ -57,6 +57,7 @@
 #include "c++/stlutils.h"
 #include "commons/exposuretimer.h"
 #include "Qt/qt_functional.h"
+#include <opencv2/opencv.hpp>
 
 #include "planetaryimager.h"
 

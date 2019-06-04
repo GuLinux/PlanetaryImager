@@ -29,14 +29,15 @@
 #include "network/server/networkserver.h"
 #include "network/server/configurationforwarder.h"
 #include "image_handlers/threadimagehandler.h"
+#include "commons/frame.h"
 
 using namespace std;
 
 
 int main(int argc, char** argv)
 {
-    qRegisterMetaType<Frame::ptr>("Frame::ptr");
-    qRegisterMetaType<Frame::const_ptr>("Frame::const_ptr");
+    qRegisterMetaType<FramePtr>("FramePtr");
+    qRegisterMetaType<FrameConstPtr>("FrameConstPtr");
     qRegisterMetaType<Imager*>("Imager*");
     CrashHandler crash_handler({SIGSEGV, SIGABRT});
     cerr << "Starting PlanetaryImager - version " << PLANETARY_IMAGER_VERSION << " (" << HOST_PROCESSOR << ")" << endl;

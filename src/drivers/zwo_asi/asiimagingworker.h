@@ -30,7 +30,7 @@ public:
   typedef std::shared_ptr<ASIImagingWorker> ptr;
   ASIImagingWorker(const QRect &roi, int bin, const ASI_CAMERA_INFO &info, ASI_IMG_TYPE format);
   ~ASIImagingWorker();
-  Frame::ptr shoot() override;
+  FramePtr shoot() override;
 
   QRect roi() const;
   ASI_IMG_TYPE format() const;

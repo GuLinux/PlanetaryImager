@@ -21,6 +21,7 @@
 #include "filewriter.h"
 #include "c++/dptr.h"
 #include "commons/configuration.h"
+
 class ImageFileWriter : public FileWriter
 {
 public:
@@ -30,7 +31,7 @@ public:
   ~ImageFileWriter();
 private:
 
-    void doHandle(Frame::const_ptr frame) override;
+    void doHandle(FrameConstPtr frame) override;
 
   DPTR
 };

@@ -54,7 +54,7 @@ DPTR_IMPL(ZWO_ASI_Imager) {
     Properties properties;
 
     ASIControl::vector controls;
-    ASIControl::ptr temperature_control;
+    ASIControlPtr temperature_control;
     
     weak_ptr<ASIImagingWorker> worker;
     ROIValidator::ptr roi_validator;
@@ -193,7 +193,7 @@ void ZWO_ASI_Imager::setControl(const Control& control)
     return;
   }
   auto camera_control_it = find_if(d->controls.begin(), d->controls.end(),
-			  [&](const ASIControl::ptr &c){ return c->caps.ControlType == static_cast<ASI_CONTROL_TYPE>(control.id); });
+			  [&](const ASIControlPtr &c){ return c->caps.ControlType == static_cast<ASI_CONTROL_TYPE>(control.id); });
   if(camera_control_it != d->controls.end()) {
     auto camera_control = *camera_control_it;
     qDebug() << "Changing control " << camera_control->control();

@@ -30,6 +30,7 @@
 #include "imagerexception.h"
 #include <QElapsedTimer>
 #include "commons/messageslogger.h"
+#include "commons/frame.h"
 
 
 using namespace std;

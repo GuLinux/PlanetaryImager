@@ -90,7 +90,7 @@ public:
                     /// Must be already validated; also used as the initial frame size for Format7 modes
                     const QRect &roi);
 
-    Frame::ptr shoot() override;
+    FramePtr shoot() override;
 
     virtual ~FC2ImagerWorker();
 };

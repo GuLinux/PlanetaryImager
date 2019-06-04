@@ -48,7 +48,7 @@ signals:
   void histogram(const QImage &, const QMap<Histogram::Channel, QVariantMap> &, Histogram::Channel channel);
 private:
 
-  void doHandle(Frame::const_ptr frame) override;
+  void doHandle(FrameConstPtr frame) override;
 
   DPTR
 };

@@ -22,6 +22,7 @@
 #include "network/networkdispatcher.h"
 #include "image_handlers/saveimages.h"
 #include "c++/dptr.h"
+#include "commons/fwd.h"
 
 class RemoteSaveImages : public SaveImages, public NetworkReceiver
 {
@@ -36,7 +37,7 @@ public slots:
   void setPaused(bool paused) override;
 private:
 
-  void doHandle(Frame::const_ptr frame) override { }
+  void doHandle(FrameConstPtr frame) override { }
 
   DPTR
 };

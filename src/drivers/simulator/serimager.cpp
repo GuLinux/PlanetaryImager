@@ -24,6 +24,7 @@
 #include <QThread>
 #include <QElapsedTimer>
 #include <QFileInfo>
+#include "commons/frame.h"
 
 using namespace std;
 
@@ -35,7 +36,7 @@ class SERImagerWorker : public ImagerThread::Worker {
 public:
   SERImagerWorker(const QString &file);
   ~SERImagerWorker();
-  Frame::ptr shoot() override;
+  FramePtr shoot() override;
 private:
   QFile file;
   SER_Header header;
@@ -70,7 +71,7 @@ SERImagerWorker::SERImagerWorker(const QString& file) : file{file}
   qDebug() << "Opened SER file: " << header.frames << " frames";
 }
 
-Frame::ptr SERImagerWorker::shoot()
+FramePtr SERImagerWorker::shoot()
 {
   QElapsedTimer elapsed;
   elapsed.start();

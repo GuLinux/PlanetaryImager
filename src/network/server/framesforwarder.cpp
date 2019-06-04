@@ -22,6 +22,7 @@
 #include <QElapsedTimer>
 #include <QtConcurrent/QtConcurrent>
 #include <atomic>
+#include "commons/frame.h"
 
 using namespace std;
 
@@ -42,7 +43,7 @@ FramesForwarder::~FramesForwarder()
 {
 }
 
-void FramesForwarder::doHandle(Frame::const_ptr frame)
+void FramesForwarder::doHandle(FrameConstPtr frame)
 {
   if(! DriverProtocol::isForwardingEnabled() || d->elapsed.elapsed() < (d->recording ? 2000 : 50 ) || ! d->enabled) // TODO: variable rate, depending on network delay?
     return;

@@ -28,7 +28,7 @@ class V4L2ImagingWorker : public ImagerThread::Worker
 public:
   V4L2ImagingWorker(const V4L2Device::ptr &device, const v4l2_format &format);
   virtual ~V4L2ImagingWorker();
-  Frame::ptr shoot() override;
+  FramePtr shoot() override;
 private:
   DPTR
 };

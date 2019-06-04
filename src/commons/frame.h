@@ -26,11 +26,13 @@
 #include <QDateTime>
 #include <QVariantMap>
 #include <chrono>
+#include "commons/fwd.h"
+
+FWD_PTR(Frame)
+
 class Frame
 {
 public:
-  typedef std::shared_ptr<Frame> ptr;
-  using const_ptr = std::shared_ptr<const Frame>;
   enum ColorFormat {
       Mono,
       RGB,
@@ -55,7 +57,7 @@ public:
   ByteOrder byteOrder() const;
   
   QVariantMap const as_variant();
-  static ptr from_variant(const QVariantMap &map);
+  static FramePtr from_variant(const QVariantMap &map);
   typedef std::chrono::duration<double> Seconds;
   Seconds exposure() const;
   void set_exposure(const Seconds &exposure);
@@ -63,5 +65,7 @@ public:
 private:
   DPTR
 };
+
+
 
 #endif // FRAME_H

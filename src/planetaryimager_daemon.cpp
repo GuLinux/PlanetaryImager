@@ -32,13 +32,15 @@
 #include "planetaryimager.h"
 #include "Qt/qt_strings_helper.h"
 #include "commons/commandline.h"
+#include "commons/frame.h"
+
 using namespace std;
 
 
 int main(int argc, char** argv)
 {
-    qRegisterMetaType<Frame::ptr>("Frame::ptr");
-    qRegisterMetaType<Frame::const_ptr>("Frame::const_ptr");
+    qRegisterMetaType<FramePtr>("FramePtr");
+    qRegisterMetaType<FrameConstPtr>("FrameConstPtr");
     CrashHandler crash_handler({SIGSEGV, SIGABRT});
     cerr << "Starting PlanetaryImager Daemon - version " << PLANETARY_IMAGER_VERSION << " (" << HOST_PROCESSOR << ")" << endl;
     QCoreApplication app(argc, argv);

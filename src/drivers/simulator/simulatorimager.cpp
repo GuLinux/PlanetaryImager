@@ -26,6 +26,7 @@
 #include <QRect>
 #include "drivers/imagerthread.h"
 #include "drivers/roi.h"
+#include "commons/frame.h"
 
 using namespace std;
 using namespace std::chrono_literals;
@@ -45,7 +46,7 @@ class SimulatorImagerWorker : public ImagerThread::Worker {
 public:
   SimulatorImagerWorker(SimulatorSettings &settings);
   
-  Frame::ptr shoot() override;
+  FramePtr shoot() override;
   void setROI(const QRect &roi);
   enum ImageType{ BGR = 0, Mono = 10, Bayer = 20};
   QRect ROI() const { return roi; }
@@ -164,7 +165,7 @@ SimulatorImagerWorker::SimulatorImagerWorker(SimulatorSettings &settings) : sett
 }
 
 
-Frame::ptr SimulatorImagerWorker::shoot()
+FramePtr SimulatorImagerWorker::shoot()
 {
   static map<SimulatorImagerWorker::ImageType, Frame::ColorFormat> formats {
     {Mono, Frame::Mono},

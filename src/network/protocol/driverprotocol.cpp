@@ -22,6 +22,7 @@
 #include <functional>
 #include <opencv2/opencv.hpp>
 #include "commons/opencv_utils.h"
+#include "commons/frame.h"
 #include <QJsonDocument>
 
 using namespace std;
@@ -194,7 +195,7 @@ void DriverProtocol::decode(Imager::Controls& controls, const NetworkPacket::ptr
   transform(begin(variant_controls), end(variant_controls), back_inserter(controls), bind(variant2control, _1));
 }
 
-NetworkPacket::ptr DriverProtocol::sendFrame(Frame::const_ptr frame)
+NetworkPacket::ptr DriverProtocol::sendFrame(FrameConstPtr frame)
 {
   if(format_parameters.format == Configuration::Network_NoImage)
     return {};
@@ -228,7 +229,7 @@ NetworkPacket::ptr DriverProtocol::sendFrame(Frame::const_ptr frame)
   return packet;
 }
 
-Frame::ptr DriverProtocol::decodeFrame(const NetworkPacket::ptr& packet)
+FramePtr DriverProtocol::decodeFrame(const NetworkPacket::ptr& packet)
 {
   QByteArray image = packet->payload();
   if(format_parameters.compression && format_parameters.format == Configuration::Network_RAW) {

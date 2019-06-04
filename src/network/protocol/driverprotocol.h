@@ -22,6 +22,9 @@
 #include "drivers/driver.h"
 #include "network/protocol/protocol.h"
 #include <QList>
+#include "commons/fwd.h"
+FWD_PTR(Frame)
+
 class DriverProtocol : public NetworkProtocol {
 public:
   ADD_PROTOCOL_PACKET_NAME(CameraList)
@@ -64,8 +67,8 @@ public:
   static Imager::Control decodeControl(const NetworkPacket::ptr &packet);
 
   static void setFormatParameters(const FormatParameters &parameters);
-  static NetworkPacket::ptr sendFrame(Frame::const_ptr frame);
-  static Frame::ptr decodeFrame(const NetworkPacket::ptr &packet);
+  static NetworkPacket::ptr sendFrame(FrameConstPtr frame);
+  static FramePtr decodeFrame(const NetworkPacket::ptr &packet);
 
   static bool isForwardingEnabled();
 

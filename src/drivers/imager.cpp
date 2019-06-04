@@ -26,7 +26,7 @@ using namespace std::placeholders;
 
 DPTR_IMPL(Imager) {
   const ImageHandler::ptr image_handler;
-  ImagerThread::ptr imager_thread;
+  ImagerThreadPtr imager_thread;
   LOG_C_SCOPE(Imager);
   unique_ptr<QHash<Imager::Capability, bool>> capabilities;
   bool destroyed = false;

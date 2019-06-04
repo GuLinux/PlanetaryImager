@@ -21,15 +21,16 @@
 #include <memory>
 #include <QList>
 #include <algorithm>
-#include "commons/frame.h"
+#include "commons/fwd.h"
+FWD_PTR(Frame)
 
 class ImageHandler {
 protected:
-    virtual void doHandle(Frame::const_ptr frame) = 0;
+    virtual void doHandle(FrameConstPtr frame) = 0;
 
 public:
   typedef std::shared_ptr<ImageHandler> ptr;
-  void handle(Frame::const_ptr frame) { doHandle(frame); }
+  void handle(FrameConstPtr frame) { doHandle(frame); }
 };
 
 class ImageHandlers : public ImageHandler {
@@ -41,7 +42,7 @@ public:
   void clear() { handlers.clear(); }
 private:
 
-  void doHandle(Frame::const_ptr frame) override {
+  void doHandle(FrameConstPtr frame) override {
     for(auto handler: handlers)
       handler->handle(frame);
   }

@@ -24,17 +24,19 @@
 #include "image_handlers/imagehandler.h"
 #include "dptr.h"
 #include <chrono>
-#include <QWaitCondition>
+#include "commons/fwd.h"
+FWD_PTR(Frame)
+FWD(Imager)
+FWD_PTR(ImagerThread)
+FWD_PTR(QWaitCondition)
 
-class Imager;
 class ImagerThread
 {
   public:
-  typedef std::shared_ptr<ImagerThread> ptr;
   typedef std::function<void()> Job;
   class Worker {
   public:
-    virtual Frame::ptr shoot() = 0;
+    virtual FramePtr shoot() = 0;
     typedef std::shared_ptr<Worker> ptr;
     typedef std::function<ptr()> factory;
   };
@@ -42,7 +44,7 @@ class ImagerThread
   ~ImagerThread();
   void stop();
   void start();
-  std::shared_ptr<QWaitCondition> push_job(const Job &job);
+  QWaitConditionPtr push_job(const Job &job);
   void set_exposure(const std::chrono::duration<double> &exposure);
   void setCaptureEndianess(Configuration::CaptureEndianess captureEndianess);
 private:

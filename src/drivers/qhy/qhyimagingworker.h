@@ -22,7 +22,6 @@
 
 #include "drivers/imagerthread.h"
 #include "c++/dptr.h"
-
 #include "qhyccd.h"
 
 class QHYImagingWorker : public ImagerThread::Worker
@@ -30,7 +29,7 @@ class QHYImagingWorker : public ImagerThread::Worker
 public:
   QHYImagingWorker(qhyccd_handle *handle);
   ~QHYImagingWorker();
-  Frame::ptr shoot() override;
+  FramePtr shoot() override;
   typedef std::shared_ptr<QHYImagingWorker> ptr;
 private:
   DPTR
