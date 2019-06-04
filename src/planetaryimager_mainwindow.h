@@ -22,7 +22,6 @@
 #include <QMainWindow>
 #include "dptr.h"
 #include "commons/messageslogger.h"
-#include "commons/filesystembrowser.h"
 #include "commons/fwd.h"
 
 FWD_PTR(ImageHandler)
@@ -30,6 +29,7 @@ FWD_PTR(ImageHandlers)
 FWD_PTR(PlanetaryImager)
 FWD_PTR(Imager)
 FWD_PTR(Camera)
+FWD_PTR(FilesystemBrowser)
 
 namespace Ui
 {
@@ -44,7 +44,7 @@ public:
   PlanetaryImagerMainWindow(
       const PlanetaryImagerPtr &planetaryImager,
       const ImageHandlersPtr &imageHandlers,
-      const FilesystemBrowser::ptr &filesystemBrowser,
+      const FilesystemBrowserPtr &filesystemBrowser,
       const QString &logFilePath = {},
       QWidget* parent = 0,
       Qt::WindowFlags flags = 0

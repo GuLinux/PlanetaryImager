@@ -38,7 +38,7 @@ DPTR_IMPL(NetworkServer) {
   NetworkDispatcher::ptr dispatcher;
   FramesForwarder::ptr framesForwarder;
   unique_ptr<QTcpServer> server;
-  DriverForwarder::ptr forwarder;
+  DriverForwarderPtr forwarder;
   FilesystemForwarder::ptr filesystemForwarder;
   void new_connection();
   void bytes_sent(quint64 written, quint64 sent);

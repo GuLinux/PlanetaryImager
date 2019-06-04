@@ -19,6 +19,7 @@
 #include "planetaryimager_mainwindow.h"
 #include "drivers/imager.h"
 #include "ui_planetaryimager_mainwindow.h"
+#include "commons/filesystembrowser.h"
 #include <functional>
 #include "commons/utils.h"
 #include "widgets/statusbarinfowidget.h"
@@ -73,7 +74,7 @@ Q_DECLARE_METATYPE(cv::Mat)
 
 DPTR_IMPL(PlanetaryImagerMainWindow) {
   PlanetaryImagerPtr planetaryImager;
-  FilesystemBrowser::ptr filesystemBrowser;
+  FilesystemBrowserPtr filesystemBrowser;
   
   static PlanetaryImagerMainWindow *q;
   unique_ptr<Ui::PlanetaryImagerMainWindow> ui;
@@ -130,7 +131,7 @@ void PlanetaryImagerMainWindow::Private::saveState()
 PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
       const PlanetaryImagerPtr &planetaryImager,
       const ImageHandlersPtr &imageHandlers,
-      const FilesystemBrowser::ptr &filesystemBrowser,
+      const FilesystemBrowserPtr &filesystemBrowser,
       const QString &logFilePath,
       QWidget* parent,
       Qt::WindowFlags flags
