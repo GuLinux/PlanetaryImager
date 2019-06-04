@@ -17,6 +17,7 @@
  */
 
 #include "pickdirectory.h"
+#include "network/client/remotefilesystem.h"
 #include "ui_pickdirectory.h"
 #include <QStandardItem>
 #include <QStandardItemModel>
@@ -28,7 +29,7 @@ using namespace std;
 DPTR_IMPL(PickDirectory) {
   unique_ptr<Ui::PickDirectory> ui;
   shared_ptr<QStandardItemModel> model;
-  RemoteFilesystem::ptr filesystem;
+  RemoteFilesystemPtr filesystem;
   PickDirectory *q;
   void browse(const QString &path);
   static const int PathRole;
@@ -37,7 +38,7 @@ DPTR_IMPL(PickDirectory) {
 
 const int PickDirectory::Private::PathRole = Qt::UserRole +1;
 
-PickDirectory::PickDirectory(const RemoteFilesystem::ptr& filesystem, const QString& startingDirectory)
+PickDirectory::PickDirectory(const RemoteFilesystemPtr& filesystem, const QString& startingDirectory)
   : dptr(make_unique<Ui::PickDirectory>(), make_shared<QStandardItemModel>(), filesystem, this)
 {
   d->ui->setupUi(this);

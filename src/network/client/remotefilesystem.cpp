@@ -16,7 +16,7 @@
  *
  */
 
-#include "remotefilesystem.h"
+#include "network/client/remotefilesystem.h"
 #include <QDebug>
 #include "network/protocol/filesystemprotocol.h"
 #include "commons/utils.h"
@@ -30,15 +30,15 @@ DPTR_IMPL(FilesystemEntry) {
   const QString name;
   const QString path;
   const Type type;
-  RemoteFilesystem::ptr filesystem;
+  RemoteFilesystemPtr filesystem;
   List children;
-  ptr parent;
+  FilesystemEntryPtr parent;
   bool children_retrieved = false;
   void retrieve_children();
   void retrieve_parent();
 };
 
-FilesystemEntry::FilesystemEntry(const QString &name, const QString &path, Type type, const RemoteFilesystem::ptr& filesystem) : dptr(name, path, type, filesystem)
+FilesystemEntry::FilesystemEntry(const QString &name, const QString &path, Type type, const RemoteFilesystemPtr& filesystem) : dptr(name, path, type, filesystem)
 {
 }
 FilesystemEntry::~FilesystemEntry()
@@ -64,7 +64,7 @@ bool FilesystemEntry::isRoot() const
 }
 
 
-FilesystemEntry::ptr FilesystemEntry::parent() const
+FilesystemEntryPtr FilesystemEntry::parent() const
 {
   if(! isRoot() && ! d->parent)
     d->retrieve_parent();
@@ -98,9 +98,9 @@ void FilesystemEntry::Private::retrieve_parent()
 #include <QDir>
 DPTR_IMPL(RemoteFilesystem) {
   RemoteFilesystem *q;
-  typedef function<void(const FilesystemEntry::ptr &)> OnEntry;
+  typedef function<void(const FilesystemEntryPtr &)> OnEntry;
   void entry(OnEntry onEntry, const QString &name, const QString &path, bool isFile, bool isDir);
-  FilesystemEntry::ptr last_entry;
+  FilesystemEntryPtr last_entry;
   FilesystemEntry::List last_list;
   void fileInfoReply(const NetworkPacketPtr &p);
   void childrenReply(const NetworkPacketPtr &p);
@@ -116,7 +116,7 @@ RemoteFilesystem::RemoteFilesystem(const NetworkDispatcherPtr& dispatcher) : Net
 RemoteFilesystem::~RemoteFilesystem()
 {
 }
-FilesystemEntry::ptr RemoteFilesystem::entry(const QString& path)
+FilesystemEntryPtr RemoteFilesystem::entry(const QString& path)
 {
   LOG_F_SCOPE
   d->last_entry = nullptr;
@@ -142,13 +142,13 @@ void RemoteFilesystem::Private::entry(OnEntry onEntry, const QString& name, cons
 void RemoteFilesystem::Private::fileInfoReply(const NetworkPacketPtr& p)
 {
   LOG_F_SCOPE
-  FilesystemProtocol::decodeFileInfoReply(p, bind(&Private::entry, this, [=](const FilesystemEntry::ptr &e){ last_entry = e; }, _1, _2, _3, _4));
+  FilesystemProtocol::decodeFileInfoReply(p, bind(&Private::entry, this, [=](const FilesystemEntryPtr &e){ last_entry = e; }, _1, _2, _3, _4));
 }
 
 void RemoteFilesystem::Private::childrenReply(const NetworkPacketPtr& p)
 {
   LOG_F_SCOPE
-  FilesystemProtocol::decodeChildrenReply(p, bind(&Private::entry, this, [=](const FilesystemEntry::ptr &e){ last_list.push_back(e);}, _1, _2, _3, _4));
+  FilesystemProtocol::decodeChildrenReply(p, bind(&Private::entry, this, [=](const FilesystemEntryPtr &e){ last_list.push_back(e);}, _1, _2, _3, _4));
 }
 
 

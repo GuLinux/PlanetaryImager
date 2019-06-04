@@ -24,7 +24,7 @@
 using namespace std;
 
 DPTR_IMPL(RemoteFilesystemBrowser) {
-  RemoteFilesystem::ptr filesystem;
+  RemoteFilesystemPtr filesystem;
 };
 
 RemoteFilesystemBrowser::RemoteFilesystemBrowser(const NetworkDispatcherPtr& dispatcher) 
