@@ -60,7 +60,7 @@ typedef function< FileWriter::Ptr() > CreateFileWriter;
 
 struct RecordingParameters {
   CreateFileWriter fileWriterFactory;
-  RecordingInformation::ptr recording_information;
+  RecordingInformationPtr recording_information;
   Configuration::RecordingLimit limit_type;
   int64_t max_frames;
   std::chrono::duration<double> max_seconds;
@@ -298,7 +298,7 @@ void LocalSaveImages::startRecording(Imager *imager)
 {
   auto writerFactory = d->writerFactory();
   if(writerFactory) {
-    RecordingInformation::ptr recording_information;
+    RecordingInformationPtr recording_information;
 
     RecordingParameters recording{
       bind(writerFactory, imager->name(), &d->configuration),

@@ -24,11 +24,15 @@
 #include <QString>
 #include <QVariantMap>
 #include "commons/configuration.h"
-class Imager;
+#include "commons/fwd.h"
+
+
+FWD(Imager)
+FWD_PTR(RecordingInformation)
+
 class RecordingInformation
 {
 public:
-  typedef std::shared_ptr<RecordingInformation> ptr;
   class Writer {
   public:
     typedef std::shared_ptr<Writer> ptr;
