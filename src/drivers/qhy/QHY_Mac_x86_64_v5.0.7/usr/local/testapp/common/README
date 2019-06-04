@@ -1,0 +1,19 @@
+scanqhyccd:
+a sample code show how to get all connected cameras
+
+controlcool:
+a sample code to control the cool temperature;
+
+initandcap:
+a sample code for init camera and capture a image;
+
+controlcfw:
+a sample code show how to use the api to control color wheel;
+
+
+osxdownloadfirmware:
+this is a sample to show how to download firmware in OSX(we are using the UDEV with fxload to download firmware in Linux);
+steps:
+1.you have to make a folder "firmware" in the same folder with osxdownloadfirmware 
+2.copy the *.HEX files to the firmware folder(the HEX files you could get from the SDK)
+3.run osxdownloadfirmware

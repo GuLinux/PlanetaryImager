@@ -1,0 +1,5 @@
+Thanks Robin Glover(robin@sharpcap.co.uk)who provided the C# wrapper for ASI SDK2:
+
+ASICameraDll2.cs is a fairly simple wrapper around the C functions in the SDK DLL.
+
+ASICameraObjectModel2.cs is an object model that wraps the functions in ASICameraDll2.cs and makes the camera feel natural and easy to use for a C# (or VB.Net) developer. It's possible to write really neat object oriented code using this object model, starting with the ASICameras class to get the number of cameras and to get hold of a camera object.
