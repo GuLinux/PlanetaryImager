@@ -26,6 +26,7 @@
 
 FWD_PTR(PlanetaryImager)
 FWD(Imager)
+FWD_PTR(DriverForwarder)
 
 class DriverForwarder : public NetworkReceiver
 {
@@ -33,7 +34,6 @@ public:
     typedef std::function<void(Imager *)> OnImagerChanged;
     DriverForwarder(const NetworkDispatcher::ptr &dispatcher, const PlanetaryImagerPtr &planetaryImager);
     ~DriverForwarder();
-    typedef std::shared_ptr<DriverForwarder> ptr;
     void getStatus(QVariantMap &status);
 private:
   DPTR
