@@ -24,12 +24,12 @@
 #include "commons/fwd.h"
 
 FWD_PTR(NetworkDispatcher)
+FWD_PTR(FramesForwarder)
 
 class FramesForwarder : public QObject, public ImageHandler
 {
 Q_OBJECT
 public:
-  typedef std::shared_ptr<FramesForwarder> ptr;
   FramesForwarder(const NetworkDispatcherPtr &dispatcher);
   ~FramesForwarder();
   bool enabled() const;

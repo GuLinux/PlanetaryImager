@@ -16,7 +16,7 @@
  *
  */
 
-#include "filesystemforwarder.h"
+#include "network/server/filesystemforwarder.h"
 #include "network/protocol/filesystemprotocol.h"
 #include "network/networkdispatcher.h"
 #include "network/networkpacket.h"

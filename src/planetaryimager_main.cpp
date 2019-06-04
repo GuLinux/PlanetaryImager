@@ -29,6 +29,7 @@
 #include "network/server/networkserver.h"
 #include "network/server/savefileforwarder.h"
 #include "network/server/configurationforwarder.h"
+#include "network/server/framesforwarder.h"
 #include "image_handlers/threadimagehandler.h"
 #include "commons/frame.h"
 #include "network/networkdispatcher.h"

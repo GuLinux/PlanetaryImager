@@ -17,9 +17,10 @@
  *
  */
 
-#include "networkserver.h"
+#include "network/server/networkserver.h"
 #include <QtNetwork/QTcpServer>
 #include <QtNetwork/QTcpSocket>
+#include "network/server/framesforwarder.h"
 #include "network/server/driverforwarder.h"
 #include "network/networkpacket.h"
 #include "network/networkdispatcher.h"
@@ -38,10 +39,10 @@ DPTR_IMPL(NetworkServer) {
   NetworkServer *q;
   PlanetaryImagerPtr planetaryImager;
   NetworkDispatcherPtr dispatcher;
-  FramesForwarder::ptr framesForwarder;
+  FramesForwarderPtr framesForwarder;
   unique_ptr<QTcpServer> server;
   DriverForwarderPtr forwarder;
-  FilesystemForwarder::ptr filesystemForwarder;
+  FilesystemForwarderPtr filesystemForwarder;
   void new_connection();
   void bytes_sent(quint64 written, quint64 sent);
   QElapsedTimer elapsed;
@@ -52,7 +53,7 @@ DPTR_IMPL(NetworkServer) {
 NetworkServer::NetworkServer(
   const PlanetaryImagerPtr &planetaryImager,
   const NetworkDispatcherPtr &dispatcher,
-  const FramesForwarder::ptr &framesForwarder,
+  const FramesForwarderPtr &framesForwarder,
   QObject *parent)
   : QObject{parent}, NetworkReceiver{dispatcher}, dptr(this, planetaryImager, dispatcher, framesForwarder, make_unique<QTcpServer>())
 {

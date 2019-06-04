@@ -21,12 +21,12 @@
 #define NETWORKSERVER_H
 #include <QObject>
 #include "c++/dptr.h"
-#include "framesforwarder.h"
 #include "network/networkreceiver.h"
 #include "commons/fwd.h"
 
 FWD_PTR(NetworkDispatcher)
 FWD_PTR(PlanetaryImager)
+FWD_PTR(FramesForwarder)
 FWD(Imager)
 
 class NetworkServer : public QObject, public NetworkReceiver
@@ -36,7 +36,7 @@ public:
   NetworkServer(
     const PlanetaryImagerPtr &planetaryImager,
     const NetworkDispatcherPtr &dispatcher,
-    const FramesForwarder::ptr &framesForwarder,
+    const FramesForwarderPtr &framesForwarder,
     QObject *parent = nullptr
   );
   ~NetworkServer();
