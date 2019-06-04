@@ -31,7 +31,7 @@ class FC2Imager: public Imager
 
 public:
 
-    FC2Imager(const fc2PGRGuid &guid, const ImageHandler::ptr &handler);
+    FC2Imager(const fc2PGRGuid &guid, const ImageHandlerPtr &handler);
 
     virtual ~FC2Imager();
 

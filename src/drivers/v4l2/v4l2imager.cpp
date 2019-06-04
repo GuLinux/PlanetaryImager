@@ -58,7 +58,7 @@ DPTR_IMPL(V4L2Imager)
 };
 
 
-V4L2Imager::V4L2Imager(const QString &name, int index, const ImageHandler::ptr &handler)
+V4L2Imager::V4L2Imager(const QString &name, int index, const ImageHandlerPtr &handler)
     : Imager{handler}, dptr("/dev/video%1"_q % index, Drivers::V4L2::controlFixes(this), this)
 {
   d->open_camera();

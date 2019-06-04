@@ -215,7 +215,7 @@ Imager::Control IIDCImager::Private::getFrameRates(dc1394video_mode_t vidMode)
 
 //Q_DECLARE_METATYPE(IIDCImagerWorker::ImageType)
 
-IIDCImager::IIDCImager(std::unique_ptr<dc1394camera_t, Deleters::camera> camera, const ImageHandler::ptr &handler,
+IIDCImager::IIDCImager(std::unique_ptr<dc1394camera_t, Deleters::camera> camera, const ImageHandlerPtr &handler,
                        const QString &cameraName, const QString &cameraVendor)
 : Imager(handler), dptr(cameraName, cameraVendor)
 {

@@ -50,7 +50,7 @@ public:
 
     virtual ~IIDCCamera();
 
-    Imager *imager(const ImageHandler::ptr &imageHandler) const override;
+    Imager *imager(const ImageHandlerPtr &imageHandler) const override;
 
     QString name() const override { return m_Name; }
 };
@@ -59,7 +59,7 @@ IIDCCamera::~IIDCCamera()
 {
 }
 
-Imager *IIDCCamera::imager(const ImageHandler::ptr &imageHandler) const
+Imager *IIDCCamera::imager(const ImageHandlerPtr &imageHandler) const
 {
     std::unique_ptr<dc1394camera_t, Deleters::camera> cam(dc1394_camera_new_unit(context, camId.guid, camId.unit));
 

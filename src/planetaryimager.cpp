@@ -32,7 +32,7 @@ Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
 
 DPTR_IMPL(PlanetaryImager) {
   Driver::ptr driver;
-  ImageHandler::ptr imageHandler;
+  ImageHandlerPtr imageHandler;
   SaveImages::ptr saveImages;
   Configuration &configuration;
   PlanetaryImager *q;
@@ -45,7 +45,7 @@ DPTR_IMPL(PlanetaryImager) {
 
 PlanetaryImager::PlanetaryImager(
   const Driver::ptr &driver,
-  const ImageHandler::ptr &imageHandler,
+  const ImageHandlerPtr &imageHandler,
   const SaveImages::ptr &saveImages,
   Configuration &configuration
 ) : QObject{}, dptr(driver, imageHandler, saveImages, configuration, this)

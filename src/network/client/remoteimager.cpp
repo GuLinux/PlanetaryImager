@@ -25,14 +25,14 @@
 using namespace std;
 
 DPTR_IMPL(RemoteImager) {
-  const ImageHandler::ptr image_handler;
+  const ImageHandlerPtr image_handler;
   QString name;
   Properties properties;
   Controls controls;
   bool live_was_started = true;
 };
 
-RemoteImager::RemoteImager(const ImageHandler::ptr& image_handler, const NetworkDispatcher::ptr &dispatcher, qlonglong id) : Imager{image_handler}, NetworkReceiver{dispatcher}, dptr(image_handler)
+RemoteImager::RemoteImager(const ImageHandlerPtr& image_handler, const NetworkDispatcher::ptr &dispatcher, qlonglong id) : Imager{image_handler}, NetworkReceiver{dispatcher}, dptr(image_handler)
 {
   register_handler(DriverProtocol::signalCameraConnected, [](const NetworkPacket::ptr &) {});
   register_handler(DriverProtocol::GetCameraNameReply, [this](const NetworkPacket::ptr &packet) {

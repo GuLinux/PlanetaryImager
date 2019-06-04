@@ -67,7 +67,7 @@ DPTR_IMPL(ZWO_ASI_Imager) {
 };
 
 
-ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandler::ptr &imageHandler) : Imager{imageHandler}, dptr(info, this)
+ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandlerPtr &imageHandler) : Imager{imageHandler}, dptr(info, this)
 {
     d->roi_validator = make_shared<ROIValidator>(initializer_list<ROIValidator::Rule>{
       ROIValidator::x_multiple(2),

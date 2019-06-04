@@ -25,7 +25,7 @@
 class V4L2Imager : public Imager
 {
 public:
-    V4L2Imager(const QString &name, int index, const ImageHandler::ptr &handler);
+    V4L2Imager(const QString &name, int index, const ImageHandlerPtr &handler);
     ~V4L2Imager();
     Imager::Properties properties() const override;
     QString name() const override;

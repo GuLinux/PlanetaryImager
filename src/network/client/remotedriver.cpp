@@ -31,7 +31,7 @@ DPTR_IMPL(RemoteDriver) {
 class RemoteCamera : public Driver::Camera {
 public:
   RemoteCamera(const QString &name, qlonglong address, const NetworkDispatcher::ptr &dispatcher) : _name{name}, _address{address}, _dispatcher{dispatcher} {}
-  Imager * imager(const ImageHandler::ptr & imageHandler) const override;
+  Imager * imager(const ImageHandlerPtr & imageHandler) const override;
   QString name() const override { return _name; }
 private:
   const QString _name;
@@ -39,7 +39,7 @@ private:
   const NetworkDispatcher::ptr _dispatcher;
 };
 
-Imager * RemoteCamera::imager(const ImageHandler::ptr& imageHandler) const
+Imager * RemoteCamera::imager(const ImageHandlerPtr& imageHandler) const
 {
   return new RemoteImager{imageHandler, _dispatcher, _address};
 }

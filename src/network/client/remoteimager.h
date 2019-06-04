@@ -26,7 +26,7 @@ class RemoteImager : public Imager, public NetworkReceiver
 {
 Q_OBJECT
 public:
-  RemoteImager(const ImageHandler::ptr &image_handler, const NetworkDispatcher::ptr &dispatcher, qlonglong id = -1);
+  RemoteImager(const ImageHandlerPtr &image_handler, const NetworkDispatcher::ptr &dispatcher, qlonglong id = -1);
   ~RemoteImager();
   Controls controls() const override;  
   QString name() const override;

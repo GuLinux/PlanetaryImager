@@ -91,7 +91,7 @@ SERImagerWorker::~SERImagerWorker()
 
 
 
-SERImager::SERImager(const ImageHandler::ptr& handler) : Imager{handler}, dptr()
+SERImager::SERImager(const ImageHandlerPtr& handler) : Imager{handler}, dptr()
 {
 }
 

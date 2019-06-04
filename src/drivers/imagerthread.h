@@ -29,6 +29,7 @@ FWD_PTR(Frame)
 FWD(Imager)
 FWD_PTR(ImagerThread)
 FWD_PTR(QWaitCondition)
+FWD_PTR(ImageHandler)
 
 class ImagerThread
 {
@@ -40,7 +41,7 @@ class ImagerThread
     typedef std::shared_ptr<Worker> ptr;
     typedef std::function<ptr()> factory;
   };
-  ImagerThread(const Worker::ptr& worker, Imager* imager, const ImageHandler::ptr& imageHandler, Configuration::CaptureEndianess captureEndianess);
+  ImagerThread(const Worker::ptr& worker, Imager* imager, const ImageHandlerPtr& imageHandler, Configuration::CaptureEndianess captureEndianess);
   ~ImagerThread();
   void stop();
   void start();

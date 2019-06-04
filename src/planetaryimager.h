@@ -23,9 +23,10 @@
 #include "c++/dptr.h"
 #include "drivers/driver.h"
 #include "drivers/imager.h"
-#include "image_handlers/imagehandler.h"
 #include "image_handlers/saveimages.h"
 #include "commons/configuration.h"
+
+FWD_PTR(ImageHandler)
 
 class PlanetaryImager : public QObject
 {
@@ -34,7 +35,7 @@ public:
     typedef std::shared_ptr<PlanetaryImager> ptr;
     PlanetaryImager(
         const Driver::ptr &driver,
-        const ImageHandler::ptr &imageHandler,
+        const ImageHandlerPtr &imageHandler,
         const SaveImages::ptr &saveImages,
         Configuration &configuration
     );

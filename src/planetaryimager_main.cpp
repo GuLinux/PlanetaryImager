@@ -58,8 +58,8 @@ int main(int argc, char** argv)
     auto configuration_forwarder = make_shared<ConfigurationForwarder>(configuration, dispatcher);
     auto frames_forwarder = make_shared<FramesForwarder>(dispatcher);
 
-    auto compositeImageHandler = make_shared<ImageHandlers>(QList<ImageHandler::ptr>{save_images, frames_forwarder});
-    auto threadedImageHandler = ImageHandler::ptr{new ThreadImageHandler{compositeImageHandler}};
+    auto compositeImageHandler = make_shared<ImageHandlers>(QList<ImageHandlerPtr>{save_images, frames_forwarder});
+    auto threadedImageHandler = ImageHandlerPtr{new ThreadImageHandler{compositeImageHandler}};
 
     auto planetaryImager = make_shared<PlanetaryImager>(drivers, threadedImageHandler, save_images, configuration);
 

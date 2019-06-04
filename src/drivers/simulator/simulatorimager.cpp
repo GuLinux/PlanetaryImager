@@ -59,7 +59,7 @@ private:
 
 Q_DECLARE_METATYPE(SimulatorImagerWorker::ImageType)
 
-SimulatorImager::SimulatorImager(const ImageHandler::ptr& handler) : Imager(handler), dptr()
+SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : Imager(handler), dptr()
 {
   d->roi_validator = make_shared<ROIValidator>(list<ROIValidator::Rule>{
     ROIValidator::x_multiple(2),

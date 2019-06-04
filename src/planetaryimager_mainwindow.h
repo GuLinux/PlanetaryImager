@@ -23,7 +23,6 @@
 #include "dptr.h"
 #include "commons/messageslogger.h"
 #include "commons/filesystembrowser.h"
-#include "image_handlers/imagehandler.h"
 #include "planetaryimager.h"
 namespace Ui
 {
@@ -44,7 +43,7 @@ public:
       Qt::WindowFlags flags = 0
   );
   void connectCamera(const Driver::Camera::ptr &camera);
-  ImageHandler::ptr imageHandler() const;
+  ImageHandlerPtr imageHandler() const;
   Imager *imager() const;
 public slots:
   void setImager(Imager *imager);

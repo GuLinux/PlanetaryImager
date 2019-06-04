@@ -338,7 +338,7 @@ static fc2PixelFormat GetFirstSupportedPixelFormat(const fc2Format7Info &f7info)
     return first;
 }
 
-FC2Imager::FC2Imager(const fc2PGRGuid &guid, const ImageHandler::ptr &handler)
+FC2Imager::FC2Imager(const fc2PGRGuid &guid, const ImageHandlerPtr &handler)
 : Imager(handler), dptr()
 {
     //FIXME: if a CHECK fails in Imager constructor, there is a segfault (instead of printing the caught exception)

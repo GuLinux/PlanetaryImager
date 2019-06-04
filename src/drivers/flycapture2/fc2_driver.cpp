@@ -36,7 +36,7 @@ public:
 
     virtual ~FC2Camera();
 
-    Imager *imager(const ImageHandler::ptr &imageHandler) const override;
+    Imager *imager(const ImageHandlerPtr &imageHandler) const override;
 
     QString name() const override { return camName; }
 };
@@ -69,7 +69,7 @@ DPTR_IMPL(FC2Driver)
 {
 };
 
-Imager *FC2Camera::imager(const ImageHandler::ptr &imageHandler) const
+Imager *FC2Camera::imager(const ImageHandlerPtr &imageHandler) const
 {
     return new FC2Imager(guid, imageHandler);
 }

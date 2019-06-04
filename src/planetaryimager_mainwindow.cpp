@@ -90,7 +90,7 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   RecordingPanel* recording_panel;
   ExposureTimer exposure_timer;
   
-  ImageHandler::ptr imageHandler;
+  ImageHandlerPtr imageHandler;
   
   
   void cameraDisconnected();
@@ -334,7 +334,7 @@ void PlanetaryImagerMainWindow::closeEvent(QCloseEvent* event)
   emit quit();
 }
 
-ImageHandler::ptr PlanetaryImagerMainWindow::imageHandler() const
+ImageHandlerPtr PlanetaryImagerMainWindow::imageHandler() const
 {
   return d->imageHandler;
 }
