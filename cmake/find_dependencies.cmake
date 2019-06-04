@@ -1,3 +1,5 @@
+include(FindPkgConfig)
+
 # Qt
 set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
@@ -19,8 +21,17 @@ find_package(Boost REQUIRED)
 # OpenCV
 find_package(OpenCV REQUIRED )
 
+# INDI
+pkg_check_modules(LIBINDI libindi)
+if(LIBINDI_FOUND)
+    set(HAVE_LIBINDI On CACHE INTERNAL "")
+else()
+    set(HAVE_LIBINDI Off CACHE INTERNAL "")
+endif()
+
+
 include_directories(${OpenCV_INCLUDE_DIRS})
-include(FindPkgConfig)
+
 
 # ccfits
 find_library(CCFITS_LIBRARY NAMES ccfits CCfits HINTS ${CCFITS_LIBRARY_PATH})

@@ -3,7 +3,12 @@ set(PlanetaryImager_SRCS planetaryimager_main.cpp ${PlanetaryImager_GUI_SRCS})
 
 
 if(static_qt_windows)
-add_definitions(-DSTATIC_WINDOWS_PLUGIN)
+    add_definitions(-DSTATIC_WINDOWS_PLUGIN)
+endif()
+
+
+if(HAVE_LIBINDI)
+    add_definitions(-DHAVE_LIBINDI)
 endif()
 
 if(OSX_BUNDLE)
@@ -27,8 +32,6 @@ else()
       add_definitions(-DDRIVERS_DIRECTORY="${CMAKE_INSTALL_PREFIX}/${drivers_destination}")
   endif()
 endif()
-
-
 
 
 if(ADD_DRIVERS_BUILD_DIRECTORY)

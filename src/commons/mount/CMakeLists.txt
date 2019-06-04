@@ -1,5 +1,4 @@
-pkg_check_modules(LIBINDI libindi)
-if(LIBINDI_FOUND)
+if(HAVE_LIBINDI)
     set(enabled_mounts ${enabled_mounts} INDI CACHE INTERNAL "")
 
     set(mount-SRCS
@@ -22,11 +21,7 @@ if(LIBINDI_FOUND)
     list(APPEND planetaryimager-commons-LIBS ${CMAKE_THREAD_LIBS_INIT})
     update_parent(planetaryimager-commons-LIBS)
     
-    list(APPEND planetaryimager-commons-DEFS -DINDI_MOUNT_SUPPORTED=1)
-    update_parent(planetaryimager-commons-DEFS)
-    
-    message("INDI support enabled.")
+    message("INDI support enabled (Mount).")
 else()
-    list(APPEND planetaryimager-commons-DEFS -DINDI_MOUNT_SUPPORTED=0)
     message("INDI support disabled: libindi not found.")
 endif()

@@ -37,7 +37,9 @@
 #include "widgets/recordingpanel.h"
 #include "widgets/camerainfowidget.h"
 #include "widgets/histogramwidget.h"
+#ifdef HAVE_LIBINDI
 #include "widgets/mount_widget.h"
+#endif
 #include "Qt/zoomableimage.h"
 #include <QGridLayout>
 #include <QToolBar>
@@ -95,8 +97,10 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
 
   RecordingPanel* recording_panel;
   ExposureTimer exposure_timer;
-  MountWidget* mount_widget;
 
+#ifdef HAVE_LIBINDI
+  MountWidget* mount_widget;
+#endif
   ImageHandler::ptr imageHandler;
 
   /// Contains elements of the "informational overlay", added to the graphics scene of 'displayImage'
@@ -202,7 +206,9 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     d->ui->histogram->setWidget(d->histogramWidget = new HistogramWidget(d->histogram, d->planetaryImager->configuration()));
     d->ui->statusbar->addPermanentWidget(d->statusbar_info_widget = new StatusBarInfoWidget(), 1);
 
+#ifdef HAVE_LIBINDI
     d->ui->mount->setWidget(d->mount_widget = new MountWidget());
+#endif
 
     d->imgTracker = make_shared<ImgTracker>();
 
@@ -298,12 +304,17 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     setupDockWidget(d->ui->actionCamera_Settings, d->ui->camera_settings);
     setupDockWidget(d->ui->actionRecording, d->ui->recording);
     setupDockWidget(d->ui->actionHistogram, d->ui->histogram);
+
+#ifdef HAVE_LIBINDI
     setupDockWidget(d->ui->actionMount, d->ui->mount);
+#endif
     if(! d->planetaryImager->configuration().widgets_setup_first_run() ) {
       tabifyDockWidget(d->ui->chipInfoWidget, d->ui->camera_settings);
       tabifyDockWidget(d->ui->chipInfoWidget, d->ui->histogram);
       tabifyDockWidget(d->ui->chipInfoWidget, d->ui->recording);
+#ifdef HAVE_LIBINDI
       tabifyDockWidget(d->ui->chipInfoWidget, d->ui->mount);
+#endif
       d->planetaryImager->configuration().set_widgets_setup_first_run(true);
     }
     qDebug() << "file " << logFilePath << "exists: " << QFile::exists(logFilePath);

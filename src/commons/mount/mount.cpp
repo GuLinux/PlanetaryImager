@@ -26,9 +26,16 @@ bool isConnectionSupported(ConnectionType connType)
     switch (connType)
     {
         case ConnectionType::INDI:
-            return INDI_MOUNT_SUPPORTED;
+#ifdef HAVE_LIBINDI
+            return true;
+#else
+            return false;
+#endif
 
         case ConnectionType::SkyWatcher:
+            return false;
+        // safety net, returning false as driver is unknown
+        default:
             return false;
     }
 }
