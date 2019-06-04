@@ -126,7 +126,7 @@ void PlanetaryImagerMainWindow::Private::saveState()
 
 PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
       const PlanetaryImager::ptr &planetaryImager,
-      const ImageHandlers::ptr &imageHandlers,
+      const ImageHandlersPtr &imageHandlers,
       const FilesystemBrowser::ptr &filesystemBrowser,
       const QString &logFilePath,
       QWidget* parent,

@@ -36,7 +36,6 @@ public:
 
 class ImageHandlers : public ImageHandler {
 public:
-  typedef std::shared_ptr<ImageHandlers> ptr;
   ImageHandlers(const QList<ImageHandlerPtr> &handlers = {}) : handlers{handlers} {}
 
   void push_back(const ImageHandlerPtr &handler) { handlers.push_back(handler); }
