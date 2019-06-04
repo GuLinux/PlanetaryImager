@@ -28,8 +28,6 @@ class IIDCDriver: public Driver
 
 public:
 
-    DECLARE_DRIVER_PLUGIN
-
     IIDCDriver();
 
     ~IIDCDriver();

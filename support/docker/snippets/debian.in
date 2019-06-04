@@ -1,0 +1,20 @@
+FROM %{BASE_IMAGE}
+COPY qemu-arm-static /usr/bin
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update && apt-get install -y \
+    autoconf \
+    qtbase5-dev \
+    qtdeclarative5-dev \
+    build-essential \
+    cmake \
+    libopencv-dev \
+    libboost-all-dev \
+    git \
+    libudev-dev \
+    libccfits-dev \
+    && apt-get clean
+
+RUN mkdir /cmake
+ENV TEST_PACKAGE_CMD="/usr/local/bin/debian-package-checker.sh"
+ENV PACKAGE_INSTALL_COMMAND="/code/support/docker/files/debian-package-checker.sh"
+

@@ -1,9 +1,0 @@
-[submodule "GuLinux-Commons"]
-	path = GuLinux-Commons
-	url = https://github.com/GuLinux/GuLinux-Commons.git
-[submodule "src/drivers/qhy/QHYCCD_Linux"]
-	path = src/drivers/qhy/QHYCCD_Linux
-	url = https://github.com/qhyccd-lzr/QHYCCD_Linux.git
-[submodule "tests/googletest"]
-	path = tests/googletest
-	url = https://github.com/google/googletest

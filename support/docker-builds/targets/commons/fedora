@@ -1,2 +1,0 @@
-export PACKAGE_NAME_SUFFIX=_fedora-${FEDORA_VERSION}
-export COMPOSE_IMAGE=gulinux/planetaryimager_build:fedora-${FEDORA_VERSION}-${TARGET_ARCH}

@@ -56,23 +56,26 @@ ZWO_ASI_Driver::ZWO_ASI_Driver() : dptr(this)
     metatypes_registered = true;
     qRegisterMetaType<ASI_IMG_TYPE>("ASI_IMG_TYPE");
   }
+  qInfo() << "(ASI) Driver initialised, version " << ASIGetSDKVersion();
 }
 
 ZWO_ASI_Driver::~ZWO_ASI_Driver()
 {
-
 }
 
 Driver::Cameras ZWO_ASI_Driver::cameras() const
 {
   int ncams = ASIGetNumOfConnectedCameras();
+  qDebug() << "(ASI) Driver: detected" << ncams << "cameras";
   Driver::Cameras cameras;
   int index=0;
   for(int index=0; index<ncams; index++) {
     ASI_CAMERA_INFO info;
     ASI_CHECK << ASIGetCameraProperty(&info, index) << string{"Get Camera Property"};
-    qDebug() << "ZWO camera index" << index << "is a" << info.Name;
+    qDebug() << "(ASI) camera index" << index << "is a" << info.Name;
     cameras.push_back(make_shared<ZWO_ASI_Camera>(info));
   }
   return cameras;
 }
+
+DECLARE_DRIVER_PLUGIN_INIT(ZWO_ASI_Driver)

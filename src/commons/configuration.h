@@ -111,6 +111,9 @@ public:
     enum class CaptureEndianess { CameraDefault=0, Little=1, Big=2};
     declare_setting(capture_endianess, CaptureEndianess)
 
+    /// If true, camera control changes are applied immediately (no need to click "Apply")
+    declare_setting(immediate_controls, bool);
+
     struct Preset {
       QString path;
       QString name;

@@ -27,7 +27,7 @@
 #include <map>
 #include <QRect>
 #include "Qt/qt_strings_helper.h"
-#include <unordered_map>
+#include <QHash>
 
 using namespace std::chrono;
 
@@ -49,7 +49,7 @@ struct EnumHash
     size_t operator()(T t) const { return static_cast<size_t>(t); }
 };
 
-static std::unordered_map<dc1394color_coding_t, const char *, EnumHash> COLOR_CODING_NAME
+static QHash<dc1394color_coding_t, const char *> COLOR_CODING_NAME
 {
     { DC1394_COLOR_CODING_MONO8,   "Mono 8-bit"           },
     { DC1394_COLOR_CODING_YUV411,  "YUV411"               },
@@ -74,11 +74,11 @@ DPTR_IMPL(IIDCImager)
     dc1394video_modes_t  videoModes;
     dc1394video_mode_t   currentVidMode;
     dc1394color_coding_t currentPixFmt;
-    std::unordered_map<dc1394video_mode_t, dc1394framerates_t, EnumHash> frameRates; ///< Key: non-scalable video mode from 'videoModes'
-    std::unordered_map<dc1394video_mode_t, dc1394format7mode_t, EnumHash> fmt7Info; ///< Key: scalable video mode form 'videoModes'
+    QHash<dc1394video_mode_t, dc1394framerates_t> frameRates; ///< Key: non-scalable video mode from 'videoModes'
+    QHash<dc1394video_mode_t, dc1394format7mode_t> fmt7Info; ///< Key: scalable video mode form 'videoModes'
 
     dc1394featureset_t features;
-    std::unordered_map<dc1394feature_t, bool> hasAbsoluteControl;
+    QHash<dc1394feature_t, bool> hasAbsoluteControl;
 
     Properties properties;
 
@@ -94,8 +94,6 @@ DPTR_IMPL(IIDCImager)
 
     bool temperatureAvailable;
     bool temperatureAbsSupported;
-
-    void updateWorkerExposureTimeout();
 
     /// Returns a combo control listing all video modes, with 'currentVidMode' selected
     Control enumerateVideoModes();
@@ -124,11 +122,6 @@ DPTR_IMPL(IIDCImager)
 static void UpdateRangeAndStep(bool absoluteCapable, Imager::Control &control,
                                uint32_t rawMin, uint32_t rawMax,
                                float    absMin, float    absMax);
-
-void IIDCImager::Private::updateWorkerExposureTimeout()
-{
-//TODO: implement this
-}
 
 Imager::Control IIDCImager::Private::enumerateCurrentModePixelFormats()
 {
@@ -197,7 +190,7 @@ Imager::Control IIDCImager::Private::getFrameRates(dc1394video_mode_t vidMode)
     const auto frloc = frameRates.find(vidMode);
     assert(frloc != frameRates.end());
 
-    const dc1394framerates_t &fr = frloc->second;
+    const dc1394framerates_t &fr = frloc.value();
 
     auto frameRatesCtrl = Imager::Control{ ControlID::FrameRate, "Fixed Frame Rate", Control::Combo };
 
@@ -239,14 +232,14 @@ IIDCImager::IIDCImager(std::unique_ptr<dc1394camera_t, Deleters::camera> camera,
 
         if (!dc1394_is_video_mode_scalable(vidMode))
         {
-            auto modeFrameRates = d->frameRates.emplace(vidMode, dc1394framerates_t{ });
-            IIDC_CHECK << dc1394_video_get_supported_framerates(d->camera.get(), vidMode, &modeFrameRates.first->second)
+            auto modeFrameRates = d->frameRates.insert(vidMode, dc1394framerates_t{ });
+            IIDC_CHECK << dc1394_video_get_supported_framerates(d->camera.get(), vidMode, &modeFrameRates.value())
                        << "Get supported frame rates";
         }
         else
         {
-            auto fmt7loc = d->fmt7Info.emplace(vidMode, dc1394format7mode_t{ });
-            dc1394format7mode_t &fmt7 = fmt7loc.first->second;
+            auto fmt7loc = d->fmt7Info.insert(vidMode, dc1394format7mode_t{ });
+            dc1394format7mode_t &fmt7 = fmt7loc.value();
             fmt7.present = DC1394_TRUE;
 
             IIDC_CHECK << dc1394_format7_get_mode_info(d->camera.get(), vidMode, &fmt7)
@@ -265,8 +258,6 @@ IIDCImager::IIDCImager(std::unique_ptr<dc1394camera_t, Deleters::camera> camera,
 
     IIDC_CHECK << dc1394_feature_get_all(d->camera.get(), &d->features)
                << "Get all features";
-
-    connect(this, &Imager::exposure_changed, this, std::bind(&Private::updateWorkerExposureTimeout, d.get()));
 }
 
 IIDCImager::~IIDCImager()
@@ -320,14 +311,14 @@ Imager::Properties IIDCImager::properties() const
 
     const auto maxImageWidth = std::max_element(d->fmt7Info.begin(), d->fmt7Info.end(),
                                           [](const auto &i1, const auto &i2)
-                                          { return i1.second.max_size_x < i2.second.max_size_x; });
+                                          { return i1.max_size_x < i2.max_size_x; });
 
     const auto maxImageHeight = std::max_element(d->fmt7Info.begin(), d->fmt7Info.end(),
                                           [](const auto &i1, const auto &i2)
-                                          { return i1.second.max_size_y < i2.second.max_size_y; });
+                                          { return i1.max_size_y < i2.max_size_y; });
 
-    properties.set_resolution({ (int)maxImageWidth->second.max_size_x,
-                                (int)maxImageHeight->second.max_size_y });
+    properties.set_resolution({ (int)maxImageWidth.value().max_size_x,
+                                (int)maxImageHeight.value().max_size_y });
 
 
     return properties;
@@ -581,10 +572,6 @@ Imager::Controls IIDCImager::controls() const
 
                 case DC1394_FEATURE_SHUTTER:
                     control.name = "Shutter";
-                    control.is_exposure = true;
-                    control.is_duration = true;
-                    // No way to check the unit using IIDC API, but PGR Firefly MV (FMVU-03MTM) and Chameleon3 (CM3-U3-13S2M) both use seconds
-                    control.duration_unit = 1s;
                     break;
 
                 case DC1394_FEATURE_GAIN:            control.name = "Gain"; break;
@@ -668,6 +655,13 @@ Imager::Controls IIDCImager::controls() const
                 }
                 else
                     control.value = absMin;
+
+                if (feature.id == DC1394_FEATURE_SHUTTER)
+                {
+                    control.is_duration = true;
+                    // No way to check the unit using IIDC API, but PGR Firefly MV (FMVU-03MTM) and Chameleon3 (CM3-U3-13S2M) both use seconds
+                    control.duration_unit = 1s;
+                }
             }
             else
             {

@@ -31,7 +31,6 @@ class Frame
 public:
   typedef std::shared_ptr<Frame> ptr;
   using const_ptr = std::shared_ptr<const Frame>; // REVIEW: OK to use this syntax for new typedefs?
-
   enum ColorFormat {
       Mono,
       RGB,

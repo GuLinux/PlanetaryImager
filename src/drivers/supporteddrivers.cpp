@@ -17,7 +17,7 @@
  */
 
 #include "supporteddrivers.h"
-#include <QPluginLoader>
+#include <QLibrary>
 #include <QDebug>
 #include <QDirIterator>
 #include <QFile>
@@ -28,12 +28,43 @@
 
 using namespace std;
 
+struct SupportedDriver {
+  typedef shared_ptr<SupportedDriver> ptr;
+  SupportedDriver(const QString &name, const QVariantMap &info, const shared_ptr<QLibrary> &library) : name(name), info(info), library(library) {}
+    QString name;
+    QVariantMap info;
+    shared_ptr<QLibrary> library;
+    shared_ptr<Driver> _driver;
+    shared_ptr<Driver> driver();
+};
+
+typedef int (*LoadDriverFunctionReady)();
+
+
+std::shared_ptr<Driver> SupportedDriver::driver()
+{
+  if(!_driver) {
+    qDebug() << "Initializing driver" << library->fileName();
+    try {
+      Driver *driverptr = ((LoadDriverFunction) library->resolve(PLANETARY_IMAGER_DRIVER_LOAD_F))();
+      qDebug() << "Loaded driver address: " << (uint64_t)driverptr;
+      _driver = shared_ptr<Driver>(driverptr);
+    } catch(const Imager::exception &e) {
+      qWarning() << "Error loading driver: " << e.what();
+    }
+  }
+  qDebug() << "Driver loaded: " << !!_driver;
+  return _driver;
+}
+
+
+
 DPTR_IMPL(SupportedDrivers) {
   SupportedDrivers *q;
-  QList<shared_ptr<QPluginLoader>> drivers;
+  QList<SupportedDriver::ptr> supported_drivers;
+
   void find_drivers(const QString &directory);
   void load_driver(const QString &filename);
-  list<Driver*> instances() const;
 };
 
 
@@ -57,18 +88,33 @@ void SupportedDrivers::Private::find_drivers(const QString& directory)
 
 void SupportedDrivers::Private::load_driver(const QString& filename)
 {
-  auto plugin = make_shared<QPluginLoader>(filename);
-  qDebug() << "trying " << filename << ": " << plugin->metaData();
-  auto getClassName = [](const auto &p) { return p->metaData().value("className"); };
-  if(plugin->metaData().value("IID").toString() == DRIVER_IID && 
-        find_if(drivers.begin(), drivers.end(), [&](const auto &p) { return getClassName(p) == getClassName(plugin); }) == drivers.end() ) {
-      if(plugin->load()) {
-        auto metadata = QJsonDocument{plugin->metaData()}.toVariant().toMap();
-        qInfo() << "driver " << plugin->fileName() << "loaded:" << metadata["className"].toString() << metadata["MetaData"].toMap()["description"].toString();
-        drivers.push_back(plugin);
-      } else {
-        qWarning() << "Error loading driver " << plugin->fileName() << ": " << plugin->errorString();
-      }
+  if(!filename.startsWith("driver_") && ! filename.endsWith(".json")) {
+    return;
+  }
+  QString library_name = filename;
+  library_name.remove(".json");
+
+  qDebug() << "[??] trying " << filename << ": " << library_name;
+
+  auto driver = make_shared<QLibrary>(library_name);
+  if(driver->load()) {
+    qDebug() << "[OK] Driver " << library_name << " loaded successfully";
+    if(driver->resolve(PLANETARY_IMAGER_DRIVER_LOAD_F)) {
+        QFile json_file(filename);
+        json_file.open(QIODevice::ReadOnly);
+        QVariantMap driver_info = QJsonDocument::fromJson(json_file.readAll()).toVariant().toMap();
+        
+        qDebug() << "[OK] PlanetaryImager_loadDriver resolved on " << library_name;
+        supported_drivers.push_back(make_shared<SupportedDriver>(
+          QFileInfo(library_name).baseName(),
+          driver_info,
+          driver
+        ));
+    } else {
+        qWarning() << "[ERR] Error resolving PlanetaryImager_loadDriver function on " << library_name << ":" << driver->errorString();
+    }
+  } else {
+    qWarning() << "[ERR] Error loading driver" << library_name << ":" << driver->errorString();
   }
 }
 
@@ -79,33 +125,29 @@ SupportedDrivers::~SupportedDrivers()
 
 void SupportedDrivers::aboutToQuit()
 {
-  for(auto driver: d->instances())
-    driver->aboutToQuit();
+  for(auto supported_driver: d->supported_drivers)
+    if(supported_driver->driver()) {
+      supported_driver->driver()->aboutToQuit();
+    } 
 }
 
 
 Driver::Cameras SupportedDrivers::cameras() const
 {
+  qDebug() << "Detecting active cameras";
   Cameras cameras;
-  for(auto driver: d->instances()) {
-    if(driver)
-      cameras.append(driver->cameras());
+  for(auto supported_driver: d->supported_drivers) {
+    qDebug() << "Checking cameras on driver " << supported_driver->name;
+    if(supported_driver->driver()) {
+      auto driver_cameras = supported_driver->driver()->cameras();
+      qDebug() << "Found" << driver_cameras.size() << "on driver" << supported_driver->name;
+      cameras.append(driver_cameras);
+    } else {
+      qWarning() << "Driver" << supported_driver->name << "doesn't seem to be correctly loaded";
+    }
   }
-
+  qDebug() << "Detected cameras: " << cameras.size();
   return cameras;
 }
 
-list<Driver *> SupportedDrivers::Private::instances() const
-{
-  list<Driver*> instances;
-  transform(begin(drivers), end(drivers), back_inserter(instances), [](const auto &p) -> Driver* {
-    qDebug() << "Initializing driver" << p->fileName();
-    try {
-      return qobject_cast<Driver*>(p->instance());
-    } catch(const Imager::exception &e) {
-      qWarning() << "Error loading driver: " << e.what();
-      return nullptr;
-    }
-  });
-  return instances;
-}
+

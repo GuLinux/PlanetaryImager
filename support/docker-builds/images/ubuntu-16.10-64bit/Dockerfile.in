@@ -1,4 +1,0 @@
-DEB_BASE_IMAGE="ubuntu:16.10"
-DEB_VERSION=16.10
-DEB_CONFIG_NAME="ubuntu-16.10"
-. ../debian-based-commons/Dockerfile.in

@@ -21,6 +21,7 @@
 #include <QTimer>
 #include <functional>
 #include <QElapsedTimer>
+#include "drivers/imager.h"
 
 using namespace std;
 using namespace std::placeholders;

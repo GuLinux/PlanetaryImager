@@ -218,7 +218,12 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     d->ui->image->layout()->addWidget(d->image_widget = new ZoomableImage(false));
 #ifdef HAVE_QT5_OPENGL // TODO: make configuration item
     if(d->planetaryImager->configuration().opengl())
-      d->image_widget->setOpenGL();
+    {
+      if (!QGLFormat::hasOpenGL())
+          qWarning() << "Window system does not support OpenGL.";
+      else
+          d->image_widget->setOpenGL();
+    }
 #endif
     d->image_widget->scene()->setBackgroundBrush(QBrush{Qt::black, Qt::Dense4Pattern});
     connect(d->image_widget, &ZoomableImage::zoomLevelChanged, d->statusbar_info_widget, &StatusBarInfoWidget::zoom);

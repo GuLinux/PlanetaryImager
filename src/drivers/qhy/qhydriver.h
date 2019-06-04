@@ -25,7 +25,6 @@ class QHYDriver : public Driver
 {
   Q_OBJECT
 public:
-  DECLARE_DRIVER_PLUGIN
     QHYDriver();
     virtual ~QHYDriver();
     Cameras cameras() const override;

@@ -1,5 +1,0 @@
-DEB_BASE_IMAGE="gulinux/planetaryimager_build:ubuntu_yakkety_arm_base"
-DEB_VERSION=16.10
-DEB_CONFIG_NAME="ubuntu-16.10"
-. ../debian-based-commons/Dockerfile.in
-

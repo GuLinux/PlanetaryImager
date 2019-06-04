@@ -1,4 +1,0 @@
-DEB_BASE_IMAGE="ubuntu:17.04"
-DEB_VERSION=17.04
-DEB_CONFIG_NAME="ubuntu-17.04"
-. ../debian-based-commons/Dockerfile.in
