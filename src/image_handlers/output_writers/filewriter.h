@@ -23,11 +23,13 @@
 #include <functional>
 #include <QString>
 #include "commons/configuration.h"
+#include "commons/fwd.h"
+
+FWD_PTR(FileWriter)
 
 class FileWriter : public ImageHandler {
 public:
-  typedef std::shared_ptr<FileWriter> Ptr;
-  typedef std::function<Ptr(const QString &deviceName, const Configuration *configuration)> Factory;
+  typedef std::function<FileWriterPtr(const QString &deviceName, const Configuration *configuration)> Factory;
   virtual QString filename() const = 0;
   static QMap<Configuration::SaveFormat, Factory> factories();
 };

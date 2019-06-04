@@ -56,7 +56,7 @@ DPTR_IMPL(LocalSaveImages) {
 
 namespace {
 typedef boost::lockfree::spsc_queue<FrameConstPtr> FramesQueue;
-typedef function< FileWriter::Ptr() > CreateFileWriter;
+typedef function< FileWriterPtr() > CreateFileWriter;
 
 struct RecordingParameters {
   CreateFileWriter fileWriterFactory;
@@ -70,10 +70,10 @@ struct RecordingParameters {
   bool timelapse;
   qlonglong timelapse_msecs;
   Configuration *configuration = nullptr;
-  RecordingInformation::Writer::ptr recording_information_writer(const FileWriter::Ptr &file_writer) const;
+  RecordingInformation::Writer::ptr recording_information_writer(const FileWriterPtr &file_writer) const;
 };
 
-RecordingInformation::Writer::ptr RecordingParameters::recording_information_writer(const FileWriter::Ptr &file_writer) const {
+RecordingInformation::Writer::ptr RecordingParameters::recording_information_writer(const FileWriterPtr &file_writer) const {
   QList<RecordingInformation::Writer::ptr> writers;
   if(write_txt_info)
     writers.push_back(RecordingInformation::txt(file_writer->filename()));
@@ -99,7 +99,7 @@ private:
   atomic_bool isRecording;
   atomic_bool isPaused;
   fps_counter savefps, meanfps;
-  FileWriter::Ptr file_writer;
+  FileWriterPtr file_writer;
   ElapsedTimer elapsed;
   size_t frames = 0;
   FrameConstPtr reference;
