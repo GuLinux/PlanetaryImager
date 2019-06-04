@@ -27,13 +27,14 @@
 #include <QElapsedTimer>
 #include "network/server/filesystemforwarder.h"
 #include "image_handlers/saveimages.h"
+#include "planetaryimager.h"
 
 using namespace std;
 using namespace std::placeholders;
 
 DPTR_IMPL(NetworkServer) {
   NetworkServer *q;
-  PlanetaryImager::ptr planetaryImager;
+  PlanetaryImagerPtr planetaryImager;
   NetworkDispatcher::ptr dispatcher;
   FramesForwarder::ptr framesForwarder;
   unique_ptr<QTcpServer> server;
@@ -47,7 +48,7 @@ DPTR_IMPL(NetworkServer) {
 };
 
 NetworkServer::NetworkServer(
-  const PlanetaryImager::ptr &planetaryImager,
+  const PlanetaryImagerPtr &planetaryImager,
   const NetworkDispatcher::ptr &dispatcher,
   const FramesForwarder::ptr &framesForwarder,
   QObject *parent)

@@ -22,13 +22,14 @@
 #include "driverforwarder.h"
 #include "network/protocol/driverprotocol.h"
 #include "Qt/qt_functional.h"
+#include "planetaryimager.h"
 
 using namespace std;
 using namespace std::placeholders;
 
 #define DECLARE_HANDLER(name) void name(const NetworkPacket::ptr &p);
 DPTR_IMPL(DriverForwarder) {
-  PlanetaryImager::ptr planetaryImager;
+  PlanetaryImagerPtr planetaryImager;
   DriverForwarder *q;
   QList<CameraPtr> cameras;
   DECLARE_HANDLER(CameraList)
@@ -49,7 +50,7 @@ DPTR_IMPL(DriverForwarder) {
 
 #define REGISTER_HANDLER(protocol, name) register_handler(protocol::name, bind(&Private::name, d.get(), _1));
 
-DriverForwarder::DriverForwarder(const NetworkDispatcher::ptr &dispatcher, const PlanetaryImager::ptr &planetaryImager) 
+DriverForwarder::DriverForwarder(const NetworkDispatcher::ptr &dispatcher, const PlanetaryImagerPtr &planetaryImager) 
   : NetworkReceiver{dispatcher}, dptr(planetaryImager, this)
 {
   REGISTER_HANDLER(DriverProtocol, CameraList)

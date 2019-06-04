@@ -21,7 +21,6 @@
 #define PLANETARYIMAGER_H
 #include <QObject>
 #include "c++/dptr.h"
-#include "commons/configuration.h"
 #include "commons/fwd.h"
 
 FWD_PTR(ImageHandler)
@@ -29,12 +28,13 @@ FWD_PTR(SaveImages)
 FWD_PTR(Driver)
 FWD_PTR(Camera)
 FWD(Imager)
+FWD_PTR(PlanetaryImager)
+FWD(Configuration)
 
 class PlanetaryImager : public QObject
 {
   Q_OBJECT
 public:
-    typedef std::shared_ptr<PlanetaryImager> ptr;
     PlanetaryImager(
         const DriverPtr &driver,
         const ImageHandlerPtr &imageHandler,

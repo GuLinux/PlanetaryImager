@@ -24,14 +24,16 @@
 #include "network/server/savefileforwarder.h"
 #include "network/networkdispatcher.h"
 #include "framesforwarder.h"
-#include "planetaryimager.h"
+#include "commons/fwd.h"
+
+FWD_PTR(PlanetaryImager)
 
 class NetworkServer : public QObject, public NetworkReceiver
 {
     Q_OBJECT
 public:
   NetworkServer(
-    const PlanetaryImager::ptr &planetaryImager,
+    const PlanetaryImagerPtr &planetaryImager,
     const NetworkDispatcher::ptr &dispatcher,
     const FramesForwarder::ptr &framesForwarder,
     QObject *parent = nullptr

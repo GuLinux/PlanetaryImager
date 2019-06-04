@@ -72,7 +72,7 @@ using namespace std::placeholders;
 Q_DECLARE_METATYPE(cv::Mat)
 
 DPTR_IMPL(PlanetaryImagerMainWindow) {
-  PlanetaryImager::ptr planetaryImager;
+  PlanetaryImagerPtr planetaryImager;
   FilesystemBrowser::ptr filesystemBrowser;
   
   static PlanetaryImagerMainWindow *q;
@@ -128,7 +128,7 @@ void PlanetaryImagerMainWindow::Private::saveState()
 
 
 PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
-      const PlanetaryImager::ptr &planetaryImager,
+      const PlanetaryImagerPtr &planetaryImager,
       const ImageHandlersPtr &imageHandlers,
       const FilesystemBrowser::ptr &filesystemBrowser,
       const QString &logFilePath,

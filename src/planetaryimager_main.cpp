@@ -30,6 +30,7 @@
 #include "network/server/configurationforwarder.h"
 #include "image_handlers/threadimagehandler.h"
 #include "commons/frame.h"
+#include "planetaryimager.h"
 
 using namespace std;
 
