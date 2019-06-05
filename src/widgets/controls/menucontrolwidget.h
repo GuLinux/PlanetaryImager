@@ -18,7 +18,7 @@
 #ifndef MENUSETTINGWIDGET_H
 #define MENUSETTINGWIDGET_H
 #include "controlwidget.h"
-#include <QComboBox>
+
 class MenuControlWidget : public ControlWidget {
   Q_OBJECT
 public:

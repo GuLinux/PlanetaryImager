@@ -19,7 +19,6 @@
 #define PLANETARY_IMAGER_DRIVER_H
 #include <QList>
 #include <QString>
-#include <QtPlugin>
 #include "imager.h"
 #include "dptr.h"
 #include "commons/fwd.h"

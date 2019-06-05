@@ -17,6 +17,7 @@
  */
 
 #include "imagerthread.h"
+#include "image_handlers/imagehandler.h"
 #include <QObject>
 #include <QThread>
 #include "imager.h"

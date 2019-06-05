@@ -21,7 +21,6 @@
 
 #include <commons/configuration.h>
 #include <functional>
-#include "image_handlers/imagehandler.h"
 #include "dptr.h"
 #include <chrono>
 #include "commons/fwd.h"

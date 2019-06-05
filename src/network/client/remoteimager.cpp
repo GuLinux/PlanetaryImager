@@ -23,6 +23,7 @@
 #include <QDebug>
 #include <QtConcurrent/QtConcurrent>
 #include "network/networkpacket.h"
+#include "image_handlers/imagehandler.h"
 
 using namespace std;
 
