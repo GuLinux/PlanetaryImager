@@ -47,8 +47,8 @@ DPTR_IMPL(V4L2Imager)
     
     V4L2DevicePtr device;
     
-    V4L2Formats::ptr v4l2formats;
-    QList<V4L2Formats::Resolution::ptr> resolutions;
+    V4L2FormatsPtr v4l2formats;
+    QList<V4L2ResolutionPtr> resolutions;
 
     void open_camera();
     QList<V4L2ControlPtr> controls;
@@ -174,7 +174,7 @@ void V4L2Imager::setControl(const Control &setting)
 
     auto current = d->v4l2formats->current_resolution();
     Control new_value = setting;
-    new_value.value = find_if( d->resolutions.begin(), d->resolutions.end(), [&](const V4L2Formats::Resolution::ptr &r){ return *r == *current; } ) - d->resolutions.begin();
+    new_value.value = find_if( d->resolutions.begin(), d->resolutions.end(), [&](const V4L2ResolutionPtr &r){ return *r == *current; } ) - d->resolutions.begin();
     emit changed(new_value);
     return;
   }
