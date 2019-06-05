@@ -85,7 +85,7 @@ DPTR_IMPL(IIDCImager)
     /// Copy of the SHUTTER control; used for informing GUI about shutter range change when frame rate changes
     Control ctrlShutter;
 
-    ROIValidator::ptr roiValidator; ///< Region of Interest validator
+    ROIValidatorPtr roiValidator; ///< Region of Interest validator
 
     /// Concerns the current video mode; used to disable ROI and return to full image size
     QSize maxFrameSize;

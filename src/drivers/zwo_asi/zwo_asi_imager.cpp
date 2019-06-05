@@ -57,7 +57,7 @@ DPTR_IMPL(ZWO_ASI_Imager) {
     ASIControlPtr temperature_control;
     
     weak_ptr<ASIImagingWorker> worker;
-    ROIValidator::ptr roi_validator;
+    ROIValidatorPtr roi_validator;
     QRect maxROI(int bin) const;
     void restart_worker(int bin, const QRect &roi, ASI_IMG_TYPE format);
     void update_worker_exposure_timeout();

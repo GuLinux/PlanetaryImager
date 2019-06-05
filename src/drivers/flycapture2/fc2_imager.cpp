@@ -153,7 +153,7 @@ DPTR_IMPL(FC2Imager)
     // Copies of controls; used for informing the GUI about changes in their availability
     Control ctrlWhiteBalanceRed, ctrlWhiteBalanceBlue;
 
-    ROIValidator::ptr roiValidator; ///< Region of Interest validator
+    ROIValidatorPtr roiValidator; ///< Region of Interest validator
 
     /// Concerns the current video mode; used to disable ROI and return to full image size
     QSize maxFrameSize;

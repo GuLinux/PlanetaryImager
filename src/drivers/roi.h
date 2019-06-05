@@ -22,11 +22,13 @@
 #include <QRect>
 #include <functional>
 #include <list>
+#include "commons/fwd.h"
+
+FWD_PTR(ROIValidator)
 
 class ROIValidator {
 public:
   typedef std::function<void(QRect &)> Rule;
-  typedef std::shared_ptr<ROIValidator> ptr;
   ROIValidator(const std::list<Rule> &rules);
   ~ROIValidator();
   QRect validate(const QRect & original, QRect currentROI) const;

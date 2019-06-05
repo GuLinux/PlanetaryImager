@@ -39,7 +39,7 @@ DPTR_IMPL(SimulatorImager) {
   shared_ptr<SimulatorImagerWorker> worker;
 
   LOG_C_SCOPE(SimulatorImager);
-  ROIValidator::ptr roi_validator;
+  ROIValidatorPtr roi_validator;
 };
 
 class SimulatorImagerWorker : public ImagerThread::Worker {
