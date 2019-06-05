@@ -51,7 +51,7 @@ DPTR_IMPL(V4L2Imager)
     QList<V4L2Formats::Resolution::ptr> resolutions;
 
     void open_camera();
-    QList<V4L2Control::ptr> controls;
+    QList<V4L2ControlPtr> controls;
     QString driver, bus, cameraname;
     QString dev_name;
     void find_controls();
@@ -98,7 +98,7 @@ QString V4L2Imager::name() const
 void V4L2Imager::Private::find_controls()
 {
   controls.clear();
-  V4L2Control::ptr control;
+  V4L2ControlPtr control;
   // TODO: should we really add controls, even if we cannot read values?
   for (int ctrlid = V4L2_CID_BASE; ctrlid < V4L2_CID_LASTP1; ctrlid++) {
     try {
@@ -140,7 +140,7 @@ void V4L2Imager::Private::find_controls()
 Imager::Controls V4L2Imager::controls() const
 {
     Imager::Controls _settings;
-    transform(begin(d->controls), end(d->controls), back_inserter(_settings), [](const V4L2Control::ptr &c) { return c->control(); } );
+    transform(begin(d->controls), end(d->controls), back_inserter(_settings), [](const V4L2ControlPtr &c) { return c->control(); } );
     auto current_resolution = d->v4l2formats->current_resolution();
     
     Control resolutions_setting{RESOLUTIONS_CONTROL_ID, "Resolution", Control::Combo};
@@ -178,7 +178,7 @@ void V4L2Imager::setControl(const Control &setting)
     emit changed(new_value);
     return;
   }
-  auto control = find_if(begin(d->controls), end(d->controls), [=](const V4L2Control::ptr &c) { return setting.id == c->control().id; });
+  auto control = find_if(begin(d->controls), end(d->controls), [=](const V4L2ControlPtr &c) { return setting.id == c->control().id; });
   if(control != end(d->controls)) {
     wait_for(push_job_on_thread([=]{
       try {

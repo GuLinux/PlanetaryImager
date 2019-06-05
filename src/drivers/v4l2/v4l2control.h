@@ -26,11 +26,11 @@
 #include "commons/fwd.h"
 
 FWD_PTR(V4L2Device)
+FWD_PTR(V4L2Control)
 
 class V4L2Control
 {
 public:
-  typedef std::shared_ptr<V4L2Control> ptr;
   typedef std::function<void(Imager::Control &)> Fix;
   
   V4L2Control(uint32_t control_id, const V4L2DevicePtr &camera, const QList<Fix> &fixes);
