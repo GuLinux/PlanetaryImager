@@ -22,11 +22,13 @@
 #include <linux/videodev2.h>
 #include "v4l2device.h"
 #include <QList>
+#include "commons/fwd.h"
+
+FWD_PTR(V4LBuffer)
 
 class V4LBuffer
 {
 public:
-    typedef std::shared_ptr<V4LBuffer> ptr;
     V4LBuffer(int index, const V4L2Device::ptr &v4ldevice);
     ~V4LBuffer();
     void queue();

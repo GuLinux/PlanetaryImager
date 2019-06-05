@@ -40,15 +40,15 @@ DPTR_IMPL(V4L2ImagingWorker) {
   uint32_t bufferinfo_type;
   void adjust_framerate();
   int request_buffers(int count);
-  function<FramePtr(const V4LBuffer::ptr)> get_frame;
-  FramePtr import_frame(const V4LBuffer::ptr &buffer);
-  FramePtr create_frame(const V4LBuffer::ptr &buffer, int cv_type, Frame::ColorFormat color_format);
-  FramePtr convert_frame(const V4LBuffer::ptr &buffer, int cv_type, int cv_conversion_format, Frame::ColorFormat color_format);
+  function<FramePtr(const V4LBufferPtr)> get_frame;
+  FramePtr import_frame(const V4LBufferPtr &buffer);
+  FramePtr create_frame(const V4LBufferPtr &buffer, int cv_type, Frame::ColorFormat color_format);
+  FramePtr convert_frame(const V4LBufferPtr &buffer, int cv_type, int cv_conversion_format, Frame::ColorFormat color_format);
 };
 
 V4L2ImagingWorker::V4L2ImagingWorker(const V4L2Device::ptr& device, const v4l2_format& format) : dptr(device, format)
 {
-  QHash<uint32_t, function<FramePtr(const V4LBuffer::ptr)>> formats = {
+  QHash<uint32_t, function<FramePtr(const V4LBufferPtr)>> formats = {
     // Mono Formats
     {V4L2_PIX_FMT_GREY, bind(&Private::create_frame, d.get(), _1, CV_8UC1, Frame::Mono)},
     {V4L2_PIX_FMT_Y16, bind(&Private::create_frame, d.get(), _1, CV_16UC1, Frame::Mono)},
@@ -142,7 +142,7 @@ FramePtr V4L2ImagingWorker::shoot()
   return frame;
 }
 
-FramePtr V4L2ImagingWorker::Private::import_frame(const V4LBuffer::ptr& buffer)
+FramePtr V4L2ImagingWorker::Private::import_frame(const V4LBufferPtr& buffer)
 {
   cv::InputArray inputArray{buffer->bytes(),  static_cast<int>(buffer->size())};
   cv::Mat image = cv::imdecode(inputArray, -1);
@@ -150,14 +150,14 @@ FramePtr V4L2ImagingWorker::Private::import_frame(const V4LBuffer::ptr& buffer)
 }
 
 
-FramePtr V4L2ImagingWorker::Private::convert_frame(const V4LBuffer::ptr& buffer, int cv_type, int cv_conversion_format, Frame::ColorFormat color_format)
+FramePtr V4L2ImagingWorker::Private::convert_frame(const V4LBufferPtr& buffer, int cv_type, int cv_conversion_format, Frame::ColorFormat color_format)
 {
   cv::Mat image{static_cast<int>(format.fmt.pix.height), static_cast<int>(format.fmt.pix.width), cv_type, buffer->bytes()};
   cv::cvtColor(image, image, cv_conversion_format);
   return make_shared<Frame>(color_format, image);
 }
 
-FramePtr V4L2ImagingWorker::Private::create_frame(const V4LBuffer::ptr& buffer, int cv_type, Frame::ColorFormat color_format)
+FramePtr V4L2ImagingWorker::Private::create_frame(const V4LBufferPtr& buffer, int cv_type, Frame::ColorFormat color_format)
 {
     cv::Mat image = cv::Mat{static_cast<int>(format.fmt.pix.height), static_cast<int>(format.fmt.pix.width), cv_type, buffer->bytes()};
     // copy(buffer->bytes(), buffer->bytes() + buffer->size(), image.begin<uint8_t>());
