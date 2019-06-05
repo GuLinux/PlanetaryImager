@@ -21,13 +21,14 @@
 
 #include "ASICamera2.h"
 #include <vector>
-#include "drivers/imager.h"
 #include "drivers/imagerthread.h"
 #include <QRect>
+#include "commons/fwd.h"
+
+FWD_PTR(Frame)
 
 class ASIImagingWorker : public ImagerThread::Worker {
 public:
-  typedef std::shared_ptr<ASIImagingWorker> ptr;
   ASIImagingWorker(const QRect &roi, int bin, const ASI_CAMERA_INFO &info, ASI_IMG_TYPE format);
   ~ASIImagingWorker();
   FramePtr shoot() override;
