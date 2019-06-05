@@ -27,6 +27,7 @@
 #include "v4l2exception.h"
 #include "c++/stringbuilder.h"
 #include "commons/frame.h"
+#include "v4l2device.h"
 
 using namespace std;
 using namespace std::placeholders;
@@ -34,7 +35,7 @@ using namespace std::placeholders;
 
 
 DPTR_IMPL(V4L2ImagingWorker) {
-  V4L2Device::ptr device;
+  V4L2DevicePtr device;
   v4l2_format format;
   V4LBuffer::List buffers;
   uint32_t bufferinfo_type;
@@ -46,7 +47,7 @@ DPTR_IMPL(V4L2ImagingWorker) {
   FramePtr convert_frame(const V4LBufferPtr &buffer, int cv_type, int cv_conversion_format, Frame::ColorFormat color_format);
 };
 
-V4L2ImagingWorker::V4L2ImagingWorker(const V4L2Device::ptr& device, const v4l2_format& format) : dptr(device, format)
+V4L2ImagingWorker::V4L2ImagingWorker(const V4L2DevicePtr& device, const v4l2_format& format) : dptr(device, format)
 {
   QHash<uint32_t, function<FramePtr(const V4LBufferPtr)>> formats = {
     // Mono Formats

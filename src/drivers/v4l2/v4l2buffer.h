@@ -20,21 +20,21 @@
 #define V4LBUFFER_H
 #include "c++/dptr.h"
 #include <linux/videodev2.h>
-#include "v4l2device.h"
 #include <QList>
 #include "commons/fwd.h"
 
+FWD_PTR(V4L2Device)
 FWD_PTR(V4LBuffer)
 
 class V4LBuffer
 {
 public:
-    V4LBuffer(int index, const V4L2Device::ptr &v4ldevice);
+    V4LBuffer(int index, const V4L2DevicePtr &v4ldevice);
     ~V4LBuffer();
     void queue();
-    class List : public QList<ptr> {
+    class List : public QList<V4LBufferPtr> {
     public:
-        std::shared_ptr< V4LBuffer > dequeue(const std::shared_ptr< V4L2Device >& device) const;
+        std::shared_ptr< V4LBuffer > dequeue(const V4L2DevicePtr& device) const;
     };
     char *bytes() const;
     uint32_t type() const;

@@ -45,7 +45,7 @@ DPTR_IMPL(V4L2Imager)
     Drivers::V4L2::ControlFixes control_fixes;
     V4L2Imager *q;
     
-    V4L2Device::ptr device;
+    V4L2DevicePtr device;
     
     V4L2Formats::ptr v4l2formats;
     QList<V4L2Formats::Resolution::ptr> resolutions;

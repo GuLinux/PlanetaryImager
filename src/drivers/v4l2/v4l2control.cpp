@@ -23,16 +23,17 @@
 #include "v4l2exception.h"
 #include "c++/stringbuilder.h"
 #include "Qt/qt_strings_helper.h"
+#include "v4l2device.h"
 
 using namespace std;
 using namespace GuLinux;
 DPTR_IMPL(V4L2Control) {
-  const V4L2Device::ptr camera;
+  const V4L2DevicePtr camera;
   Imager::Control control;
   void read();
 };
 
-V4L2Control::V4L2Control(uint32_t control_id, const V4L2Device::ptr& camera, const QList<Fix> &fixes) : dptr(camera)
+V4L2Control::V4L2Control(uint32_t control_id, const V4L2DevicePtr& camera, const QList<Fix> &fixes) : dptr(camera)
 { 
   v4l2_queryctrl v4l2control{control_id};
   camera->ioctl(VIDIOC_QUERYCTRL, &v4l2control);

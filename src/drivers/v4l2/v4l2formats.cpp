@@ -22,23 +22,24 @@
 #include <QDebug>
 #include "v4l2utils.h"
 #include "Qt/qt_strings_helper.h"
+#include "v4l2device.h"
 
 using namespace std;
 
 DPTR_IMPL(V4L2Formats) {
-  V4L2Device::ptr device;
+  V4L2DevicePtr device;
   QList<V4L2Formats::Format::ptr> formats;
 };
 
 DPTR_IMPL(V4L2Formats::Format) {
   v4l2_fmtdesc fmtdesc;
-  V4L2Device::ptr device;
+  V4L2DevicePtr device;
   QList<V4L2Formats::Resolution::ptr> resolutions;
 };
 
 DPTR_IMPL(V4L2Formats::Resolution) {
   v4l2_frmsizeenum frmsizeenum;
-  V4L2Device::ptr device;
+  V4L2DevicePtr device;
   Format &format;
 };
 
@@ -53,7 +54,7 @@ QDebug operator<<(QDebug dbg, const V4L2Formats::Format &format) {
   return dbg.space().quote();
 }
 
-V4L2Formats::V4L2Formats(const V4L2Device::ptr& device) : dptr(device)
+V4L2Formats::V4L2Formats(const V4L2DevicePtr& device) : dptr(device)
 {
   v4l2_fmtdesc formats;
   formats.index = 0;
@@ -71,7 +72,7 @@ V4L2Formats::V4L2Formats(const V4L2Device::ptr& device) : dptr(device)
 
 
 namespace {
-  v4l2_format v4l2_query_format(const V4L2Device::ptr &device) {
+  v4l2_format v4l2_query_format(const V4L2DevicePtr &device) {
     v4l2_format current_format;
     current_format.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
     device->ioctl(VIDIOC_G_FMT , &current_format, "querying webcam format");
@@ -102,7 +103,7 @@ V4L2Formats::Resolution::ptr V4L2Formats::current_resolution() const
 }
 
 
-V4L2Formats::Format::Format(const v4l2_fmtdesc &fmtdesc, const V4L2Device::ptr &device) : dptr(fmtdesc, device)
+V4L2Formats::Format::Format(const v4l2_fmtdesc &fmtdesc, const V4L2DevicePtr &device) : dptr(fmtdesc, device)
 {
   v4l2_frmsizeenum frmsize;
   frmsize.pixel_format = fmtdesc.pixelformat;
@@ -137,7 +138,7 @@ QList<V4L2Formats::Format::ptr> V4L2Formats::formats() const {
   return d->formats;
 }
 
-V4L2Formats::Resolution::Resolution(const v4l2_frmsizeenum& frmsizeenum, const V4L2Device::ptr& device, Format &format) : dptr(frmsizeenum, device, format)
+V4L2Formats::Resolution::Resolution(const v4l2_frmsizeenum& frmsizeenum, const V4L2DevicePtr& device, Format &format) : dptr(frmsizeenum, device, format)
 {
 }
 

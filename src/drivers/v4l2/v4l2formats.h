@@ -20,18 +20,19 @@
 #ifndef V4L2FORMATS_H
 #define V4L2FORMATS_H
 
-#include "v4l2device.h"
 #include "c++/dptr.h"
 #include <QSize>
 #include <QList>
 #include <linux/videodev2.h>
+#include "commons/fwd.h"
 
+FWD_PTR(V4L2Device)
 
 class V4L2Formats
 {
 public:
   typedef std::shared_ptr<V4L2Formats> ptr;
-  V4L2Formats(const V4L2Device::ptr &device);
+  V4L2Formats(const V4L2DevicePtr &device);
   ~V4L2Formats();
   class Format;
   class Resolution;
@@ -44,7 +45,7 @@ private:
 
 class V4L2Formats::Resolution {
 public:
-  Resolution(const v4l2_frmsizeenum &frmsizeenum, const V4L2Device::ptr &device, Format &format);
+  Resolution(const v4l2_frmsizeenum &frmsizeenum, const V4L2DevicePtr &device, Format &format);
   ~Resolution();
   typedef std::shared_ptr<Resolution> ptr;
   QSize size() const;
@@ -59,7 +60,7 @@ private:
 
 class V4L2Formats::Format {
 public:
-  Format(const v4l2_fmtdesc &fmtdesc, const V4L2Device::ptr &device);
+  Format(const v4l2_fmtdesc &fmtdesc, const V4L2DevicePtr &device);
   ~Format();
   typedef std::shared_ptr<Format> ptr;
   QString name() const;

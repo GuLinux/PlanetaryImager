@@ -20,10 +20,12 @@
 #define V4LDEVICE_H
 #include <QString>
 #include "c++/dptr.h"
+#include "commons/fwd.h"
+
+FWD_PTR(V4L2Device)
 
 class V4L2Device {
 public:
-  typedef std::shared_ptr<V4L2Device> ptr;
   V4L2Device(const QString &path);
   ~V4L2Device();
   
