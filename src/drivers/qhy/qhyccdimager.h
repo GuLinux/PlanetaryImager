@@ -18,7 +18,6 @@
 
 #ifndef QHYCCD_H
 #define QHYCCD_H
-#include "qhydriver.h"
 #include <drivers/imager.h>
 #include "dptr.h"
 #include <QObject>

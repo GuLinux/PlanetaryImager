@@ -46,7 +46,7 @@ DPTR_IMPL(QHYCCDImager) {
   QHYCCDImager *q;
   qhyccd_handle *handle;
     Properties chip;
-  QList<QHYControl::ptr> controls;
+  QList<QHYControlPtr> controls;
   QHYImagingWorkerPtr imaging_worker;
 };
 

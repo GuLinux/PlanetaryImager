@@ -197,10 +197,10 @@ QMap<int, QString> QHYControl::Private::control_names() {
 
 //#include <QFile>
 //#include <QJsonDocument>
-QList<QHYControl::ptr> QHYControl::availableControls(qhyccd_handle *handle)
+QList<QHYControlPtr> QHYControl::availableControls(qhyccd_handle *handle)
 {
     auto keys = Private::control_names().keys();
-    QList<QHYControl::ptr> controls;
+    QList<QHYControlPtr> controls;
     transform(begin(keys), end(keys), back_inserter(controls), [=](auto id){ return make_shared<QHYControl>(id, handle);});
     controls.erase(remove_if(begin(controls), end(controls), [](const auto &c) { return !c->available(); }), end(controls));
 
