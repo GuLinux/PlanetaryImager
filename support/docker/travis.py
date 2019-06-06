@@ -11,7 +11,7 @@ class Travis:
   def generate(self, args):
     travis_obj = {
       'language': 'cpp',
-      'if': 'branch = master OR type = pull_request',
+      'if': '(branch = master OR type = pull_request OR commit_message =~ /.*#trigger_ci.*/) AND (NOT commit_message =~ /.*#skip_ci.*/)',
       'matrix': {
       },
       'before_install': [

@@ -7,7 +7,7 @@ deploy:
   provider: script
   script: 'bash -x ${TRAVIS_BUILD_DIR}/scripts/travis/deploy'
   skip_cleanup: true
-if: 'branch = master OR type = pull_request'
+if: '(branch = master OR type = pull_request OR commit_message =~ /.*#trigger_ci.*/) AND (NOT commit_message =~ /.*#skip_ci.*/)'
 language: cpp
 matrix:
   include:
