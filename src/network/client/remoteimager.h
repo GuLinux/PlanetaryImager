@@ -21,12 +21,16 @@
 #define REMOTEIMAGER_H
 #include "drivers/imager.h"
 #include "c++/dptr.h"
-#include "network/networkdispatcher.h"
+#include "commons/fwd.h"
+#include "network/networkreceiver.h"
+
+FWD_PTR(NetworkDispatcher)
+
 class RemoteImager : public Imager, public NetworkReceiver
 {
 Q_OBJECT
 public:
-  RemoteImager(const ImageHandler::ptr &image_handler, const NetworkDispatcher::ptr &dispatcher, qlonglong id = -1);
+  RemoteImager(const ImageHandlerPtr &image_handler, const NetworkDispatcherPtr &dispatcher, qlonglong id = -1);
   ~RemoteImager();
   Controls controls() const override;  
   QString name() const override;

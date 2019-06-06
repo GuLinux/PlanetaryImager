@@ -19,6 +19,8 @@
 #include "durationcontrolwidget.h"
 #include <QDoubleSpinBox>
 #include <QComboBox>
+
+#include "Qt/qt_functional.h"
 #include "commons/utils.h"
 using namespace std;
 using namespace std::chrono_literals;

@@ -39,6 +39,7 @@
 #include <QJsonDocument>
 #include "Qt/qt_functional.h"
 #include <QSortFilterProxyModel>
+#include "commons/filesystembrowser.h"
 
 using namespace std;
 using namespace std::placeholders;
@@ -246,7 +247,7 @@ CameraControlsWidget::~CameraControlsWidget()
 
 
 
-CameraControlsWidget::CameraControlsWidget(Imager *imager, Configuration &configuration, const FilesystemBrowser::ptr &filesystemBrowser, QWidget *parent)
+CameraControlsWidget::CameraControlsWidget(Imager *imager, Configuration &configuration, const FilesystemBrowserPtr &filesystemBrowser, QWidget *parent)
 : QWidget{parent}, dptr(imager, configuration, make_unique<Ui::CameraControlsWidget>(), make_unique<QStringListModel>(), this)
 {
   d->ui->setupUi(this);

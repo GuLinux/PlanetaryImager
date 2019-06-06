@@ -16,24 +16,27 @@
  *
  */
 
-#include "framesforwarder.h"
-#include <QObject>
+
+#include "network/server/framesforwarder.h"
 #include "network/protocol/driverprotocol.h"
+#include <QObject>
 #include <QElapsedTimer>
 #include <QtConcurrent/QtConcurrent>
 #include <atomic>
+#include "commons/frame.h"
+#include "network/networkdispatcher.h"
 
 using namespace std;
 
 DPTR_IMPL(FramesForwarder) {
-  NetworkDispatcher::ptr dispatcher;
+  NetworkDispatcherPtr dispatcher;
   atomic_bool enabled;
   FramesForwarder *q;
   QElapsedTimer elapsed;
   bool recording = false;
 };
 
-FramesForwarder::FramesForwarder(const NetworkDispatcher::ptr& dispatcher) : dptr(dispatcher, {true}, this)
+FramesForwarder::FramesForwarder(const NetworkDispatcherPtr& dispatcher) : dptr(dispatcher, {true}, this)
 {
   d->elapsed.restart();
 }
@@ -42,7 +45,7 @@ FramesForwarder::~FramesForwarder()
 {
 }
 
-void FramesForwarder::doHandle(Frame::const_ptr frame)
+void FramesForwarder::doHandle(FrameConstPtr frame)
 {
   if(! DriverProtocol::isForwardingEnabled() || d->elapsed.elapsed() < (d->recording ? 2000 : 50 ) || ! d->enabled) // TODO: variable rate, depending on network delay?
     return;

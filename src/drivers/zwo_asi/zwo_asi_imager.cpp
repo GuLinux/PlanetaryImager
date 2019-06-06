@@ -54,10 +54,10 @@ DPTR_IMPL(ZWO_ASI_Imager) {
     Properties properties;
 
     ASIControl::vector controls;
-    ASIControl::ptr temperature_control;
+    ASIControlPtr temperature_control;
     
     weak_ptr<ASIImagingWorker> worker;
-    ROIValidator::ptr roi_validator;
+    ROIValidatorPtr roi_validator;
     QRect maxROI(int bin) const;
     void restart_worker(int bin, const QRect &roi, ASI_IMG_TYPE format);
     void update_worker_exposure_timeout();
@@ -67,7 +67,7 @@ DPTR_IMPL(ZWO_ASI_Imager) {
 };
 
 
-ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandler::ptr &imageHandler) : Imager{imageHandler}, dptr(info, this)
+ZWO_ASI_Imager::ZWO_ASI_Imager(const ASI_CAMERA_INFO &info, const ImageHandlerPtr &imageHandler) : Imager{imageHandler}, dptr(info, this)
 {
     d->roi_validator = make_shared<ROIValidator>(initializer_list<ROIValidator::Rule>{
       ROIValidator::x_multiple(2),
@@ -193,7 +193,7 @@ void ZWO_ASI_Imager::setControl(const Control& control)
     return;
   }
   auto camera_control_it = find_if(d->controls.begin(), d->controls.end(),
-			  [&](const ASIControl::ptr &c){ return c->caps.ControlType == static_cast<ASI_CONTROL_TYPE>(control.id); });
+			  [&](const ASIControlPtr &c){ return c->caps.ControlType == static_cast<ASI_CONTROL_TYPE>(control.id); });
   if(camera_control_it != d->controls.end()) {
     auto camera_control = *camera_control_it;
     qDebug() << "Changing control " << camera_control->control();

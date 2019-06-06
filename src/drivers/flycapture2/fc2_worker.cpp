@@ -20,6 +20,7 @@
 
 #include "fc2_exception.h"
 #include "fc2_worker.h"
+#include "commons/frame.h"
 
 
 // Captured frames may be "inconsistent" (have damaged contents), e.g. sometimes when using GigE cameras
@@ -131,7 +132,7 @@ void FC2ImagerWorker::initFrameInfo()
     }
 }
 
-Frame::ptr FC2ImagerWorker::shoot()
+FramePtr FC2ImagerWorker::shoot()
 {
 //    //TODO: fail gracefully if cannot capture
 

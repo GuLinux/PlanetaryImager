@@ -19,6 +19,8 @@
 
 #include "configurationforwarder.h"
 #include "network/protocol/configurationprotocol.h"
+#include "network/networkdispatcher.h"
+#include "network/networkpacket.h"
 
 using namespace std;
 using namespace std::placeholders;
@@ -26,10 +28,10 @@ using namespace std::placeholders;
 DPTR_IMPL(ConfigurationForwarder) {
   Configuration &configuration;
   ConfigurationForwarder *q;
-  void get(const NetworkPacket::ptr &packet);
-  void set(const NetworkPacket::ptr &packet);
-  void reset(const NetworkPacket::ptr &packet);
-  void list(const NetworkPacket::ptr &packet);
+  void get(const NetworkPacketPtr &packet);
+  void set(const NetworkPacketPtr &packet);
+  void reset(const NetworkPacketPtr &packet);
+  void list(const NetworkPacketPtr &packet);
   
   struct ConfigurationFunctions {
     function<QVariant()> get;
@@ -53,7 +55,7 @@ d->settings_list[#name] = #type;
 }; \
 d->settings_list[#name] = #type;
 
-ConfigurationForwarder::ConfigurationForwarder(Configuration &configuration, const NetworkDispatcher::ptr& dispatcher) : NetworkReceiver{dispatcher}, dptr(configuration, this)
+ConfigurationForwarder::ConfigurationForwarder(Configuration &configuration, const NetworkDispatcherPtr& dispatcher) : NetworkReceiver{dispatcher}, dptr(configuration, this)
 {
   register_handler(ConfigurationProtocol::Get, bind(&Private::get, d.get(), _1));
   register_handler(ConfigurationProtocol::Set, bind(&Private::set, d.get(), _1));
@@ -95,19 +97,19 @@ ConfigurationForwarder::~ConfigurationForwarder()
 }
 
 
-void ConfigurationForwarder::Private::get(const NetworkPacket::ptr& packet)
+void ConfigurationForwarder::Private::get(const NetworkPacketPtr& packet)
 {
   auto name = packet->payloadVariant().toString();
   auto value = names[name].get();
   q->dispatcher()->queue_send(ConfigurationProtocol::encodeGetReply(name, value));
 }
 
-void ConfigurationForwarder::Private::reset(const NetworkPacket::ptr& packet)
+void ConfigurationForwarder::Private::reset(const NetworkPacketPtr& packet)
 {
   names[packet->payloadVariant().toString()].reset();
 }
 
-void ConfigurationForwarder::Private::set(const NetworkPacket::ptr& packet)
+void ConfigurationForwarder::Private::set(const NetworkPacketPtr& packet)
 {
   QString name;
   QVariant value;
@@ -115,7 +117,7 @@ void ConfigurationForwarder::Private::set(const NetworkPacket::ptr& packet)
   names[name].set(value);
 }
 
-void ConfigurationForwarder::Private::list(const NetworkPacket::ptr& packet)
+void ConfigurationForwarder::Private::list(const NetworkPacketPtr& packet)
 {
   q->dispatcher()->queue_send(ConfigurationProtocol::packetListReply() << settings_list);
 }

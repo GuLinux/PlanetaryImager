@@ -19,9 +19,15 @@
 
 #ifndef DRIVERPROTOCOL_H
 #define DRIVERPROTOCOL_H
-#include "drivers/driver.h"
 #include "network/protocol/protocol.h"
 #include <QList>
+#include "commons/fwd.h"
+#include "drivers/imager.h"
+
+FWD_PTR(Frame)
+FWD_PTR(Camera)
+FWD_PTR(NetworkPacket)
+
 class DriverProtocol : public NetworkProtocol {
 public:
   ADD_PROTOCOL_PACKET_NAME(CameraList)
@@ -49,30 +55,30 @@ public:
 
   // TODO: remove all the static methods, particularly since most of them are stateful
 
-  static NetworkPacket::ptr sendCameraListReply(const Driver::Cameras &cameras);
-  typedef std::function<Driver::Camera::ptr(const QString &, qlonglong)> CameraFactory;
-  static void decode(Driver::Cameras &cameras, const NetworkPacket::ptr &packet, const CameraFactory &factory);
+  static NetworkPacketPtr sendCameraListReply(const QList<CameraPtr> &cameras);
+  typedef std::function<CameraPtr(const QString &, qlonglong)> CameraFactory;
+  static void decode(QList<CameraPtr> &cameras, const NetworkPacketPtr &packet, const CameraFactory &factory);
 
-  static NetworkPacket::ptr sendGetPropertiesReply(const Imager::Properties &properties);
-  static void decode(Imager::Properties &properties, const NetworkPacket::ptr &packet);
+  static NetworkPacketPtr sendGetPropertiesReply(const Imager::Properties &properties);
+  static void decode(Imager::Properties &properties, const NetworkPacketPtr &packet);
 
-  static NetworkPacket::ptr sendGetControlsReply(const Imager::Controls &controls);
-  static void decode(Imager::Controls &controls, const NetworkPacket::ptr &packet);
+  static NetworkPacketPtr sendGetControlsReply(const Imager::Controls &controls);
+  static void decode(Imager::Controls &controls, const NetworkPacketPtr &packet);
 
-  static NetworkPacket::ptr setControl(const Imager::Control &control);
-  static NetworkPacket::ptr controlChanged(const Imager::Control &control);
-  static Imager::Control decodeControl(const NetworkPacket::ptr &packet);
+  static NetworkPacketPtr setControl(const Imager::Control &control);
+  static NetworkPacketPtr controlChanged(const Imager::Control &control);
+  static Imager::Control decodeControl(const NetworkPacketPtr &packet);
 
   static void setFormatParameters(const FormatParameters &parameters);
-  static NetworkPacket::ptr sendFrame(Frame::const_ptr frame);
-  static Frame::ptr decodeFrame(const NetworkPacket::ptr &packet);
+  static NetworkPacketPtr sendFrame(FrameConstPtr frame);
+  static FramePtr decodeFrame(const NetworkPacketPtr &packet);
 
   static bool isForwardingEnabled();
 
   struct DriverStatus {
     bool imager_running;
   };
-  static DriverStatus decodeStatus(const NetworkPacket::ptr &packet);
+  static DriverStatus decodeStatus(const NetworkPacketPtr &packet);
   static void encodeStatus(const DriverStatus &status, QVariantMap &data);
 };
 

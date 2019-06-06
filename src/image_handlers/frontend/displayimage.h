@@ -22,8 +22,8 @@
 #include <QObject>
 #include "dptr.h"
 #include "image_handlers/imagehandler.h"
-
 #include "commons/configuration.h"
+
 class DisplayImage : public QObject, public ImageHandler
 {
 Q_OBJECT
@@ -44,7 +44,7 @@ public slots:
   void read_settings();
 private:
 
-  void doHandle(Frame::const_ptr frame) override;
+  void doHandle(FrameConstPtr frame) override;
 
   DPTR
 };

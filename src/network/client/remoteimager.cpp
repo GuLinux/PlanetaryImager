@@ -19,46 +19,49 @@
 
 #include "remoteimager.h"
 #include "network/protocol/driverprotocol.h"
+#include "network/networkdispatcher.h"
 #include <QDebug>
 #include <QtConcurrent/QtConcurrent>
+#include "network/networkpacket.h"
+#include "image_handlers/imagehandler.h"
 
 using namespace std;
 
 DPTR_IMPL(RemoteImager) {
-  const ImageHandler::ptr image_handler;
+  const ImageHandlerPtr image_handler;
   QString name;
   Properties properties;
   Controls controls;
   bool live_was_started = true;
 };
 
-RemoteImager::RemoteImager(const ImageHandler::ptr& image_handler, const NetworkDispatcher::ptr &dispatcher, qlonglong id) : Imager{image_handler}, NetworkReceiver{dispatcher}, dptr(image_handler)
+RemoteImager::RemoteImager(const ImageHandlerPtr& image_handler, const NetworkDispatcherPtr &dispatcher, qlonglong id) : Imager{image_handler}, NetworkReceiver{dispatcher}, dptr(image_handler)
 {
-  register_handler(DriverProtocol::signalCameraConnected, [](const NetworkPacket::ptr &) {});
-  register_handler(DriverProtocol::GetCameraNameReply, [this](const NetworkPacket::ptr &packet) {
+  register_handler(DriverProtocol::signalCameraConnected, [](const NetworkPacketPtr &) {});
+  register_handler(DriverProtocol::GetCameraNameReply, [this](const NetworkPacketPtr &packet) {
     d->name = packet->payloadVariant().toString();
   });
-  register_handler(DriverProtocol::GetPropertiesReply, [this](const NetworkPacket::ptr &packet) {
+  register_handler(DriverProtocol::GetPropertiesReply, [this](const NetworkPacketPtr &packet) {
     DriverProtocol::decode(d->properties, packet);
   });
-  register_handler(DriverProtocol::GetControlsReply, [this](const NetworkPacket::ptr &packet) {
+  register_handler(DriverProtocol::GetControlsReply, [this](const NetworkPacketPtr &packet) {
     DriverProtocol::decode(d->controls, packet);
   });
-  register_handler(DriverProtocol::SendFrame, [this](const NetworkPacket::ptr &packet) {
+  register_handler(DriverProtocol::SendFrame, [this](const NetworkPacketPtr &packet) {
     //qDebug() << "Got frame";
     QtConcurrent::run([=] {
       auto frame = DriverProtocol::decodeFrame(packet);
       d->image_handler->handle(frame);
     });
   });
-  register_handler(DriverProtocol::signalFPS, [this](const NetworkPacket::ptr &packet) {
+  register_handler(DriverProtocol::signalFPS, [this](const NetworkPacketPtr &packet) {
     emit fps(packet->payloadVariant().toDouble());
   });
-  register_handler(DriverProtocol::signalTemperature, [this](const NetworkPacket::ptr &packet) {
+  register_handler(DriverProtocol::signalTemperature, [this](const NetworkPacketPtr &packet) {
     emit temperature(packet->payloadVariant().toDouble());
   });
-  register_handler(DriverProtocol::signalDisconnected, [this](const NetworkPacket::ptr &) { emit disconnected(); });
-  register_handler(DriverProtocol::signalControlChanged, [this](const NetworkPacket::ptr &packet) {
+  register_handler(DriverProtocol::signalDisconnected, [this](const NetworkPacketPtr &) { emit disconnected(); });
+  register_handler(DriverProtocol::signalControlChanged, [this](const NetworkPacketPtr &packet) {
     auto control = DriverProtocol::decodeControl(packet) ;
     emit changed( control );
   });

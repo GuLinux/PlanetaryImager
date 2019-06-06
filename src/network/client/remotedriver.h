@@ -22,17 +22,21 @@
 
 #include "c++/dptr.h"
 #include "drivers/driver.h"
-#include "network/networkdispatcher.h"
 #include <QObject>
+#include "commons/fwd.h"
+#include "network/networkreceiver.h"
+
+FWD_PTR(RemoteDriver)
+FWD_PTR(NetworkDispatcher)
+
 class RemoteDriver : public Driver, public NetworkReceiver
 {
 Q_OBJECT
 public:
-  typedef std::shared_ptr<RemoteDriver> ptr;
-  RemoteDriver(const NetworkDispatcher::ptr &dispatcher);
+  RemoteDriver(const NetworkDispatcherPtr &dispatcher);
   ~RemoteDriver();
-  Cameras cameras() const override;
-  Camera::ptr existing_running_camera() const;
+  QList<CameraPtr> cameras() const override;
+  CameraPtr existing_running_camera() const;
 private:
   DPTR
 };

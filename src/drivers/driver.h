@@ -19,25 +19,25 @@
 #define PLANETARY_IMAGER_DRIVER_H
 #include <QList>
 #include <QString>
-#include <QtPlugin>
 #include "imager.h"
 #include "dptr.h"
+#include "commons/fwd.h"
+
+FWD_PTR(Driver)
+FWD_PTR(Camera)
+
+class Camera {
+public:
+  virtual QString name() const = 0;
+  virtual Imager *imager(const ImageHandlerPtr &imageHandler) const = 0;
+};
 
 class Driver : public QObject {
   Q_OBJECT
 public:
-  typedef std::shared_ptr<Driver> ptr;
-  class Camera {
-  public:
-    typedef std::shared_ptr<Camera> ptr;
-    virtual QString name() const = 0;
-    virtual Imager *imager(const ImageHandler::ptr &imageHandler) const = 0;
-  };
-  typedef QList<Camera::ptr> Cameras; 
   virtual void aboutToQuit();
-  virtual Cameras cameras() const = 0;
+  virtual QList<CameraPtr> cameras() const = 0;
 };
-typedef QList<Driver::ptr> Drivers;
 typedef Driver *(*LoadDriverFunction)();
 
 

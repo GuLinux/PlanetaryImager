@@ -18,6 +18,7 @@
  */
 
 #include "savefileprotocol.h"
+#include "network/networkpacket.h"
 
 using namespace std;
 PROTOCOL_NAME_VALUE(SaveFile, StartRecording);
@@ -31,7 +32,7 @@ PROTOCOL_NAME_VALUE(SaveFile, signalFinished);
 PROTOCOL_NAME_VALUE(SaveFile, slotSetPaused);
 
 
-NetworkPacket::ptr SaveFileProtocol::setPaused(bool paused)
+NetworkPacketPtr SaveFileProtocol::setPaused(bool paused)
 {
   return packetslotSetPaused() << paused;
 }

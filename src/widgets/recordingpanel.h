@@ -23,13 +23,16 @@
 #include "dptr.h"
 
 #include "commons/configuration.h"
-#include "commons/filesystembrowser.h"
+#include "commons/fwd.h"
+
+FWD_PTR(FilesystemBrowser)
+
 class RecordingPanel : public QWidget
 {
     Q_OBJECT
 public:
     ~RecordingPanel();
-    RecordingPanel(Configuration &configuration, const FilesystemBrowser::ptr &filesystemBrowser, QWidget* parent = 0);
+    RecordingPanel(Configuration &configuration, const FilesystemBrowserPtr &filesystemBrowser, QWidget* parent = 0);
 public slots:
   void recording(bool recording = false, const QString &filename = {});
   void saveFPS(double fps);

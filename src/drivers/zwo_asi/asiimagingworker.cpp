@@ -19,6 +19,7 @@
 #include "asiimagingworker.h"
 #include "zwoexception.h"
 #include <atomic>
+#include "commons/frame.h"
 
 using namespace std;
 
@@ -80,7 +81,7 @@ void ASIImagingWorker::calc_exposure_timeout()
 
 
 
-Frame::ptr ASIImagingWorker::shoot()
+FramePtr ASIImagingWorker::shoot()
 {
   // ASI CAMs are little endian
   auto frame = make_shared<Frame>( d->format == ASI_IMG_RAW16 ? 16 : 8,  d->colorFormat(), QSize{d->roi.width(), d->roi.height()}, Frame::LittleEndian);

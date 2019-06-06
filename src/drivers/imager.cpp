@@ -25,15 +25,15 @@ using namespace std;
 using namespace std::placeholders;
 
 DPTR_IMPL(Imager) {
-  const ImageHandler::ptr image_handler;
-  ImagerThread::ptr imager_thread;
+  const ImageHandlerPtr image_handler;
+  ImagerThreadPtr imager_thread;
   LOG_C_SCOPE(Imager);
   unique_ptr<QHash<Imager::Capability, bool>> capabilities;
   bool destroyed = false;
   Configuration::CaptureEndianess captureEndianess = Configuration::CaptureEndianess::CameraDefault;
 };
 
-Imager::Imager(const ImageHandler::ptr& image_handler) : QObject(nullptr), dptr(image_handler)
+Imager::Imager(const ImageHandlerPtr& image_handler) : QObject(nullptr), dptr(image_handler)
 {
   static bool metatypes_registered = false;
   if(!metatypes_registered) {

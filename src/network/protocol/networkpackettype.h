@@ -1,5 +1,6 @@
 /*
- * Copyright (C) 2016  Marco Gulino <marco@gulinux.net>
+ * GuLinux Planetary Imager - https://github.com/GuLinux/PlanetaryImager
+ * Copyright (C) 2019  Marco Gulino <marco@gulinux.net>
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -16,29 +17,11 @@
  *
  */
 
-#ifndef ASIIMAGINGWORKER_H
-#define ASIIMAGINGWORKER_H
+#ifndef NETWORK_PACKET_TYPE_H
+#define NETWORK_PACKET_TYPE_H
 
-#include "ASICamera2.h"
-#include <vector>
-#include "drivers/imagerthread.h"
-#include <QRect>
-#include "commons/fwd.h"
+#include <QString>
 
-FWD_PTR(Frame)
+typedef QString NetworkPacketType;
 
-class ASIImagingWorker : public ImagerThread::Worker {
-public:
-  ASIImagingWorker(const QRect &roi, int bin, const ASI_CAMERA_INFO &info, ASI_IMG_TYPE format);
-  ~ASIImagingWorker();
-  FramePtr shoot() override;
-
-  QRect roi() const;
-  ASI_IMG_TYPE format() const;
-  int bin() const;
-  void calc_exposure_timeout();
-private:
-  DPTR
-};
-
-#endif // ASIIMAGINGWORKER_H
+#endif

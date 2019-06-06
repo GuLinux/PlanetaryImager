@@ -18,7 +18,6 @@
 
 #ifndef QHYCCD_H
 #define QHYCCD_H
-#include "qhydriver.h"
 #include <drivers/imager.h>
 #include "dptr.h"
 #include <QObject>
@@ -28,7 +27,7 @@ class QHYCCDImager : public Imager
 {
   Q_OBJECT
 public:
-    QHYCCDImager(const QString &cameraName, const char *id, const ImageHandler::ptr &imageHandler);
+    QHYCCDImager(const QString &cameraName, const char *id, const ImageHandlerPtr &imageHandler);
     ~QHYCCDImager();
 
     QString name() const override;

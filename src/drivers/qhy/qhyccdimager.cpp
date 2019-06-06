@@ -46,12 +46,12 @@ DPTR_IMPL(QHYCCDImager) {
   QHYCCDImager *q;
   qhyccd_handle *handle;
     Properties chip;
-  QList<QHYControl::ptr> controls;
-  QHYImagingWorker::ptr imaging_worker;
+  QList<QHYControlPtr> controls;
+  QHYImagingWorkerPtr imaging_worker;
 };
 
 
-QHYCCDImager::QHYCCDImager(const QString &cameraName, const char *id, const ImageHandler::ptr &imageHandler) : Imager{imageHandler}, dptr(cameraName, id, this)
+QHYCCDImager::QHYCCDImager(const QString &cameraName, const char *id, const ImageHandlerPtr &imageHandler) : Imager{imageHandler}, dptr(cameraName, id, this)
 {
   qDebug() << "Opening QHY camera " << cameraName << ", id=" << id;
   d->handle = OpenQHYCCD(const_cast<char*>(id));

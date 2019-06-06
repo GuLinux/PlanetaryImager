@@ -16,6 +16,8 @@
  *
  */
 #include "menucontrolwidget.h"
+#include <QComboBox>
+#include "Qt/qt_functional.h"
 
 struct MenuControlWidget::Private {
   QComboBox *edit;

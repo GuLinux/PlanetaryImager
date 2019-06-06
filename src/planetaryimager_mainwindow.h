@@ -22,9 +22,15 @@
 #include <QMainWindow>
 #include "dptr.h"
 #include "commons/messageslogger.h"
-#include "commons/filesystembrowser.h"
-#include "image_handlers/imagehandler.h"
-#include "planetaryimager.h"
+#include "commons/fwd.h"
+
+FWD_PTR(ImageHandler)
+FWD_PTR(ImageHandlers)
+FWD_PTR(PlanetaryImager)
+FWD_PTR(Imager)
+FWD_PTR(Camera)
+FWD_PTR(FilesystemBrowser)
+
 namespace Ui
 {
 class PlanetaryImagerMainWindow;
@@ -36,15 +42,15 @@ class PlanetaryImagerMainWindow : public QMainWindow
 public:
   ~PlanetaryImagerMainWindow();
   PlanetaryImagerMainWindow(
-      const PlanetaryImager::ptr &planetaryImager,
-      const ImageHandlers::ptr &imageHandlers,
-      const FilesystemBrowser::ptr &filesystemBrowser,
+      const PlanetaryImagerPtr &planetaryImager,
+      const ImageHandlersPtr &imageHandlers,
+      const FilesystemBrowserPtr &filesystemBrowser,
       const QString &logFilePath = {},
       QWidget* parent = 0,
       Qt::WindowFlags flags = 0
   );
-  void connectCamera(const Driver::Camera::ptr &camera);
-  ImageHandler::ptr imageHandler() const;
+  void connectCamera(const CameraPtr &camera);
+  ImageHandlerPtr imageHandler() const;
   Imager *imager() const;
 public slots:
   void setImager(Imager *imager);

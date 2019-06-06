@@ -18,6 +18,8 @@
 
 #include "remotesaveimages.h"
 #include "network/protocol/savefileprotocol.h"
+#include "network/networkpacket.h"
+#include "network/networkdispatcher.h"
 
 using namespace std;
 
@@ -25,14 +27,14 @@ DPTR_IMPL(RemoteSaveImages) {
   RemoteSaveImages *q;
 };
 
-RemoteSaveImages::RemoteSaveImages(const NetworkDispatcher::ptr& dispatcher) : NetworkReceiver{dispatcher}, dptr(this)
+RemoteSaveImages::RemoteSaveImages(const NetworkDispatcherPtr& dispatcher) : NetworkReceiver{dispatcher}, dptr(this)
 {
-  register_handler(SaveFileProtocol::signalSaveFPS, [this](const NetworkPacket::ptr &p) { emit saveFPS(p->payloadVariant().toDouble()); });
-  register_handler(SaveFileProtocol::signalMeanFPS, [this](const NetworkPacket::ptr &p) { emit meanFPS(p->payloadVariant().toDouble()); });
-  register_handler(SaveFileProtocol::signalSavedFrames, [this](const NetworkPacket::ptr &p) { emit savedFrames(p->payloadVariant().toLongLong()); });
-  register_handler(SaveFileProtocol::signalDroppedFrames, [this](const NetworkPacket::ptr &p) { emit droppedFrames(p->payloadVariant().toLongLong()); });
-  register_handler(SaveFileProtocol::signalRecording, [this](const NetworkPacket::ptr &p) { emit recording(p->payloadVariant().toString()); });
-  register_handler(SaveFileProtocol::signalFinished, [this](const NetworkPacket::ptr &) { emit finished(); });
+  register_handler(SaveFileProtocol::signalSaveFPS, [this](const NetworkPacketPtr &p) { emit saveFPS(p->payloadVariant().toDouble()); });
+  register_handler(SaveFileProtocol::signalMeanFPS, [this](const NetworkPacketPtr &p) { emit meanFPS(p->payloadVariant().toDouble()); });
+  register_handler(SaveFileProtocol::signalSavedFrames, [this](const NetworkPacketPtr &p) { emit savedFrames(p->payloadVariant().toLongLong()); });
+  register_handler(SaveFileProtocol::signalDroppedFrames, [this](const NetworkPacketPtr &p) { emit droppedFrames(p->payloadVariant().toLongLong()); });
+  register_handler(SaveFileProtocol::signalRecording, [this](const NetworkPacketPtr &p) { emit recording(p->payloadVariant().toString()); });
+  register_handler(SaveFileProtocol::signalFinished, [this](const NetworkPacketPtr &) { emit finished(); });
   
 }
 

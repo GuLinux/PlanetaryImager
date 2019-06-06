@@ -5,17 +5,20 @@
 #include "qhyccd.h"
 #include <QList>
 #include "drivers/imager.h"
+#include "commons/fwd.h"
+
+FWD_PTR(QHYControl)
+
 class QHYControl
 {
 public:
-    typedef std::shared_ptr<QHYControl> ptr;
     QHYControl(int id, qhyccd_handle *handle);
     ~QHYControl();
     int id() const;
     QString name() const;
     bool isUIControl() const;
     bool available() const;
-    static QList<QHYControl::ptr> availableControls(qhyccd_handle *handle);
+    static QList<QHYControlPtr> availableControls(qhyccd_handle *handle);
     Imager::Control control() const;
     void reload();
     void setValue(double value);

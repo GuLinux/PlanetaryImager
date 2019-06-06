@@ -32,7 +32,7 @@ public:
 
     ~FC2Driver();
 
-    Driver::Cameras cameras() const override;
+    QList<CameraPtr> cameras() const override;
 
 private:
 

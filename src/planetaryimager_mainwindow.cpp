@@ -19,6 +19,7 @@
 #include "planetaryimager_mainwindow.h"
 #include "drivers/imager.h"
 #include "ui_planetaryimager_mainwindow.h"
+#include "commons/filesystembrowser.h"
 #include <functional>
 #include "commons/utils.h"
 #include "widgets/statusbarinfowidget.h"
@@ -49,6 +50,8 @@
 
 #include "widgets/editroidialog.h"
 
+#include "image_handlers/imagehandler.h"
+#include "image_handlers/frontend/histogram.h"
 #include "image_handlers/frontend/displayimage.h"
 #include "image_handlers/saveimages.h"
 #include "image_handlers/threadimagehandler.h"
@@ -57,8 +60,10 @@
 #include "c++/stlutils.h"
 #include "commons/exposuretimer.h"
 #include "Qt/qt_functional.h"
+#include <opencv2/opencv.hpp>
 
 #include "planetaryimager.h"
+#include "drivers/driver.h"
 
 using namespace GuLinux;
 using namespace std;
@@ -68,8 +73,8 @@ using namespace std::placeholders;
 Q_DECLARE_METATYPE(cv::Mat)
 
 DPTR_IMPL(PlanetaryImagerMainWindow) {
-  PlanetaryImager::ptr planetaryImager;
-  FilesystemBrowser::ptr filesystemBrowser;
+  PlanetaryImagerPtr planetaryImager;
+  FilesystemBrowserPtr filesystemBrowser;
   
   static PlanetaryImagerMainWindow *q;
   unique_ptr<Ui::PlanetaryImagerMainWindow> ui;
@@ -79,7 +84,7 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
 
   StatusBarInfoWidget *statusbar_info_widget;
   shared_ptr<DisplayImage> displayImage;
-  Histogram::ptr histogram;
+  HistogramPtr histogram;
   CameraControlsWidget* cameraSettingsWidget = nullptr;
   CameraInfoWidget* cameraInfoWidget = nullptr;
   HistogramWidget *histogramWidget = nullptr;
@@ -89,7 +94,7 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   RecordingPanel* recording_panel;
   ExposureTimer exposure_timer;
   
-  ImageHandler::ptr imageHandler;
+  ImageHandlerPtr imageHandler;
   
   
   void cameraDisconnected();
@@ -124,9 +129,9 @@ void PlanetaryImagerMainWindow::Private::saveState()
 
 
 PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
-      const PlanetaryImager::ptr &planetaryImager,
-      const ImageHandlers::ptr &imageHandlers,
-      const FilesystemBrowser::ptr &filesystemBrowser,
+      const PlanetaryImagerPtr &planetaryImager,
+      const ImageHandlersPtr &imageHandlers,
+      const FilesystemBrowserPtr &filesystemBrowser,
       const QString &logFilePath,
       QWidget* parent,
       Qt::WindowFlags flags
@@ -333,7 +338,7 @@ void PlanetaryImagerMainWindow::closeEvent(QCloseEvent* event)
   emit quit();
 }
 
-ImageHandler::ptr PlanetaryImagerMainWindow::imageHandler() const
+ImageHandlerPtr PlanetaryImagerMainWindow::imageHandler() const
 {
   return d->imageHandler;
 }
@@ -364,7 +369,7 @@ void PlanetaryImagerMainWindow::Private::onCamerasFound()
 }
 
 
-void PlanetaryImagerMainWindow::connectCamera(const Driver::Camera::ptr& camera)
+void PlanetaryImagerMainWindow::connectCamera(const CameraPtr& camera)
 {
   d->planetaryImager->open(camera);
 }

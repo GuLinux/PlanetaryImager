@@ -27,7 +27,7 @@ class QRect;
 class SimulatorImager : public Imager {
   Q_OBJECT
 public:
-    SimulatorImager(const ImageHandler::ptr &handler);
+    SimulatorImager(const ImageHandlerPtr &handler);
     virtual ~SimulatorImager();
     Properties properties() const override;
     QString name() const override;

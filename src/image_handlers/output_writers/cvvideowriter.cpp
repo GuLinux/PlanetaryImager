@@ -22,6 +22,8 @@
 #include "cvvideowriter.h"
 #include "commons/opencv_utils.h"
 #include "image_handlers/saveimages.h"
+#include "commons/frame.h"
+
 using namespace std;
 
 DPTR_IMPL(cvVideoWriter) {
@@ -46,7 +48,7 @@ QString cvVideoWriter::filename() const
   return d->filename;
 }
 
-void cvVideoWriter::doHandle(Frame::const_ptr frame)
+void cvVideoWriter::doHandle(FrameConstPtr frame)
 {
   auto fourcc = [](const string &s) { return CV_FOURCC_COMPAT(s[0], s[1], s[2], s[3]); };
   auto size = cv::Size{frame->mat().cols, frame->mat().rows};

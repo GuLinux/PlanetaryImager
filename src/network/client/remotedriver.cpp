@@ -19,41 +19,44 @@
 
 #include "remotedriver.h"
 #include "network/protocol/driverprotocol.h"
+#include "network/networkdispatcher.h"
 #include <QCoreApplication>
 #include "remoteimager.h"
+#include "network/networkpacket.h"
+
 using namespace std;
 
 DPTR_IMPL(RemoteDriver) {
-  Cameras cameras;
+  QList<CameraPtr> cameras;
   DriverProtocol::DriverStatus status;
 };
 
-class RemoteCamera : public Driver::Camera {
+class RemoteCamera : public Camera {
 public:
-  RemoteCamera(const QString &name, qlonglong address, const NetworkDispatcher::ptr &dispatcher) : _name{name}, _address{address}, _dispatcher{dispatcher} {}
-  Imager * imager(const ImageHandler::ptr & imageHandler) const override;
+  RemoteCamera(const QString &name, qlonglong address, const NetworkDispatcherPtr &dispatcher) : _name{name}, _address{address}, _dispatcher{dispatcher} {}
+  Imager * imager(const ImageHandlerPtr & imageHandler) const override;
   QString name() const override { return _name; }
 private:
   const QString _name;
   const qlonglong _address;
-  const NetworkDispatcher::ptr _dispatcher;
+  const NetworkDispatcherPtr _dispatcher;
 };
 
-Imager * RemoteCamera::imager(const ImageHandler::ptr& imageHandler) const
+Imager * RemoteCamera::imager(const ImageHandlerPtr& imageHandler) const
 {
   return new RemoteImager{imageHandler, _dispatcher, _address};
 }
 
 
-RemoteDriver::RemoteDriver(const NetworkDispatcher::ptr &dispatcher) : NetworkReceiver{dispatcher}, dptr()
+RemoteDriver::RemoteDriver(const NetworkDispatcherPtr &dispatcher) : NetworkReceiver{dispatcher}, dptr()
 {
   d->status.imager_running = false;
-  register_handler(DriverProtocol::CameraListReply, [this](const NetworkPacket::ptr &packet){
+  register_handler(DriverProtocol::CameraListReply, [this](const NetworkPacketPtr &packet){
     qDebug() << "Processing cameras: " << packet;
     d->cameras.clear();
     DriverProtocol::decode(d->cameras, packet, [&](const QString &name, qlonglong address) { return make_shared<RemoteCamera>(name, address, this->dispatcher() ); });
   });
-  register_handler(NetworkProtocol::HelloReply, [this](const NetworkPacket::ptr &p) {
+  register_handler(NetworkProtocol::HelloReply, [this](const NetworkPacketPtr &p) {
     qDebug() << "hello reply handler";
     d->status = DriverProtocol::decodeStatus(p);
   });
@@ -64,14 +67,14 @@ RemoteDriver::~RemoteDriver()
 }
 
 
-Driver::Cameras RemoteDriver::cameras() const
+QList<CameraPtr> RemoteDriver::cameras() const
 {
   dispatcher()->queue_send(DriverProtocol::packetCameraList() );
   wait_for_processed(DriverProtocol::CameraListReply);
   return d->cameras;;
 }
 
-Driver::Camera::ptr RemoteDriver::existing_running_camera() const
+CameraPtr RemoteDriver::existing_running_camera() const
 {
   if(! d->status.imager_running)
     return {};

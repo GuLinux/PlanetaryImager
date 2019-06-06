@@ -35,7 +35,7 @@ public slots:
   void setPaused(bool paused);
 private:
 
-  void doHandle(Frame::const_ptr frame) override;
+  void doHandle(FrameConstPtr frame) override;
 
   DPTR
 };

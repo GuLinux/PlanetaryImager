@@ -39,10 +39,10 @@ DPTR_IMPL(QHYDriver) {
 };
 
 
-class QHYCamera : public Driver::Camera {
+class QHYCamera : public Camera {
 public:
   QHYCamera(int index) : index{index} {}
-  virtual Imager *imager(const ImageHandler::ptr& imageHandler) const { return new QHYCCDImager(name(), id, imageHandler); }
+  virtual Imager *imager(const ImageHandlerPtr& imageHandler) const { return new QHYCCDImager(name(), id, imageHandler); }
   virtual QString name() const {   return QString(id).remove(QRegularExpression{"-[\\da-f]+$"}); }
   char id[255];
   int index;
@@ -65,9 +65,9 @@ void QHYDriver::aboutToQuit()
 }
 
 
-Driver::Cameras QHYDriver::cameras() const
+QList<CameraPtr> QHYDriver::cameras() const
 {
-  Cameras cameras;
+  QList<CameraPtr> cameras;
   int found_cameras = ScanQHYCCD();
   if(found_cameras == 0 /* was QHYCCD_ERROR_NO_DEVICE */) {
     return cameras;

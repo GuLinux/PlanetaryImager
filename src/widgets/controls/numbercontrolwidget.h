@@ -19,7 +19,6 @@
 #define NUMBERSETTINGWIDGET_H
 
 #include "controlwidget.h"
-#include <QDoubleSpinBox>
 
 class NumberControlWidget : public ControlWidget {
   Q_OBJECT

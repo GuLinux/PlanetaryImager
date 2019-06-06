@@ -18,6 +18,8 @@
 
 #include "filesystemprotocol.h"
 #include <QFileInfo>
+#include "network/networkpacket.h"
+
 using namespace std;
 using namespace std::placeholders;
 PROTOCOL_NAME_VALUE(Filesystem, FileInfo);
@@ -39,25 +41,25 @@ namespace {
   }
 }
 
-NetworkPacket::ptr FilesystemProtocol::childrenReply(const QList<QFileInfo>& filesInfo)
+NetworkPacketPtr FilesystemProtocol::childrenReply(const QList<QFileInfo>& filesInfo)
 {
   QVariantList list;
   transform(filesInfo.begin(), filesInfo.end(), back_inserter(list), fileInfo2Map);
   return packetChildrenReply() << list;
 }
 
-NetworkPacket::ptr FilesystemProtocol::fileInfoReply(const QFileInfo& fileInfo)
+NetworkPacketPtr FilesystemProtocol::fileInfoReply(const QFileInfo& fileInfo)
 {
   return packetFileInfoReply() << fileInfo2Map(fileInfo);
 }
 
-void FilesystemProtocol::decodeFileInfoReply(const NetworkPacket::ptr& packet, CreateFileInfo createFileInfo)
+void FilesystemProtocol::decodeFileInfoReply(const NetworkPacketPtr& packet, CreateFileInfo createFileInfo)
 {
   qDebug() << packet->payloadVariant().toMap();
   decodeFileInfo(packet->payloadVariant().toMap(), createFileInfo);
 }
 
-void FilesystemProtocol::decodeChildrenReply(const NetworkPacket::ptr& packet, CreateFileInfo createFileInfo)
+void FilesystemProtocol::decodeChildrenReply(const NetworkPacketPtr& packet, CreateFileInfo createFileInfo)
 {
   auto l = packet->payloadVariant().toList();
   for(auto v: l) {

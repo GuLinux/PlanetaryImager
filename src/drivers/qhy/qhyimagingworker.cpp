@@ -21,6 +21,8 @@
 #include "qhyexception.h"
 #include "qhyccd.h"
 #include <QDebug>
+#include "commons/frame.h"
+
 using namespace std;
 
 DPTR_IMPL(QHYImagingWorker) {
@@ -60,7 +62,7 @@ QHYImagingWorker::~QHYImagingWorker()
 }
 
 
-Frame::ptr QHYImagingWorker::shoot()
+FramePtr QHYImagingWorker::shoot()
 {
   QHY_CHECK << GetQHYCCDLiveFrame(d->handle,&d->w,&d->h,&d->bpp,&d->channels,d->buffer.data()) << "Capturing live frame";
   

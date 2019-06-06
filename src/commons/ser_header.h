@@ -17,7 +17,6 @@
  */
 #ifndef _SER_HEADER_H
 #define _SER_HEADER_H
-#include <stdint.h>
 #include "frame.h"
 #include <QDateTime>
 #include <QtEndian>

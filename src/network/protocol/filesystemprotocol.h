@@ -20,6 +20,8 @@
 #define FILESYSTEMPROTOCOL_H
 #include "network/protocol/protocol.h"
 #include <QList>
+#include "commons/fwd.h"
+FWD_PTR(NetworkPacket)
 
 class QFileInfo;
 
@@ -33,10 +35,10 @@ public:
   
   typedef std::function<void(const QString &name, const QString &path, bool isFile, bool isDir)> CreateFileInfo;
   
-  static NetworkPacket::ptr fileInfoReply(const QFileInfo &fileInfo);
-  static void decodeFileInfoReply(const NetworkPacket::ptr &packet, CreateFileInfo createFileInfo);
-  static NetworkPacket::ptr childrenReply(const QList<QFileInfo> &filesInfo);
-  static void decodeChildrenReply(const NetworkPacket::ptr &packet, CreateFileInfo createFileInfo);
+  static NetworkPacketPtr fileInfoReply(const QFileInfo &fileInfo);
+  static void decodeFileInfoReply(const NetworkPacketPtr &packet, CreateFileInfo createFileInfo);
+  static NetworkPacketPtr childrenReply(const QList<QFileInfo> &filesInfo);
+  static void decodeChildrenReply(const NetworkPacketPtr &packet, CreateFileInfo createFileInfo);
 };
 
 #endif // FILESYSTEMPROTOCOL_H

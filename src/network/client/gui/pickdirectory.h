@@ -21,13 +21,15 @@
 
 #include <QDialog>
 #include "c++/dptr.h"
-#include "network/client/remotefilesystem.h"
+#include "commons/fwd.h"
+
+FWD_PTR(RemoteFilesystem)
 
 class PickDirectory : public QDialog
 {
     Q_OBJECT
 public:
-  PickDirectory(const RemoteFilesystem::ptr &filesystem, const QString &startingDirectory);
+  PickDirectory(const RemoteFilesystemPtr &filesystem, const QString &startingDirectory);
   ~PickDirectory();
 signals:
   void directoryPicked(const QString &path);

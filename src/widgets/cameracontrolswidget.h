@@ -21,14 +21,16 @@
 #include <QWidget>
 #include "dptr.h"
 #include "drivers/imager.h"
-#include "commons/filesystembrowser.h"
-
 #include "commons/configuration.h"
+#include "commons/fwd.h"
+
+FWD_PTR(FilesystemBrowser)
+
 class CameraControlsWidget : public QWidget
 {
 public:
 ~CameraControlsWidget();
-CameraControlsWidget(Imager *imager, Configuration &configuration, const FilesystemBrowser::ptr &filesystemBrowser, QWidget* parent = 0);
+CameraControlsWidget(Imager *imager, Configuration &configuration, const FilesystemBrowserPtr &filesystemBrowser, QWidget* parent = 0);
 
 private:
     DPTR

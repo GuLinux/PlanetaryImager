@@ -21,6 +21,8 @@
 #define CONFIGURATIONPROTOCOL_H
 
 #include "network/protocol/protocol.h"
+#include "commons/fwd.h"
+FWD_PTR(NetworkPacket)
 
 class ConfigurationProtocol : public NetworkProtocol
 {
@@ -33,14 +35,14 @@ public:
   ADD_PROTOCOL_PACKET_NAME(Reset)
   ADD_PROTOCOL_PACKET_NAME(signalSettingsChanged)
   
-  static NetworkPacket::ptr get(const QString name);
-  static NetworkPacket::ptr set(const QString name, const QVariant &value);
-  static NetworkPacket::ptr reset(const QString name);
+  static NetworkPacketPtr get(const QString name);
+  static NetworkPacketPtr set(const QString name, const QVariant &value);
+  static NetworkPacketPtr reset(const QString name);
   
-  static void decodeGetReply(const NetworkPacket::ptr &packet, QString &name, QVariant &value);
-  static NetworkPacket::ptr encodeGetReply(const QString &name, const QVariant &value);
+  static void decodeGetReply(const NetworkPacketPtr &packet, QString &name, QVariant &value);
+  static NetworkPacketPtr encodeGetReply(const QString &name, const QVariant &value);
   
-  static void decodeSet(const NetworkPacket::ptr &packet, QString &name, QVariant &value);
+  static void decodeSet(const NetworkPacketPtr &packet, QString &name, QVariant &value);
 };
 
 #endif // CONFIGURATIONPROTOCOL_H

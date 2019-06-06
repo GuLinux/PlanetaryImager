@@ -23,12 +23,13 @@
 #include <QMap>
 #include <opencv2/opencv.hpp>
 #include "histogramstatswidget.h"
+#include "image_handlers/frontend/histogram.h"
 
 using namespace std;
 using namespace std::placeholders;
 
 DPTR_IMPL(HistogramWidget) {
-  Histogram::ptr histogram;
+  HistogramPtr histogram;
   Configuration  &configuration;
   HistogramWidget *q;
   std::unique_ptr<Ui::HistogramWidget> ui;
@@ -41,7 +42,7 @@ HistogramWidget::~HistogramWidget()
 {
 }
 
-HistogramWidget::HistogramWidget(const Histogram::ptr &histogram, Configuration &configuration, QWidget* parent) : QWidget(parent), dptr(histogram, configuration, this)
+HistogramWidget::HistogramWidget(const HistogramPtr &histogram, Configuration &configuration, QWidget* parent) : QWidget(parent), dptr(histogram, configuration, this)
 {
     d->channel_combo_indexes = {
       {Histogram::Grayscale, 0},

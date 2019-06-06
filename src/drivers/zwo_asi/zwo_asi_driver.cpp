@@ -29,11 +29,11 @@ DPTR_IMPL(ZWO_ASI_Driver) {
 };
 
 namespace {
-  class ZWO_ASI_Camera : public Driver::Camera {
+  class ZWO_ASI_Camera : public Camera {
   public:
     typedef shared_ptr<ZWO_ASI_Camera> ptr;
     ZWO_ASI_Camera(const ASI_CAMERA_INFO &info) : info{info} {}
-    virtual Imager * imager(const ImageHandler::ptr& imageHandler) const;
+    virtual Imager * imager(const ImageHandlerPtr& imageHandler) const;
     virtual QString name() const { return {info.Name};}
   private:
     const ASI_CAMERA_INFO info;
@@ -43,7 +43,7 @@ namespace {
 
 
 
-Imager * ZWO_ASI_Camera::imager(const ImageHandler::ptr& imageHandler) const
+Imager * ZWO_ASI_Camera::imager(const ImageHandlerPtr& imageHandler) const
 {
   return new ZWO_ASI_Imager(info, imageHandler);
 }
@@ -63,11 +63,11 @@ ZWO_ASI_Driver::~ZWO_ASI_Driver()
 {
 }
 
-Driver::Cameras ZWO_ASI_Driver::cameras() const
+QList<CameraPtr> ZWO_ASI_Driver::cameras() const
 {
   int ncams = ASIGetNumOfConnectedCameras();
   qDebug() << "(ASI) Driver: detected" << ncams << "cameras";
-  Driver::Cameras cameras;
+  QList<CameraPtr> cameras;
   int index=0;
   for(int index=0; index<ncams; index++) {
     ASI_CAMERA_INFO info;

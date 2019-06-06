@@ -19,17 +19,18 @@
 #include "v4l2buffer.h"
 #include "v4l2exception.h"
 #include <sys/mman.h>
+#include "v4l2device.h"
 
 using namespace std;
 
 DPTR_IMPL(V4LBuffer) {
-  V4L2Device::ptr v4ldevice;
+  V4L2DevicePtr v4ldevice;
   v4l2_buffer bufferinfo;
   char *memory;
 };
 
 
-V4LBuffer::V4LBuffer(int index, const V4L2Device::ptr &v4ldevice) : dptr(v4ldevice)
+V4LBuffer::V4LBuffer(int index, const V4L2DevicePtr &v4ldevice) : dptr(v4ldevice)
 {
   memset(&d->bufferinfo, 0, sizeof(v4l2_buffer));
   d->bufferinfo.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
