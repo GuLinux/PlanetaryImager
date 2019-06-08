@@ -124,7 +124,3 @@ void RemoteImager::setROI(const QRect &roi)
 {
   dispatcher()->queue_send(DriverProtocol::packetSetROI() << roi);
 }
-
-
-
-#include "remoteimager.moc"

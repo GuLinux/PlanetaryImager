@@ -337,5 +337,3 @@ void DisplayImage::Private::sobel( cv::Mat &source, int blur_size, int ker_size,
   cv::addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, source );
 }
 
-
-#include "displayimage.moc"

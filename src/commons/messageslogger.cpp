@@ -45,6 +45,3 @@ MessagesLogger * MessagesLogger::instance()
   static MessagesLogger *instance = new MessagesLogger;
   return instance;
 }
-
-
-#include "messageslogger.moc"

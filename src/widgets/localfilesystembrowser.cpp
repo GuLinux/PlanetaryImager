@@ -42,5 +42,3 @@ void LocalFilesystemBrowser::pickDirectory(const QString currentDirectory) const
     connect(filedialog, SIGNAL(finished(int)), filedialog, SLOT(deleteLater()));
     filedialog->show();
 }
-
-#include "localfilesystembrowser.moc"

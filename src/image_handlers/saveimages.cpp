@@ -41,6 +41,3 @@ SaveImages::Error SaveImages::Error::openingFile(const QString& file, const QStr
     message = "%1\n%2"_q % message % additionalInfo;
   return Error(message);
 }
-
-
-#include "saveimages.moc"

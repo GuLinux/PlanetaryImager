@@ -26,7 +26,7 @@ class QCoreApplication;
 class CommandLine
 {
 public:
-  CommandLine(QCoreApplication &app);
+  explicit CommandLine(QCoreApplication &app);
   ~CommandLine();
   CommandLine &backend();
   CommandLine &daemon(const QString &listenAddress = "0.0.0.0");

@@ -76,7 +76,7 @@ template<typename T> void Configuration::Private::set(const QString& key, const 
 {
   settings->setValue(key, value);
   values_cache[key] = value;
-  emit q->settings_changed();
+  emit this->q->settings_changed();
 }
 
 
@@ -295,8 +295,3 @@ void Configuration::Preset::save(const QVariantMap& presets)
   }
   file.write(QJsonDocument::fromVariant(presets).toJson());
 }
-
- 
-
-
-#include "configuration.moc"

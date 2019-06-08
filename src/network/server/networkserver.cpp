@@ -122,7 +122,3 @@ void NetworkServer::Private::bytes_sent(quint64 written, quint64 sent)
       framesForwarder->setEnabled(true);
     }
 }
-
-
-
-#include "networkserver.moc"

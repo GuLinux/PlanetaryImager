@@ -446,7 +446,3 @@ void PlanetaryImagerMainWindow::Private::editROI()
   //TODO check for resolution not existing
   // TODO check for current ROI
 }
-
-
-
-#include "planetaryimager_mainwindow.moc"

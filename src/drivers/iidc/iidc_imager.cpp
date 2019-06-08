@@ -622,8 +622,8 @@ Imager::Controls IIDCImager::controls() const
                         << "Get feature mode";
             control.value_auto = (DC1394_FEATURE_MODE_AUTO == currMode);
 
-            float absMin, absMax;
-            uint32_t rawMin, rawMax;
+            float absMin = 0, absMax = 0;
+            uint32_t rawMin = 0, rawMax = 0;
 
             d->getRawRange(feature.id, rawMin, rawMax);
 
@@ -725,8 +725,8 @@ void IIDCImager::Private::setHighestFrameRate(dc1394video_mode_t vidMode)
 
 void IIDCImager::Private::updateShutterCtrl()
 {
-    uint32_t rawMin, rawMax;
-    float absMin, absMax;
+    uint32_t rawMin = 0, rawMax = 0;
+    float absMin = 0, absMax = 0;
 
     getRawRange(DC1394_FEATURE_SHUTTER, rawMin, rawMax);
 

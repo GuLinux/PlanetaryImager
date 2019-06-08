@@ -23,7 +23,7 @@ DPTR_IMPL(Imager::exception) {
     string what;
 };
 
-Imager::exception::exception(int code, const unordered_map<int, string> codes_map, const string& message_prefix, const string& where)
+Imager::exception::exception(int code, const unordered_map<int, string> &codes_map, const string& message_prefix, const string& where)
     : dptr(code)
 {
   ostringstream message;

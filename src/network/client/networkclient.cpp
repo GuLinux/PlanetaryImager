@@ -85,8 +85,3 @@ void NetworkClient::disconnectFromHost()
 {
   d->socket->close();
 }
-
-
-
-
-#include "networkclient.moc"

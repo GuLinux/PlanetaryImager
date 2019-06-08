@@ -59,11 +59,14 @@ class Dockerfile:
         '--rm',
         '-v',
         '{}:/code'.format(os.path.abspath(code_path)),
-        '-v',
-        '{}:/dest'.format(os.path.abspath(destination_path)),
         '-e',
         'MAKE_OPTS=-j{}'.format(make_jobs),
       ]
+      if destination_path and destination_path != 'none':
+        cmdline.extend([
+          '-v',
+          '{}:/dest'.format(os.path.abspath(destination_path)),
+      ])
       if privileged:
         cmdline.append('--privileged')
       if build_directory:
