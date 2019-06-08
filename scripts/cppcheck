@@ -15,6 +15,9 @@ cppcheck \
     -DQ_IMPORT_PLUGIN \
     -DQ_DECLARE_METATYPE \
     --xml \
+    -I "${BUILD_DIR}/GuLinux-Commons" \
+    -I "${BUILD_DIR}/GuLinux-Commons/c++" \
+    -I "${BUILD_DIR}/GuLinux-Commons/Qt" \
     "$@" \
     src 2> "$BUILD_DIR/cppcheck.xml"
 if [ -r "$BUILD_DIR/cppcheck.xml" ]; then
