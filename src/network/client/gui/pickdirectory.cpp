@@ -70,5 +70,3 @@ void PickDirectory::Private::browse(const QString& path)
 PickDirectory::~PickDirectory()
 {
 }
-
-#include "pickdirectory.moc"

@@ -130,7 +130,3 @@ void QHYCCDImager::clearROI()
 {
 
 }
-
-
-#include "qhyccdimager.moc"
-

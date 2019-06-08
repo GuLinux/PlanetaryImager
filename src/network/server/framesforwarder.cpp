@@ -68,6 +68,3 @@ void FramesForwarder::recordingMode(bool recording)
 {
   d->recording = recording;
 }
-
-
-#include "framesforwarder.moc"

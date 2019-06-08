@@ -65,7 +65,4 @@ SimulatorDriver::SimulatorDriver()
   Q_INIT_RESOURCE(simulator);
 }
 
-
-
 DECLARE_DRIVER_PLUGIN_INIT(SimulatorDriver)
-#include "simulatordriver.moc"

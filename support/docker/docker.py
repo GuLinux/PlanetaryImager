@@ -69,7 +69,7 @@ def package(args):
   if args.clean_logs:
     cleanup_logs()
     
-  destination_path = os.path.abspath(args.dest)
+  destination_path = os.path.abspath(args.dest) if args.dest and args.dest != 'none' else None
   filtered_images = filter_images(args.images_filter)
   cmake_defines = args.cmake_define
   cmake_defines.append('CMAKE_BUILD_TYPE=' + args.cmake_build_type)
@@ -112,7 +112,7 @@ parser_list = subparsers.add_parser('list', help='List supported images')
 parser_list.set_defaults(action='list')
 
 parser_package = subparsers.add_parser('package', help='Run packager on built images')
-parser_package.add_argument('-d', '--dest', required=True, help='Destination directory (i.e. where to put packages)')
+parser_package.add_argument('-d', '--dest', required=True, help='Destination directory (i.e. where to put packages). Use `none` if you want to skip exporting packages.')
 parser_package.add_argument('-b', '--build-directory', required=False, help='Bind build directory on docker')
 parser_package.add_argument('--cmake-build-type', default='RelWithDebInfo', help='CMAKE_BUILD_TYPE')
 parser_package.add_argument('-j', '--make-jobs', default=1, help='Make parallel jobs')

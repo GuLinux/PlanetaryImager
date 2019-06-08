@@ -23,8 +23,8 @@
 
 class CrashHandler {
 public:
-  CrashHandler(const std::list<int> &install_signals);
-  CrashHandler(const std::initializer_list<int> &install_signals);
+  explicit CrashHandler(const std::list<int> &install_signals);
+  explicit CrashHandler(const std::initializer_list<int> &install_signals);
   ~CrashHandler();
 };
 

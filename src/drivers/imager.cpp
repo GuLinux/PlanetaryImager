@@ -166,4 +166,3 @@ void Imager::setCaptureEndianess(Configuration::CaptureEndianess captureEndianes
         wait_for(push_job_on_thread([=]() { d->imager_thread->setCaptureEndianess(d->captureEndianess); }));
 }
 
-#include "imager.moc"

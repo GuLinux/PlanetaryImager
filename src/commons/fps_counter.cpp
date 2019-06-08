@@ -79,7 +79,3 @@ fps_counter& fps_counter::operator++()
     d->timeout();
   return *this;
 }
-
-
-
-#include "fps_counter.moc"

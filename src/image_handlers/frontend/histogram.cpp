@@ -246,6 +246,3 @@ void Histogram::setChannel(Histogram::Channel channel)
   if(d->last_frame)
     d->handle(d->last_frame);
 }
-
-
-#include "histogram.moc"

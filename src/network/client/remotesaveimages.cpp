@@ -56,6 +56,3 @@ void RemoteSaveImages::setPaused(bool paused)
 {
   dispatcher()->queue_send(SaveFileProtocol::setPaused(paused));
 }
-
-
-#include "remotesaveimages.moc"

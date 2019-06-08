@@ -62,6 +62,8 @@ Frame::ColorFormat SER_Header::frame_color_format() const
     if(format.second == static_cast<ColorId>(colorId))
       return format.first;
   }
+  // Default to Mono
+  return Frame::Mono;
 }
 
 void SER_Header::set_color_format(const Frame::ColorFormat& format)
