@@ -58,12 +58,11 @@ int SER_Header::bytesPerPixel() const
 
 Frame::ColorFormat SER_Header::frame_color_format() const
 {
-  for(auto format: color_format_conversion()) {
-    if(format.second == static_cast<ColorId>(colorId))
-      return format.first;
-  }
-  // Default to Mono
-  return Frame::Mono;
+  auto formats = color_format_conversion();
+  auto format_it = find_if(begin(formats), end(formats), [this](auto format) {
+    return format.second == static_cast<ColorId>(this->colorId);
+  });
+  return format_it == end(formats) ? Frame::Mono : format_it->first;
 }
 
 void SER_Header::set_color_format(const Frame::ColorFormat& format)

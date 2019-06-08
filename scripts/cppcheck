@@ -15,6 +15,7 @@ cppcheck \
     -DQ_IMPORT_PLUGIN \
     -DQ_DECLARE_METATYPE \
     --xml \
+    "$@" \
     src 2> "$BUILD_DIR/cppcheck.xml"
 if [ -r "$BUILD_DIR/cppcheck.xml" ]; then
     cppcheck-htmlreport \
