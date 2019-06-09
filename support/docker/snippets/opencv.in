@@ -1,9 +1,8 @@
-#RUN cd / && git clone https://github.com/libusb/libusb.git libusb-git && cd libusb-git && ./autogen.sh && ./configure --enable-static=yes --enable-shared=no --prefix=/opt/libusb-git && make all install && cd / && rm -rf /libusb-git
-RUN cd / && git clone https://github.com/opencv/opencv.git opencv-git -b 3.1.0 && \
+RUN cd / && git clone https://github.com/opencv/opencv.git opencv-git -b 4.1.0 && \
     mkdir -p opencv-git/build && \
     cd opencv-git/build && \
-    $CMAKE_BIN ../ \
-        -DCMAKE_INSTALL_PREFIX=/opt/opencv%{OPENCV_DIR_SUFFIX} \
+    %{CMAKE_BIN} ../ \
+        -DCMAKE_INSTALL_PREFIX=/opt/opencv-git \
         -DCMAKE_BUILD_TYPE=Release \
         -DWITH_WIN32UI=Off \
         -DWITH_QT=Off \
@@ -28,4 +27,4 @@ RUN cd / && git clone https://github.com/opencv/opencv.git opencv-git -b 3.1.0 &
         -DBUILD_PERF_TESTS=Off \
     && make all install && \
     cd / && rm -rf /opencv-git
-ENV CMAKE_PREFIX_PATH="/opt/opencv;$CMAKE_PREFIX_PATH}"
+ENV CMAKE_PREFIX_PATH="/opt/opencv-git;$CMAKE_PREFIX_PATH}"

@@ -1,6 +1,7 @@
 #!/bin/bash
 set -e
 . ${TRAVIS_BUILD_DIR}/git_commit_date.sh
+mkdir -p "$TRAVIS_BUILD_DIR/packages"
 
 if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
     source ~/virtualenv/python3.6/bin/activate
@@ -11,6 +12,5 @@ fi
 if [ "${TRAVIS_OS_NAME}" == "osx" ]; then
     cd "$TRAVIS_BUILD_DIR/build"
     make package -j4
-    mkdir -p "$TRAVIS_BUILD_DIR/packages"
     cp -av *.dmg "$TRAVIS_BUILD_DIR/packages"
 fi

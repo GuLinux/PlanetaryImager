@@ -66,7 +66,7 @@ V4L2ImagingWorker::V4L2ImagingWorker(const V4L2DevicePtr& device, const v4l2_for
     // Compressed formats
     {V4L2_PIX_FMT_MJPEG, bind(&Private::import_frame, d.get(), _1)},
     // YUV Colorspace
-    {V4L2_PIX_FMT_YUYV, bind(&Private::convert_frame, d.get(), _1, CV_8UC2, CV_YUV2RGB_YUYV, Frame::RGB)},
+    {V4L2_PIX_FMT_YUYV, bind(&Private::convert_frame, d.get(), _1, CV_8UC2, cv::COLOR_YUV2RGB_YUYV, Frame::RGB)},
   };
   auto pixelformat = format.fmt.pix.pixelformat;
   if(!formats.contains(pixelformat))

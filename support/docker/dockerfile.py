@@ -5,8 +5,10 @@ import shutil
 import subprocess
 from datetime import datetime
 
-images_dir = 'images'
-logs_dir = os.path.abspath('./logs')
+docker_path = os.path.abspath(os.path.dirname(__file__))
+
+images_dir = os.path.join(docker_path, 'images')
+logs_dir = os.path.abspath(os.path.join(docker_path, 'logs'))
 
 def cleanup_logs():
     shutil.rmtree(logs_dir, ignore_errors=True)
@@ -15,7 +17,7 @@ def cleanup_logs():
 class Dockerfile:
     def __init__(self, name, snippets, files, substitutions):
         self.name = name
-        self.snippets = [Snippet(os.path.join('snippets', snippet + '.in')) for snippet in snippets]
+        self.snippets = [Snippet(os.path.join(docker_path, 'snippets', snippet + '.in')) for snippet in snippets]
         self.substitutions = substitutions
         self.files = files
         self.status = None
@@ -33,8 +35,8 @@ class Dockerfile:
         snippets = []
 
         snippets.extend(self.snippets)
-        snippets.append(Snippet('snippets/workdir.in'))
-        snippets.append(Snippet('snippets/entrypoint.in'))
+        snippets.append(Snippet(os.path.join(docker_path, 'snippets/workdir.in')))
+        snippets.append(Snippet(os.path.join(docker_path, 'snippets/entrypoint.in')))
 
         for snippet in snippets:
             with open(dockerfile, 'a') as f:
@@ -62,7 +64,7 @@ class Dockerfile:
         '-e',
         'MAKE_OPTS=-j{}'.format(make_jobs),
       ]
-      if destination_path and destination_path != 'none':
+      if destination_path:
         cmdline.extend([
           '-v',
           '{}:/dest'.format(os.path.abspath(destination_path)),
