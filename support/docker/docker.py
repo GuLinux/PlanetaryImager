@@ -11,7 +11,6 @@ import os
 
 docker_path = os.path.abspath(os.path.dirname(__file__))
 code_path = os.path.dirname(os.path.dirname(docker_path))
-os.chdir(docker_path)
 
 images = [
   Ubuntu('19.04', 'x86_64'),
@@ -68,7 +67,6 @@ def list_images():
 def package(args):
   if args.clean_logs:
     cleanup_logs()
-    
   destination_path = os.path.abspath(args.dest) if args.dest and args.dest != 'none' else None
   filtered_images = filter_images(args.images_filter)
   cmake_defines = args.cmake_define
