@@ -1,0 +1,17 @@
+#!/bin/bash
+
+test_png() {
+    png_file="$1"
+    if png2icns "/tmp/test.icns" "$png_file" &>/dev/null; then
+        echo "$png_file"
+    fi
+    rm -f /tmp/test.icns
+}
+
+png2icns planetary_imager.icns $( 
+find icons/ -type f -name "*.png" | cut -f2 -d/ | sort -h -r | while read size; do
+    test_png "icons/$size/planetary_imager.png"
+done
+)
+
+
