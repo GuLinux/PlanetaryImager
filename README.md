@@ -10,6 +10,11 @@ Useful Links
  * [Project Homepage - Full description, screenshots](http://planetaryimager.gulinux.net)
  * [Releases and Downloads](https://github.com/GuLinux/PlanetaryImager/releases)
  * [Report a bug](https://github.com/GuLinux/PlanetaryImager/issues)
+ 
+ 
+Last build status:  
+[![](https://api.travis-ci.org/GuLinux/PlanetaryImager.svg?branch=master)](https://travis-ci.org/GuLinux/PlanetaryImager?target=_blank)
+
 
  
 Supported Cameras
