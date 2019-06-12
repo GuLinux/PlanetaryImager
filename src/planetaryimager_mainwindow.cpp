@@ -83,7 +83,7 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   unique_ptr<Ui::PlanetaryImagerMainWindow> ui;
   Imager *imager = nullptr;
   void rescan_devices();
-  void saveState();
+  void saveWindowGeometry();
 
   StatusBarInfoWidget *statusbar_info_widget;
   shared_ptr<DisplayImage> displayImage;
@@ -123,7 +123,7 @@ PlanetaryImagerMainWindow::~PlanetaryImagerMainWindow()
   d->planetaryImager->quit();
 }
 
-void PlanetaryImagerMainWindow::Private::saveState()
+void PlanetaryImagerMainWindow::Private::saveWindowGeometry()
 {
   planetaryImager->configuration().set_main_window_geometry(q->saveGeometry());
 }
@@ -330,8 +330,8 @@ void PlanetaryImagerMainWindow::showEvent(QShowEvent *event)
 void PlanetaryImagerMainWindow::closeEvent(QCloseEvent* event)
 {
   d->main_window_widgets->save();
+  d->saveWindowGeometry();
   QMainWindow::closeEvent(event);
-  saveState();
   emit quit();
 }
 
