@@ -11,6 +11,6 @@ fi
 
 if [ "${TRAVIS_OS_NAME}" == "osx" ]; then
     cd "$TRAVIS_BUILD_DIR/build"
-    make package -j4
+    ninja package
     cp -av *.dmg "$TRAVIS_BUILD_DIR/packages"
 fi

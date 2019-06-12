@@ -61,8 +61,6 @@ class Dockerfile:
         '--rm',
         '-v',
         '{}:/code'.format(os.path.abspath(code_path)),
-        '-e',
-        'MAKE_OPTS=-j{}'.format(make_jobs),
       ]
       if destination_path:
         cmdline.extend([
