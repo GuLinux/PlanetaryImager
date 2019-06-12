@@ -47,6 +47,7 @@
 #include <QGraphicsScene>
 #include <QFileInfo>
 #include <QDesktopServices>
+#include <QDesktopWidget>
 
 #include "widgets/editroidialog.h"
 
@@ -64,6 +65,7 @@
 
 #include "planetaryimager.h"
 #include "drivers/driver.h"
+#include "mainwindowwidgets.h"
 
 using namespace GuLinux;
 using namespace std;
@@ -75,6 +77,7 @@ Q_DECLARE_METATYPE(cv::Mat)
 DPTR_IMPL(PlanetaryImagerMainWindow) {
   PlanetaryImagerPtr planetaryImager;
   FilesystemBrowserPtr filesystemBrowser;
+  MainWindowWidgetsPtr main_window_widgets;
   
   static PlanetaryImagerMainWindow *q;
   unique_ptr<Ui::PlanetaryImagerMainWindow> ui;
@@ -113,7 +116,6 @@ PlanetaryImagerMainWindow *PlanetaryImagerMainWindow::Private::q = nullptr;
 PlanetaryImagerMainWindow::~PlanetaryImagerMainWindow()
 {
   LOG_F_SCOPE
-  d->saveState();
   if(d->imager) {
       d->imager->destroy();
   }
@@ -123,7 +125,6 @@ PlanetaryImagerMainWindow::~PlanetaryImagerMainWindow()
 
 void PlanetaryImagerMainWindow::Private::saveState()
 {
-  planetaryImager->configuration().set_dock_status(q->saveState());
   planetaryImager->configuration().set_main_window_geometry(q->saveGeometry());
 }
 
@@ -142,6 +143,9 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     d->ui.reset(new Ui::PlanetaryImagerMainWindow);
     
     d->ui->setupUi(this);
+    d->main_window_widgets = make_shared<MainWindowWidgets>(this, d->ui->menuWindow, planetaryImager->configuration());
+
+    restoreGeometry(d->planetaryImager->configuration().main_window_geometry());
     setWindowIcon(QIcon::fromTheme("planetary_imager"));
     d->ui->recording->setWidget(d->recording_panel = new RecordingPanel{d->planetaryImager->configuration(), filesystemBrowser});
     d->configurationDialog = new ConfigurationDialog(d->planetaryImager->configuration(), this);
@@ -184,18 +188,21 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     d->image_widget->actions()[ZoomableImage::Actions::ZoomRealSize]->setShortcut({Qt::CTRL + Qt::Key_Backspace});
     d->image_widget->actions()[ZoomableImage::Actions::ZoomRealSize]->setIcon(QIcon{":/resources/real_size.png"});
     d->image_widget->toolbar()->setWindowTitle("Image Control");
-    addToolBar(d->image_widget->toolbar());
-    QToolBar *helpToolBar = new QToolBar;
-    helpToolBar->setWindowTitle(tr("Help"));
+    d->image_widget->toolbar()->setObjectName("imageToolbar");
+
+    d->main_window_widgets->add_toolbar(d->ui->imageManipulation);
+    d->main_window_widgets->add_toolbar(d->ui->ROIToolbar);
+    d->main_window_widgets->add_toolbar(d->image_widget->toolbar(), true);
+    QToolBar *helpToolBar = new QToolBar(tr("Help"));
     auto whatsThis = QWhatsThis::createAction();
     whatsThis->setIcon(QIcon{":/resources/help.png"});
     helpToolBar->addAction(whatsThis);
-    addToolBar(helpToolBar);
+    helpToolBar->setObjectName("help");
+    d->main_window_widgets->add_toolbar(helpToolBar, true);
+
     d->image_widget->toolbar()->setFloatable(true);
     d->image_widget->toolbar()->setMovable(true);
     
-    restoreGeometry(d->planetaryImager->configuration().main_window_geometry());
-    restoreState(d->planetaryImager->configuration().dock_status());
     connect(d->ui->actionAbout, &QAction::triggered, bind(&QMessageBox::about, this, tr("About"),
 							  tr("%1 version %2.\nFast imaging capture software for planetary imaging").arg(qApp->applicationDisplayName())
 							 .arg(qApp->applicationVersion())));
@@ -203,19 +210,6 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     connect(d->ui->action_devices_rescan, &QAction::triggered, bind(&Private::rescan_devices, d.get()));
     connect(d->ui->actionShow_settings, &QAction::triggered, bind(&QDialog::show, d->configurationDialog));
     
-    auto dockWidgetToggleVisibility = [=](QDockWidget *widget, bool visible){ widget->setVisible(visible); };
-    auto dockWidgetVisibleCheck = [=](QAction *action, QDockWidget *widget) { action->setChecked(widget->isVisible()); };
-    QList<QDockWidget*> dock_widgets;
-    auto setupDockWidget = [&](QAction *action, QDockWidget *widget){
-      dockWidgetVisibleCheck(action, widget);
-      connect(action, &QAction::triggered, bind(dockWidgetToggleVisibility, widget, _1));
-      connect(widget, &QDockWidget::visibilityChanged, bind(dockWidgetVisibleCheck, action, widget));
-      connect(widget, &QDockWidget::dockLocationChanged, bind(&Private::saveState, d.get()));
-      connect(widget, &QDockWidget::topLevelChanged, bind(&Private::saveState, d.get()));
-      connect(widget, &QDockWidget::visibilityChanged, bind(&Private::saveState, d.get()));
-      dock_widgets.push_back(widget);
-    };
-
     connect(d->configurationDialog, &QDialog::accepted, this, bind(&DisplayImage::read_settings, d->displayImage), Qt::DirectConnection);
     connect(d->configurationDialog, &QDialog::accepted, this, bind(&Histogram::read_settings, d->histogram), Qt::DirectConnection);
     connect(d->configurationDialog, &QDialog::accepted, this,
@@ -236,16 +230,14 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
         QTimer::singleShot(5000,  bind(&DisplayImage::setRecording, d->displayImage, false));
         QTimer::singleShot(5000,  bind(&Histogram::setRecording, d->histogram, false));
     }, Qt::QueuedConnection);
-    setupDockWidget(d->ui->actionChip_Info, d->ui->chipInfoWidget);
-    setupDockWidget(d->ui->actionCamera_Settings, d->ui->camera_settings);
-    setupDockWidget(d->ui->actionRecording, d->ui->recording);
-    setupDockWidget(d->ui->actionHistogram, d->ui->histogram);
-    if(! d->planetaryImager->configuration().widgets_setup_first_run() ) {
-      tabifyDockWidget(d->ui->chipInfoWidget, d->ui->camera_settings);
-      tabifyDockWidget(d->ui->chipInfoWidget, d->ui->histogram);
-      tabifyDockWidget(d->ui->chipInfoWidget, d->ui->recording);
-      d->planetaryImager->configuration().set_widgets_setup_first_run(true);
-    }
+
+    d->main_window_widgets->add_dock(d->ui->chipInfoWidget);
+    d->main_window_widgets->add_dock(d->ui->camera_settings);
+    d->main_window_widgets->add_dock(d->ui->recording);
+    d->main_window_widgets->add_dock(d->ui->histogram);
+
+    d->main_window_widgets->load();
+
     qDebug() << "file " << logFilePath << "exists: " << QFile::exists(logFilePath);
     d->ui->actionOpen_log_file_folder->setMenuRole(QAction::ApplicationSpecificRole);
     d->ui->actionOpen_log_file_folder->setVisible( ! logFilePath.isEmpty() && QFile::exists(logFilePath));
@@ -269,8 +261,6 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
 #endif
     });
     
-    connect(d->ui->actionHide_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::hide, _1) ); });
-    connect(d->ui->actionShow_all, &QAction::triggered, [=]{ for_each(begin(dock_widgets), end(dock_widgets), bind(&QWidget::show, _1) ); });
     connect(MessagesLogger::instance(), &MessagesLogger::message, this, bind(&PlanetaryImagerMainWindow::notify, this, _1, _2, _3, _4), Qt::QueuedConnection);
     connect(d->displayImage.get(), &DisplayImage::gotImage, this, bind(&ZoomableImage::setImage, d->image_widget, _1), Qt::QueuedConnection);
     
@@ -332,9 +322,16 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     d->rescan_devices();
 }
 
+void PlanetaryImagerMainWindow::showEvent(QShowEvent *event)
+{
+  QMainWindow::showEvent(event);
+}
+
 void PlanetaryImagerMainWindow::closeEvent(QCloseEvent* event)
 {
+  d->main_window_widgets->save();
   QMainWindow::closeEvent(event);
+  saveState();
   emit quit();
 }
 

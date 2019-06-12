@@ -1,4 +1,4 @@
-set(PlanetaryImager_GUI_SRCS planetaryimager_mainwindow.cpp planetaryimager_mainwindow.ui resources/resources.qrc)
+set(PlanetaryImager_GUI_SRCS planetaryimager_mainwindow.cpp mainwindowwidgets.cpp planetaryimager_mainwindow.ui resources/resources.qrc)
 set(PlanetaryImager_SRCS planetaryimager_main.cpp ${PlanetaryImager_GUI_SRCS})
 
 

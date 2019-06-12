@@ -26,7 +26,7 @@
      <x>0</x>
      <y>0</y>
      <width>997</width>
-     <height>30</height>
+     <height>27</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuDevice">
@@ -45,18 +45,6 @@
     <addaction name="action_devices_rescan"/>
     <addaction name="menu_device_load"/>
     <addaction name="actionDisconnect"/>
-   </widget>
-   <widget class="QMenu" name="menuPanels">
-    <property name="title">
-     <string>Pa&amp;nels</string>
-    </property>
-    <addaction name="separator"/>
-    <addaction name="actionChip_Info"/>
-    <addaction name="actionCamera_Settings"/>
-    <addaction name="actionRecording"/>
-    <addaction name="actionHistogram"/>
-    <addaction name="actionHide_all"/>
-    <addaction name="actionShow_all"/>
    </widget>
    <widget class="QMenu" name="menuView">
     <property name="title">
@@ -84,11 +72,16 @@
     <addaction name="actionAbout_Qt"/>
     <addaction name="actionQuit"/>
    </widget>
+   <widget class="QMenu" name="menuWindow">
+    <property name="title">
+     <string>Window</string>
+    </property>
+   </widget>
+   <addaction name="menuPlanetary_Imager"/>
    <addaction name="menuDevice"/>
-   <addaction name="menuPanels"/>
    <addaction name="menuView"/>
    <addaction name="menuROI"/>
-   <addaction name="menuPlanetary_Imager"/>
+   <addaction name="menuWindow"/>
   </widget>
   <widget class="QStatusBar" name="statusbar"/>
   <widget class="QDockWidget" name="chipInfoWidget">
@@ -134,7 +127,7 @@
           <x>0</x>
           <y>0</y>
           <width>80</width>
-          <height>162</height>
+          <height>165</height>
          </rect>
         </property>
        </widget>
