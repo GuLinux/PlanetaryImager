@@ -43,18 +43,24 @@ DPTR_IMPL(MainWindowWidgets) {
     QAction *toolbars_separator;
     QList<QDockWidget*> docks;
     QList<QToolBar*> toolbars;
+    void add_menu_action(const char *text, function<void()> lambda_function);
 };
+
+void MainWindowWidgets::Private::add_menu_action(const char *text, function<void()> lambda_function) {
+    auto action = window_menu->addAction(QObject::tr(text));
+    QObject::connect(action, &QAction::triggered, main_window, lambda_function);
+}
 
 MainWindowWidgets::MainWindowWidgets(QMainWindow *main_window, QMenu *windowMenu, Configuration &configuration) : dptr(main_window, windowMenu, configuration, !configuration.widgets_setup_first_run()) {
     configuration.set_widgets_setup_first_run(true);
     windowMenu->addSection(QObject::tr("Panels"));
     d->docks_separator = windowMenu->addSeparator();
-    windowMenu->addAction(QObject::tr("Show All"), main_window, [this]{
+    d->add_menu_action("Show All", [this]{
         for(auto dock: d->docks) {
             dock->show();
         }
     });
-    windowMenu->addAction(QObject::tr("Hide All"), main_window, [this] {
+    d->add_menu_action("Hide All", [this] {
         for(auto dock: d->docks) {
             dock->hide();
         }
@@ -62,12 +68,12 @@ MainWindowWidgets::MainWindowWidgets(QMainWindow *main_window, QMenu *windowMenu
 
     windowMenu->addSection(QObject::tr("Toolbars"));
     d->toolbars_separator = windowMenu->addSeparator();
-    windowMenu->addAction(QObject::tr("Show All"), main_window, [this]{
+    d->add_menu_action("Show All", [this]{
         for(auto toolbar: d->toolbars) {
             toolbar->show();
         }
     });
-    windowMenu->addAction(QObject::tr("Hide All"), main_window, [this] {
+    d->add_menu_action("Hide All", [this] {
         for(auto toolbar: d->toolbars) {
             toolbar->hide();
         }
