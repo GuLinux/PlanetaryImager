@@ -21,32 +21,35 @@
 #define PLANETARYIMAGER_H
 #include <QObject>
 #include "c++/dptr.h"
-#include "drivers/driver.h"
-#include "drivers/imager.h"
-#include "image_handlers/imagehandler.h"
-#include "image_handlers/saveimages.h"
-#include "commons/configuration.h"
+#include "commons/fwd.h"
+
+FWD_PTR(ImageHandler)
+FWD_PTR(SaveImages)
+FWD_PTR(Driver)
+FWD_PTR(Camera)
+FWD(Imager)
+FWD_PTR(PlanetaryImager)
+FWD(Configuration)
 
 class PlanetaryImager : public QObject
 {
   Q_OBJECT
 public:
-    typedef std::shared_ptr<PlanetaryImager> ptr;
     PlanetaryImager(
-        const Driver::ptr &driver,
-        const ImageHandler::ptr &imageHandler,
-        const SaveImages::ptr &saveImages,
+        const DriverPtr &driver,
+        const ImageHandlerPtr &imageHandler,
+        const SaveImagesPtr &saveImages,
         Configuration &configuration
     );
     ~PlanetaryImager();
-  Driver::Cameras cameras() const;
+  QList<CameraPtr> cameras() const;
   Imager *imager() const;
-  SaveImages::ptr saveImages() const;
+  SaveImagesPtr saveImages() const;
   Configuration &configuration() const;
 
 public slots:
   void scanCameras();
-  void open(const Driver::Camera::ptr &camera);
+  void open(const CameraPtr &camera);
   void closeImager();
   void startRecording();
   void setRecordingPaused(bool paused);

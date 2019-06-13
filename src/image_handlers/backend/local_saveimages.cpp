@@ -37,6 +37,7 @@
 #include "c++/stlutils.h"
 #include "commons/messageslogger.h"
 #include "commons/elapsedtimer.h"
+#include "commons/frame.h"
 
 using namespace std;
 using namespace std::placeholders;
@@ -54,12 +55,12 @@ DPTR_IMPL(LocalSaveImages) {
 
 
 namespace {
-typedef boost::lockfree::spsc_queue<Frame::const_ptr> FramesQueue;
-typedef function< FileWriter::Ptr() > CreateFileWriter;
+typedef boost::lockfree::spsc_queue<FrameConstPtr> FramesQueue;
+typedef function< FileWriterPtr() > CreateFileWriter;
 
 struct RecordingParameters {
   CreateFileWriter fileWriterFactory;
-  RecordingInformation::ptr recording_information;
+  RecordingInformationPtr recording_information;
   Configuration::RecordingLimit limit_type;
   int64_t max_frames;
   std::chrono::duration<double> max_seconds;
@@ -69,10 +70,10 @@ struct RecordingParameters {
   bool timelapse;
   qlonglong timelapse_msecs;
   Configuration *configuration = nullptr;
-  RecordingInformation::Writer::ptr recording_information_writer(const FileWriter::Ptr &file_writer) const;
+  RecordingInformation::Writer::ptr recording_information_writer(const FileWriterPtr &file_writer) const;
 };
 
-RecordingInformation::Writer::ptr RecordingParameters::recording_information_writer(const FileWriter::Ptr &file_writer) const {
+RecordingInformation::Writer::ptr RecordingParameters::recording_information_writer(const FileWriterPtr &file_writer) const {
   QList<RecordingInformation::Writer::ptr> writers;
   if(write_txt_info)
     writers.push_back(RecordingInformation::txt(file_writer->filename()));
@@ -87,9 +88,9 @@ public:
     Recording(const RecordingParameters &parameters, LocalSaveImages *saveImagesObject);
   ~Recording();
   RecordingParameters parameters() const { return _parameters; }
-  void evaluate(Frame::const_ptr frame);
+  void evaluate(FrameConstPtr frame);
   bool accepting_frames() const;
-  void handle(Frame::const_ptr frame);
+  void handle(FrameConstPtr frame);
   inline void stop() { isRecording = false; }
   void setPaused(bool paused);
 private:
@@ -98,10 +99,10 @@ private:
   atomic_bool isRecording;
   atomic_bool isPaused;
   fps_counter savefps, meanfps;
-  FileWriter::Ptr file_writer;
+  FileWriterPtr file_writer;
   ElapsedTimer elapsed;
   size_t frames = 0;
-  Frame::const_ptr reference;
+  FrameConstPtr reference;
   QDateTime timelapse_last_shot;
 };
 
@@ -112,7 +113,7 @@ public:
   virtual ~WriterThreadWorker();
   void stop();
 public slots:
-  virtual void queue(Frame::const_ptr frame);
+  virtual void queue(FrameConstPtr frame);
   void start(const RecordingParameters &recording, qlonglong max_memory_usage);
   void setPaused(bool paused);
 private:
@@ -153,14 +154,14 @@ void Recording::setPaused(bool paused) {
 }
 
 
-void Recording::handle(Frame::const_ptr frame) {
+void Recording::handle(FrameConstPtr frame) {
   file_writer->handle(frame);
   ++savefps;
   ++meanfps;
   emit saveImagesObject->savedFrames(++frames);
 }
 
-void Recording::evaluate(Frame::const_ptr frame) {
+void Recording::evaluate(FrameConstPtr frame) {
   if(isPaused)
     return;
   if(frames == 0) {
@@ -218,7 +219,7 @@ void WriterThreadWorker::setPaused(bool paused) {
 }
 
 
-void WriterThreadWorker::queue(Frame::const_ptr frame)
+void WriterThreadWorker::queue(FrameConstPtr frame)
 {
   if(!recording)
     return;
@@ -246,7 +247,7 @@ void WriterThreadWorker::start(const RecordingParameters & recording_parameters,
   try {
     recording = make_unique<Recording>(recording_parameters, saveImages);
     while(recording->accepting_frames() ) {
-      Frame::const_ptr frame;
+      FrameConstPtr frame;
       if(framesQueue && framesQueue->pop(frame)) {
           recording->evaluate(frame);
       } else {
@@ -287,7 +288,7 @@ LocalSaveImages::~LocalSaveImages()
 }
 
 
-void LocalSaveImages::doHandle(Frame::const_ptr frame)
+void LocalSaveImages::doHandle(FrameConstPtr frame)
 {
   d->worker->queue(frame);
 //   QtConcurrent::run(bind(&WriterThreadWorker::handle, d->worker, frame));
@@ -297,7 +298,7 @@ void LocalSaveImages::startRecording(Imager *imager)
 {
   auto writerFactory = d->writerFactory();
   if(writerFactory) {
-    RecordingInformation::ptr recording_information;
+    RecordingInformationPtr recording_information;
 
     RecordingParameters recording{
       bind(writerFactory, imager->name(), &d->configuration),

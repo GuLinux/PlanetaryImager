@@ -22,6 +22,7 @@
 #include <QDateTime>
 #include "image_handlers/saveimages.h"
 #include "commons/ser_header.h"
+#include "commons/frame.h"
 
 using namespace std;
 using namespace std::placeholders;
@@ -80,7 +81,7 @@ QString SERWriter::filename() const
   return d->file.fileName();
 }
 
-void SERWriter::doHandle(Frame::const_ptr frame)
+void SERWriter::doHandle(FrameConstPtr frame)
 {
   if(! d->header->imageWidth) {
       // Force incorrect ENDIAN Type for compatibility with most readers ...

@@ -18,6 +18,7 @@
  */
 
 #include "configurationprotocol.h"
+#include "network/networkpacket.h"
 
 PROTOCOL_NAME_VALUE(Configuration, List);
 PROTOCOL_NAME_VALUE(Configuration, ListReply);
@@ -28,36 +29,36 @@ PROTOCOL_NAME_VALUE(Configuration, Reset);
 PROTOCOL_NAME_VALUE(Configuration, signalSettingsChanged);
 
 
-NetworkPacket::ptr  ConfigurationProtocol::get(const QString name)
+NetworkPacketPtr  ConfigurationProtocol::get(const QString name)
 {
   return packetGet() << QVariant{name};
 }
 
-NetworkPacket::ptr ConfigurationProtocol::set(const QString name, const QVariant& value)
+NetworkPacketPtr ConfigurationProtocol::set(const QString name, const QVariant& value)
 {
   return packetSet() << QVariantMap{{"name", name}, {"value", value}};
 }
 
-NetworkPacket::ptr ConfigurationProtocol::reset(const QString name)
+NetworkPacketPtr ConfigurationProtocol::reset(const QString name)
 {
   return packetReset() << QVariant{name};
 }
 
-void ConfigurationProtocol::decodeGetReply(const NetworkPacket::ptr& packet, QString& name, QVariant& value)
+void ConfigurationProtocol::decodeGetReply(const NetworkPacketPtr& packet, QString& name, QVariant& value)
 {
   QVariantMap map = packet->payloadVariant().toMap();
   name = map["name"].toString();
   value = map["value"];
 }
 
-void ConfigurationProtocol::decodeSet(const NetworkPacket::ptr& packet, QString& name, QVariant& value)
+void ConfigurationProtocol::decodeSet(const NetworkPacketPtr& packet, QString& name, QVariant& value)
 {
   QVariantMap map = packet->payloadVariant().toMap();
   name = map["name"].toString();
   value = map["value"];
 }
 
-NetworkPacket::ptr ConfigurationProtocol::encodeGetReply(const QString& name, const QVariant& value)
+NetworkPacketPtr ConfigurationProtocol::encodeGetReply(const QString& name, const QVariant& value)
 {
   return packetGetReply() << QVariantMap {{"name", name}, {"value", value}};
 }

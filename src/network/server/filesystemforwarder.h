@@ -19,14 +19,17 @@
 #ifndef FILESYSTEMFORWARDER_H
 #define FILESYSTEMFORWARDER_H
 
-#include "network/networkdispatcher.h"
 #include "c++/dptr.h"
+#include "commons/fwd.h"
+#include "network/networkreceiver.h"
+
+FWD_PTR(FilesystemForwarder)
+FWD_PTR(NetworkDispatcher)
 
 class FilesystemForwarder : public NetworkReceiver
 {
 public:
-  typedef std::shared_ptr<FilesystemForwarder> ptr;
-  FilesystemForwarder(const NetworkDispatcher::ptr &dispatcher);
+  FilesystemForwarder(const NetworkDispatcherPtr &dispatcher);
   ~FilesystemForwarder();
 private:
   DPTR

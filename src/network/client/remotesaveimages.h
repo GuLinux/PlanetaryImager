@@ -19,15 +19,18 @@
 #ifndef REMOTESAVEIMAGES_H
 #define REMOTESAVEIMAGES_H
 
-#include "network/networkdispatcher.h"
 #include "image_handlers/saveimages.h"
 #include "c++/dptr.h"
+#include "commons/fwd.h"
+#include "network/networkreceiver.h"
+
+FWD_PTR(NetworkDispatcher)
 
 class RemoteSaveImages : public SaveImages, public NetworkReceiver
 {
 Q_OBJECT
 public:
-  RemoteSaveImages(const NetworkDispatcher::ptr &dispatcher);
+  RemoteSaveImages(const NetworkDispatcherPtr &dispatcher);
   ~RemoteSaveImages();
 
 public slots:
@@ -36,7 +39,7 @@ public slots:
   void setPaused(bool paused) override;
 private:
 
-  void doHandle(Frame::const_ptr frame) override { }
+  void doHandle(FrameConstPtr frame) override { }
 
   DPTR
 };

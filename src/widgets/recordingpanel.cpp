@@ -32,13 +32,14 @@
 #include <QFileInfo>
 #include <QDebug>
 #include "commons/elapsedtimer.h"
+#include "commons/filesystembrowser.h"
 #include "c++/stlutils.h"
 
 using namespace std;
 
 DPTR_IMPL(RecordingPanel) {
     Configuration &configuration;
-    FilesystemBrowser::ptr filesystemBrowser;
+    FilesystemBrowserPtr filesystemBrowser;
     bool recording;
     RecordingPanel *q;
     unique_ptr<Ui::RecordingPanel> ui;
@@ -60,7 +61,7 @@ RecordingPanel::~RecordingPanel()
 {
 }
 
-RecordingPanel::RecordingPanel(Configuration &configuration, const FilesystemBrowser::ptr &filesystemBrowser, QWidget* parent)
+RecordingPanel::RecordingPanel(Configuration &configuration, const FilesystemBrowserPtr &filesystemBrowser, QWidget* parent)
   : QWidget{parent}, dptr(configuration, filesystemBrowser, false, this)
 {
   d->ui = make_unique<Ui::RecordingPanel>();

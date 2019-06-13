@@ -19,22 +19,26 @@
 #ifndef REMOTEFILESYSTEM_H
 #define REMOTEFILESYSTEM_H
 
-#include "network/networkdispatcher.h"
 #include "c++/dptr.h"
 #include <QList>
+#include "commons/fwd.h"
+#include "network/networkreceiver.h"
+
+FWD_PTR(NetworkDispatcher)
+FWD_PTR(FilesystemEntry)
+FWD_PTR(RemoteFilesystem)
 
 class RemoteFilesystem;
 class FilesystemEntry {
 public:
-  typedef std::shared_ptr<FilesystemEntry> ptr;
-  typedef QList<ptr> List;
   enum Type { File, Directory };
   FilesystemEntry(const QString &name, const QString &path, Type type, const std::shared_ptr<RemoteFilesystem> &filesystem);
   ~FilesystemEntry();
   QString name() const;
   QString path() const;
   Type type() const;
-  ptr parent() const;
+  FilesystemEntryPtr parent() const;
+  typedef QList<FilesystemEntryPtr> List;
   List children() const;
   bool isRoot() const;
 private:
@@ -44,11 +48,10 @@ private:
 class RemoteFilesystem : public NetworkReceiver, public std::enable_shared_from_this<RemoteFilesystem>
 {
 public:
-  typedef std::shared_ptr<RemoteFilesystem> ptr;
-  RemoteFilesystem(const NetworkDispatcher::ptr &dispatcher);
+  RemoteFilesystem(const NetworkDispatcherPtr &dispatcher);
   ~RemoteFilesystem();
   
-  FilesystemEntry::ptr entry(const QString &path);
+  FilesystemEntryPtr entry(const QString &path);
   FilesystemEntry::List entries(const QString &parent_path);
 private:
   DPTR

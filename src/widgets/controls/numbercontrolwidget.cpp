@@ -16,6 +16,8 @@
  *
  */
 #include "numbercontrolwidget.h"
+#include <QDoubleSpinBox>
+#include "Qt/qt_functional.h"
 
 struct NumberControlWidget::Private {
   QDoubleSpinBox *edit;

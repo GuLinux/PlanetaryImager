@@ -17,27 +17,32 @@
  *
  */
 
-#include "networkserver.h"
+#include "network/server/networkserver.h"
 #include <QtNetwork/QTcpServer>
+#include <QtNetwork/QTcpSocket>
+#include "network/server/framesforwarder.h"
 #include "network/server/driverforwarder.h"
+#include "network/networkpacket.h"
 #include "network/networkdispatcher.h"
 #include "network/protocol/protocol.h"
 #include "network/protocol/driverprotocol.h"
 #include "Qt/qt_strings_helper.h"
 #include <QElapsedTimer>
 #include "network/server/filesystemforwarder.h"
+#include "image_handlers/saveimages.h"
+#include "planetaryimager.h"
 
 using namespace std;
 using namespace std::placeholders;
 
 DPTR_IMPL(NetworkServer) {
   NetworkServer *q;
-  PlanetaryImager::ptr planetaryImager;
-  NetworkDispatcher::ptr dispatcher;
-  FramesForwarder::ptr framesForwarder;
+  PlanetaryImagerPtr planetaryImager;
+  NetworkDispatcherPtr dispatcher;
+  FramesForwarderPtr framesForwarder;
   unique_ptr<QTcpServer> server;
-  DriverForwarder::ptr forwarder;
-  FilesystemForwarder::ptr filesystemForwarder;
+  DriverForwarderPtr forwarder;
+  FilesystemForwarderPtr filesystemForwarder;
   void new_connection();
   void bytes_sent(quint64 written, quint64 sent);
   QElapsedTimer elapsed;
@@ -46,9 +51,9 @@ DPTR_IMPL(NetworkServer) {
 };
 
 NetworkServer::NetworkServer(
-  const PlanetaryImager::ptr &planetaryImager,
-  const NetworkDispatcher::ptr &dispatcher,
-  const FramesForwarder::ptr &framesForwarder,
+  const PlanetaryImagerPtr &planetaryImager,
+  const NetworkDispatcherPtr &dispatcher,
+  const FramesForwarderPtr &framesForwarder,
   QObject *parent)
   : QObject{parent}, NetworkReceiver{dispatcher}, dptr(this, planetaryImager, dispatcher, framesForwarder, make_unique<QTcpServer>())
 {
@@ -56,17 +61,17 @@ NetworkServer::NetworkServer(
   d->filesystemForwarder = make_shared<FilesystemForwarder>(dispatcher);
   connect(d->server.get(), &QTcpServer::newConnection, bind(&Private::new_connection, d.get()));
   d->forwarder = make_shared<DriverForwarder>(dispatcher, planetaryImager);
-  register_handler(NetworkProtocol::Hello, [this](const NetworkPacket::ptr &p){
+  register_handler(NetworkProtocol::Hello, [this](const NetworkPacketPtr &p){
     DriverProtocol::setFormatParameters(NetworkProtocol::decodeHello(p));
     QVariantMap status;
     d->forwarder->getStatus(status);
     d->dispatcher->send(NetworkProtocol::packetHelloReply() << status);
   });
   
-  register_handler(NetworkProtocol::ping, [this](const NetworkPacket::ptr &) {
+  register_handler(NetworkProtocol::ping, [this](const NetworkPacketPtr &) {
     d->dispatcher->send(NetworkProtocol::packetpong());
   });
-  register_handler(DriverProtocol::StartLive, [this](const NetworkPacket::ptr &){
+  register_handler(DriverProtocol::StartLive, [this](const NetworkPacketPtr &){
       d->elapsed.restart();
   });
   connect(d->dispatcher.get(), &NetworkDispatcher::bytes, this, bind(&Private::bytes_sent, d.get(), _1, _2));
@@ -117,7 +122,3 @@ void NetworkServer::Private::bytes_sent(quint64 written, quint64 sent)
       framesForwarder->setEnabled(true);
     }
 }
-
-
-
-#include "networkserver.moc"

@@ -19,6 +19,7 @@
 #include "iidc_exception.h"
 #include "iidc_worker.h"
 #include <QRect>
+#include "commons/frame.h"
 
 
 IIDCImagerWorker::IIDCImagerWorker(dc1394camera_t *_camera, dc1394video_mode_t _vidMode,
@@ -104,7 +105,7 @@ static bool isYUV(dc1394color_coding_t colorCoding)
            colorCoding == DC1394_COLOR_CODING_YUV444;
 }
 
-Frame::ptr IIDCImagerWorker::shoot()
+FramePtr IIDCImagerWorker::shoot()
 {
     //TODO: fail gracefully if cannot capture
     IIDC_CHECK << dc1394_capture_dequeue(camera, DC1394_CAPTURE_POLICY_WAIT, &nativeFrame)

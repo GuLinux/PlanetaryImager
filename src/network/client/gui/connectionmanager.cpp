@@ -44,9 +44,9 @@ using namespace std;
 DPTR_IMPL(ConnectionManager) {
   ConnectionManager *q;
   unique_ptr<Ui::ConnectionManager> ui;
-  NetworkDispatcher::ptr dispatcher;
-  RemoteDriver::ptr remoteDriver;
-  NetworkClient::ptr client;
+  NetworkDispatcherPtr dispatcher;
+  RemoteDriverPtr remoteDriver;
+  NetworkClientPtr client;
   unique_ptr<RemoteConfiguration> configuration;
   
   PlanetaryImagerMainWindow *mainWindow = nullptr;

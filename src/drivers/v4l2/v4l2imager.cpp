@@ -45,20 +45,20 @@ DPTR_IMPL(V4L2Imager)
     Drivers::V4L2::ControlFixes control_fixes;
     V4L2Imager *q;
     
-    V4L2Device::ptr device;
+    V4L2DevicePtr device;
     
-    V4L2Formats::ptr v4l2formats;
-    QList<V4L2Formats::Resolution::ptr> resolutions;
+    V4L2FormatsPtr v4l2formats;
+    QList<V4L2ResolutionPtr> resolutions;
 
     void open_camera();
-    QList<V4L2Control::ptr> controls;
+    QList<V4L2ControlPtr> controls;
     QString driver, bus, cameraname;
     QString dev_name;
     void find_controls();
 };
 
 
-V4L2Imager::V4L2Imager(const QString &name, int index, const ImageHandler::ptr &handler)
+V4L2Imager::V4L2Imager(const QString &name, int index, const ImageHandlerPtr &handler)
     : Imager{handler}, dptr("/dev/video%1"_q % index, Drivers::V4L2::controlFixes(this), this)
 {
   d->open_camera();
@@ -98,7 +98,7 @@ QString V4L2Imager::name() const
 void V4L2Imager::Private::find_controls()
 {
   controls.clear();
-  V4L2Control::ptr control;
+  V4L2ControlPtr control;
   // TODO: should we really add controls, even if we cannot read values?
   for (int ctrlid = V4L2_CID_BASE; ctrlid < V4L2_CID_LASTP1; ctrlid++) {
     try {
@@ -140,7 +140,7 @@ void V4L2Imager::Private::find_controls()
 Imager::Controls V4L2Imager::controls() const
 {
     Imager::Controls _settings;
-    transform(begin(d->controls), end(d->controls), back_inserter(_settings), [](const V4L2Control::ptr &c) { return c->control(); } );
+    transform(begin(d->controls), end(d->controls), back_inserter(_settings), [](const V4L2ControlPtr &c) { return c->control(); } );
     auto current_resolution = d->v4l2formats->current_resolution();
     
     Control resolutions_setting{RESOLUTIONS_CONTROL_ID, "Resolution", Control::Combo};
@@ -174,11 +174,11 @@ void V4L2Imager::setControl(const Control &setting)
 
     auto current = d->v4l2formats->current_resolution();
     Control new_value = setting;
-    new_value.value = find_if( d->resolutions.begin(), d->resolutions.end(), [&](const V4L2Formats::Resolution::ptr &r){ return *r == *current; } ) - d->resolutions.begin();
+    new_value.value = find_if( d->resolutions.begin(), d->resolutions.end(), [&](const V4L2ResolutionPtr &r){ return *r == *current; } ) - d->resolutions.begin();
     emit changed(new_value);
     return;
   }
-  auto control = find_if(begin(d->controls), end(d->controls), [=](const V4L2Control::ptr &c) { return setting.id == c->control().id; });
+  auto control = find_if(begin(d->controls), end(d->controls), [=](const V4L2ControlPtr &c) { return setting.id == c->control().id; });
   if(control != end(d->controls)) {
     wait_for(push_job_on_thread([=]{
       try {

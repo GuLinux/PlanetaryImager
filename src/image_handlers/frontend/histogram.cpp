@@ -22,6 +22,7 @@
 
 #include <QtConcurrent/QtConcurrent>
 #include "commons/configuration.h"
+#include "commons/frame.h"
 #include <atomic>
 #include "c++/stringbuilder.h"
 
@@ -46,8 +47,8 @@ DPTR_IMPL(Histogram) {
   bool should_read_frame() const;
   bool logarithmic = false;
   Channel channel = All;
-  Frame::const_ptr last_frame;
-  void handle(Frame::const_ptr frame);
+  FrameConstPtr last_frame;
+  void handle(FrameConstPtr frame);
   struct HistogramOutput {
     cv::Mat histogram;
     QVariantMap stats;
@@ -86,7 +87,7 @@ Histogram::Histogram(const Configuration &configuration, QObject* parent) : QObj
   }
 }
 
-void Histogram::doHandle(Frame::const_ptr frame)
+void Histogram::doHandle(FrameConstPtr frame)
 {
   if( ! d->should_read_frame() )
     return;
@@ -95,7 +96,7 @@ void Histogram::doHandle(Frame::const_ptr frame)
   d->last_frame = frame;
 }
 
-void Histogram::Private::handle(Frame::const_ptr frame)
+void Histogram::Private::handle(FrameConstPtr frame)
 {
   BENCH(_histogram)->every(5)->ms();
   cv::Mat source;
@@ -245,6 +246,3 @@ void Histogram::setChannel(Histogram::Channel channel)
   if(d->last_frame)
     d->handle(d->last_frame);
 }
-
-
-#include "histogram.moc"

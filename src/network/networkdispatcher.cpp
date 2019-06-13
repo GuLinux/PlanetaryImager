@@ -18,9 +18,11 @@
  */
 
 #include "networkdispatcher.h"
+#include "networkreceiver.h"
+#include "network/networkpacket.h"
+#include <QtNetwork/QTcpSocket>
 #include <QHash>
 #include <QHash>
-#include <QCoreApplication>
 #include "commons/utils.h"
 #include <QCoreApplication>
 #include "Qt/qt_strings_helper.h"
@@ -36,55 +38,8 @@ DPTR_IMPL(NetworkDispatcher) {
   void readyRead();
   uint64_t written;
   uint64_t sent;
-  void debugPacket(const NetworkPacket::ptr &packet, const QString &prefix);
+  void debugPacket(const NetworkPacketPtr &packet, const QString &prefix);
 };
-
-
-DPTR_IMPL(NetworkReceiver) {
-  const NetworkDispatcher::ptr dispatcher;
-  QHash<NetworkPacket::Type, bool> packets_processed;
-  QHash<NetworkPacket::Type, NetworkReceiver::HandlePacket> handlers;
-};
-
-NetworkReceiver::NetworkReceiver(const NetworkDispatcher::ptr &dispatcher) : dptr(dispatcher)
-{
-  dispatcher->attach(this);
-}
-
-NetworkReceiver::~NetworkReceiver()
-{
-  d->dispatcher->detach(this);
-}
-
-NetworkDispatcher::ptr NetworkReceiver::dispatcher() const
-{
-  return d->dispatcher;
-}
-
-
-void NetworkReceiver::wait_for_processed(const NetworkPacket::Type &name) const
-{
-  if(! d->dispatcher->is_connected())
-    return;
-  d->packets_processed[name] = false;
-  while(! d->packets_processed[name] && d->dispatcher->is_connected())
-    qApp->processEvents();
-}
-
-
-
-void NetworkReceiver::register_handler(const NetworkPacket::Type& name, const HandlePacket handler)
-{
-  d->handlers[name] = handler;
-}
-
-void NetworkReceiver::handle(const NetworkPacket::ptr& packet)
-{
-  auto handler = d->handlers[packet->name()];
-  if(handler)
-    handler(packet);
-  d->packets_processed[packet->name()] = true;
-}
 
 
 
@@ -93,7 +48,7 @@ NetworkDispatcher::NetworkDispatcher(QObject* parent) : QObject{parent}, dptr()
   static bool metatypes_registered = false;
   if(!metatypes_registered) {
     metatypes_registered = true;
-    qRegisterMetaType<NetworkPacket::ptr>("NetworkPacket::ptr");
+    qRegisterMetaType<NetworkPacketPtr>("NetworkPacketPtr");
   }
 }
 
@@ -128,7 +83,7 @@ void NetworkDispatcher::setSocket(QTcpSocket* socket)
   connect(socket, &QTcpSocket::readyRead, this, bind(&Private::readyRead, d.get()));
 }
 
-void NetworkDispatcher::send(const NetworkPacket::ptr &packet) {
+void NetworkDispatcher::send(const NetworkPacketPtr &packet) {
   if(! is_connected() || ! packet)
     return;
   //qDebug() << packet->name();
@@ -137,16 +92,16 @@ void NetworkDispatcher::send(const NetworkPacket::ptr &packet) {
   d->written += written;
 }
 
-void NetworkDispatcher::queue_send(const NetworkPacket::ptr& packet)
+void NetworkDispatcher::queue_send(const NetworkPacketPtr& packet)
 {
   if(packet)
-    QMetaObject::invokeMethod(this, "send", Q_ARG(NetworkPacket::ptr, packet) );
+    QMetaObject::invokeMethod(this, "send", Q_ARG(NetworkPacketPtr, packet) );
 }
 
 
 void NetworkDispatcher::Private::readyRead()
 {
-  QList<NetworkPacket::ptr> packets;
+  QList<NetworkPacketPtr> packets;
   while(socket->bytesAvailable() > 0) {
     //qDebug() << socket->bytesAvailable();
     auto packet = make_shared<NetworkPacket>();
@@ -167,7 +122,7 @@ bool NetworkDispatcher::is_connected() const
   return d->socket && d->socket->isValid() && d->socket->isOpen();
 }
 
-void NetworkDispatcher::Private::debugPacket(const NetworkPacket::ptr& packet, const QString& prefix)
+void NetworkDispatcher::Private::debugPacket(const NetworkPacketPtr& packet, const QString& prefix)
 {
 #ifdef DEBUG_NETWORK_PACKETS
     QString payload;

@@ -26,6 +26,7 @@
 #include <QRect>
 #include "drivers/imagerthread.h"
 #include "drivers/roi.h"
+#include "commons/frame.h"
 
 using namespace std;
 using namespace std::chrono_literals;
@@ -38,14 +39,14 @@ DPTR_IMPL(SimulatorImager) {
   shared_ptr<SimulatorImagerWorker> worker;
 
   LOG_C_SCOPE(SimulatorImager);
-  ROIValidator::ptr roi_validator;
+  ROIValidatorPtr roi_validator;
 };
 
 class SimulatorImagerWorker : public ImagerThread::Worker {
 public:
   SimulatorImagerWorker(SimulatorSettings &settings);
   
-  Frame::ptr shoot() override;
+  FramePtr shoot() override;
   void setROI(const QRect &roi);
   enum ImageType{ BGR = 0, Mono = 10, Bayer = 20};
   QRect ROI() const { return roi; }
@@ -58,7 +59,7 @@ private:
 
 Q_DECLARE_METATYPE(SimulatorImagerWorker::ImageType)
 
-SimulatorImager::SimulatorImager(const ImageHandler::ptr& handler) : Imager(handler), dptr()
+SimulatorImager::SimulatorImager(const ImageHandlerPtr& handler) : Imager(handler), dptr()
 {
   d->roi_validator = make_shared<ROIValidator>(list<ROIValidator::Rule>{
     ROIValidator::x_multiple(2),
@@ -164,7 +165,7 @@ SimulatorImagerWorker::SimulatorImagerWorker(SimulatorSettings &settings) : sett
 }
 
 
-Frame::ptr SimulatorImagerWorker::shoot()
+FramePtr SimulatorImagerWorker::shoot()
 {
   static map<SimulatorImagerWorker::ImageType, Frame::ColorFormat> formats {
     {Mono, Frame::Mono},

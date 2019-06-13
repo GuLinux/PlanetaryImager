@@ -17,6 +17,7 @@
  */
 
 #include "imagerthread.h"
+#include "image_handlers/imagehandler.h"
 #include <QObject>
 #include <QThread>
 #include "imager.h"
@@ -30,6 +31,7 @@
 #include "imagerexception.h"
 #include <QElapsedTimer>
 #include "commons/messageslogger.h"
+#include "commons/frame.h"
 
 
 using namespace std;
@@ -38,10 +40,10 @@ using namespace std::chrono_literals;
 DPTR_IMPL(ImagerThread) : public QObject {
   Q_OBJECT
 public:
-  Private(const ImagerThread::Worker::ptr& worker, Imager* imager, const ImageHandler::ptr& imageHandler);
+  Private(const ImagerThread::Worker::ptr& worker, Imager* imager, const ImageHandlerPtr& imageHandler);
   Worker::ptr worker;
   Imager *imager;
-  ImageHandler::ptr imageHandler;
+  ImageHandlerPtr imageHandler;
   fps_counter fps;
   atomic_bool running;
   QThread thread;
@@ -55,7 +57,7 @@ public:
   LOG_C_SCOPE(ImagerThread);
 };
 
-ImagerThread::Private::Private(const ImagerThread::Worker::ptr& worker, Imager* imager, const ImageHandler::ptr& imageHandler)
+ImagerThread::Private::Private(const ImagerThread::Worker::ptr& worker, Imager* imager, const ImageHandlerPtr& imageHandler)
   : worker{worker},
   imager{imager},
   imageHandler{imageHandler},
@@ -68,7 +70,7 @@ ImagerThread::Private::Private(const ImagerThread::Worker::ptr& worker, Imager* 
 }
 
 
-ImagerThread::ImagerThread(const ImagerThread::Worker::ptr& worker, Imager* imager, const ImageHandler::ptr& imageHandler,
+ImagerThread::ImagerThread(const ImagerThread::Worker::ptr& worker, Imager* imager, const ImageHandlerPtr& imageHandler,
                            Configuration::CaptureEndianess captureEndianess)
   : dptr(worker, imager, imageHandler)
 {

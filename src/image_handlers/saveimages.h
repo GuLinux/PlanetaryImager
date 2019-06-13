@@ -22,13 +22,13 @@
 #include "image_handlers/imagehandler.h"
 #include "drivers/imager.h"
 #include <QObject>
+#include "commons/fwd.h"
 
 #include "commons/configuration.h"
 class SaveImages : public QObject, public ImageHandler
 {
   Q_OBJECT
 public:
-  typedef std::shared_ptr<SaveImages> ptr;
   class Error;
     SaveImages(QObject *parent = 0);
     virtual ~SaveImages();

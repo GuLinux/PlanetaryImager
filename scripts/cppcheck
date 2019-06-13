@@ -1,0 +1,29 @@
+#!/bin/bash
+PROJECT_DIR="$( cd "$( dirname "$0" )/.."; pwd )"
+BUILD_DIR="${BUILD_DIR:-$PROJECT_DIR/build}"
+mkdir -p "$BUILD_DIR"
+
+cppcheck \
+    --cppcheck-build-dir="${BUILD_DIR}" \
+    --enable=all \
+    -i src/drivers/zwo_asi/ASI_Linux_Mac_v1.14.0425 \
+    -i src/drivers/zwo_asi/ASI_Windows_v1.14.0425 \
+    -i src/drivers/qhy/QHY_Linux_armv7_v5.0.7 \
+    -i src/drivers/qhy/QHY_Linux_x86_64_v5.0.7 \
+    -i src/drivers/qhy/QHY_Mac_x86_64_v5.0.7 \
+    -i src/drivers/qhy/QHY_Windows_v5.0.7 \
+    -DQ_IMPORT_PLUGIN \
+    -DQ_DECLARE_METATYPE \
+    --xml \
+    -I "${BUILD_DIR}/GuLinux-Commons" \
+    -I "${BUILD_DIR}/GuLinux-Commons/c++" \
+    -I "${BUILD_DIR}/GuLinux-Commons/Qt" \
+    "$@" \
+    src 2> "$BUILD_DIR/cppcheck.xml"
+if [ -r "$BUILD_DIR/cppcheck.xml" ]; then
+    cppcheck-htmlreport \
+        --title="PlanetaryImager cppcheck report" \
+        --file="$BUILD_DIR/cppcheck.xml" \
+        --report-dir="$BUILD_DIR/cppcheck" \
+        --source-dir="$PROJECT_DIR"
+fi

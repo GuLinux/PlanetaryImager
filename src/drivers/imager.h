@@ -25,7 +25,6 @@
 #include <QObject>
 #include <QDebug>
 #include <QSet>
-#include "image_handlers/imagehandler.h"
 #include "imagerthread.h"
 #include "c++/dptr.h"
 #include <QWaitCondition>
@@ -34,7 +33,7 @@ class Imager : public QObject {
   Q_OBJECT
 public:
   class exception;
-  Imager(const ImageHandler::ptr &image_handler);
+  Imager(const ImageHandlerPtr &image_handler);
   virtual ~Imager();
   struct Control;
   struct Properties;

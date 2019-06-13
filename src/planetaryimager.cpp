@@ -22,6 +22,8 @@
 #include "commons/messageslogger.h"
 #include <QThread>
 #include <QTimer>
+#include "image_handlers/saveimages.h"
+#include "drivers/driver.h"
 
 #ifdef STATIC_WINDOWS_PLUGIN
 #pragma message("Initializing Qt static plugins")
@@ -30,22 +32,21 @@ Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
 #endif
 
 DPTR_IMPL(PlanetaryImager) {
-  Driver::ptr driver;
-  ImageHandler::ptr imageHandler;
-  SaveImages::ptr saveImages;
+  DriverPtr driver;
+  ImageHandlerPtr imageHandler;
+  SaveImagesPtr saveImages;
   Configuration &configuration;
   PlanetaryImager *q;
-
-  Driver::Cameras cameras;
+  QList<CameraPtr> cameras;
   Imager *imager = nullptr;
 
   void initDevicesWatcher();
 };
 
 PlanetaryImager::PlanetaryImager(
-  const Driver::ptr &driver,
-  const ImageHandler::ptr &imageHandler,
-  const SaveImages::ptr &saveImages,
+  const DriverPtr &driver,
+  const ImageHandlerPtr &imageHandler,
+  const SaveImagesPtr &saveImages,
   Configuration &configuration
 ) : QObject{}, dptr(driver, imageHandler, saveImages, configuration, this)
 {
@@ -62,7 +63,7 @@ Imager * PlanetaryImager::imager() const
   return d->imager;
 }
 
-SaveImages::ptr PlanetaryImager::saveImages() const
+SaveImagesPtr PlanetaryImager::saveImages() const
 {
   return d->saveImages;
 }
@@ -73,7 +74,7 @@ Configuration &PlanetaryImager::configuration() const
 }
 
 
-Driver::Cameras PlanetaryImager::cameras() const
+QList<CameraPtr> PlanetaryImager::cameras() const
 {
   return d->cameras;
 }
@@ -95,18 +96,17 @@ void PlanetaryImager::stopRecording()
 
 void PlanetaryImager::scanCameras()
 {
-  GuLinux::qAsyncR<Driver::Cameras>([this] { return d->driver->cameras(); }, [this](const Driver::Cameras &cameras) {
+  GuLinux::qAsyncR<QList<CameraPtr>>([this] { return d->driver->cameras(); }, [this](const QList<CameraPtr> &cameras) {
     d->cameras = cameras;
     emit camerasChanged();
   }, this);
 }
 
-void PlanetaryImager::open(const Driver::Camera::ptr& camera)
+void PlanetaryImager::open(const CameraPtr& camera)
 {
   if(d->imager)
     d->imager->destroy();
-
-  auto openImager = [this, camera] {
+  auto openImager = [this, camera] () -> Imager *{
     try {
       auto imager = camera->imager(d->imageHandler);
       imager->setCaptureEndianess(d->configuration.capture_endianess());
@@ -115,6 +115,7 @@ void PlanetaryImager::open(const Driver::Camera::ptr& camera)
       return imager;
     } catch(const std::exception &e) {
       MessagesLogger::queue(MessagesLogger::Error, tr("Initialization Error"), tr("Error initializing imager %1: \n%2") % camera->name() % e.what());
+      return nullptr;
     }
   };
 

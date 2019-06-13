@@ -18,15 +18,16 @@
 
 #include "remotefilesystembrowser.h"
 #include "network/client/remotefilesystem.h"
+#include "network/networkdispatcher.h"
 #include "pickdirectory.h"
 
 using namespace std;
 
 DPTR_IMPL(RemoteFilesystemBrowser) {
-  RemoteFilesystem::ptr filesystem;
+  RemoteFilesystemPtr filesystem;
 };
 
-RemoteFilesystemBrowser::RemoteFilesystemBrowser(const NetworkDispatcher::ptr& dispatcher) 
+RemoteFilesystemBrowser::RemoteFilesystemBrowser(const NetworkDispatcherPtr& dispatcher) 
   : dptr(make_shared<RemoteFilesystem>(dispatcher))
 {
 }

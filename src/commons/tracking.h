@@ -77,7 +77,7 @@ signals:
     void targetLost();
 
 private:
-    void doHandle(Frame::const_ptr frame) override;
+    void doHandle(FrameConstPtr  frame) override;
 };
 
 #endif // TRACKING_H

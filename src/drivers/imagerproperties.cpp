@@ -18,6 +18,7 @@
 
 #include "imager.h"
 #include "Qt/qt_strings_helper.h"
+#include <QSize>
 
 using namespace std;
 

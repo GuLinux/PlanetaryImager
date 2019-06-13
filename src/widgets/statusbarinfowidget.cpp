@@ -93,6 +93,3 @@ void StatusBarInfoWidget::deviceDisconnected()
 {
   d->ui->device_status->setText(tr("Disconnected"));
 }
-
-
-#include "statusbarinfowidget.moc"

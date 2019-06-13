@@ -24,20 +24,22 @@
 #include <QString>
 #include <QVariant>
 #include <QDebug>
+#include "commons/fwd.h"
+#include "network/protocol/networkpackettype.h"
+
+FWD_PTR(NetworkPacket)
 
 class QIODevice;
 class NetworkPacket
 {
 public:
-  typedef std::shared_ptr<NetworkPacket> ptr;
-  typedef QString Type;
   NetworkPacket();
-  NetworkPacket(const Type &name);
+  NetworkPacket(const NetworkPacketType &name);
   ~NetworkPacket();
   qint64 sendTo(QIODevice *device) const;
   void receiveFrom(QIODevice *device);
-  void setName(const Type &name);
-  Type name() const;
+  void setName(const NetworkPacketType &name);
+  NetworkPacketType name() const;
   
   void setPayload(const QByteArray &payload);
   void movePayload(QByteArray &&payload);
@@ -50,10 +52,10 @@ public:
 private:
   DPTR
 };
-NetworkPacket::ptr operator<<(const NetworkPacket::ptr &packet, const QByteArray &payload);
-NetworkPacket::ptr operator<<(const NetworkPacket::ptr &packet, const QVariant &payload);
+NetworkPacketPtr operator<<(const NetworkPacketPtr &packet, const QByteArray &payload);
+NetworkPacketPtr operator<<(const NetworkPacketPtr &packet, const QVariant &payload);
 
 QDebug operator<<(QDebug dbg, const NetworkPacket &packet);
-inline QDebug operator<<(QDebug dbg, const NetworkPacket::ptr &packet) { return dbg << *packet; }
-Q_DECLARE_METATYPE(NetworkPacket::ptr)
+inline QDebug operator<<(QDebug dbg, const NetworkPacketPtr &packet) { return dbg << *packet; }
+Q_DECLARE_METATYPE(NetworkPacketPtr)
 #endif // NETWORKPACKET_H

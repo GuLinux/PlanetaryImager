@@ -21,20 +21,25 @@
 #define NETWORK_PROTOCOL_H
 
 #include <QString>
-#include "network/networkdispatcher.h"
-#include "network/networkpacket.h"
 #include "commons/configuration.h"
-#define ADD_PROTOCOL_NAME(name) static const NetworkPacket::Type name;
+#include "network/protocol/networkpackettype.h"
+#include "commons/fwd.h"
+
+FWD_PTR(NetworkPacket)
+
+#define ADD_PROTOCOL_NAME(name) static const NetworkPacketType name;
 
 #define ADD_PROTOCOL_PACKET_NAME(name) ADD_PROTOCOL_NAME(name) \
-static NetworkPacket::ptr packet ## name() { return NetworkProtocol::packet(name); }
+static NetworkPacketPtr packet ## name() { return NetworkProtocol::packet(name); }
 
-#define PROTOCOL_NAME__CUSTOM_VALUE(Area, name, value) const NetworkPacket::Type Area ## Protocol::name = value
+#define PROTOCOL_NAME__CUSTOM_VALUE(Area, name, value) const NetworkPacketType Area ## Protocol::name = value
 #define PROTOCOL_NAME_VALUE(Area, name) PROTOCOL_NAME__CUSTOM_VALUE(Area, name, #Area "_" #name)
+
+
 
 class NetworkProtocol {
 public:
-  static NetworkPacket::ptr packet(const NetworkPacket::Type &name);
+  static NetworkPacketPtr packet(const NetworkPacketType &name);
 
   ADD_PROTOCOL_PACKET_NAME(Hello)
   ADD_PROTOCOL_PACKET_NAME(HelloReply)
@@ -46,8 +51,8 @@ public:
     bool force8bit;
     int jpegQuality;
   };
-  static NetworkPacket::ptr hello(const FormatParameters &parameters);
-  static FormatParameters decodeHello(const NetworkPacket::ptr &packet);
+  static NetworkPacketPtr hello(const FormatParameters &parameters);
+  static FormatParameters decodeHello(const NetworkPacketPtr &packet);
   
 };
 

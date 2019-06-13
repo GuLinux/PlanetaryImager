@@ -22,6 +22,7 @@
 #include <commons/utils.h>
 #include <dc1394/dc1394.h>
 #include <drivers/imagerthread.h>
+#include "commons/frame.h" // TODO: remove, moving struct frameinfo into cpp file
 
 
 class IIDCImagerWorker: public ImagerThread::Worker
@@ -65,7 +66,7 @@ public:
                      /// Must be already validated; also used as the initial frame size for Format7 modes
                      const QRect &roi);
 
-    Frame::ptr shoot() override;
+    FramePtr shoot() override;
 
     virtual ~IIDCImagerWorker();
 };

@@ -17,7 +17,7 @@
  *
  */
 
-#include "networkpacket.h"
+#include "network/networkpacket.h"
 #include <QIODevice>
 #include <QDataStream>
 #include <QJsonDocument>
@@ -28,7 +28,7 @@
 using namespace std;
 
 DPTR_IMPL(NetworkPacket) {
-  Type name;
+  NetworkPacketType name;
   QByteArray payload;
   static const int NAME_BYTES = 1;
   static const int PACKET_BYTES = 4;
@@ -42,7 +42,7 @@ NetworkPacket::NetworkPacket() : dptr()
 {
 }
 
-NetworkPacket::NetworkPacket(const Type& name) : NetworkPacket()
+NetworkPacket::NetworkPacket(const NetworkPacketType& name) : NetworkPacket()
 {
   if(name.size() > 255) {
     throw runtime_error(("Packet name must be under 256 characters (was: %1)" % name).toStdString());
@@ -117,12 +117,12 @@ QByteArray NetworkPacket::Private::chunked_read(int bytes, QIODevice *device, in
 
 
 
-NetworkPacket::Type NetworkPacket::name() const
+NetworkPacketType NetworkPacket::name() const
 {
   return d->name;
 }
 
-void NetworkPacket::setName(const Type& name)
+void NetworkPacket::setName(const NetworkPacketType& name)
 {
   d->name = name;
 }
@@ -168,13 +168,13 @@ QDebug operator<<(QDebug dbg, const NetworkPacket& packet)
   return dbg;
 }
 
-NetworkPacket::ptr operator<<(const NetworkPacket::ptr& packet, const QByteArray& payload)
+NetworkPacketPtr operator<<(const NetworkPacketPtr& packet, const QByteArray& payload)
 {
   packet->setPayload(payload);
   return packet;
 }
 
-NetworkPacket::ptr operator<<(const NetworkPacket::ptr& packet, const QVariant& payload)
+NetworkPacketPtr operator<<(const NetworkPacketPtr& packet, const QVariant& payload)
 {
   packet->setPayload(payload);
   return packet;

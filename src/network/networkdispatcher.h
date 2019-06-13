@@ -22,39 +22,27 @@
 
 #include <functional>
 #include <QObject>
-#include <QtNetwork/QTcpSocket>
 #include "c++/dptr.h"
-#include "networkpacket.h"
+#include "commons/fwd.h"
 
-class NetworkDispatcher;
-class NetworkReceiver {
-public:
-  NetworkReceiver(const std::shared_ptr<NetworkDispatcher> &dispatcher);
-  void handle(const NetworkPacket::ptr &packet);
-  virtual ~NetworkReceiver();
-protected:
-  typedef std::function<void(const NetworkPacket::ptr &)> HandlePacket;
-  void register_handler(const NetworkPacket::Type &name, const HandlePacket handler);
-  void wait_for_processed(const NetworkPacket::Type &name) const;
-  std::shared_ptr<NetworkDispatcher> dispatcher() const;
-private:
-  DPTR
-};
+FWD(NetworkReceiver)
+FWD_PTR(NetworkPacket)
+FWD_PTR(NetworkDispatcher)
+FWD(QTcpSocket)
 
 class NetworkDispatcher : public QObject
 {
   Q_OBJECT
 public:
-  typedef std::shared_ptr<NetworkDispatcher> ptr;
   NetworkDispatcher(QObject *parent = nullptr);
   ~NetworkDispatcher();
   void attach(NetworkReceiver *receiver);
   void detach(NetworkReceiver *receiver);
   void setSocket(QTcpSocket *socket);
-  void queue_send(const NetworkPacket::ptr &packet);
+  void queue_send(const NetworkPacketPtr &packet);
   bool is_connected() const;
 public slots:
-  void send(const NetworkPacket::ptr &packet);
+  void send(const NetworkPacketPtr &packet);
 signals:
   void bytes(quint64 written, quint64 transmitted);
 private:

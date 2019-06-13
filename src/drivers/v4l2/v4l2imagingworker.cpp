@@ -26,27 +26,30 @@
 #include <functional>
 #include "v4l2exception.h"
 #include "c++/stringbuilder.h"
+#include "commons/frame.h"
+#include "v4l2device.h"
+
 using namespace std;
 using namespace std::placeholders;
 
 
 
 DPTR_IMPL(V4L2ImagingWorker) {
-  V4L2Device::ptr device;
+  V4L2DevicePtr device;
   v4l2_format format;
   V4LBuffer::List buffers;
   uint32_t bufferinfo_type;
   void adjust_framerate();
   int request_buffers(int count);
-  function<Frame::ptr(const V4LBuffer::ptr)> get_frame;
-  Frame::ptr import_frame(const V4LBuffer::ptr &buffer);
-  Frame::ptr create_frame(const V4LBuffer::ptr &buffer, int cv_type, Frame::ColorFormat color_format);
-  Frame::ptr convert_frame(const V4LBuffer::ptr &buffer, int cv_type, int cv_conversion_format, Frame::ColorFormat color_format);
+  function<FramePtr(const V4LBufferPtr)> get_frame;
+  FramePtr import_frame(const V4LBufferPtr &buffer);
+  FramePtr create_frame(const V4LBufferPtr &buffer, int cv_type, Frame::ColorFormat color_format);
+  FramePtr convert_frame(const V4LBufferPtr &buffer, int cv_type, int cv_conversion_format, Frame::ColorFormat color_format);
 };
 
-V4L2ImagingWorker::V4L2ImagingWorker(const V4L2Device::ptr& device, const v4l2_format& format) : dptr(device, format)
+V4L2ImagingWorker::V4L2ImagingWorker(const V4L2DevicePtr& device, const v4l2_format& format) : dptr(device, format)
 {
-  QHash<uint32_t, function<Frame::ptr(const V4LBuffer::ptr)>> formats = {
+  QHash<uint32_t, function<FramePtr(const V4LBufferPtr)>> formats = {
     // Mono Formats
     {V4L2_PIX_FMT_GREY, bind(&Private::create_frame, d.get(), _1, CV_8UC1, Frame::Mono)},
     {V4L2_PIX_FMT_Y16, bind(&Private::create_frame, d.get(), _1, CV_16UC1, Frame::Mono)},
@@ -63,7 +66,7 @@ V4L2ImagingWorker::V4L2ImagingWorker(const V4L2Device::ptr& device, const v4l2_f
     // Compressed formats
     {V4L2_PIX_FMT_MJPEG, bind(&Private::import_frame, d.get(), _1)},
     // YUV Colorspace
-    {V4L2_PIX_FMT_YUYV, bind(&Private::convert_frame, d.get(), _1, CV_8UC2, CV_YUV2RGB_YUYV, Frame::RGB)},
+    {V4L2_PIX_FMT_YUYV, bind(&Private::convert_frame, d.get(), _1, CV_8UC2, cv::COLOR_YUV2RGB_YUYV, Frame::RGB)},
   };
   auto pixelformat = format.fmt.pix.pixelformat;
   if(!formats.contains(pixelformat))
@@ -127,7 +130,7 @@ int V4L2ImagingWorker::Private::request_buffers(int count)
 }
 
 
-Frame::ptr V4L2ImagingWorker::shoot()
+FramePtr V4L2ImagingWorker::shoot()
 {
   QBENCH(dequeue_buffer)->every(100)->ms();
   auto buffer = d->buffers.dequeue(d->device);
@@ -140,7 +143,7 @@ Frame::ptr V4L2ImagingWorker::shoot()
   return frame;
 }
 
-Frame::ptr V4L2ImagingWorker::Private::import_frame(const V4LBuffer::ptr& buffer)
+FramePtr V4L2ImagingWorker::Private::import_frame(const V4LBufferPtr& buffer)
 {
   cv::InputArray inputArray{buffer->bytes(),  static_cast<int>(buffer->size())};
   cv::Mat image = cv::imdecode(inputArray, -1);
@@ -148,14 +151,14 @@ Frame::ptr V4L2ImagingWorker::Private::import_frame(const V4LBuffer::ptr& buffer
 }
 
 
-Frame::ptr V4L2ImagingWorker::Private::convert_frame(const V4LBuffer::ptr& buffer, int cv_type, int cv_conversion_format, Frame::ColorFormat color_format)
+FramePtr V4L2ImagingWorker::Private::convert_frame(const V4LBufferPtr& buffer, int cv_type, int cv_conversion_format, Frame::ColorFormat color_format)
 {
   cv::Mat image{static_cast<int>(format.fmt.pix.height), static_cast<int>(format.fmt.pix.width), cv_type, buffer->bytes()};
   cv::cvtColor(image, image, cv_conversion_format);
   return make_shared<Frame>(color_format, image);
 }
 
-Frame::ptr V4L2ImagingWorker::Private::create_frame(const V4LBuffer::ptr& buffer, int cv_type, Frame::ColorFormat color_format)
+FramePtr V4L2ImagingWorker::Private::create_frame(const V4LBufferPtr& buffer, int cv_type, Frame::ColorFormat color_format)
 {
     cv::Mat image = cv::Mat{static_cast<int>(format.fmt.pix.height), static_cast<int>(format.fmt.pix.width), cv_type, buffer->bytes()};
     // copy(buffer->bytes(), buffer->bytes() + buffer->size(), image.begin<uint8_t>());

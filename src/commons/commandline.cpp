@@ -31,7 +31,6 @@ using namespace std::placeholders;
 
 DPTR_IMPL(CommandLine) {
   QCoreApplication &app;
-  CommandLine *q;
   QCommandLineParser parser;
   void loggingOptions();
 };
@@ -46,7 +45,7 @@ void CommandLine::Private::loggingOptions()
 }
 
 
-CommandLine::CommandLine(QCoreApplication& app) : dptr(app, this)
+CommandLine::CommandLine(QCoreApplication& app) : dptr(app)
 {
   d->parser.addHelpOption();
   d->parser.addVersionOption();

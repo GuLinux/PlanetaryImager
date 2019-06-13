@@ -85,7 +85,7 @@ DPTR_IMPL(IIDCImager)
     /// Copy of the SHUTTER control; used for informing GUI about shutter range change when frame rate changes
     Control ctrlShutter;
 
-    ROIValidator::ptr roiValidator; ///< Region of Interest validator
+    ROIValidatorPtr roiValidator; ///< Region of Interest validator
 
     /// Concerns the current video mode; used to disable ROI and return to full image size
     QSize maxFrameSize;
@@ -215,7 +215,7 @@ Imager::Control IIDCImager::Private::getFrameRates(dc1394video_mode_t vidMode)
 
 //Q_DECLARE_METATYPE(IIDCImagerWorker::ImageType)
 
-IIDCImager::IIDCImager(std::unique_ptr<dc1394camera_t, Deleters::camera> camera, const ImageHandler::ptr &handler,
+IIDCImager::IIDCImager(std::unique_ptr<dc1394camera_t, Deleters::camera> camera, const ImageHandlerPtr &handler,
                        const QString &cameraName, const QString &cameraVendor)
 : Imager(handler), dptr(cameraName, cameraVendor)
 {
@@ -622,8 +622,8 @@ Imager::Controls IIDCImager::controls() const
                         << "Get feature mode";
             control.value_auto = (DC1394_FEATURE_MODE_AUTO == currMode);
 
-            float absMin, absMax;
-            uint32_t rawMin, rawMax;
+            float absMin = 0, absMax = 0;
+            uint32_t rawMin = 0, rawMax = 0;
 
             d->getRawRange(feature.id, rawMin, rawMax);
 
@@ -725,8 +725,8 @@ void IIDCImager::Private::setHighestFrameRate(dc1394video_mode_t vidMode)
 
 void IIDCImager::Private::updateShutterCtrl()
 {
-    uint32_t rawMin, rawMax;
-    float absMin, absMax;
+    uint32_t rawMin = 0, rawMax = 0;
+    float absMin = 0, absMax = 0;
 
     getRawRange(DC1394_FEATURE_SHUTTER, rawMin, rawMax);
 

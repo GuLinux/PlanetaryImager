@@ -4,6 +4,7 @@ RUN apt-get update && apt-get install -y \
     cmake \
     git \
     wget \
+    ninja-build \
     autopoint autoconf automake bash bison bzip2 flex \
     libgdk-pixbuf2.0-dev gettext git gperf intltool make \
     sed libffi-dev libtool p7zip-full patch lzip \

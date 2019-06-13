@@ -3,14 +3,14 @@ set -e
 
 if [ "${TRAVIS_OS_NAME}" == "${BUILD_OS_FAMILY}" ] && [ "${SKIP_TESTS}" == "0" ]; then
     if [ "$TRAVIS_OS_NAME" == 'linux' ]; then
-        docker run --privileged -v $TRAVIS_BUILD_DIR:/code -v $TRAVIS_BUILD_DIR/build:/build --entrypoint make --name "planetary_imager_build" ${DOCKER_IMAGE} build_tests -j4
-        docker run --privileged -v $TRAVIS_BUILD_DIR:/code -v $TRAVIS_BUILD_DIR/build:/build --entrypoint make --name "planetary_imager_tests" ${DOCKER_IMAGE} test CTEST_OUTPUT_ON_FAILURE=1 GTEST_OUTPUT=xml:/build/tests_result/
+        docker run --privileged -v $TRAVIS_BUILD_DIR:/code -v $TRAVIS_BUILD_DIR/build:/build --entrypoint ninja --name "planetary_imager_build" ${DOCKER_IMAGE} build_tests
+        docker run --privileged -v $TRAVIS_BUILD_DIR:/code -v $TRAVIS_BUILD_DIR/build:/build --entrypoint ninja --name "planetary_imager_tests" -e GTEST_OUTPUT=xml:/build/tests_result -e CTEST_OUTPUT_ON_FAILURE=1 ${DOCKER_IMAGE} test
     fi
 
     if [ "$TRAVIS_OS_NAME" == 'osx' ]; then
         cd "$TRAVIS_BUILD_DIR/build"
-        make build_tests -j4
-        make test GTEST_OUTPUT=xml:$TRAVIS_BUILD_DIR/build/tests_result/  CTEST_OUTPUT_ON_FAILURE=1
+        ninja build_tests
+        GTEST_OUTPUT=xml:$TRAVIS_BUILD_DIR/build/tests_result/  CTEST_OUTPUT_ON_FAILURE=1 ninja test
     fi
 fi
 

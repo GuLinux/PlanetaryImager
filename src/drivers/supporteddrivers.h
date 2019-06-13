@@ -26,7 +26,7 @@ class SupportedDrivers : public Driver {
 public:
   SupportedDrivers(const QStringList &driversPath = {});
   ~SupportedDrivers();
-  virtual Cameras cameras() const;
+  virtual QList<CameraPtr> cameras() const;
   void aboutToQuit() override;
 private:
   DPTR;

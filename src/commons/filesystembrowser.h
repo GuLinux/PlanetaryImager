@@ -20,13 +20,15 @@
 #define FILESYSTEM_BROWSER_H
 #include <QObject>
 #include <memory>
+#include "commons/fwd.h"
 
-class QSettings;
+FWD_PTR(FilesystemBrowser)
+FWD(QSettings)
+
 class FilesystemBrowser : public QObject
 {
   Q_OBJECT
 public:
-  typedef std::shared_ptr<FilesystemBrowser> ptr;
   virtual bool isLocal() const = 0;
 public slots:
   virtual void pickDirectory(const QString currentDirectory = {}) const = 0;

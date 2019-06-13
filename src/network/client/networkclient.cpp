@@ -17,8 +17,9 @@
  *
  */
 
-#include "networkclient.h"
+#include "network/client/networkclient.h"
 #include <QtNetwork/QTcpSocket>
+#include "network/networkpacket.h"
 #include "network/networkdispatcher.h"
 #include "protocol/protocol.h"
 #include "protocol/driverprotocol.h"
@@ -27,13 +28,13 @@
 using namespace std;
 
 DPTR_IMPL(NetworkClient) {
-  NetworkDispatcher::ptr dispatcher;
+  NetworkDispatcherPtr dispatcher;
   unique_ptr<QTcpSocket> socket;
   bool imager_is_running = false;
-  NetworkPacket::ptr helloPacket;
+  NetworkPacketPtr helloPacket;
 };
 
-NetworkClient::NetworkClient(const NetworkDispatcher::ptr &dispatcher, QObject *parent)
+NetworkClient::NetworkClient(const NetworkDispatcherPtr &dispatcher, QObject *parent)
   : QObject{parent}, NetworkReceiver{dispatcher}, dptr(dispatcher, make_unique<QTcpSocket>())
 {
   static bool metatypes_registered = false;
@@ -84,8 +85,3 @@ void NetworkClient::disconnectFromHost()
 {
   d->socket->close();
 }
-
-
-
-
-#include "networkclient.moc"

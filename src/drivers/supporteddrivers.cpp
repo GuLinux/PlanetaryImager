@@ -24,6 +24,8 @@
 #include <QFileInfo>
 #include <QDirIterator>
 #include <QJsonDocument>
+#include <QMutex>
+#include <QMutexLocker>
 #include "drivers/imagerexception.h"
 
 using namespace std;
@@ -62,6 +64,7 @@ std::shared_ptr<Driver> SupportedDriver::driver()
 DPTR_IMPL(SupportedDrivers) {
   SupportedDrivers *q;
   QList<SupportedDriver::ptr> supported_drivers;
+  shared_ptr<QMutex> drivers_scan_mutex;
 
   void find_drivers(const QString &directory);
   void load_driver(const QString &filename);
@@ -70,6 +73,7 @@ DPTR_IMPL(SupportedDrivers) {
 
 SupportedDrivers::SupportedDrivers(const QStringList &driversPath) : dptr(this)
 {
+  d->drivers_scan_mutex = make_shared<QMutex>();
   for(const QString &path: driversPath)
     d->find_drivers(path);
 }
@@ -132,10 +136,11 @@ void SupportedDrivers::aboutToQuit()
 }
 
 
-Driver::Cameras SupportedDrivers::cameras() const
+QList<CameraPtr> SupportedDrivers::cameras() const
 {
+  QMutexLocker lock(d->drivers_scan_mutex.get());
   qDebug() << "Detecting active cameras";
-  Cameras cameras;
+  QList<CameraPtr> cameras;
   for(auto supported_driver: d->supported_drivers) {
     qDebug() << "Checking cameras on driver " << supported_driver->name;
     if(supported_driver->driver()) {

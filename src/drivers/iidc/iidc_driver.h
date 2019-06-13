@@ -32,7 +32,7 @@ public:
 
     ~IIDCDriver();
 
-    Driver::Cameras cameras() const override;
+    QList<CameraPtr> cameras() const override;
 
 private:
 

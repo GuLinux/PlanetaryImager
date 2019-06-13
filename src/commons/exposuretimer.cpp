@@ -76,5 +76,3 @@ void ExposureTimer::Private::finished()
   timer->stop();
   emit q->finished();
 }
-
-#include "exposuretimer.moc"

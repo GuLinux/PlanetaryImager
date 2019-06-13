@@ -20,15 +20,17 @@
 #define V4L2IMAGINGWORKER_H
 #include "drivers/imagerthread.h"
 #include "c++/dptr.h"
-#include "v4l2device.h"
+#include "commons/fwd.h"
+
+FWD_PTR(V4L2Device)
 
 struct v4l2_format;
 class V4L2ImagingWorker : public ImagerThread::Worker
 {
 public:
-  V4L2ImagingWorker(const V4L2Device::ptr &device, const v4l2_format &format);
+  V4L2ImagingWorker(const V4L2DevicePtr &device, const v4l2_format &format);
   virtual ~V4L2ImagingWorker();
-  Frame::ptr shoot() override;
+  FramePtr shoot() override;
 private:
   DPTR
 };

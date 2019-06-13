@@ -3,6 +3,7 @@ COPY qemu-arm-static /usr/bin
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update && apt-get install -y \
     autoconf \
+    ninja-build \
     qtbase5-dev \
     qtdeclarative5-dev \
     build-essential \

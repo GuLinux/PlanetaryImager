@@ -16,6 +16,7 @@ if [ "${TRAVIS_OS_NAME}" == "linux" ]; then
 fi
 if [ "${TRAVIS_OS_NAME}" == "osx" ]; then
     bash support/osx/install-deps
+    brew install ninja
 fi
 echo "export GIT_COMMIT_DATE=\"$(git show -s --format='%cd' --date=short | tr -d '-')\"" > ${TRAVIS_BUILD_DIR}/git_commit_date.sh
 cat ${TRAVIS_BUILD_DIR}/git_commit_date.sh

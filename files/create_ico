@@ -1,0 +1,2 @@
+#!/bin/bash
+icotool -c -o planetary_imager.ico $( find icons/ -type f -name "*.png")

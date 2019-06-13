@@ -23,7 +23,7 @@
 #include "fc2_imager.h"
 
 
-class FC2Camera: public Driver::Camera
+class FC2Camera: public Camera
 {
     fc2PGRGuid guid;
     QString camName;
@@ -36,7 +36,7 @@ public:
 
     virtual ~FC2Camera();
 
-    Imager *imager(const ImageHandler::ptr &imageHandler) const override;
+    Imager *imager(const ImageHandlerPtr &imageHandler) const override;
 
     QString name() const override { return camName; }
 };
@@ -69,18 +69,18 @@ DPTR_IMPL(FC2Driver)
 {
 };
 
-Imager *FC2Camera::imager(const ImageHandler::ptr &imageHandler) const
+Imager *FC2Camera::imager(const ImageHandlerPtr &imageHandler) const
 {
     return new FC2Imager(guid, imageHandler);
 }
 
-Driver::Cameras FC2Driver::cameras() const
+QList<CameraPtr> FC2Driver::cameras() const
 {
     fc2Context context;
     FC2_CHECK << fc2CreateContext(&context)
               << "fc2CreateContext";
 
-    Driver::Cameras result;
+    QList<CameraPtr> result;
 
     unsigned int numCams;
     FC2_CHECK << fc2GetNumOfCameras(context, &numCams)

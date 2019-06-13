@@ -27,16 +27,21 @@
 #include "widgets/localfilesystembrowser.h"
 #include "commons/commandline.h"
 #include "network/server/networkserver.h"
+#include "network/server/savefileforwarder.h"
 #include "network/server/configurationforwarder.h"
+#include "network/server/framesforwarder.h"
 #include "image_handlers/threadimagehandler.h"
+#include "commons/frame.h"
+#include "network/networkdispatcher.h"
+#include "planetaryimager.h"
 
 using namespace std;
 
 
 int main(int argc, char** argv)
 {
-    qRegisterMetaType<Frame::ptr>("Frame::ptr");
-    qRegisterMetaType<Frame::const_ptr>("Frame::const_ptr");
+    qRegisterMetaType<FramePtr>("FramePtr");
+    qRegisterMetaType<FrameConstPtr>("FrameConstPtr");
     qRegisterMetaType<Imager*>("Imager*");
     CrashHandler crash_handler({SIGSEGV, SIGABRT});
     cerr << "Starting PlanetaryImager - version " << PLANETARY_IMAGER_VERSION << " (" << HOST_PROCESSOR << ")" << endl;
@@ -57,8 +62,8 @@ int main(int argc, char** argv)
     auto configuration_forwarder = make_shared<ConfigurationForwarder>(configuration, dispatcher);
     auto frames_forwarder = make_shared<FramesForwarder>(dispatcher);
 
-    auto compositeImageHandler = make_shared<ImageHandlers>(QList<ImageHandler::ptr>{save_images, frames_forwarder});
-    auto threadedImageHandler = ImageHandler::ptr{new ThreadImageHandler{compositeImageHandler}};
+    auto compositeImageHandler = make_shared<ImageHandlers>(QList<ImageHandlerPtr>{save_images, frames_forwarder});
+    auto threadedImageHandler = ImageHandlerPtr{new ThreadImageHandler{compositeImageHandler}};
 
     auto planetaryImager = make_shared<PlanetaryImager>(drivers, threadedImageHandler, save_images, configuration);
 

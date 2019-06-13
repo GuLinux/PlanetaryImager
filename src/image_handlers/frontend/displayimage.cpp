@@ -35,6 +35,7 @@
 #include "Qt/benchmark.h"
 #include <atomic>
 #include "commons/utils.h"
+#include "commons/frame.h"
 
 using namespace std;
 using namespace std::placeholders;
@@ -68,7 +69,7 @@ DPTR_IMPL(DisplayImage) {
 
   QElapsedTimer elapsed;
   QRect imageRect;
-  boost::lockfree::spsc_queue<Frame::const_ptr, boost::lockfree::capacity<50>> queue;
+  boost::lockfree::spsc_queue<FrameConstPtr, boost::lockfree::capacity<50>> queue;
   atomic_bool detectEdges;
   QVector<QRgb> grayScale;
 
@@ -79,10 +80,10 @@ DPTR_IMPL(DisplayImage) {
   void canny(cv::Mat& source, int lowThreshold = 1, int ratio = 3, int kernel_size = 3, int blurSize = 3);
   void sobel( cv::Mat& source, int blur_size = 3, int ker_size = 3, int scale = 1, int delta = 0 );
 
-  void bayer2rgb(Frame::const_ptr frame, cv::Mat &image);
-  void bgr2rgb(Frame::const_ptr frame, cv::Mat &image);
-  void rgb2rgb(Frame::const_ptr frame, cv::Mat &image);
-  void gray2rgb(Frame::const_ptr frame, cv::Mat &image);
+  void bayer2rgb(FrameConstPtr frame, cv::Mat &image);
+  void bgr2rgb(FrameConstPtr frame, cv::Mat &image);
+  void rgb2rgb(FrameConstPtr frame, cv::Mat &image);
+  void gray2rgb(FrameConstPtr frame, cv::Mat &image);
 
   /// If 'src's endianess is not native, returns a copy of 'src' with bytes swapped; otherwise, returns 'src'
   cv::Mat getEndianCorrectMat(const cv::Mat &src, Frame::ByteOrder srcByteOrder);
@@ -144,7 +145,7 @@ void DisplayImage::read_settings()
 }
 
 
-void DisplayImage::doHandle(Frame::const_ptr frame)
+void DisplayImage::doHandle(FrameConstPtr frame)
 {
   if( ! d->should_display_frame()  || !frame->mat().data ) {
     return;
@@ -158,7 +159,7 @@ void DisplayImage::doHandle(Frame::const_ptr frame)
 
 void DisplayImage::create_qimages()
 {
-  Frame::const_ptr frame;
+  FrameConstPtr frame;
   while(d->running) {
     if(!d->queue.pop(frame)) {
       QThread::msleep(1);
@@ -167,7 +168,7 @@ void DisplayImage::create_qimages()
 
     ++*d->displayFps;
     auto cv_image = new cv::Mat;
-    static QHash<Frame::ColorFormat, std::function<void(Frame::const_ptr, cv::Mat&)>> converters {
+    static QHash<Frame::ColorFormat, std::function<void(FrameConstPtr, cv::Mat&)>> converters {
       {Frame::Mono, bind(&Private::gray2rgb, d.get(), _1, _2)},
       {Frame::RGB, bind(&Private::rgb2rgb, d.get(), _1, _2)},
       {Frame::BGR, bind(&Private::bgr2rgb, d.get(), _1, _2)},
@@ -248,7 +249,7 @@ cv::Mat DisplayImage::Private::getEndianCorrectMat(const cv::Mat &src, Frame::By
         return src;
 }
 
-void DisplayImage::Private::bayer2rgb(Frame::const_ptr frame, cv::Mat& image)
+void DisplayImage::Private::bayer2rgb(FrameConstPtr frame, cv::Mat& image)
 {
   if(! debayer) {
     gray2rgb(frame, image);
@@ -264,17 +265,17 @@ void DisplayImage::Private::bayer2rgb(Frame::const_ptr frame, cv::Mat& image)
   cv::cvtColor(getEndianCorrectMat(frame->mat(), frame->byteOrder()), image, bayer_patterns[frame->colorFormat()]);
 }
 
-void DisplayImage::Private::bgr2rgb(Frame::const_ptr frame, cv::Mat& image)
+void DisplayImage::Private::bgr2rgb(FrameConstPtr frame, cv::Mat& image)
 {
   cv::cvtColor(getEndianCorrectMat(frame->mat(), frame->byteOrder()), image, cv::COLOR_BGR2RGB);
 }
 
-void DisplayImage::Private::gray2rgb(Frame::const_ptr frame, cv::Mat& image)
+void DisplayImage::Private::gray2rgb(FrameConstPtr frame, cv::Mat& image)
 {
   cv::cvtColor(getEndianCorrectMat(frame->mat(), frame->byteOrder()), image, cv::COLOR_GRAY2RGB);
 }
 
-void DisplayImage::Private::rgb2rgb(Frame::const_ptr frame, cv::Mat& image)
+void DisplayImage::Private::rgb2rgb(FrameConstPtr frame, cv::Mat& image)
 {
   getEndianCorrectMat(frame->mat(), frame->byteOrder()).copyTo(image);
 }
@@ -336,5 +337,3 @@ void DisplayImage::Private::sobel( cv::Mat &source, int blur_size, int ker_size,
   cv::addWeighted( abs_grad_x, 0.5, abs_grad_y, 0.5, 0, source );
 }
 
-
-#include "displayimage.moc"

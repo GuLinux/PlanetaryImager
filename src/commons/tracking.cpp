@@ -138,7 +138,7 @@ DPTR_IMPL(ImgTracker)
         updated with it, so that GetTrackingPosition()'s result does not suddenly change. */
     QPoint blockMatchingReportedOffset = QPoint{ 0, 0 };
 
-    Frame::const_ptr prevFrame;
+    FrameConstPtr prevFrame;
 };
 
 #define LOCK()  std::lock_guard<std::mutex> lock(d->guard)
@@ -164,8 +164,8 @@ bool ImgTracker::addBlockMatchingTarget(const QPoint &pos)
 
     constexpr unsigned BBOX_SIZE = 32; //TODO: make it configurable
 
-    const cv::Rect refBlockRect = cv::Rect{ pos.x() - BBOX_SIZE/2,
-                                            pos.y() - BBOX_SIZE/2,
+    const cv::Rect refBlockRect = cv::Rect{ static_cast<int>(pos.x() - BBOX_SIZE/2),
+                                            static_cast<int>(pos.y() - BBOX_SIZE/2),
                                             BBOX_SIZE, BBOX_SIZE };
 
     const cv::Rect frameRect = cv::Rect{ 0, 0, d->prevFrame->mat().size[1], d->prevFrame->mat().size[0] };
@@ -190,7 +190,7 @@ bool ImgTracker::addBlockMatchingTarget(const QPoint &pos)
 }
 
 
-void ImgTracker::doHandle(Frame::const_ptr frame)
+void ImgTracker::doHandle(FrameConstPtr frame)
 {
     //TODO: change frame fragments' endianess if needed
 
