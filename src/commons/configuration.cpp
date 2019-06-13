@@ -97,7 +97,6 @@ define_setting(max_display_fps, int, 30)
 define_setting(max_display_fps_recording, int, 15)
 define_setting(limit_fps, bool, true)
 define_setting(debayer, bool, true)
-define_setting(opengl, bool, true)
 define_setting(limit_fps_recording, bool, true)
 
 define_setting_enum(recording_limit_type, Configuration::RecordingLimit, Configuration::FramesNumber)

@@ -20,7 +20,9 @@
 #include "zwoexception.h"
 #include <atomic>
 #include "commons/frame.h"
+#include <array>
 
+#define FRAMES_BUFFER 5
 using namespace std;
 
 DPTR_IMPL(ASIImagingWorker) {
@@ -35,6 +37,12 @@ DPTR_IMPL(ASIImagingWorker) {
   int getCVImageType();
   Frame::ColorFormat color_format;
   Frame::ColorFormat colorFormat() const;
+#ifdef FRAMES_BUFFER
+  array<FramePtr, FRAMES_BUFFER> frames;
+#endif
+  uint8_t current_frame = 0;
+  FramePtr new_frame() const;
+  uint8_t next_index();
 };
 
 ASIImagingWorker::ASIImagingWorker(const QRect& roi, int bin, const ASI_CAMERA_INFO& info, ASI_IMG_TYPE format)
@@ -59,6 +67,22 @@ ASIImagingWorker::ASIImagingWorker(const QRect& roi, int bin, const ASI_CAMERA_I
     d->color_format = Frame::Mono;
   }
   calc_exposure_timeout();
+#ifdef FRAMES_BUFFER
+  generate(begin(d->frames), end(d->frames), bind(&Private::new_frame, d.get()));
+#endif
+}
+
+FramePtr ASIImagingWorker::Private::new_frame() const {
+  // ASI CAMs are little endian
+  return make_shared<Frame>( format == ASI_IMG_RAW16 ? 16 : 8,  colorFormat(), QSize{roi.width(), roi.height()}, Frame::LittleEndian);
+}
+
+uint8_t ASIImagingWorker::Private::next_index() {
+#ifdef FRAMES_BUFFER
+    return (current_frame++) % frames.size();
+#else
+    return 0;
+#endif
 }
 
 ASIImagingWorker::~ASIImagingWorker()
@@ -83,8 +107,11 @@ void ASIImagingWorker::calc_exposure_timeout()
 
 FramePtr ASIImagingWorker::shoot()
 {
-  // ASI CAMs are little endian
-  auto frame = make_shared<Frame>( d->format == ASI_IMG_RAW16 ? 16 : 8,  d->colorFormat(), QSize{d->roi.width(), d->roi.height()}, Frame::LittleEndian);
+#ifdef FRAMES_BUFFER
+  FramePtr frame = d->frames[d->next_index()];
+#else
+  FramePtr frame = d->new_frame();
+#endif
   ASI_CHECK << ASIGetVideoData(d->info.CameraID, frame->data(), frame->size(), d->exposure_timeout) << "Capture frame";
   return frame;
 }

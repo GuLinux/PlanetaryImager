@@ -43,16 +43,10 @@ ConfigurationDialog::~ConfigurationDialog()
 
 ConfigurationDialog::ConfigurationDialog(Configuration &configuration, QWidget* parent) : QDialog(parent), dptr(configuration, this)
 {
-    static bool original_opengl_setting = d->configuration.opengl();
     d->ui.reset(new Ui::ConfigurationDialog);
     d->ui->setupUi(this);
-#ifndef HAVE_QT5_OPENGL
-    d->ui->opengl->hide();
-#endif
     connect(d->ui->debayer, &QCheckBox::toggled, bind(&Configuration::set_debayer, &d->configuration, _1));
-    connect(d->ui->opengl, &QCheckBox::toggled, bind(&Configuration::set_opengl, &d->configuration, _1));
     d->ui->debayer->setChecked(d->configuration.debayer());
-    d->ui->opengl->setChecked(d->configuration.opengl());
     d->ui->pauseShouldStopRecordingTimeout->setChecked(d->configuration.recording_pause_stops_timer());
     connect(d->ui->pauseShouldStopRecordingTimeout, &QCheckBox::toggled, bind(&Configuration::set_recording_pause_stops_timer, &d->configuration, _1));
     
@@ -174,11 +168,6 @@ ConfigurationDialog::ConfigurationDialog(Configuration &configuration, QWidget* 
     }
     d->ui->video_codec->setCurrentIndex(d->ui->video_codec->findData(d->configuration.video_codec()));
     connect(d->ui->video_codec, F_PTR(QComboBox, activated, int), [=](int index){ d->configuration.set_video_codec(d->ui->video_codec->itemData(index).toString()); });
-    connect(this, &QDialog::accepted, [this] {
-      if(original_opengl_setting != d->configuration.opengl()) {
-        QMessageBox::information(this, tr("Restart required"), tr("You changed the OpenGL setting. Please restart PlanetaryImage for this change to take effect"));
-      }
-    });
 
     d->ui->pixelDataEndianess->addItem("camera default", static_cast<int>(Configuration::CaptureEndianess::CameraDefault));
     d->ui->pixelDataEndianess->addItem("little-endian",  static_cast<int>(Configuration::CaptureEndianess::Little));
