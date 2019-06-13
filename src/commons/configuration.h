@@ -41,7 +41,6 @@ public:
     declare_setting(limit_fps_recording, bool)
     declare_setting(debayer, bool)
     declare_setting(limit_fps, bool)
-    declare_setting(opengl, bool)
     
     declare_setting(buffered_output, bool )
     declare_setting(max_memory_usage, long long )
