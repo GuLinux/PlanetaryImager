@@ -43,10 +43,10 @@ if not pr:
             retry += 1
 
 if pr:
-    release_body='''# {}  
+    release_body='''## {}  
 {}
 
-## Commit message:
+### Commit message:
 ```
 {}
 ```
