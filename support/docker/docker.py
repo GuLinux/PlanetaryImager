@@ -113,6 +113,7 @@ parser_package = subparsers.add_parser('package', help='Run packager on built im
 parser_package.add_argument('-d', '--dest', required=True, help='Destination directory (i.e. where to put packages). Use `none` if you want to skip exporting packages.')
 parser_package.add_argument('-b', '--build-directory', required=False, help='Bind build directory on docker')
 parser_package.add_argument('--cmake-build-type', default='RelWithDebInfo', help='CMAKE_BUILD_TYPE')
+parser_package.add_argument('-j', '--make-jobs', help='Make parallel jobs')
 parser_package.add_argument('-D', '--cmake-define', action='append', default=[], help='CMake definitions to be passed to docker container (use multiple times if necessary)')
 parser_package.add_argument('-i', '--images-filter', action='append', default=[], help='Filter images by name (use multiple times if necessary)')
 parser_package.add_argument('-c', '--clean-logs', action='store_true', default=False, help='Clean logs directory')
