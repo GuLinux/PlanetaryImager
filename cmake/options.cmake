@@ -29,6 +29,11 @@ if(DEBUG_NETWORK_PACKETS)
   add_definitions(-DDEBUG_NETWORK_PACKETS)
 endif()
 
+option(DISABLE_TRACKING "Disable tracking implementation" ON)
+if(DISABLE_TRACKING)
+    add_definitions(-DDISABLE_TRACKING)
+endif()
+
 # Extra executables to be built
 if("${CPACK_GENERATOR}" STREQUAL "DragNDrop")
     message("Disabling PlanetaryImager network daemon and frontend in bundle mode")

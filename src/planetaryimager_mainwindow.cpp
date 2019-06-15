@@ -290,8 +290,13 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     d->main_window_widgets->add_dock(d->ui->camera_settings);
     d->main_window_widgets->add_dock(d->ui->recording);
     d->main_window_widgets->add_dock(d->ui->histogram);
+#ifndef DISABLE_TRACKING
 #ifdef HAVE_LIBINDI
     d->main_window_widgets->add_dock(d->ui->mount);
+#endif
+#else
+    d->ui->mount->hide();
+    delete d->ui->mount;
 #endif
     d->main_window_widgets->load();
 
@@ -448,6 +453,10 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
 
     readTemperature->start(2000);
     d->rescan_devices();
+#ifdef DISABLE_TRACKING
+    delete d->ui->menuTracking;
+    delete d->ui->trackingToolBar;
+#endif
 }
 
 void PlanetaryImagerMainWindow::showEvent(QShowEvent *event)
