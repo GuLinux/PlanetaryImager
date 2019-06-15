@@ -45,7 +45,7 @@ public:
   Imager *imager;
   ImageHandlerPtr imageHandler;
   fps_counter fps;
-  atomic_bool running;  
+  atomic_bool running;
   QThread thread;
   boost::lockfree::spsc_queue<Job> jobs_queue;
   bool long_exposure_mode = false;
@@ -144,7 +144,7 @@ void ImagerThread::Private::thread_started()
         % e.what());
         continue;
       }
-      
+
       if(firstErrorOccured.elapsed() > 90 * 1000) {
           MessagesLogger::queue(MessagesLogger::Warning, tr("Error on frame capture"), tr("An error occurred while capturing frame for %1:\n%2\nDisconnecting camera.")
             % imager->name()

@@ -46,7 +46,7 @@ public:
   Imager *imager() const;
   SaveImagesPtr saveImages() const;
   Configuration &configuration() const;
-  
+
 public slots:
   void scanCameras();
   void open(const CameraPtr &camera);

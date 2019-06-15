@@ -47,6 +47,11 @@ function(add_driver)
   set(enabled_drivers ${enabled_drivers} ${add_driver_NAME} CACHE INTERNAL "")
 endfunction()
 
+# Updates the specified CMake variable in the parent scope
+macro(update_parent VAR_NAME)
+    set(${VAR_NAME} ${${VAR_NAME}} PARENT_SCOPE)
+endmacro(update_parent)
+
 function(external_project_download IN_FILE OUT_DIR)
   configure_file(${IN_FILE} ${OUT_DIR}_download/CMakeLists.txt)
   execute_process(COMMAND ${CMAKE_COMMAND} -G "${CMAKE_GENERATOR}" .

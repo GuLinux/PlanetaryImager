@@ -31,17 +31,15 @@
 Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)
 #endif
 
-
 DPTR_IMPL(PlanetaryImager) {
   DriverPtr driver;
   ImageHandlerPtr imageHandler;
   SaveImagesPtr saveImages;
   Configuration &configuration;
   PlanetaryImager *q;
-  
   QList<CameraPtr> cameras;
   Imager *imager = nullptr;
-  
+
   void initDevicesWatcher();
 };
 
@@ -108,7 +106,6 @@ void PlanetaryImager::open(const CameraPtr& camera)
 {
   if(d->imager)
     d->imager->destroy();
-  
   auto openImager = [this, camera] () -> Imager *{
     try {
       auto imager = camera->imager(d->imageHandler);
@@ -121,7 +118,7 @@ void PlanetaryImager::open(const CameraPtr& camera)
       return nullptr;
     }
   };
-  
+
   auto onImagerOpened = [this](Imager *imager) {
     d->imager = imager;
     if(imager) {
