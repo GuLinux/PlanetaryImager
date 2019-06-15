@@ -100,7 +100,7 @@ QPoint findNewPos(const QPoint &oldPos, ///< Old position of 'refBlock's center 
 QPoint findCentroid(cv::Mat img)
 {
     if (img.channels() > 1)
-        cv::cvtColor(img, img, CV_RGB2GRAY);
+        cv::cvtColor(img, img, cv::COLOR_RGB2GRAY);
 
     const auto moments = cv::moments(img);
     if (moments.m00 == 0.0)
@@ -200,29 +200,30 @@ void ImgTracker::doHandle(FrameConstPtr frame)
 
     LOCK();
 
-    switch (d->mode)
-    {
-    case TrackingMode::BlockMatching:
-        for (auto &target: d->targets)
-            target.pos = findNewPos(target.pos, target.refBlock, frame->mat());
-        break;
+    switch (d->mode) {
+        case TrackingMode::BlockMatching:
+            for (auto &target: d->targets)
+                target.pos = findNewPos(target.pos, target.refBlock, frame->mat());
+            break;
 
-    case TrackingMode::Centroid:
-        {
-            const QPoint newPos = findCentroid(cv::Mat(frame->mat(), toCvRect(d->centroid.area)));
-            const QPoint delta = newPos - d->centroid.pos;
-            const QRect oldArea = d->centroid.area;
-            d->centroid.area.moveTopLeft(d->centroid.area.topLeft() + delta);
-            const QRect intersection = d->centroid.area.intersected(QRect{ 0, 0, frame->mat().size[1], frame->mat().size[0] });
-            if (intersection.width() != oldArea.width() ||
-                intersection.height() != oldArea.height())
+        case TrackingMode::Centroid:
             {
-                qWarning() << "Centroid calculation rect outside image";
-                emit targetLost();
-                d->mode = TrackingMode::Disabled;
+                const QPoint newPos = findCentroid(cv::Mat(frame->mat(), toCvRect(d->centroid.area)));
+                const QPoint delta = newPos - d->centroid.pos;
+                const QRect oldArea = d->centroid.area;
+                d->centroid.area.moveTopLeft(d->centroid.area.topLeft() + delta);
+                const QRect intersection = d->centroid.area.intersected(QRect{ 0, 0, frame->mat().size[1], frame->mat().size[0] });
+                if (intersection.width() != oldArea.width() ||
+                    intersection.height() != oldArea.height())
+                {
+                    qWarning() << "Centroid calculation rect outside image";
+                    emit targetLost();
+                    d->mode = TrackingMode::Disabled;
+                }
             }
-        }
-        break;
+            break;
+        default:
+            return;
     }
 }
 
