@@ -33,6 +33,7 @@
 #include "image_handlers/threadimagehandler.h"
 #include "commons/frame.h"
 #include "network/networkdispatcher.h"
+#include "commons/definitions.h"
 #include "planetaryimager.h"
 
 using namespace std;

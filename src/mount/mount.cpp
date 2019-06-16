@@ -17,6 +17,7 @@
  */
 
 #include "mount.h"
+#include "commons/definitions.h"
 
 namespace Mount
 {
@@ -26,12 +27,7 @@ bool isConnectionSupported(ConnectionType connType)
     switch (connType)
     {
         case ConnectionType::INDI:
-#ifdef HAVE_LIBINDI
-            return true;
-#else
-            return false;
-#endif
-
+            return HAVE_LIBINDI == 1;
         case ConnectionType::SkyWatcher:
             return false;
         // safety net, returning false as driver is unknown

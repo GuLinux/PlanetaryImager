@@ -25,6 +25,7 @@
 #include <iostream>
 #include "loghandler.h"
 #include <QStandardPaths>
+#include "commons/definitions.h"
 
 using namespace std;
 using namespace std::placeholders;
@@ -58,12 +59,10 @@ CommandLine::~CommandLine()
 
 CommandLine & CommandLine::backend()
 {
-
-#ifdef OSX_BUNDLE
-  QString driversDirectory = QCoreApplication::applicationDirPath() + "/" + DRIVERS_DIRECTORY;
-#else
   QString driversDirectory = DRIVERS_DIRECTORY;
-#endif
+  if(OSX_BUNDLE == 1) {
+    driversDirectory = QCoreApplication::applicationDirPath() + "/" + DRIVERS_DIRECTORY;
+  }
   d->parser.addOption({"drivers", "Drivers directory", "drivers_directory_path", driversDirectory});
   d->loggingOptions();
   return *this;
@@ -112,9 +111,9 @@ CommandLine & CommandLine::process()
 QStringList CommandLine::driversDirectories() const
 {
   QStringList drivers(d->parser.value("drivers"));
-#ifdef ADDITIONAL_DRIVERS_DIRECTORY
-  drivers << ADDITIONAL_DRIVERS_DIRECTORY;
-#endif
+  if(ADD_DRIVERS_BUILD_DIRECTORY == 1) {
+      drivers << ADDITIONAL_DRIVERS_DIRECTORY;
+  }
   return drivers;
 }
 

@@ -24,8 +24,9 @@
 #include <QTimer>
 #include "image_handlers/saveimages.h"
 #include "drivers/driver.h"
+#include "commons/definitions.h"
 
-#ifdef STATIC_WINDOWS_PLUGIN
+#if STATIC_QT_WINDOWS == 1
 #pragma message("Initializing Qt static plugins")
 #include <QtPlugin>
 Q_IMPORT_PLUGIN(QWindowsIntegrationPlugin)

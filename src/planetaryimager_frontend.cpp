@@ -26,6 +26,7 @@
 #include <QMenu>
 #include "commons/commandline.h"
 #include "commons/frame.h"
+#include "commons/definitions.h"
 
 #include "network/client/gui/connectionmanager.h"
 

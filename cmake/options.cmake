@@ -20,26 +20,14 @@ option(ADD_DRIVERS_BUILD_DIRECTORY "Search for drivers in the current build dire
 
 # Developer mode: log all message to stderr
 option(DEVELOPER_MODE "Force logging mode to debug" OFF)
-if(DEVELOPER_MODE)
-  add_definitions(-DDEVELOPER_MODE)
-endif()
-
 option(DEBUG_NETWORK_PACKETS "Debug network packets" OFF)
-if(DEBUG_NETWORK_PACKETS)
-  add_definitions(-DDEBUG_NETWORK_PACKETS)
-endif()
-
 option(DISABLE_TRACKING "Disable tracking implementation" ON)
-if(DISABLE_TRACKING)
-    add_definitions(-DDISABLE_TRACKING)
-endif()
 
 # Extra executables to be built
 if("${CPACK_GENERATOR}" STREQUAL "DragNDrop")
     message("Disabling PlanetaryImager network daemon and frontend in bundle mode")
     set(build_network_server Off)
     set(OSX_BUNDLE On)
-    add_definitions(-DOSX_BUNDLE=1)
     set(CMAKE_INSTALL_PREFIX /)
     set(MACOSX_BUNDLE_BUNDLE_NAME PlanetaryImager)
     set(MACOSX_BUNDLE_BUNDLE_VERSION ${FULL_VERSION})

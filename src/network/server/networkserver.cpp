@@ -31,6 +31,7 @@
 #include "network/server/filesystemforwarder.h"
 #include "image_handlers/saveimages.h"
 #include "planetaryimager.h"
+#include "commons/definitions.h"
 
 using namespace std;
 using namespace std::placeholders;
@@ -109,7 +110,7 @@ namespace {
 
 void NetworkServer::Private::bytes_sent(quint64 written, quint64 sent)
 {
-#ifdef DEVELOPER_MODE
+#if DEVELOPER_MODE == 1
     qDebug() << "written: %1 MB, sent: %2 MB, cached: %3 MB, rate: %4 MB/sec"_q
       % to_mb(written) % to_mb(sent) % to_mb(written - sent) % ( to_mb(sent - last_sent) / to_secs(elapsed.elapsed()) );
 #endif
