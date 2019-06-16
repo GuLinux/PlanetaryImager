@@ -1,5 +1,7 @@
 set(mount-SRCS mount.cpp)
 add_backend_dependencies(mount)
+# Temporary hack: adding to both frontend and backend to let the client compile. This should really be a backend dependency only.
+add_frontend_dependencies(mount)
 
 if(HAVE_LIBINDI)
     set(enabled_mounts ${enabled_mounts} INDI CACHE INTERNAL "")
@@ -10,6 +12,8 @@ if(HAVE_LIBINDI)
     find_package(Threads REQUIRED)
 
     add_backend_dependencies(indiclient ${CMAKE_THREAD_LIBS_INIT})
+    # Temporary hack: adding to both frontend and backend to let the client compile. This should really be a backend dependency only.
+    add_frontend_dependencies(indiclient ${CMAKE_THREAD_LIBS_INIT})
     message("INDI support enabled (Mount).")
 else()
     message("INDI support disabled: libindi not found.")
