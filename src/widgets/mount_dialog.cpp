@@ -18,7 +18,7 @@
 
 #include <memory>
 
-#include "commons/mount/mount.h"
+#include "mount/mount.h"
 #include "mount_dialog.h"
 #include "ui_mount_dialog.h"
 

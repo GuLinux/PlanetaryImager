@@ -1,15 +1,6 @@
 set(PlanetaryImager_GUI_SRCS planetaryimager_mainwindow.cpp mainwindowwidgets.cpp planetaryimager_mainwindow.ui resources/resources.qrc)
 set(PlanetaryImager_SRCS planetaryimager_main.cpp ${PlanetaryImager_GUI_SRCS})
-
-
-if(static_qt_windows)
-    add_definitions(-DSTATIC_WINDOWS_PLUGIN)
-endif()
-
-
-if(HAVE_LIBINDI)
-    add_definitions(-DHAVE_LIBINDI)
-endif()
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 if(OSX_BUNDLE)
     set(drivers_destination ${APPBUNDLE_INSTALL_PREFIX}/Contents/Plugins/${CMAKE_PROJECT_NAME})
@@ -23,19 +14,19 @@ set(CMAKE_INSTALL_DEFAULT_DIRECTORY_PERMISSIONS OWNER_READ OWNER_WRITE OWNER_EXE
 if(${CMAKE_SYSTEM_NAME} STREQUAL "Windows")
   set(drivers_destination drivers)
   set(binary_destination .)
-  add_definitions(-DDRIVERS_DIRECTORY="${drivers_destination}")
+  set(DRIVERS_DIRECTORY "${drivers_destination}")
 else()
   if(OSX_BUNDLE)
-      add_definitions(-DDRIVERS_DIRECTORY="../Plugins/${CMAKE_PROJECT_NAME}")
+      set(DRIVERS_DIRECTORY "../Plugins/${CMAKE_PROJECT_NAME}")
       set(CMAKE_INSTALL_RPATH "@executable_path/../Frameworks" "@executable_path/../../Frameworks")
   else()
-      add_definitions(-DDRIVERS_DIRECTORY="${CMAKE_INSTALL_PREFIX}/${drivers_destination}")
+      set(DRIVERS_DIRECTORY "${CMAKE_INSTALL_PREFIX}/${drivers_destination}")
   endif()
 endif()
 
 
 if(ADD_DRIVERS_BUILD_DIRECTORY)
-  add_definitions(-DADDITIONAL_DRIVERS_DIRECTORY="${CMAKE_CURRENT_BINARY_DIR}/drivers")
+    set(ADDITIONAL_DRIVERS_DIRECTORY "${CMAKE_CURRENT_BINARY_DIR}/drivers")
 endif()
 
 add_subdirectory(drivers)
@@ -43,6 +34,7 @@ add_subdirectory(image_handlers)
 add_subdirectory(widgets)
 add_subdirectory(commons)
 add_subdirectory(network)
+add_subdirectory(mount)
 
 
 message(STATUS "********* ExtraLibraries: ${EXTRA_LIBRARIES}")
@@ -68,7 +60,6 @@ target_link_libraries(${appname}
     network_server
     ${planetary_imager_backend_DEPS}
     ${planetary_imager_frontend_DEPS}
-    ${planetary_imager_commons_DEPS}
     ${planetary_imager_backend_DEPS}
     ${planetary_imager_commons_DEPS}
     GuLinux_Qt_Commons
@@ -87,8 +78,6 @@ if(build_network_server)
   add_executable(planetary_imager_daemon ${WIN32_APP_FLAG} planetaryimager_daemon.cpp planetaryimager.cpp)
   target_link_libraries(planetary_imager_daemon
     network_server
-    ${planetary_imager_backend_DEPS}
-    ${planetary_imager_commons_DEPS}
     ${planetary_imager_backend_DEPS}
     ${planetary_imager_commons_DEPS}
     GuLinux_Qt_Commons
@@ -144,4 +133,5 @@ else()
     install(TARGETS ${install_targets} RUNTIME DESTINATION ${binary_destination})
 endif()
 
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/commons/definitions.h.in ${CMAKE_CURRENT_BINARY_DIR}/commons/definitions.h)
 

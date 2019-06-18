@@ -19,7 +19,6 @@ include(cmake/functions.cmake)
 
 external_project_download(cmake/GuLinux-Commons.cmake.in GuLinux-Commons)
 
-add_definitions(-DSRC_DIR="${CMAKE_SOURCE_DIR}")
 configure_file(${CMAKE_SOURCE_DIR}/scripts/version.sh.in ${CMAKE_BINARY_DIR}/scripts/version.sh)
 
 if(NOT OSX_BUNDLE)

@@ -1,5 +1,5 @@
 set(cflags_fpic Off CACHE BOOL "")
-set(static_qt_windows On CACHE BOOL "")
+set(STATIC_QT_WINDOWS On CACHE BOOL "")
 set(CMAKE_INSTALL_PREFIX / CACHE PATH "")
 set(CPACK_GENERATOR ZIP CACHE STRING "")
 

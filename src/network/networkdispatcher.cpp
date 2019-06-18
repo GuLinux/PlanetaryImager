@@ -26,7 +26,8 @@
 #include "commons/utils.h"
 #include <QCoreApplication>
 #include "Qt/qt_strings_helper.h"
-#ifdef DEVELOPER_MODE
+#include "commons/definitions.h"
+#if DEVELOPER_MODE == 1
 #include "commons/loghandler.h"
 #endif
 
@@ -124,7 +125,7 @@ bool NetworkDispatcher::is_connected() const
 
 void NetworkDispatcher::Private::debugPacket(const NetworkPacketPtr& packet, const QString& prefix)
 {
-#ifdef DEBUG_NETWORK_PACKETS
+#if DEBUG_NETWORK_PACKETS == 1
     QString payload;
     if(packet->payloadVariant().isValid()) {
         QDebug(&payload) << packet->payloadVariant();

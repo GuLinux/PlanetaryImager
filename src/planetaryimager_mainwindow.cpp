@@ -38,9 +38,7 @@
 #include "widgets/recordingpanel.h"
 #include "widgets/camerainfowidget.h"
 #include "widgets/histogramwidget.h"
-#ifdef HAVE_LIBINDI
 #include "widgets/mount_widget.h"
-#endif
 #include "Qt/zoomableimage.h"
 #include <QGridLayout>
 #include <QToolBar>
@@ -64,6 +62,7 @@
 #include "image_handlers/threadimagehandler.h"
 
 #include "commons/messageslogger.h"
+#include "commons/definitions.h"
 #include "c++/stlutils.h"
 #include "commons/exposuretimer.h"
 #include "Qt/qt_functional.h"
@@ -104,9 +103,7 @@ DPTR_IMPL(PlanetaryImagerMainWindow) {
   RecordingPanel* recording_panel;
   ExposureTimer exposure_timer;
 
-#ifdef HAVE_LIBINDI
   MountWidget* mount_widget;
-#endif
   ImageHandlerPtr imageHandler;
 
   /// Contains elements of the "informational overlay", added to the graphics scene of 'displayImage'
@@ -212,9 +209,9 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     d->ui->histogram->setWidget(d->histogramWidget = new HistogramWidget(d->histogram, d->planetaryImager->configuration()));
     d->ui->statusbar->addPermanentWidget(d->statusbar_info_widget = new StatusBarInfoWidget(), 1);
 
-#ifdef HAVE_LIBINDI
-    d->ui->mount->setWidget(d->mount_widget = new MountWidget());
-#endif
+    if(HAVE_LIBINDI == 1) {
+        d->ui->mount->setWidget(d->mount_widget = new MountWidget());
+    }
 
     d->imgTracker = make_shared<ImgTracker>();
 
@@ -290,14 +287,13 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
     d->main_window_widgets->add_dock(d->ui->camera_settings);
     d->main_window_widgets->add_dock(d->ui->recording);
     d->main_window_widgets->add_dock(d->ui->histogram);
-#ifndef DISABLE_TRACKING
-#ifdef HAVE_LIBINDI
-    d->main_window_widgets->add_dock(d->ui->mount);
-#endif
-#else
-    d->ui->mount->hide();
-    delete d->ui->mount;
-#endif
+    if(DISABLE_TRACKING == 0 && HAVE_LIBINDI == 1) {
+        d->main_window_widgets->add_dock(d->ui->mount);
+    }
+    else {
+        d->ui->mount->hide();
+        delete d->ui->mount;
+    }
     d->main_window_widgets->load();
 
     qDebug() << "file " << logFilePath << "exists: " << QFile::exists(logFilePath);
@@ -453,10 +449,10 @@ PlanetaryImagerMainWindow::PlanetaryImagerMainWindow(
 
     readTemperature->start(2000);
     d->rescan_devices();
-#ifdef DISABLE_TRACKING
-    delete d->ui->menuTracking;
-    delete d->ui->trackingToolBar;
-#endif
+    if(DISABLE_TRACKING == 1) {
+        delete d->ui->menuTracking;
+        delete d->ui->trackingToolBar;
+    }
 }
 
 void PlanetaryImagerMainWindow::showEvent(QShowEvent *event)

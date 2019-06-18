@@ -27,6 +27,7 @@
 #include "commons/commandline.h"
 #include <QMutex>
 #include <QMutexLocker>
+#include "commons/definitions.h"
 
 using namespace std;
 using namespace std::placeholders;
@@ -65,7 +66,7 @@ void LogHandler::Private::log_handler(QtMsgType type, const QMessageLogContext &
     {QtDebugMsg   , 50},
   };
   for(auto output: outputs) {
-#ifndef DEVELOPER_MODE
+#if DEVELOPER_MODE == 0
     if(priority[type] > priority[output.level])
       continue;
 #endif

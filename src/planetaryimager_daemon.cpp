@@ -32,6 +32,7 @@
 #include "planetaryimager.h"
 #include "Qt/qt_strings_helper.h"
 #include "commons/commandline.h"
+#include "commons/definitions.h"
 #include "commons/frame.h"
 #include "network/networkdispatcher.h"
 
