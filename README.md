@@ -51,7 +51,7 @@ If not, please try binary releases first.
     cmake .. -DCMAKE_INSTALL_PREFIX=/usr
     make all && sudo make install
 
-To enable a driver not enabled by default, either add `DEFAULT_ON` as argument to `add_driver()` in driver's `CMakeLists.txt file`, or set `BUILD_DRIVER_xxx:BOOL=ON` in CMakeCache.txt in the build directory.
+To enable a driver not enabled by default, add `-DBUILD_DRIVER_xxxx=ON` when calling `cmake`, where `xxxx` is the driver's name. Alternatively, one can also pass `DEFAULT_ON` as argument to `add_driver()` in driver's `CMakeLists.txt` file.
 
 To run without installing, you must specify the drivers location as a parameter. E.g. when in build directory, use:
 
