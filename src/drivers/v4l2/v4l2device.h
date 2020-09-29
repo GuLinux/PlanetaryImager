@@ -33,11 +33,17 @@ public:
   inline operator bool() const;
   int descriptor() const;
   
-  template<typename T> void ioctl(uint64_t ctl, T *data, const QString &errorLabel = {}) const { return __ioctl(ctl, reinterpret_cast<void*>(data), errorLabel); }
-  template<typename T> int xioctl(uint64_t ctl, T *data, const QString &errorLabel = {}) const { return __xioctl(ctl, reinterpret_cast<void*>(data), errorLabel); }
+  template<typename T> void ioctl(uint64_t ctl, T *data, const QString &errorLabel = {}) const {
+    return __ioctl(ctl, reinterpret_cast<void*>(data), errorLabel);
+  }
+
+  template<typename T> int xioctl(uint64_t ctl, T *data, const QString &errorLabel = {}, int ok_errno = 0) const {
+    return __xioctl(ctl, reinterpret_cast<void*>(data), errorLabel, ok_errno);
+  }
+
 private:
   void __ioctl(uint64_t ctl, void *data, const QString &errorLabel) const;
-  int __xioctl(uint64_t ctl, void *data, const QString &errorLabel) const;
+  int __xioctl(uint64_t ctl, void *data, const QString &errorLabel, int ok_errno) const;
   DPTR
 };
 

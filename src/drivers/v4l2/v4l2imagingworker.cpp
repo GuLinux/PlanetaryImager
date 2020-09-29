@@ -102,9 +102,10 @@ void V4L2ImagingWorker::Private::adjust_framerate()
     fps_s.height = format.fmt.pix.height;
     fps_s.pixel_format = format.fmt.pix.pixelformat;
     qDebug() << "scanning for fps with pixel format " << FOURCC2QS(fps_s.pixel_format);
-    for(fps_s.index = 0; device->xioctl(VIDIOC_ENUM_FRAMEINTERVALS, &fps_s) >= 0; fps_s.index++) {
+    while (device->xioctl(VIDIOC_ENUM_FRAMEINTERVALS, &fps_s, {}, EINVAL) >= 0) {
       qDebug() << "found fps: " << fps_s;
       rates.push_back(fps_s);
+      fps_s.index++;
     }
     auto ratio = [=](const v4l2_frmivalenum &a) { return static_cast<double>(a.discrete.numerator)/static_cast<double>(a.discrete.denominator); };
     sort(begin(rates), end(rates), [&](const v4l2_frmivalenum &a, const v4l2_frmivalenum &b){ return ratio(a) < ratio(b);} );

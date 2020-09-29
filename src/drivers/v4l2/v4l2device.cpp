@@ -93,13 +93,14 @@ void V4L2Device::__ioctl(uint64_t ctl, void* data, const QString& errorLabel) co
     //qDebug() << "IOCTL RUN: %1 with result %2"_q % d->ioctl_names.value(ctl, "%1"_q % ctl) % r;
 }
 
-int V4L2Device::__xioctl(uint64_t ctl, void* data, const QString& errorLabel) const
+int V4L2Device::__xioctl(uint64_t ctl, void* data, const QString &errorLabel, int ok_errno) const
 {
   try {
     this->ioctl(ctl, data, errorLabel);
     return 0;
   } catch(const V4L2Exception &e) {
-    qWarning() << e.what();
+    if (errno != ok_errno)
+      qWarning() << e.what();
     return -1;
   }
 }
