@@ -1,0 +1,33 @@
+* text=auto eol=lf
+
+# images
+*.jpg binary
+*.png binary
+*.ico binary
+*.xcf binary
+*.icns binary
+
+# linux
+*.a binary
+*.so binary
+*.so.* binary
+*.hex binary
+*.HEX binary
+test_gui2_snap binary
+test_gui2_video binary
+fxload binary
+
+# mac
+*.dylib binary
+*.dylib.* binary
+
+# windows
+*.aps binary
+*.dll binary
+*.lib binary
+*.exe binary
+*.exp binary
+
+# random
+*.pdf binary
+*.img binary
