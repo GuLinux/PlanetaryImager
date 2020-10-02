@@ -441,7 +441,7 @@ void CHistLib::DrawHistBar(Mat& HistImage, unsigned BinCount)
       mHistImageBorder + mSpread * BinCount,
       mHistImageBorder + mHistImageHeight),
     mHistAxisColor,
-    0);
+    1);
 
   // Label initial bin
   putText(
