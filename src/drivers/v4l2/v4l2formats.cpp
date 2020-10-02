@@ -59,8 +59,9 @@ V4L2Formats::V4L2Formats(const V4L2DevicePtr& device) : dptr(device)
   v4l2_fmtdesc formats;
   formats.index = 0;
   formats.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;
-  for(formats.index = 0; 0 ==device->xioctl(VIDIOC_ENUM_FMT, &formats); formats.index++) {
+  while (0 == device->xioctl(VIDIOC_ENUM_FMT, &formats, {}, EINVAL)) {
     d->formats.push_back(make_shared<V4L2Format>(formats, device));
+    formats.index++;
   }
   for(auto format: d->formats)
     qDebug() << "Found format: " << *format;
@@ -106,9 +107,11 @@ V4L2ResolutionPtr V4L2Formats::current_resolution() const
 V4L2Format::V4L2Format(const v4l2_fmtdesc &fmtdesc, const V4L2DevicePtr &device) : dptr(fmtdesc, device)
 {
   v4l2_frmsizeenum frmsize;
+  frmsize.index = 0;
   frmsize.pixel_format = fmtdesc.pixelformat;
-  for(frmsize.index = 0; device->xioctl(VIDIOC_ENUM_FRAMESIZES, &frmsize, "querying resolutions") >= 0; frmsize.index++) {
+  while (device->xioctl(VIDIOC_ENUM_FRAMESIZES, &frmsize, "querying resolutions", EINVAL) >= 0) {
     d->resolutions.push_back(make_shared<V4L2Resolution>(frmsize, device, *this));
+    frmsize.index++;
   }
 }
 
