@@ -66,7 +66,6 @@ HistogramWidget::HistogramWidget(const HistogramPtr &histogram, Configuration &c
     connect(d->ui->histogram_logarithmic, &QCheckBox::toggled, this, bind(&Private::toggle_histogram_logarithmic, d.get(), _1));
     connect(d->ui->channel, F_PTR(QComboBox, currentIndexChanged, int), this, [this](int index) { d->histogram->setChannel(d->channel_combo_indexes.key(index)); });
     d->toggle_histogram_logarithmic(configuration.histogram_logarithmic());
-    d->ui->statsWidget->setLayout(new QVBoxLayout);
 }
 
 void HistogramWidget::Private::toggle_histogram_logarithmic(bool logarithmic)
