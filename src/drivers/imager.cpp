@@ -136,6 +136,7 @@ void Imager::wait_for(const std::shared_ptr<QWaitCondition>& wait_condition) con
   QMutex wait_mutex;
   wait_mutex.lock();
   wait_condition->wait(&wait_mutex);
+  wait_mutex.unlock();
 }
 
 
